@@ -4,7 +4,7 @@ We appreciate your interest in contributing to MageForge! Please follow the guid
 
 ## Submitting a Pull Request
 
-1. **Create an Issue**: Start by [creating an issue](https://github.com/dermatz/mageforge/issues) to describe your feature request or bug report. Be sure to include all relevant details.
+1. **Create an Issue**: Start by [creating an issue](https://github.com/OpenForgeProject/mageforge/issues) to describe your feature request or bug report. Be sure to include all relevant details.
 2. **Fork the Repository**: Fork this repository and create a new branch for your work that corresponds to the issue you opened.
 3. **Commit Your Changes**: Make your changes in the new branch and commit them with clear, descriptive messages.
 4. **Open a Pull Request**: Submit a pull request to merge your changes into the `main` branch of this repository.

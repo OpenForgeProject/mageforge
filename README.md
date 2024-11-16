@@ -1,14 +1,13 @@
 # MageForge for Magento 2
 
 ![Mageforge Hero](./.github/assets/mageforge-hero.jpg)
-
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/365d32460022451ba3918f5643341753)](https://app.codacy.com/gh/dermatz/mageforge/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7d7c46d7492043c7ada514ed1d4a4c05)](https://app.codacy.com/gh/OpenForgeProject/mageforge/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 MageForge is a Magento 2 module designed to assist frontend developers in streamlining their workflow and enhancing productivity.
 
 ---
 
-[![Join our Discord community](./.github/assets/small_logo_blurple_RGB.png)](https://discord.gg/H5CjMXQQHn)
+[![Join our OpenForgeProject Discord community](./.github/assets/small_logo_blurple_RGB.png)](https://discord.gg/H5CjMXQQHn)
 
 ## Features
 
@@ -38,7 +37,7 @@ Latest Version: 1.0.0
 ## Report Feature or Bugs
 
 MageForge provides several forms to submit feature requests or report a bug.
-You will find it in the [issue section](https://github.com/dermatz/mageforge/issues) of GitHub.
+You will find it in the [issue section](https://github.com/OpenForgeProject/mageforge/issues) of GitHub.
 
 ## Contributing
 
@@ -56,7 +55,7 @@ See the [LICENSE](LICENSE) file for more details.
 
 ## Support
 
-For support, please open an issue on the [GitHub repository](https://github.com/dermatz/mageforge/issues).
+For support, please open an issue on the [GitHub repository](https://github.com/OpenForgeProject/mageforge/issues).
 
 ## Changelog
 
