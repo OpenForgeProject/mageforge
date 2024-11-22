@@ -15,10 +15,8 @@ All notable changes to this project will be documented in this file.
 - added dependabot
 - added `VersionCommand`
 - added Codacy Badge to `README.md`
-- changed Repository URLs
+- added the `mageforge:version` command usage example in `README.md`
 
 ---
 
 ## Latest Release
-
-### 0.0.0 (update this line with first release)
