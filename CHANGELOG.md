@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - added dependabot
 - added `VersionCommand`
 - added Codacy Badge to `README.md`
+- changed Repository URLs
 - added codacy code-quality badge to `README.md`
 
 ---
