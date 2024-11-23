@@ -16,9 +16,8 @@ All notable changes to this project will be documented in this file.
 - added `VersionCommand`
 - added Codacy Badge to `README.md`
 - changed Repository URLs
+- added codacy code-quality badge to `README.md`
 
 ---
 
 ## Latest Release
-
-### 0.0.0 (update this line with first release)
