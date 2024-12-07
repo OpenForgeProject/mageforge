@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - changed Repository URLs
 - added codacy code-quality badge to `README.md`
 - moved to OpenForgeProject
+- add ListThemesCommand
 
 ---
 

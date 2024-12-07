@@ -17,6 +17,10 @@
                     name="openforgeproject_mageforge_version"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\VersionCommand</item>
+                <item
+                    name="openforgeproject_mageforge_themes_list"
+                    xsi:type="object"
+                >OpenForgeProject\MageForge\Console\Command\ListThemesCommand</item>
             </argument>
         </arguments>
     </type>
