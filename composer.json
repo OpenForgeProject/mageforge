@@ -1,5 +1,5 @@
 {
-  "name": "mageforge/base",
+  "name": "openforgeproject/mageforge",
   "description": "Magento 2 module for frontend wizardry~",
   "license": "GPL-3.0",
   "type": "magento2-module",
@@ -8,7 +8,7 @@
       "registration.php"
     ],
     "psr-4": {
-      "MageForge\\Base\\": "src/"
+      "OpenForgeProject\\MageForge\\": "src/"
     }
   }
 }

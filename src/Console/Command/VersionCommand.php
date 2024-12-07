@@ -14,7 +14,7 @@ use Magento\Framework\Filesystem\Driver\File;
 
 class VersionCommand extends Command
 {
-    private const API_URL = 'https://api.github.com/repos/mage-forge/base/releases/latest';
+    private const API_URL = 'https://api.github.com/repos/openforgeproject/mageforge/releases/latest';
     private const UNKNOWN_VERSION = 'Unknown';
 
     /**
