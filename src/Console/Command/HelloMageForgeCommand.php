@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MageForge\Base\Console\Command;
+namespace OpenForgeProject\MageForge\Console\Command;
 
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;

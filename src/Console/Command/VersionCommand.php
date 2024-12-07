@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MageForge\Base\Console\Command;
+namespace OpenForgeProject\MageForge\Console\Command;
 
-use MageForge\Base\Exception\FetchLatestVersionException;
+use OpenForgeProject\MageForge\Exception\FetchLatestVersionException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -15,6 +15,7 @@ use Magento\Framework\Filesystem\Driver\File;
 class VersionCommand extends Command
 {
     private const API_URL = 'https://api.github.com/repos/openforgeproject/mageforge/releases/latest';
+    private const PACKAGE_NAME = 'openforgeproject/mageforge';
     private const UNKNOWN_VERSION = 'Unknown';
 
     /**
@@ -68,7 +69,7 @@ class VersionCommand extends Command
 
         $moduleVersion = self::UNKNOWN_VERSION;
         foreach ($composerLock['packages'] as $package) {
-            if ($package['name'] === 'mageforge/base') {
+            if ($package['name'] === self::PACKAGE_NAME) {
                 $moduleVersion = $package['version'];
                 break;
             }

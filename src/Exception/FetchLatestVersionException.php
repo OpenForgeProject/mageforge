@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MageForge\Base\Exception;
+namespace OpenForgeProject\MageForge\Exception;
 
 class FetchLatestVersionException extends \RuntimeException
 {

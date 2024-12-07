@@ -5,7 +5,7 @@
   "type": "magento2-module",
   "autoload": {
     "files": [
-      "registration.php"
+      "src/registration.php"
     ],
     "psr-4": {
       "OpenForgeProject\\MageForge\\": "src/"
