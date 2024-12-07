@@ -6,6 +6,6 @@ use Magento\Framework\Component\ComponentRegistrar;
 
 ComponentRegistrar::register(
     ComponentRegistrar::MODULE,
-    'MageForge_Base',
+    'OpenForgeProject_MageForge',
     __DIR__
 );

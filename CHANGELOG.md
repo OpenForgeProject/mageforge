@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## 0.1.0
+## UNRELEASED
 
 - added trunk support
 - added GitHub `issue` and `feature` templates
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - added Codacy Badge to `README.md`
 - changed Repository URLs
 - added codacy code-quality badge to `README.md`
+- moved to OpenForgeProject
 
 ---
 
