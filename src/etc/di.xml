@@ -28,5 +28,8 @@
         <arguments>
             <argument name="productMetadata" xsi:type="object">Magento\Framework\App\ProductMetadataInterface</argument>
         </arguments>
+        <arguments>
+            <argument name="escaper" xsi:type="object">Magento\Framework\Escaper</argument>
+        </arguments>
     </type>
 </config>
