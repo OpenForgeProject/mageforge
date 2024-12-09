@@ -8,6 +8,7 @@ use OpenForgeProject\MageForge\Exception\FetchLatestVersionException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Magento\Framework\Console\Cli;
 use GuzzleHttp\Client;
 use Magento\Framework\Filesystem\Driver\File;
@@ -43,11 +44,17 @@ class VersionCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $io = new SymfonyStyle($input, $output);
+
         $moduleVersion = $this->getModuleVersion();
         $latestVersion = $this->getLatestVersion();
 
-        $output->writeln("Module Version: $moduleVersion");
-        $output->writeln("Latest Version: $latestVersion");
+        $io->title('MageForge Version Information');
+        $io->section('Versions');
+        $io->listing([
+            "Module Version: $moduleVersion",
+            "Latest Version: $latestVersion"
+        ]);
 
         return Cli::RETURN_SUCCESS;
     }
