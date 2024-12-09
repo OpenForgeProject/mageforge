@@ -12,24 +12,14 @@ MageForge is a Magento 2 module designed to assist frontend developers in stream
 
 ## Features
 
-### `mageforge:version` Command
+### Available Commands
 
-The `mageforge:version` command displays the current module version and the latest available version.
+| Command                  | Description                                                 |
+|--------------------------|-------------------------------------------------------------|
+| `mageforge:version`      | Displays the current module version and the latest available version. |
+| `mageforge:system-check` | Displays system information like PHP, MySQL, NodeJs, OS, Magento Version etc. |
 
-#### Usage
-
-To use the `mageforge:version` command, run the following in your terminal:
-
-```sh
-php bin/magento mageforge:version
-```
-
-Example output:
-
-```sh
-Module Version: 1.0.0
-Latest Version: 1.0.0
-```
+---
 
 ## Installation
 
