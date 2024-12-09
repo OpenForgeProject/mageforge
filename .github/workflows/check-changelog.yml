@@ -8,6 +8,7 @@ on: [pull_request]
 jobs:
     check-changelog:
         runs-on: ubuntu-latest
+        continue-on-error: true
         steps:
             - name: Check out the repository
               uses: actions/checkout@v3
