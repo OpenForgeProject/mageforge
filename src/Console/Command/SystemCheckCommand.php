@@ -14,10 +14,20 @@ use GuzzleHttp\Client;
 use Composer\Semver\Comparator;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Magento\Framework\App\ProductMetadataInterface;
 
 class SystemCheckCommand extends Command
 {
     private const NODE_LTS_URL = 'https://nodejs.org/dist/index.json';
+
+    /**
+     * @inheritDoc
+     */
+    public function __construct(
+        private readonly ProductMetadataInterface $productMetadata,
+    ) {
+        parent::__construct();
+    }
 
     /**
      * @inheritDoc
@@ -39,6 +49,7 @@ class SystemCheckCommand extends Command
         $nodeVersion = $this->getNodeVersion();
         $mysqlVersion = $this->getShortMysqlVersion();
         $osInfo = $this->getShortOsInfo();
+        $magentoVersion = $this->productMetadata->getVersion();
         $latestLtsNodeVersion = $this->getLatestLtsNodeVersion();
 
         $nodeVersionDisplay = Comparator::lessThan($nodeVersion, $latestLtsNodeVersion)
@@ -56,7 +67,9 @@ class SystemCheckCommand extends Command
                 new TableSeparator(),
                 ['MySQL', $mysqlVersion],
                 new TableSeparator(),
-                ['OS', $osInfo]
+                ['OS', $osInfo],
+                new TableSeparator(),
+                ['Magento', $magentoVersion]
             ]
         );
 
