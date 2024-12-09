@@ -124,6 +124,10 @@ class SystemCheckCommand extends Command
 
     /**
      * Run a command and return the output
+     *
+     * @param string $command
+     * @return string
+     * @throws ProcessFailedException
      */
     private function runCommand(string $command): string
     {
