@@ -47,11 +47,11 @@ class SystemCheckCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $phpVersion = $this->escaper->escapeHtml(phpversion());
-        $nodeVersion = $this->escaper->escapeHtml($this->getNodeVersion());
-        $mysqlVersion = $this->escaper->escapeHtml($this->getShortMysqlVersion());
-        $osInfo = $this->escaper->escapeHtml($this->getShortOsInfo());
-        $magentoVersion = $this->escaper->escapeHtml($this->productMetadata->getVersion());
+        $phpVersion = phpversion();
+        $nodeVersion = $this->getNodeVersion();
+        $mysqlVersion = $this->getShortMysqlVersion();
+        $osInfo = $this->getShortOsInfo();
+        $magentoVersion = $this->productMetadata->getVersion();
         $latestLtsNodeVersion = $this->escaper->escapeHtml($this->getLatestLtsNodeVersion());
 
         $nodeVersionDisplay = Comparator::lessThan($nodeVersion, $latestLtsNodeVersion)
@@ -112,8 +112,7 @@ class SystemCheckCommand extends Command
      */
     private function getShortMysqlVersion(): string
     {
-        $mysqlVersion = $this->runCommand('mysql -V');
-        if (preg_match('/Distrib ([\d.]+)/', $mysqlVersion, $matches)) {
+        if (preg_match('/Distrib ([\d.]+)/', $this->runCommand('mysql -V'), $matches)) {
             return $matches[1];
         }
         return 'Unknown';
@@ -124,9 +123,8 @@ class SystemCheckCommand extends Command
      */
     private function getShortOsInfo(): string
     {
-        $osInfo = php_uname();
-        $osInfoParts = explode(' ', $osInfo);
-        return $osInfoParts[0] . ' ' . $osInfoParts[2];
+        list($osName, , $osVersion) = explode(' ', php_uname());
+        return ($osName ?? 'Unknown') . ' ' . ($osVersion ?? 'Unknown');
     }
 
     /**
