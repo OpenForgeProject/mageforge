@@ -151,6 +151,6 @@ class SystemCheckCommand extends Command
             throw new ProcessFailedException($process);
         }
 
-        return trim($process->getOutput());
+        return $this->escaper->escapeHtml(trim($process->getOutput()));
     }
 }
