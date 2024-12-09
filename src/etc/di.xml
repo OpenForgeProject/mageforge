@@ -17,7 +17,19 @@
                     name="openforgeproject_mageforge_version"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\VersionCommand</item>
+                <item
+                    name="openforgeproject_mageforge_system_check"
+                    xsi:type="object"
+                >OpenForgeProject\MageForge\Console\Command\SystemCheckCommand</item>
             </argument>
+        </arguments>
+    </type>
+    <type name="OpenForgeProject\MageForge\Console\Command\SystemCheckCommand">
+        <arguments>
+            <argument name="productMetadata" xsi:type="object">Magento\Framework\App\ProductMetadataInterface</argument>
+        </arguments>
+        <arguments>
+            <argument name="escaper" xsi:type="object">Magento\Framework\Escaper</argument>
         </arguments>
     </type>
 </config>
