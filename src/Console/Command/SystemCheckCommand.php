@@ -12,6 +12,8 @@ use Symfony\Component\Console\Helper\TableSeparator;
 use Magento\Framework\Console\Cli;
 use GuzzleHttp\Client;
 use Composer\Semver\Comparator;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class SystemCheckCommand extends Command
 {
@@ -34,7 +36,7 @@ class SystemCheckCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $phpVersion = phpversion();
-        $nodeVersion = trim(shell_exec('node -v'));
+        $nodeVersion = $this->getNodeVersion();
         $mysqlVersion = $this->getShortMysqlVersion();
         $osInfo = $this->getShortOsInfo();
         $latestLtsNodeVersion = $this->getLatestLtsNodeVersion();
@@ -95,7 +97,7 @@ class SystemCheckCommand extends Command
      */
     private function getShortMysqlVersion(): string
     {
-        $mysqlVersion = trim(shell_exec('mysql -V'));
+        $mysqlVersion = $this->runCommand('mysql -V');
         if (preg_match('/Distrib ([\d.]+)/', $mysqlVersion, $matches)) {
             return $matches[1];
         }
@@ -110,5 +112,28 @@ class SystemCheckCommand extends Command
         $osInfo = php_uname();
         $osInfoParts = explode(' ', $osInfo);
         return $osInfoParts[0] . ' ' . $osInfoParts[2];
+    }
+
+    /**
+     * Get the Node.js version
+     */
+    private function getNodeVersion(): string
+    {
+        return $this->runCommand('node -v');
+    }
+
+    /**
+     * Run a command and return the output
+     */
+    private function runCommand(string $command): string
+    {
+        $process = new Process(explode(' ', $command));
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+
+        return trim($process->getOutput());
     }
 }
