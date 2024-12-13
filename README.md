@@ -1,4 +1,4 @@
-# MageForge for Magento 2
+# MageForge for Magento 2 (Still in development!!)
 
 ![Mageforge Hero](./.github/assets/mageforge-hero.jpg)
 
