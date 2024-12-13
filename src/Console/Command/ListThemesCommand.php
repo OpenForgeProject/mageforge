@@ -12,18 +12,33 @@ use Magento\Framework\Console\Cli;
 
 class ListThemesCommand extends Command
 {
+    /**
+     * Constructor
+     *
+     * @param ThemeList $themeList
+     */
     public function __construct(
         private readonly ThemeList $themeList,
     ) {
         parent::__construct();
     }
 
+    /**
+     * Configure the command
+     */
     protected function configure(): void
     {
         $this->setName('mageforge:themes:list');
         $this->setDescription('Lists all available themes');
     }
 
+    /**
+     * Execute the command
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     */
     protected function execute(
         InputInterface $input,
         OutputInterface $output,
