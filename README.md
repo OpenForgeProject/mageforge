@@ -4,7 +4,7 @@ This branch is dedicated to the development of the Magento 2 module.
 
 Make sure you have [DDEV](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/) installed.
 
-To clone this repository, use the command `git clone -b develop git@github.com:dermatz/mageforge.git`.
+To clone this repository, use the command `git clone -b develop git@github.com:OpenForgeProject/mageforge.git`.
 
 Navigate to the cloned directory by running `cd mageforge`.
 
