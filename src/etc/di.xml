@@ -21,6 +21,10 @@
                     name="openforgeproject_mageforge_system_check"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\SystemCheckCommand</item>
+                <item
+                    name="openforgeproject_mageforge_themes_list"
+                    xsi:type="object"
+                >OpenForgeProject\MageForge\Console\Command\ListThemesCommand</item>
             </argument>
         </arguments>
     </type>
