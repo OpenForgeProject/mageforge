@@ -8,10 +8,21 @@ use Magento\Framework\View\Design\Theme\ThemeList as MagentoThemeList;
 
 class ThemeList
 {
+    /**
+     * Constructor
+     *
+     * @param MagentoThemeList $magentoThemeList
+     */
     public function __construct(
-        private readonly MagentoThemeList $magentoThemeList,
-    ) {}
+        private readonly MagentoThemeList $magentoThemeList
+    ) {
+    }
 
+    /**
+     * Get all themes
+     *
+     * @return array
+     */
     public function getAllThemes(): array
     {
         return $this->magentoThemeList->getItems();
