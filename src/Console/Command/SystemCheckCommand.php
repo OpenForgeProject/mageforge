@@ -15,10 +15,7 @@ use Composer\Semver\Comparator;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Magento\Framework\App\ProductMetadataInterface;
-<<<<<<< HEAD
 use Magento\Framework\Escaper;
-=======
->>>>>>> 53dd067 (Inject ProductMetadataInterface into SystemCheckCommand and display Magento version in output)
 
 class SystemCheckCommand extends Command
 {
@@ -29,10 +26,7 @@ class SystemCheckCommand extends Command
      */
     public function __construct(
         private readonly ProductMetadataInterface $productMetadata,
-<<<<<<< HEAD
         private readonly Escaper $escaper,
-=======
->>>>>>> 53dd067 (Inject ProductMetadataInterface into SystemCheckCommand and display Magento version in output)
     ) {
         parent::__construct();
     }
@@ -58,11 +52,7 @@ class SystemCheckCommand extends Command
         $mysqlVersion = $this->getShortMysqlVersion();
         $osInfo = $this->getShortOsInfo();
         $magentoVersion = $this->productMetadata->getVersion();
-<<<<<<< HEAD
         $latestLtsNodeVersion = $this->escaper->escapeHtml($this->getLatestLtsNodeVersion());
-=======
-        $latestLtsNodeVersion = $this->getLatestLtsNodeVersion();
->>>>>>> 53dd067 (Inject ProductMetadataInterface into SystemCheckCommand and display Magento version in output)
 
         $nodeVersionDisplay = Comparator::lessThan($nodeVersion, $latestLtsNodeVersion)
             ? "<fg=yellow>$nodeVersion</> (Latest LTS: <fg=green>$latestLtsNodeVersion</>)"
