@@ -3,7 +3,8 @@ name: Check for CHANGELOG.md Update
 permissions:
     contents: read
 
-on: [pull_request]
+on: []
+# on: [pull_request]
 
 jobs:
     check-changelog:
