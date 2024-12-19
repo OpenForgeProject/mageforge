@@ -8,6 +8,7 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\Table;
 use Magento\Framework\Console\Cli;
 
 class ListThemesCommand extends Command
@@ -51,15 +52,18 @@ class ListThemesCommand extends Command
         }
 
         $output->writeln('<info>Available Themes:</info>');
+        $table = new Table($output);
+        $table->setHeaders(['Code', 'Title', 'Path']);
+
         foreach ($themes as $path => $theme) {
-            $output->writeln(
-                sprintf(
-                    '<comment>%s</comment> - %s',
-                    $path,
-                    $theme->getThemeTitle(),
-                ),
-            );
+            $table->addRow([
+                sprintf('<fg=yellow>%s</>', $theme->getCode()),
+                $theme->getThemeTitle(),
+                $path
+            ]);
         }
+
+        $table->render();
 
         return Cli::RETURN_SUCCESS;
     }
