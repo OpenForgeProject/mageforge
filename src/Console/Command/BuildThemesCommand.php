@@ -31,7 +31,11 @@ class BuildThemesCommand extends Command
     {
         $this->setName('mageforge:themes:build')
             ->setDescription('Builds a Magento theme')
-            ->addArgument('themeCodes', InputArgument::IS_ARRAY | InputArgument::REQUIRED, 'The codes of the themes to build');
+            ->addArgument(
+                'themeCodes',
+                InputArgument::IS_ARRAY | InputArgument::REQUIRED,
+                'The codes of the theme to build'
+            );
     }
 
     /**
