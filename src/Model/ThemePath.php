@@ -27,7 +27,7 @@ class ThemePath
         $themes = $this->themeList->getAllThemes();
         foreach ($themes as $path => $theme) {
             if ($theme->getCode() === $themeCode) {
-                return $path;
+                return $theme->getFullPath(); // Assuming getFullPath() returns the relative path
             }
         }
         return null;
