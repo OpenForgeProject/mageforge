@@ -25,6 +25,10 @@
                     name="openforgeproject_mageforge_themes_list"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\ListThemesCommand</item>
+                <item
+                    name="openforgeproject_mageforge_themes_build"
+                    xsi:type="object"
+                >OpenForgeProject\MageForge\Console\Command\BuildThemesCommand</item>
             </argument>
         </arguments>
     </type>
