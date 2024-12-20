@@ -44,7 +44,10 @@ class BuildThemesCommand extends Command
         $themesCount = count($themeCodes);
         $io->confirm("Build all " . $themesCount . " Themes?", false);
 
-        $io->title(count($themeCodes) > 1 ? 'Build ' . $themesCount . ' themes! This can take a while, please wait. '  : 'Build the theme.');
+        $io->title(count($themeCodes) > 1
+            ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
+            : 'Build the theme.'
+        );
         foreach ($themeCodes as $themeCode) {
             $themePath = $this->themePath->getPath($themeCode);
             $io->section("Theme Code: $themeCode");
