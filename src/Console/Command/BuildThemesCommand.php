@@ -96,12 +96,13 @@ class BuildThemesCommand extends Command
 
             // Run static content deploy
             $io->section("Running 'magento setup:static-content:deploy -t $themeCode -f'... Please wait.");
-            exec("php bin/magento setup:static-content:deploy -t $themeCode -f", $outputLines, $resultCode);
+            $sanitizedThemeCode = escapeshellarg($themeCode);
+            exec("php bin/magento setup:static-content:deploy -t $sanitizedThemeCode -f", $outputLines, $resultCode);
             $io->writeln($outputLines);
             if ($resultCode === 0) {
-                $io->success("'magento setup:static-content:deploy -t $themeCode -f' has been successfully executed.");
+                $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
             } else {
-                $io->error("'magento setup:static-content:deploy -t $themeCode -f' failed. Please check the output for more details.");
+                $io->error("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' failed. Please check the output for more details.");
             }
 
             // Clean the output before the next theme is running
