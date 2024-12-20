@@ -34,8 +34,7 @@ class BuildThemesCommand extends Command
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY | InputArgument::REQUIRED,
-                'The codes of the theme to build'
-            );
+                'The codes of the theme to build');
     }
 
     /**
@@ -50,8 +49,7 @@ class BuildThemesCommand extends Command
 
         $io->title(count($themeCodes) > 1
             ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
-            : 'Build the theme.'
-        );
+            : 'Build the theme.');
         foreach ($themeCodes as $themeCode) {
             $themePath = $this->themePath->getPath($themeCode);
             $io->section("Theme Code: $themeCode");
