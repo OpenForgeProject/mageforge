@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use OpenForgeProject\MageForge\Model\ThemePath;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -12,6 +13,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BuildThemesCommand extends Command
 {
+    /**
+     * Constructor
+     *
+     * @param ThemePath $themePath
+     */
+    public function __construct(
+        private readonly ThemePath $themePath,
+    ) {
+        parent::__construct();
+    }
+
     /**
      * @inheritDoc
      */
@@ -29,10 +41,14 @@ class BuildThemesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $themeCodes = $input->getArgument('themeCodes');
+        $themesCount = count($themeCodes);
+        $io->confirm("Build all " . $themesCount . " Themes?", false);
 
-        $io->title(count($themeCodes) > 1 ? 'Check themes' : 'Check theme');
+        $io->title(count($themeCodes) > 1 ? 'Build ' . $themesCount . ' themes! This can take a while, please wait. '  : 'Build the theme.');
         foreach ($themeCodes as $themeCode) {
-            $io->section("Check $themeCode ...");
+            $themePath = $this->themePath->getPath($themeCode);
+            $io->section("Theme Code: $themeCode");
+            $io->text("Theme Path: $themePath");
         }
 
         return Command::SUCCESS;

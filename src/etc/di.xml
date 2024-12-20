@@ -40,4 +40,9 @@
             <argument name="escaper" xsi:type="object">Magento\Framework\Escaper</argument>
         </arguments>
     </type>
+    <type name="OpenForgeProject\MageForge\Console\Command\BuildThemesCommand">
+        <arguments>
+            <argument name="themePath" xsi:type="object">OpenForgeProject\MageForge\Model\ThemePath</argument>
+        </arguments>
+    </type>
 </config>
