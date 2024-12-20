@@ -34,7 +34,8 @@ class BuildThemesCommand extends Command
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY | InputArgument::REQUIRED,
-                'The codes of the theme to build');
+                'The codes of the theme to build'
+            );
     }
 
     /**
