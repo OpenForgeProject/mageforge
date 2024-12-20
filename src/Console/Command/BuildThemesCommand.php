@@ -117,26 +117,41 @@ class BuildThemesCommand extends Command
             }
 
             # check grunt-config.json
-            if (!file_exists('grunt-config.json')) {
-                $io->warning("The 'grunt-config.json' file does not exist in the Magento root path.");
-                if (!file_exists('grunt-config.json.sample')) {
-                    $io->warning("The 'grunt-config.json.sample' file does not exist in the Magento root path.");
-                    $io->error("Skip this theme build.");
-                    continue;
-                } else {
-                    $io->success("The 'grunt-config.json.sample' file found.");
-                    if ($io->confirm("Do you want to copy 'grunt-config.json.sample' to 'grunt-config.json'?", false)) {
-                        copy('grunt-config.json.sample', 'grunt-config.json');
-                        $io->success("'grunt-config.json.sample' has been copied to 'grunt-config.json'.");
-                    }
-                }
-            } else {
-                $io->success("The 'grunt-config.json' file found.");
-            }
+            // if (!file_exists('grunt-config.json')) {
+            //     $io->warning("The 'grunt-config.json' file does not exist in the Magento root path.");
+            //     if (!file_exists('grunt-config.json.sample')) {
+            //         $io->warning("The 'grunt-config.json.sample' file does not exist in the Magento root path.");
+            //         $io->error("Skip this theme build.");
+            //         continue;
+            //     } else {
+            //         $io->success("The 'grunt-config.json.sample' file found.");
+            //         if ($io->confirm("Do you want to copy 'grunt-config.json.sample' to 'grunt-config.json'?", false)) {
+            //             copy('grunt-config.json.sample', 'grunt-config.json');
+            //             $io->success("'grunt-config.json.sample' has been copied to 'grunt-config.json'.");
+            //         }
+            //     }
+            // } else {
+            //     $io->success("The 'grunt-config.json' file found.");
+            // }
 
             # Run Grunt
             $io->section("Running 'grunt'... This can take a while, please wait.");
-            exec('node_modules/.bin/grunt', $outputLines, $resultCode);
+            exec('node_modules/.bin/grunt clean', $outputLines, $resultCode);
+            $io->writeln($outputLines);
+            if ($resultCode === 0) {
+                $io->success("'grunt clean' has been successfully executed.");
+            } else {
+                $io->error("'grunt clean' failed. Please check the output for more details.");
+                continue;
+            }
+            exec('node_modules/.bin/grunt less', $outputLines, $resultCode);
+            $io->writeln($outputLines);
+            if ($resultCode === 0) {
+                $io->success("'grunt less' has been successfully executed.");
+            } else {
+                $io->error("'grunt less' failed. Please check the output for more details.");
+                continue;
+            }
 
         }
         return Command::SUCCESS;
