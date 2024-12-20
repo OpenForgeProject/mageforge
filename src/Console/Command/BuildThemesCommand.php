@@ -119,11 +119,16 @@ class BuildThemesCommand extends Command
         return Command::SUCCESS;
     }
 
+    private function isDirectory(string $path): bool
+    {
+        return is_dir($path);
+    }
+
     private function checkPackageJson(SymfonyStyle $io): bool
     {
-        if (!file_exists('package.json')) {
+        if (!is_file('package.json')) {
             $io->warning("The 'package.json' file does not exist in the Magento root path.");
-            if (!file_exists('package.json.sample')) {
+            if (!is_file('package.json.sample')) {
                 $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
@@ -142,7 +147,7 @@ class BuildThemesCommand extends Command
 
     private function checkNodeModules(SymfonyStyle $io): bool
     {
-        if (!is_dir('node_modules')) {
+        if (!$this->isDirectory('node_modules')) {
             $io->warning("The 'node_modules' folder does not exist in the Magento root path.");
             if ($io->confirm("Run 'npm install' to install the dependencies?", false)) {
                 $io->section("Running 'npm install'... Please wait.");
@@ -165,9 +170,9 @@ class BuildThemesCommand extends Command
 
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile): bool
     {
-        if (!file_exists($file)) {
+        if (!is_file($file)) {
             $io->warning("The '$file' file does not exist in the Magento root path.");
-            if (!file_exists($sampleFile)) {
+            if (!is_file($sampleFile)) {
                 $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
