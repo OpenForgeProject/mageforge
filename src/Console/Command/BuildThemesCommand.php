@@ -10,22 +10,35 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Magento\Framework\Shell;
 
+/**
+ * Command to build Magento themes
+ *
+ * This command executes the necessary steps to build one or more Magento themes:
+ * - Verifies required files (package.json, Gruntfile.js)
+ * - Runs Grunt tasks (clean, less)
+ * - Deploys static content for the theme
+ */
 class BuildThemesCommand extends Command
 {
     /**
      * Constructor
      *
-     * @param ThemePath $themePath
+     * @param ThemePath $themePath Service to resolve theme paths
+     * @param Shell $shell Magento shell command executor
      */
     public function __construct(
         private readonly ThemePath $themePath,
+        private readonly Shell $shell,
     ) {
         parent::__construct();
     }
 
     /**
-     * @inheritDoc
+     * Configures the command
+     *
+     * @return void
      */
     protected function configure(): void
     {
@@ -39,7 +52,17 @@ class BuildThemesCommand extends Command
     }
 
     /**
-     * @inheritDoc
+     * Executes the theme building process
+     *
+     * This method:
+     * 1. Validates theme existence
+     * 2. Checks for required files and dependencies
+     * 3. Runs Grunt tasks
+     * 4. Deploys static content
+     *
+     * @param InputInterface $input Console input
+     * @param OutputInterface $output Console output
+     * @return int Exit code (0 for success, non-zero for failure)
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -119,11 +142,25 @@ class BuildThemesCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * Checks if the given path is a directory
+     *
+     * @param string $path The path to check
+     * @return bool True if the path is a directory, false otherwise
+     */
     private function isDirectory(string $path): bool
     {
         return is_dir($path);
     }
 
+    /**
+     * Verifies and sets up package.json
+     *
+     * Checks if package.json exists, if not, offers to copy from sample file.
+     *
+     * @param SymfonyStyle $io The IO interface for user interaction
+     * @return bool True if package.json is ready, false if setup failed
+     */
     private function checkPackageJson(SymfonyStyle $io): bool
     {
         if (!is_file('package.json')) {
@@ -145,6 +182,14 @@ class BuildThemesCommand extends Command
         return true;
     }
 
+    /**
+     * Verifies and sets up node_modules
+     *
+     * Checks if node_modules exists, if not, offers to run npm install.
+     *
+     * @param SymfonyStyle $io The IO interface for user interaction
+     * @return bool True if node_modules is ready, false if setup failed
+     */
     private function checkNodeModules(SymfonyStyle $io): bool
     {
         if (!$this->isDirectory('node_modules')) {
@@ -168,6 +213,16 @@ class BuildThemesCommand extends Command
         return true;
     }
 
+    /**
+     * Verifies and sets up required files
+     *
+     * Checks if a required file exists, if not, offers to copy from sample file.
+     *
+     * @param SymfonyStyle $io The IO interface for user interaction
+     * @param string $file The target file to check
+     * @param string $sampleFile The sample file to copy from if needed
+     * @return bool True if file is ready, false if setup failed
+     */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile): bool
     {
         if (!is_file($file)) {
