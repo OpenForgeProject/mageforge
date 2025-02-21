@@ -74,6 +74,7 @@ class BuildThemesCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $themeCodes = $input->getArgument('themeCodes');
         $isVerbose = $this->isVerbose($output);
+        $successList = [];
 
         if (empty($themeCodes)) {
             if ($isVerbose) {
@@ -101,7 +102,7 @@ class BuildThemesCommand extends Command
         $totalSteps = $themesCount * 4;
         $progressBar = new ProgressBar($output, $totalSteps);
         $progressBar->setFormat(
-            "\n%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%\n%message%\n"
+            "\n%current%/%max% [%bar%] %percent:3s%% in %elapsed:6s% | used Memory: %memory:6s%\n%message%"
         );
         $progressBar->setMessage('Starting build process...');
 
@@ -118,6 +119,7 @@ class BuildThemesCommand extends Command
                 $io->error("Theme $themeCode is not installed.");
                 continue;
             }
+            $successList[] = "✓ Theme $themeCode validated";
             $progressBar->advance();
 
             if ($isVerbose) {
@@ -131,6 +133,7 @@ class BuildThemesCommand extends Command
             if (!$this->checkFile($io, 'Gruntfile.js', 'Gruntfile.js.sample', $isVerbose)) {
                 continue;
             }
+            $successList[] = "✓ Dependencies for $themeCode checked";
             $progressBar->advance();
 
             static $isFirstRun = true;
@@ -148,6 +151,7 @@ class BuildThemesCommand extends Command
                         $output->writeln($shellOutput);
                         $io->success("'grunt less' has been successfully executed.");
                     }
+                    $successList[] = "✓ Grunt tasks executed";
                 } catch (\Exception $e) {
                     $io->error($e->getMessage());
                     continue;
@@ -167,6 +171,7 @@ class BuildThemesCommand extends Command
                     $output->writeln($shellOutput);
                     $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
                 }
+                $successList[] = "✓ Static content deployed for $themeCode";
             } catch (\Exception $e) {
                 $io->error($e->getMessage());
                 continue;
@@ -181,6 +186,13 @@ class BuildThemesCommand extends Command
         $progressBar->finish();
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
+
+        // Zeige die Erfolgsliste an
+        $output->writeln("\n");
+        $io->section('Build Summary');
+        foreach ($successList as $success) {
+            $output->writeln($success);
+        }
 
         if ($isVerbose) {
             $io->section("Build process completed.");
