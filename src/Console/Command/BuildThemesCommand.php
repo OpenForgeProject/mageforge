@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Magento\Framework\Shell;
+use Magento\Framework\Filesystem\DriverInterface;
 
 /**
  * Command to build Magento themes
@@ -27,10 +28,12 @@ class BuildThemesCommand extends Command
      *
      * @param ThemePath $themePath Service to resolve theme paths
      * @param Shell $shell Magento shell command executor
+     * @param DriverInterface $driver Filesystem driver
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly Shell $shell,
+        private readonly DriverInterface $driver,
     ) {
         parent::__construct();
     }
@@ -71,9 +74,11 @@ class BuildThemesCommand extends Command
         $themesCount = count($themeCodes);
         $startTime = microtime(true);
 
-        $io->title($themesCount > 1
-            ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
-            : 'Build the theme. Please wait...');
+        $io->title(
+            $themesCount > 1
+                ? sprintf('Build %d themes! This can take a while, please wait.', $themesCount)
+                : 'Build the theme. Please wait...'
+        );
 
         foreach ($themeCodes as $themeCode) {
             $themePath = $this->themePath->getPath($themeCode);
@@ -96,20 +101,16 @@ class BuildThemesCommand extends Command
             static $isFirstRun = true;
             if ($isFirstRun) {
                 $io->section("Running 'grunt'... Please wait.");
-                exec('node_modules/.bin/grunt clean', $outputLines, $resultCode);
-                $io->writeln($outputLines);
-                if ($resultCode === 0) {
+                try {
+                    $output = $this->shell->execute('node_modules/.bin/grunt clean');
+                    $io->writeln($output);
                     $io->success("'grunt clean' has been successfully executed.");
-                } else {
-                    $io->error("'grunt clean' failed. Please check the output for more details.");
-                    continue;
-                }
-                exec('node_modules/.bin/grunt less', $outputLines, $resultCode);
-                $io->writeln($outputLines);
-                if ($resultCode === 0) {
+
+                    $output = $this->shell->execute('node_modules/.bin/grunt less');
+                    $io->writeln($output);
                     $io->success("'grunt less' has been successfully executed.");
-                } else {
-                    $io->error("'grunt less' failed. Please check the output for more details.");
+                } catch (\Exception $e) {
+                    $io->error($e->getMessage());
                     continue;
                 }
                 $isFirstRun = false;
@@ -120,12 +121,15 @@ class BuildThemesCommand extends Command
             // Run static content deploy
             $io->section("Running 'magento setup:static-content:deploy -t $themeCode -f'... Please wait.");
             $sanitizedThemeCode = escapeshellarg($themeCode);
-            exec("php bin/magento setup:static-content:deploy -t $sanitizedThemeCode -f", $outputLines, $resultCode);
-            $io->writeln($outputLines);
-            if ($resultCode === 0) {
-                $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
-            } else {
-                $io->error("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' failed. Please check the output for more details.");
+            try {
+                $output = $this->shell->execute(
+                    sprintf("php bin/magento setup:static-content:deploy -t %s -f", $sanitizedThemeCode)
+                );
+                $io->writeln($output);
+                $io->success("'static-content:deploy -t $sanitizedThemeCode -f' executed successfully.");
+            } catch (\Exception $e) {
+                $io->error($e->getMessage());
+                continue;
             }
 
             // Clean the output before the next theme is running
@@ -150,7 +154,7 @@ class BuildThemesCommand extends Command
      */
     private function isDirectory(string $path): bool
     {
-        return is_dir($path);
+        return $this->driver->isDirectory($path);
     }
 
     /**
@@ -163,16 +167,16 @@ class BuildThemesCommand extends Command
      */
     private function checkPackageJson(SymfonyStyle $io): bool
     {
-        if (!is_file('package.json')) {
+        if (!$this->driver->isFile('package.json')) {
             $io->warning("The 'package.json' file does not exist in the Magento root path.");
-            if (!is_file('package.json.sample')) {
+            if (!$this->driver->isFile('package.json.sample')) {
                 $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
                 $io->success("The 'package.json.sample' file found.");
                 if ($io->confirm("Copy 'package.json.sample' to 'package.json'?", false)) {
-                    copy('package.json.sample', 'package.json');
+                    $this->driver->copy('package.json.sample', 'package.json');
                     $io->success("'package.json.sample' has been copied to 'package.json'.");
                 }
             }
@@ -196,11 +200,12 @@ class BuildThemesCommand extends Command
             $io->warning("The 'node_modules' folder does not exist in the Magento root path.");
             if ($io->confirm("Run 'npm install' to install the dependencies?", false)) {
                 $io->section("Running 'npm install'... Please wait.");
-                exec('npm install', $outputLines, $resultCode);
-                if ($resultCode === 0) {
+                try {
+                    $output = $this->shell->execute('npm install');
+                    $io->writeln($output);
                     $io->success("'npm install' has been successfully executed.");
-                } else {
-                    $io->error("'npm install' failed. Please check the output for more details.");
+                } catch (\Exception $e) {
+                    $io->error($e->getMessage());
                     return false;
                 }
             } else {
@@ -225,16 +230,16 @@ class BuildThemesCommand extends Command
      */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile): bool
     {
-        if (!is_file($file)) {
+        if (!$this->driver->isFile($file)) {
             $io->warning("The '$file' file does not exist in the Magento root path.");
-            if (!is_file($sampleFile)) {
+            if (!$this->driver->isFile($sampleFile)) {
                 $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
                 $io->success("The '$sampleFile' file found.");
                 if ($io->confirm("Copy '$sampleFile' to '$file'?", false)) {
-                    copy($sampleFile, $file);
+                    $this->driver->copy($sampleFile, $file);
                     $io->success("'$sampleFile' has been copied to '$file'.");
                 }
             }
