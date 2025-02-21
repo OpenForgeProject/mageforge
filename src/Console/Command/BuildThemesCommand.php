@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Model\ThemeList;
 
@@ -72,9 +73,12 @@ class BuildThemesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $themeCodes = $input->getArgument('themeCodes');
+        $isVerbose = $this->isVerbose($output);
 
         if (empty($themeCodes)) {
-            $io->title('No theme codes provided. Available themes:');
+            if ($isVerbose) {
+                $io->title('No theme codes provided. Available themes:');
+            }
             $table = new Table($output);
             $table->setHeaders(['Theme Code', 'Title']);
 
@@ -93,77 +97,103 @@ class BuildThemesCommand extends Command
         $themesCount = count($themeCodes);
         $startTime = microtime(true);
 
-        $io->title($themesCount > 1
-            ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
-            : 'Build the theme. Please wait...');
+        // Calculate total steps (4 steps per theme)
+        $totalSteps = $themesCount * 4;
+        $progressBar = new ProgressBar($output, $totalSteps);
+        $progressBar->setFormat(
+            "\n%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%\n%message%\n"
+        );
+        $progressBar->setMessage('Starting build process...');
+
+        if ($isVerbose) {
+            $io->title($themesCount > 1
+                ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
+                : 'Build the theme. Please wait...');
+        }
 
         foreach ($themeCodes as $themeCode) {
+            $progressBar->setMessage("Validating theme: $themeCode");
             $themePath = $this->themePath->getPath($themeCode);
             if ($themePath === null) {
                 $io->error("Theme $themeCode is not installed.");
                 continue;
             }
-            $io->section("Theme: $themeCode");
+            $progressBar->advance();
 
-            if (!$this->checkPackageJson($io) || !$this->checkNodeModules($io)) {
-                continue;
+            if ($isVerbose) {
+                $io->section("Theme: $themeCode");
             }
 
-            // Check Gruntfile.js file
-            if (!$this->checkFile($io, 'Gruntfile.js', 'Gruntfile.js.sample')) {
+            $progressBar->setMessage("Checking dependencies for theme: $themeCode");
+            if (!$this->checkPackageJson($io, $isVerbose) || !$this->checkNodeModules($io, $isVerbose)) {
                 continue;
             }
+            if (!$this->checkFile($io, 'Gruntfile.js', 'Gruntfile.js.sample', $isVerbose)) {
+                continue;
+            }
+            $progressBar->advance();
 
-            // Run Grunt only on the first run
             static $isFirstRun = true;
             if ($isFirstRun) {
-                $io->section("Running 'grunt'... Please wait.");
+                $progressBar->setMessage("Running Grunt tasks");
                 try {
-                    $output = $this->shell->execute('node_modules/.bin/grunt clean');
-                    $io->writeln($output);
-                    $io->success("'grunt clean' has been successfully executed.");
+                    $shellOutput = $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+                    if ($isVerbose) {
+                        $output->writeln($shellOutput);
+                        $io->success("'grunt clean' has been successfully executed.");
+                    }
 
-                    $output = $this->shell->execute('node_modules/.bin/grunt less');
-                    $io->writeln($output);
-                    $io->success("'grunt less' has been successfully executed.");
+                    $shellOutput = $this->shell->execute('node_modules/.bin/grunt less --quiet');
+                    if ($isVerbose) {
+                        $output->writeln($shellOutput);
+                        $io->success("'grunt less' has been successfully executed.");
+                    }
                 } catch (\Exception $e) {
                     $io->error($e->getMessage());
                     continue;
                 }
                 $isFirstRun = false;
-            } else {
-                $io->success("Grunt has been already executed.");
             }
+            $progressBar->advance();
 
-            // Run static content deploy
-            $io->section("Running 'magento setup:static-content:deploy -t $themeCode -f'... Please wait.");
+            $progressBar->setMessage("Deploying static content for theme: $themeCode");
             $sanitizedThemeCode = escapeshellarg($themeCode);
             try {
-                $output = $this->shell->execute(
-                    "php bin/magento setup:static-content:deploy -t %s -f",
+                $shellOutput = $this->shell->execute(
+                    "php bin/magento setup:static-content:deploy -t %s -f -q",
                     [$sanitizedThemeCode]
                 );
-                $io->writeln($output);
-                $io->success(
-                    "'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed."
-                );
+                if ($isVerbose) {
+                    $output->writeln($shellOutput);
+                    $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
+                }
             } catch (\Exception $e) {
                 $io->error($e->getMessage());
                 continue;
             }
+            $progressBar->advance();
 
-            // Clean the output before the next theme is running
-            $outputLines = [];
-
-            $io->success("Theme $themeCode has been successfully built.");
+            if ($isVerbose) {
+                $io->success("Theme $themeCode has been successfully built.");
+            }
         }
 
+        $progressBar->finish();
         $endTime = microtime(true);
         $duration = $endTime - $startTime;
-        $io->section("Build process completed.");
+
+        if ($isVerbose) {
+            $io->section("Build process completed.");
+        }
+        $output->writeln('');
         $io->success("All themes have been built successfully in " . round($duration, 2) . " seconds.");
 
         return Command::SUCCESS;
+    }
+
+    private function isVerbose(OutputInterface $output): bool
+    {
+        return $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
     }
 
     /**
@@ -183,24 +213,33 @@ class BuildThemesCommand extends Command
      * Checks if package.json exists, if not, offers to copy from sample file.
      *
      * @param SymfonyStyle $io The IO interface for user interaction
+     * @param bool $isVerbose Whether to output verbose messages
      * @return bool True if package.json is ready, false if setup failed
      */
-    private function checkPackageJson(SymfonyStyle $io): bool
+    private function checkPackageJson(SymfonyStyle $io, bool $isVerbose): bool
     {
         if (!is_file('package.json')) {
-            $io->warning("The 'package.json' file does not exist in the Magento root path.");
+            if ($isVerbose) {
+                $io->warning("The 'package.json' file does not exist in the Magento root path.");
+            }
             if (!is_file('package.json.sample')) {
-                $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
+                if ($isVerbose) {
+                    $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
+                }
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
-                $io->success("The 'package.json.sample' file found.");
+                if ($isVerbose) {
+                    $io->success("The 'package.json.sample' file found.");
+                }
                 if ($io->confirm("Copy 'package.json.sample' to 'package.json'?", false)) {
                     copy('package.json.sample', 'package.json');
-                    $io->success("'package.json.sample' has been copied to 'package.json'.");
+                    if ($isVerbose) {
+                        $io->success("'package.json.sample' has been copied to 'package.json'.");
+                    }
                 }
             }
-        } else {
+        } elseif ($isVerbose) {
             $io->success("The 'package.json' file found.");
         }
         return true;
@@ -212,18 +251,25 @@ class BuildThemesCommand extends Command
      * Checks if node_modules exists, if not, offers to run npm install.
      *
      * @param SymfonyStyle $io The IO interface for user interaction
+     * @param bool $isVerbose Whether to output verbose messages
      * @return bool True if node_modules is ready, false if setup failed
      */
-    private function checkNodeModules(SymfonyStyle $io): bool
+    private function checkNodeModules(SymfonyStyle $io, bool $isVerbose): bool
     {
         if (!$this->isDirectory('node_modules')) {
-            $io->warning("The 'node_modules' folder does not exist in the Magento root path.");
+            if ($isVerbose) {
+                $io->warning("The 'node_modules' folder does not exist in the Magento root path.");
+            }
             if ($io->confirm("Run 'npm install' to install the dependencies?", false)) {
-                $io->section("Running 'npm install'... Please wait.");
+                if ($isVerbose) {
+                    $io->section("Running 'npm install'... Please wait.");
+                }
                 try {
-                    $output = $this->shell->execute('npm install');
-                    $io->writeln($output);
-                    $io->success("'npm install' has been successfully executed.");
+                    $shellOutput = $this->shell->execute('npm install --quiet');
+                    if ($isVerbose) {
+                        $io->writeln($shellOutput);
+                        $io->success("'npm install' has been successfully executed.");
+                    }
                 } catch (\Exception $e) {
                     $io->error($e->getMessage());
                     return false;
@@ -232,7 +278,7 @@ class BuildThemesCommand extends Command
                 $io->error("Skipping this theme build.");
                 return false;
             }
-        } else {
+        } elseif ($isVerbose) {
             $io->success("The 'node_modules' folder found.");
         }
         return true;
@@ -246,24 +292,33 @@ class BuildThemesCommand extends Command
      * @param SymfonyStyle $io The IO interface for user interaction
      * @param string $file The target file to check
      * @param string $sampleFile The sample file to copy from if needed
+     * @param bool $isVerbose Whether to output verbose messages
      * @return bool True if file is ready, false if setup failed
      */
-    private function checkFile(SymfonyStyle $io, string $file, string $sampleFile): bool
+    private function checkFile(SymfonyStyle $io, string $file, string $sampleFile, bool $isVerbose): bool
     {
         if (!is_file($file)) {
-            $io->warning("The '$file' file does not exist in the Magento root path.");
+            if ($isVerbose) {
+                $io->warning("The '$file' file does not exist in the Magento root path.");
+            }
             if (!is_file($sampleFile)) {
-                $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
+                if ($isVerbose) {
+                    $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
+                }
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
-                $io->success("The '$sampleFile' file found.");
+                if ($isVerbose) {
+                    $io->success("The '$sampleFile' file found.");
+                }
                 if ($io->confirm("Copy '$sampleFile' to '$file'?", false)) {
                     copy($sampleFile, $file);
-                    $io->success("'$sampleFile' has been copied to '$file'.");
+                    if ($isVerbose) {
+                        $io->success("'$sampleFile' has been copied to '$file'.");
+                    }
                 }
             }
-        } else {
+        } elseif ($isVerbose) {
             $io->success("The '$file' file found.");
         }
         return true;
