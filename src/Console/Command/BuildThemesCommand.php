@@ -11,7 +11,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Magento\Framework\Shell;
-use Magento\Framework\Filesystem\DriverInterface;
 
 /**
  * Command to build Magento themes
@@ -28,12 +27,10 @@ class BuildThemesCommand extends Command
      *
      * @param ThemePath $themePath Service to resolve theme paths
      * @param Shell $shell Magento shell command executor
-     * @param DriverInterface $driver Filesystem driver
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly Shell $shell,
-        private readonly DriverInterface $driver,
     ) {
         parent::__construct();
     }
@@ -74,11 +71,9 @@ class BuildThemesCommand extends Command
         $themesCount = count($themeCodes);
         $startTime = microtime(true);
 
-        $io->title(
-            $themesCount > 1
-                ? sprintf('Build %d themes! This can take a while, please wait.', $themesCount)
-                : 'Build the theme. Please wait...'
-        );
+        $io->title($themesCount > 1
+            ? 'Build ' . $themesCount . ' themes! This can take a while, please wait.'
+            : 'Build the theme. Please wait...');
 
         foreach ($themeCodes as $themeCode) {
             $themePath = $this->themePath->getPath($themeCode);
@@ -122,11 +117,9 @@ class BuildThemesCommand extends Command
             $io->section("Running 'magento setup:static-content:deploy -t $themeCode -f'... Please wait.");
             $sanitizedThemeCode = escapeshellarg($themeCode);
             try {
-                $output = $this->shell->execute(
-                    sprintf("php bin/magento setup:static-content:deploy -t %s -f", $sanitizedThemeCode)
-                );
+                $output = $this->shell->execute("php bin/magento setup:static-content:deploy -t %s -f", [$sanitizedThemeCode]);
                 $io->writeln($output);
-                $io->success("'static-content:deploy -t $sanitizedThemeCode -f' executed successfully.");
+                $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
             } catch (\Exception $e) {
                 $io->error($e->getMessage());
                 continue;
@@ -154,7 +147,7 @@ class BuildThemesCommand extends Command
      */
     private function isDirectory(string $path): bool
     {
-        return $this->driver->isDirectory($path);
+        return is_dir($path);
     }
 
     /**
@@ -167,16 +160,16 @@ class BuildThemesCommand extends Command
      */
     private function checkPackageJson(SymfonyStyle $io): bool
     {
-        if (!$this->driver->isFile('package.json')) {
+        if (!is_file('package.json')) {
             $io->warning("The 'package.json' file does not exist in the Magento root path.");
-            if (!$this->driver->isFile('package.json.sample')) {
+            if (!is_file('package.json.sample')) {
                 $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
                 $io->success("The 'package.json.sample' file found.");
                 if ($io->confirm("Copy 'package.json.sample' to 'package.json'?", false)) {
-                    $this->driver->copy('package.json.sample', 'package.json');
+                    copy('package.json.sample', 'package.json');
                     $io->success("'package.json.sample' has been copied to 'package.json'.");
                 }
             }
@@ -230,16 +223,16 @@ class BuildThemesCommand extends Command
      */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile): bool
     {
-        if (!$this->driver->isFile($file)) {
+        if (!is_file($file)) {
             $io->warning("The '$file' file does not exist in the Magento root path.");
-            if (!$this->driver->isFile($sampleFile)) {
+            if (!is_file($sampleFile)) {
                 $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
                 $io->error("Skipping this theme build.");
                 return false;
             } else {
                 $io->success("The '$sampleFile' file found.");
                 if ($io->confirm("Copy '$sampleFile' to '$file'?", false)) {
-                    $this->driver->copy($sampleFile, $file);
+                    copy($sampleFile, $file);
                     $io->success("'$sampleFile' has been copied to '$file'.");
                 }
             }
