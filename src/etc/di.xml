@@ -43,6 +43,7 @@
     <type name="OpenForgeProject\MageForge\Console\Command\BuildThemesCommand">
         <arguments>
             <argument name="themePath" xsi:type="object">OpenForgeProject\MageForge\Model\ThemePath</argument>
+            <argument name="themeList" xsi:type="object">OpenForgeProject\MageForge\Model\ThemeList</argument>
         </arguments>
     </type>
 </config>

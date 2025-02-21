@@ -10,7 +10,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Helper\Table;
 use Magento\Framework\Shell;
+use OpenForgeProject\MageForge\Model\ThemeList;
 
 /**
  * Command to build Magento themes
@@ -27,10 +29,12 @@ class BuildThemesCommand extends Command
      *
      * @param ThemePath $themePath Service to resolve theme paths
      * @param Shell $shell Magento shell command executor
+     * @param ThemeList $themeList Service to get the list of themes
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly Shell $shell,
+        private readonly ThemeList $themeList,
     ) {
         parent::__construct();
     }
@@ -46,7 +50,7 @@ class BuildThemesCommand extends Command
             ->setDescription('Builds a Magento theme')
             ->addArgument(
                 'themeCodes',
-                InputArgument::IS_ARRAY | InputArgument::REQUIRED,
+                InputArgument::IS_ARRAY,
                 'The codes of the theme to build'
             );
     }
@@ -68,6 +72,24 @@ class BuildThemesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $themeCodes = $input->getArgument('themeCodes');
+
+        if (empty($themeCodes)) {
+            $io->title('No theme codes provided. Available themes:');
+            $table = new Table($output);
+            $table->setHeaders(['Theme Code', 'Title']);
+
+            foreach ($this->themeList->getAllThemes() as $theme) {
+                $table->addRow([
+                    $theme->getCode(),
+                    $theme->getThemeTitle()
+                ]);
+            }
+
+            $table->render();
+            $io->info('Usage: bin/magento mageforge:themes:build <theme-code> [<theme-code>...]');
+            return Command::SUCCESS;
+        }
+
         $themesCount = count($themeCodes);
         $startTime = microtime(true);
 
