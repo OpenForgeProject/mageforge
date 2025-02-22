@@ -102,7 +102,8 @@ class BuildThemesCommand extends Command
         $totalSteps = $themesCount * 4;
         $progressBar = new ProgressBar($output, $totalSteps);
         $progressBar->setFormat(
-            "\n%current%/%max% [%bar%] %percent:3s%% in %elapsed:6s% | used Memory: %memory:6s%\n%message%"
+            "\n%current%/%max% [%bar%] %percent:3s%% "
+            . "in %elapsed:6s% | used Memory: %memory:6s%\n%message%"
         );
         $progressBar->setMessage('Starting build process...');
 
@@ -169,7 +170,12 @@ class BuildThemesCommand extends Command
                 );
                 if ($isVerbose) {
                     $output->writeln($shellOutput);
-                    $io->success("'magento setup:static-content:deploy -t $sanitizedThemeCode -f' has been successfully executed.");
+                    $io->success(
+                        sprintf(
+                            "'magento setup:static-content:deploy -t %s -f' has been successfully executed.",
+                            $sanitizedThemeCode
+                        )
+                    );
                 }
                 $successList[] = "✓ Static content deployed for $themeCode";
             } catch (\Exception $e) {
@@ -203,6 +209,12 @@ class BuildThemesCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * Checks if output should be verbose
+     *
+     * @param OutputInterface $output The output interface to check
+     * @return bool True if output should be verbose, false otherwise
+     */
     private function isVerbose(OutputInterface $output): bool
     {
         return $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
