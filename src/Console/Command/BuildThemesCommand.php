@@ -165,6 +165,7 @@ class BuildThemesCommand extends Command
             $progressBar->advance();
 
             $progressBar->setMessage("Deploying static content for theme: $themeCode");
+            // @codingStandardsIgnoreLine
             $sanitizedThemeCode = escapeshellarg($themeCode);
             try {
                 $shellOutput = $this->shell->execute(
