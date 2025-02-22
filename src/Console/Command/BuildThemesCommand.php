@@ -14,6 +14,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Model\ThemeList;
+use Magento\Framework\Filesystem\Driver\File;
 
 /**
  * Command to build Magento themes
@@ -31,11 +32,13 @@ class BuildThemesCommand extends Command
      * @param ThemePath $themePath Service to resolve theme paths
      * @param Shell $shell Magento shell command executor
      * @param ThemeList $themeList Service to get the list of themes
+     * @param File $fileDriver Magento filesystem driver
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly Shell $shell,
         private readonly ThemeList $themeList,
+        private readonly File $fileDriver,
     ) {
         parent::__construct();
     }
@@ -228,7 +231,7 @@ class BuildThemesCommand extends Command
      */
     private function isDirectory(string $path): bool
     {
-        return is_dir($path);
+        return $this->fileDriver->isDirectory($path);
     }
 
     /**
@@ -242,11 +245,11 @@ class BuildThemesCommand extends Command
      */
     private function checkPackageJson(SymfonyStyle $io, bool $isVerbose): bool
     {
-        if (!is_file('package.json')) {
+        if (!$this->fileDriver->isFile('package.json')) {
             if ($isVerbose) {
                 $io->warning("The 'package.json' file does not exist in the Magento root path.");
             }
-            if (!is_file('package.json.sample')) {
+            if (!$this->fileDriver->isFile('package.json.sample')) {
                 if ($isVerbose) {
                     $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
                 }
@@ -257,7 +260,7 @@ class BuildThemesCommand extends Command
                     $io->success("The 'package.json.sample' file found.");
                 }
                 if ($io->confirm("Copy 'package.json.sample' to 'package.json'?", false)) {
-                    copy('package.json.sample', 'package.json');
+                    $this->fileDriver->copy('package.json.sample', 'package.json');
                     if ($isVerbose) {
                         $io->success("'package.json.sample' has been copied to 'package.json'.");
                     }
@@ -321,11 +324,11 @@ class BuildThemesCommand extends Command
      */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile, bool $isVerbose): bool
     {
-        if (!is_file($file)) {
+        if (!$this->fileDriver->isFile($file)) {
             if ($isVerbose) {
                 $io->warning("The '$file' file does not exist in the Magento root path.");
             }
-            if (!is_file($sampleFile)) {
+            if (!$this->fileDriver->isFile($sampleFile)) {
                 if ($isVerbose) {
                     $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
                 }
@@ -336,7 +339,7 @@ class BuildThemesCommand extends Command
                     $io->success("The '$sampleFile' file found.");
                 }
                 if ($io->confirm("Copy '$sampleFile' to '$file'?", false)) {
-                    copy($sampleFile, $file);
+                    $this->fileDriver->copy($sampleFile, $file);
                     if ($isVerbose) {
                         $io->success("'$sampleFile' has been copied to '$file'.");
                     }
