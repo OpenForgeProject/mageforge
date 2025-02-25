@@ -117,21 +117,43 @@ class BuildThemesCommand extends Command
         array &$successList
     ): bool {
         $progressBar->setMessage("Validating theme: $themeCode");
-        if (!$this->validateTheme($themeCode, $io, $successList)) {
+
+        // Validate theme and get theme path
+        $themePath = $this->themePath->getPath($themeCode);
+        if ($themePath === null) {
+            $io->error("Theme $themeCode is not installed.");
             return false;
         }
         $progressBar->advance();
+        $successList[] = "$themeCode: Theme validated";
 
+        // Check if it's a Hyva theme
+        $isHyvaTheme = $this->hyvaThemeDetector->isHyvaTheme($themePath);
         if ($isVerbose) {
-            $io->section("Theme: $themeCode");
+            $io->section("Theme: $themeCode" . ($isHyvaTheme ? ' (Hyvä Theme)' : ' (Magento Standard Theme)'));
         }
 
+        if ($isHyvaTheme) {
+            return $this->processHyvaThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList);
+        }
+
+        return $this->processMagentoThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList);
+    }
+
+    private function processMagentoThemeBuild(
+        string $themeCode,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose,
+        ProgressBar $progressBar,
+        array &$successList
+    ): bool {
         // Check dependencies
         if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
             return false;
         }
         $progressBar->advance();
-        $successList[] = "✓ Dependencies checked for $themeCode";
+        $successList[] = "$themeCode: Dependencies checked";
 
         // Run Grunt tasks
         static $gruntTasksRun = false;
@@ -140,7 +162,7 @@ class BuildThemesCommand extends Command
             if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
                 return false;
             }
-            $successList[] = "✓ Grunt tasks executed";
+            $successList[] = "Global: Grunt tasks executed";
             $gruntTasksRun = true;
         }
         $progressBar->advance();
@@ -149,11 +171,36 @@ class BuildThemesCommand extends Command
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
-        $successList[] = "✓ Static content deployed for $themeCode";
+        $successList[] = "$themeCode: Static content deployed";
         $progressBar->advance();
 
         if ($isVerbose) {
             $io->success("Theme $themeCode has been successfully built.");
+        }
+
+        return true;
+    }
+
+    private function processHyvaThemeBuild(
+        string $themeCode,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose,
+        ProgressBar $progressBar,
+        array &$successList
+    ): bool {
+        // For now, just deploy static content for Hyva themes
+        // Skip Grunt and dependency checks as they're not needed
+        $progressBar->advance(2); // Skip dependency and grunt steps
+
+        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
+            return false;
+        }
+        $successList[] = "$themeCode: Static content deployed (Hyvä Theme)";
+        $progressBar->advance();
+
+        if ($isVerbose) {
+            $io->success("Hyvä theme $themeCode has been successfully built.");
         }
 
         return true;
@@ -202,15 +249,44 @@ class BuildThemesCommand extends Command
         float $duration
     ): void {
         $progressBar->finish();
+        $output->writeln('');
 
-        $output->writeln("\n");
-        $io->section('Build Summary');
+        // Gruppiere die Erfolgsmeldungen nach Theme
+        $themeGroups = [];
         foreach ($successList as $success) {
-            $output->writeln($success);
+            if (strpos($success, 'Global:') === 0) {
+                $themeGroups['global'][] = $success;
+            } else {
+                $themeCode = substr($success, 0, strpos($success, ':'));
+                $themeGroups[$themeCode][] = $success;
+            }
+        }
+
+        // Zeige globale Erfolgsmeldungen zuerst
+        if (isset($themeGroups['global'])) {
+            $output->writeln('<info>Global Build Steps</info>');
+            $output->writeln(str_repeat('-', 18));
+            foreach ($themeGroups['global'] as $success) {
+                $output->writeln($success);
+            }
+        }
+
+        // Zeige dann die themespezifischen Erfolgsmeldungen
+        foreach ($themeGroups as $themeCode => $successes) {
+            if ($themeCode !== 'global') {
+                $output->writeln('');
+                $output->writeln("<info>Theme: $themeCode</info>");
+                $output->writeln(str_repeat('-', strlen("Theme: $themeCode")));
+                foreach ($successes as $success) {
+                    $message = substr($success, strpos($success, ':') + 2);
+                    $output->writeln("✓ $message");
+                }
+            }
         }
 
         if ($this->isVerbose($output)) {
-            $io->section("Build process completed.");
+            $output->writeln('');
+            $output->writeln('<info>Build process completed.</info>');
         }
 
         $output->writeln('');
