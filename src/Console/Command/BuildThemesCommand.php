@@ -74,10 +74,6 @@ class BuildThemesCommand extends Command
      * 2. Checks for required files and dependencies
      * 3. Runs Grunt tasks
      * 4. Deploys static content
-     *
-     * @param InputInterface $input Console input
-     * @param OutputInterface $output Console output
-     * @return int Exit code (0 for success, non-zero for failure)
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -99,10 +95,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Displays available themes when no theme code is provided
-     *
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param bool $isVerbose Whether to output verbose messages
-     * @return int Command result code
      */
     private function displayAvailableThemes(SymfonyStyle $io, bool $isVerbose): int
     {
@@ -125,12 +117,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Processes the build for multiple themes
-     *
-     * @param array $themeCodes List of theme codes to build
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param OutputInterface $output Console output
-     * @param bool $isVerbose Whether to output verbose messages
-     * @return int Command result code
      */
     private function processBuildThemes(
         array $themeCodes,
@@ -161,14 +147,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Processes a single theme build
-     *
-     * @param string $themeCode The theme code to process
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param OutputInterface $output Console output
-     * @param bool $isVerbose Whether to output verbose messages
-     * @param ProgressBar $progressBar Progress indicator
-     * @param array $successList List of successful operations
-     * @return bool True if theme was processed successfully, false otherwise
      */
     private function processTheme(
         string $themeCode,
@@ -208,14 +186,7 @@ class BuildThemesCommand extends Command
     }
 
     /**
-     * Executes Grunt tasks for theme building
-     *
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param OutputInterface $output Console output
-     * @param bool $isVerbose Whether to output verbose messages
-     * @param ProgressBar $progressBar Progress indicator
-     * @param array $successList List of successful operations
-     * @return bool True if grunt tasks executed successfully, false otherwise
+     * Deploys static content for a theme
      */
     private function runGruntTasks(
         SymfonyStyle $io,
@@ -251,14 +222,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Deploys static content for a theme
-     *
-     * @param string $themeCode The theme code to deploy
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param OutputInterface $output Console output
-     * @param bool $isVerbose Whether to output verbose messages
-     * @param ProgressBar $progressBar Progress indicator
-     * @param array $successList List of successful operations
-     * @return bool True if deployment was successful, false otherwise
      */
     private function deployStaticContent(
         string $themeCode,
@@ -296,9 +259,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Checks if output should be verbose
-     *
-     * @param OutputInterface $output The output interface to check
-     * @return bool True if output should be verbose, false otherwise
      */
     private function isVerbose(OutputInterface $output): bool
     {
@@ -307,9 +267,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Checks if the given path is a directory
-     *
-     * @param string $path The path to check
-     * @return bool True if the path is a directory, false otherwise
      */
     private function isDirectory(string $path): bool
     {
@@ -318,12 +275,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Verifies and sets up package.json
-     *
-     * Checks if package.json exists, if not, offers to copy from sample file.
-     *
-     * @param SymfonyStyle $io The IO interface for user interaction
-     * @param bool $isVerbose Whether to output verbose messages
-     * @return bool True if package.json is ready, false if setup failed
      */
     private function checkPackageJson(SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -358,10 +309,6 @@ class BuildThemesCommand extends Command
      * Verifies and sets up node_modules
      *
      * Checks if node_modules exists, if not, offers to run npm install.
-     *
-     * @param SymfonyStyle $io The IO interface for user interaction
-     * @param bool $isVerbose Whether to output verbose messages
-     * @return bool True if node_modules is ready, false if setup failed
      */
     private function checkNodeModules(SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -397,12 +344,6 @@ class BuildThemesCommand extends Command
      * Verifies and sets up required files
      *
      * Checks if a required file exists, if not, offers to copy from sample file.
-     *
-     * @param SymfonyStyle $io The IO interface for user interaction
-     * @param string $file The target file to check
-     * @param string $sampleFile The sample file to copy from if needed
-     * @param bool $isVerbose Whether to output verbose messages
-     * @return bool True if file is ready, false if setup failed
      */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile, bool $isVerbose): bool
     {
@@ -435,10 +376,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Creates and configures the progress bar
-     *
-     * @param OutputInterface $output Console output
-     * @param int $max Maximum steps for the progress bar
-     * @return ProgressBar Configured progress bar instance
      */
     private function createProgressBar(OutputInterface $output, int $max): ProgressBar
     {
@@ -453,10 +390,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Displays the build process header
-     *
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param int $themesCount Number of themes to build
-     * @return void
      */
     private function displayBuildHeader(SymfonyStyle $io, int $themesCount): void
     {
@@ -468,13 +401,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Displays the build process summary
-     *
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param OutputInterface $output Console output
-     * @param ProgressBar $progressBar Progress indicator
-     * @param array $successList List of successful operations
-     * @param float $duration Total build duration in seconds
-     * @return void
      */
     private function displayBuildSummary(
         SymfonyStyle $io,
@@ -504,11 +430,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Validates if a theme exists
-     *
-     * @param string $themeCode The theme code to validate
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param array $successList List of successful operations
-     * @return bool True if theme is valid, false otherwise
      */
     private function validateTheme(string $themeCode, SymfonyStyle $io, array &$successList): bool
     {
@@ -523,13 +444,6 @@ class BuildThemesCommand extends Command
 
     /**
      * Checks theme dependencies
-     *
-     * @param string $themeCode The theme code being processed
-     * @param SymfonyStyle $io The IO interface for interaction
-     * @param bool $isVerbose Whether to output verbose messages
-     * @param ProgressBar $progressBar Progress indicator
-     * @param array $successList List of successful operations
-     * @return bool True if all dependencies are satisfied, false otherwise
      */
     private function checkDependencies(
         string $themeCode,
