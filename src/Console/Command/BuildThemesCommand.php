@@ -89,8 +89,18 @@ class BuildThemesCommand extends Command
     ): int {
         $startTime = microtime(true);
         $successList = [];
-        $totalSteps = count($themeCodes) * 4;
+        $hasStandardTheme = false;
 
+        // Prüfe vorab, ob es Standard-Magento-Themes gibt
+        foreach ($themeCodes as $themeCode) {
+            $themePath = $this->themePath->getPath($themeCode);
+            if ($themePath && !$this->hyvaThemeDetector->isHyvaTheme($themePath)) {
+                $hasStandardTheme = true;
+                break;
+            }
+        }
+
+        $totalSteps = count($themeCodes) * ($hasStandardTheme ? 4 : 2);
         $progressBar = $this->createProgressBar($output, $totalSteps);
 
         if ($isVerbose) {
@@ -98,7 +108,7 @@ class BuildThemesCommand extends Command
         }
 
         foreach ($themeCodes as $themeCode) {
-            if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $progressBar, $successList)) {
+            if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $progressBar, $successList, $hasStandardTheme)) {
                 continue;
             }
         }
@@ -114,7 +124,8 @@ class BuildThemesCommand extends Command
         OutputInterface $output,
         bool $isVerbose,
         ProgressBar $progressBar,
-        array &$successList
+        array &$successList,
+        bool $hasStandardTheme
     ): bool {
         $progressBar->setMessage("Validating theme: $themeCode");
 
@@ -137,7 +148,7 @@ class BuildThemesCommand extends Command
             return $this->processHyvaThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList);
         }
 
-        return $this->processMagentoThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList);
+        return $this->processMagentoThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList, $hasStandardTheme);
     }
 
     private function processMagentoThemeBuild(
@@ -146,26 +157,29 @@ class BuildThemesCommand extends Command
         OutputInterface $output,
         bool $isVerbose,
         ProgressBar $progressBar,
-        array &$successList
+        array &$successList,
+        bool $hasStandardTheme
     ): bool {
-        // Check dependencies
-        if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
-            return false;
-        }
-        $progressBar->advance();
-        $successList[] = "$themeCode: Dependencies checked";
-
-        // Run Grunt tasks
-        static $gruntTasksRun = false;
-        if (!$gruntTasksRun) {
-            $progressBar->setMessage('Running Grunt tasks');
-            if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
+        // Check dependencies only if there are standard themes
+        if ($hasStandardTheme) {
+            if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
                 return false;
             }
-            $successList[] = "Global: Grunt tasks executed";
-            $gruntTasksRun = true;
+            $progressBar->advance();
+            $successList[] = "$themeCode: Dependencies checked";
+
+            // Run Grunt tasks
+            static $gruntTasksRun = false;
+            if (!$gruntTasksRun) {
+                $progressBar->setMessage('Running Grunt tasks');
+                if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
+                    return false;
+                }
+                $successList[] = "Global: Grunt tasks executed";
+                $gruntTasksRun = true;
+            }
+            $progressBar->advance();
         }
-        $progressBar->advance();
 
         // Deploy static content
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
