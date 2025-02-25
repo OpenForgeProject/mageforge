@@ -10,26 +10,46 @@
                 xsi:type="array"
             >
                 <item
-                    name="openforgeproject_mageforge_hello"
+                    name="mageforge_hello"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\HelloMageForgeCommand</item>
                 <item
-                    name="openforgeproject_mageforge_version"
+                    name="mageforge_version"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\VersionCommand</item>
                 <item
-                    name="openforgeproject_mageforge_system_check"
+                    name="mageforge_system_check"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\SystemCheckCommand</item>
                 <item
-                    name="openforgeproject_mageforge_themes_list"
+                    name="mageforge_themes_list"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\ListThemesCommand</item>
                 <item
-                    name="openforgeproject_mageforge_themes_build"
+                    name="mageforge_themes_build"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\BuildThemesCommand</item>
             </argument>
+        </arguments>
+    </type>
+
+    <!-- Configure services -->
+    <type name="OpenForgeProject\MageForge\Service\DependencyChecker">
+        <arguments>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
+        </arguments>
+    </type>
+
+    <type name="OpenForgeProject\MageForge\Service\GruntTaskRunner">
+        <arguments>
+            <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
+        </arguments>
+    </type>
+
+    <type name="OpenForgeProject\MageForge\Service\StaticContentDeployer">
+        <arguments>
+            <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
         </arguments>
     </type>
 </config>
