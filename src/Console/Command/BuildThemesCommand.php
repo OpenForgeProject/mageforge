@@ -91,7 +91,7 @@ class BuildThemesCommand extends Command
         $successList = [];
         $hasStandardTheme = false;
 
-        // Prüfe vorab, ob es Standard-Magento-Themes gibt
+        // Check if there are any standard Magento themes
         foreach ($themeCodes as $themeCode) {
             $themePath = $this->themePath->getPath($themeCode);
             if ($themePath && !$this->hyvaThemeDetector->isHyvaTheme($themePath)) {
@@ -265,7 +265,7 @@ class BuildThemesCommand extends Command
         $progressBar->finish();
         $output->writeln('');
 
-        // Gruppiere die Erfolgsmeldungen nach Theme
+        // Group success messages by theme
         $themeGroups = [];
         foreach ($successList as $success) {
             if (strpos($success, 'Global:') === 0) {
@@ -276,7 +276,7 @@ class BuildThemesCommand extends Command
             }
         }
 
-        // Zeige globale Erfolgsmeldungen zuerst
+        // Show global success messages first
         if (isset($themeGroups['global'])) {
             $output->writeln('<info>Global Build Steps</info>');
             $output->writeln(str_repeat('-', 18));
@@ -285,7 +285,7 @@ class BuildThemesCommand extends Command
             }
         }
 
-        // Zeige dann die themespezifischen Erfolgsmeldungen
+        // Show theme-specific success messages
         foreach ($themeGroups as $themeCode => $successes) {
             if ($themeCode !== 'global') {
                 $output->writeln('');
