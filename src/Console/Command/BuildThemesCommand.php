@@ -15,6 +15,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use Magento\Framework\Filesystem\Driver\File;
+use OpenForgeProject\MageForge\Service\HyvaThemeDetector;
 
 /**
  * Command to build Magento themes
@@ -35,25 +36,19 @@ class BuildThemesCommand extends Command
 
     /**
      * Constructor
-     *
-     * @param ThemePath $themePath Service to resolve theme paths
-     * @param Shell $shell Magento shell command executor
-     * @param ThemeList $themeList Service to get the list of themes
-     * @param File $fileDriver Magento filesystem driver
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly Shell $shell,
         private readonly ThemeList $themeList,
         private readonly File $fileDriver,
+        private readonly HyvaThemeDetector $hyvaThemeDetector
     ) {
         parent::__construct();
     }
 
     /**
      * Configures the command
-     *
-     * @return void
      */
     protected function configure(): void
     {
@@ -135,6 +130,15 @@ class BuildThemesCommand extends Command
         }
 
         foreach ($themeCodes as $themeCode) {
+            $themePath = $this->themePath->getPath($themeCode);
+            if ($themePath && $this->hyvaThemeDetector->isHyvaTheme($themePath)) {
+                if ($isVerbose) {
+                    $io->note("Theme $themeCode is a Hyvä theme - adjusting build process");
+                }
+                // Here you could add specific Hyvä theme build logic in the future
+            }
+
+            // Process the theme build regardless of whether it's Hyvä or not
             if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $progressBar, $successList)) {
                 continue;
             }

@@ -29,27 +29,7 @@
                     name="openforgeproject_mageforge_themes_build"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\BuildThemesCommand</item>
-                <item
-                    name="mageforge_themes_build"
-                    xsi:type="object"
-                >OpenForgeProject\MageForge\Console\Command\BuildThemesCommand</item>
             </argument>
-        </arguments>
-    </type>
-    <type name="OpenForgeProject\MageForge\Console\Command\SystemCheckCommand">
-        <arguments>
-            <argument name="productMetadata" xsi:type="object">Magento\Framework\App\ProductMetadataInterface</argument>
-        </arguments>
-        <arguments>
-            <argument name="escaper" xsi:type="object">Magento\Framework\Escaper</argument>
-        </arguments>
-    </type>
-    <type name="OpenForgeProject\MageForge\Console\Command\BuildThemesCommand">
-        <arguments>
-            <argument name="themePath" xsi:type="object">OpenForgeProject\MageForge\Model\ThemePath</argument>
-            <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
-            <argument name="themeList" xsi:type="object">OpenForgeProject\MageForge\Model\ThemeList</argument>
-            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
     </type>
 </config>
