@@ -22,7 +22,6 @@ class HyvaThemeDetector
     ) {
     }
 
-
     /**
      * Multiple checks to determine if a theme is a Hyva theme
      */
@@ -32,7 +31,7 @@ class HyvaThemeDetector
         $themePath = rtrim($themePath, '/');
 
         // First check for tailwind directory in theme folder
-        if (!file_exists($themePath . '/' . self::TAILWIND_DIR)) {
+        if (!file_exists(filename: $themePath . '/' . self::TAILWIND_DIR)) {
             return false;
         }
 
