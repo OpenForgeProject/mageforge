@@ -28,6 +28,8 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        $this->autoRepair($io,  $output, $themePath);
+
         // Build Hyva theme
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
 
@@ -44,20 +46,6 @@ class Builder implements BuilderInterface
             $io->section("Building Hyvä theme in: $tailwindPath");
         }
 
-        // Remove node_modules if exists
-        if ($this->fileDriver->isDirectory('node_modules')) {
-            if ($isVerbose) {
-                $io->text('Removing node_modules directory...');
-            }
-            $this->fileDriver->deleteDirectory('node_modules');
-        }
-
-        // Run npm ci
-        if ($isVerbose) {
-            $io->text('Running npm ci...');
-        }
-        $this->shell->execute('npm ci --quiet');
-
         // Run npm run build
         if ($isVerbose) {
             $io->text('Running npm run build...');
@@ -73,6 +61,7 @@ class Builder implements BuilderInterface
 
         // Deploy static content for the theme
         $themeCode = basename($themePath);
+        $io->text("Deploying static content for theme: $themeCode");
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
@@ -114,6 +103,24 @@ class Builder implements BuilderInterface
         }
 
         return false;
+    }
+
+    private function autoRepair(SymfonyStyle $io, OutputInterface $output, string $themePath): void
+    {
+        // check if node_modules exists in theme + web/tailwind/node_modules
+        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+        chdir($tailwindPath);
+
+        if (!$this->fileDriver->isDirectory('node_modules')) {
+            $io->warning('Node modules not found in tailwind directory. Running npm install...');
+            try {
+                $this->shell->execute('npm install --quiet', []);
+                $io->success('Node modules installed successfully.');
+            } catch (\Exception $e) {
+                $io->error('Failed to install node modules: ' . $e->getMessage());
+                throw $e;
+            }
+        }
     }
 
     public function getName(): string
