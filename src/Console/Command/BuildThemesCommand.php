@@ -18,6 +18,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\ProgressBar;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use Magento\Framework\Filesystem\Driver\File;
+use OpenForgeProject\MageForge\Service\HyvaThemeBuilder;
 
 class BuildThemesCommand extends Command
 {
@@ -28,7 +29,8 @@ class BuildThemesCommand extends Command
         private readonly HyvaThemeDetector $hyvaThemeDetector,
         private readonly DependencyChecker $dependencyChecker,
         private readonly GruntTaskRunner $gruntTaskRunner,
-        private readonly StaticContentDeployer $staticContentDeployer
+        private readonly StaticContentDeployer $staticContentDeployer,
+        private readonly HyvaThemeBuilder $hyvaThemeBuilder
     ) {
         parent::__construct();
     }
@@ -203,10 +205,16 @@ class BuildThemesCommand extends Command
         ProgressBar $progressBar,
         array &$successList
     ): bool {
-        // For now, just deploy static content for Hyva themes
-        // Skip Grunt and dependency checks as they're not needed
-        $progressBar->advance(2); // Skip dependency and grunt steps
+        $themePath = $this->themePath->getPath($themeCode);
 
+        // Build Hyva theme
+        if (!$this->hyvaThemeBuilder->build($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+        $successList[] = "$themeCode: Hyvä theme built successfully";
+        $progressBar->advance(2);
+
+        // Deploy static content
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }

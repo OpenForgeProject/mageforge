@@ -52,4 +52,25 @@
             <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
         </arguments>
     </type>
+
+    <type name="OpenForgeProject\MageForge\Service\HyvaThemeBuilder">
+        <arguments>
+            <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+
+    <!-- Configure BuildThemesCommand -->
+    <type name="OpenForgeProject\MageForge\Console\Command\BuildThemesCommand">
+        <arguments>
+            <argument name="themePath" xsi:type="object">OpenForgeProject\MageForge\Model\ThemePath</argument>
+            <argument name="themeList" xsi:type="object">OpenForgeProject\MageForge\Model\ThemeList</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="hyvaThemeDetector" xsi:type="object">OpenForgeProject\MageForge\Service\HyvaThemeDetector</argument>
+            <argument name="dependencyChecker" xsi:type="object">OpenForgeProject\MageForge\Service\DependencyChecker</argument>
+            <argument name="gruntTaskRunner" xsi:type="object">OpenForgeProject\MageForge\Service\GruntTaskRunner</argument>
+            <argument name="staticContentDeployer" xsi:type="object">OpenForgeProject\MageForge\Service\StaticContentDeployer</argument>
+            <argument name="hyvaThemeBuilder" xsi:type="object">OpenForgeProject\MageForge\Service\HyvaThemeBuilder</argument>
+        </arguments>
+    </type>
 </config>
