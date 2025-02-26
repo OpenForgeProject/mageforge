@@ -11,8 +11,8 @@ use Magento\Framework\Serialize\SerializerInterface;
 
 class HyvaThemeDetector
 {
-    private const HYVA_MODULE = 'hyva-themes';
     private const THEME_XML = 'theme.xml';
+    private const TAILWIND_DIR = 'web/tailwind';
     private const COMPOSER_JSON = 'composer.json';
 
     public function __construct(
@@ -22,12 +22,21 @@ class HyvaThemeDetector
     ) {
     }
 
+
+    /**
+     * Multiple checks to determine if a theme is a Hyva theme
+     */
     public function isHyvaTheme(string $themePath): bool
     {
         // normalize path
         $themePath = rtrim($themePath, '/');
 
-        // First check composer.json for Hyva module dependency
+        // First check for tailwind directory in theme folder
+        if (!file_exists($themePath . '/' . self::TAILWIND_DIR)) {
+            return false;
+        }
+
+        // Then check composer.json for Hyva module dependency
         if (file_exists($themePath . '/' . self::COMPOSER_JSON)) {
             $composerContent = file_get_contents($themePath . '/' . self::COMPOSER_JSON);
             if ($composerContent) {
