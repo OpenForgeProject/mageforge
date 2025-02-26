@@ -4,33 +4,22 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
-use OpenForgeProject\MageForge\Service\DependencyChecker;
-use OpenForgeProject\MageForge\Service\GruntTaskRunner;
-use OpenForgeProject\MageForge\Service\StaticContentDeployer;
-use OpenForgeProject\MageForge\Service\HyvaThemeDetector;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\ProgressBar;
-use OpenForgeProject\MageForge\Model\ThemeList;
-use Magento\Framework\Filesystem\Driver\File;
-use OpenForgeProject\MageForge\Service\HyvaThemeBuilder;
-use OpenForgeProject\MageForge\Service\StandardThemeBuilder;
 
 class BuildThemesCommand extends Command
 {
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
-        private readonly File $fileDriver,
-        private readonly HyvaThemeDetector $hyvaThemeDetector,
-        private readonly StandardThemeBuilder $standardThemeBuilder,
-        private readonly HyvaThemeBuilder $hyvaThemeBuilder,
-        private readonly StaticContentDeployer $staticContentDeployer
+        private readonly BuilderPool $builderPool
     ) {
         parent::__construct();
     }
@@ -54,7 +43,7 @@ class BuildThemesCommand extends Command
             $isVerbose = $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
 
             if (empty($themeCodes)) {
-                return $this->displayAvailableThemes($io, $isVerbose);
+                return $this->displayAvailableThemes($io);
             }
 
             return $this->processBuildThemes($themeCodes, $io, $output, $isVerbose);
@@ -64,12 +53,8 @@ class BuildThemesCommand extends Command
         }
     }
 
-    private function displayAvailableThemes(SymfonyStyle $io, bool $isVerbose): int
+    private function displayAvailableThemes(SymfonyStyle $io): int
     {
-        if ($isVerbose) {
-            $io->title('No theme codes provided. Available themes:');
-        }
-
         $table = new Table($io);
         $table->setHeaders(['Theme Code', 'Title']);
 
@@ -91,31 +76,18 @@ class BuildThemesCommand extends Command
     ): int {
         $startTime = microtime(true);
         $successList = [];
-        $hasStandardTheme = false;
-
-        // Check if there are any standard Magento themes
-        foreach ($themeCodes as $themeCode) {
-            $themePath = $this->themePath->getPath($themeCode);
-            if ($themePath && !$this->hyvaThemeDetector->isHyvaTheme($themePath)) {
-                $hasStandardTheme = true;
-                break;
-            }
-        }
-
-        $totalSteps = count($themeCodes) * ($hasStandardTheme ? 4 : 2);
-        $progressBar = $this->createProgressBar($output, $totalSteps);
 
         if ($isVerbose) {
-            $this->displayBuildHeader($io, count($themeCodes));
+            $io->title(sprintf('Building %d theme(s)', count($themeCodes)));
         }
 
         foreach ($themeCodes as $themeCode) {
-            if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $progressBar, $successList, $hasStandardTheme)) {
+            if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
                 continue;
             }
         }
 
-        $this->displayBuildSummary($io, $output, $progressBar, $successList, microtime(true) - $startTime);
+        $this->displayBuildSummary($io, $successList, microtime(true) - $startTime);
 
         return Command::SUCCESS;
     }
@@ -125,175 +97,50 @@ class BuildThemesCommand extends Command
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
-        ProgressBar $progressBar,
-        array &$successList,
-        bool $hasStandardTheme
-    ): bool {
-        $progressBar->setMessage("Validating theme: $themeCode");
-
-        // Validate theme and get theme path
-        $themePath = $this->themePath->getPath($themeCode);
-        if ($themePath === null) {
-            $io->error("Theme $themeCode is not installed.");
-            return false;
-        }
-        $progressBar->advance();
-        $successList[] = "$themeCode: Theme validated";
-
-        // Check if it's a Hyva theme
-        $isHyvaTheme = $this->hyvaThemeDetector->isHyvaTheme($themePath);
-        if ($isVerbose) {
-            $io->section("Theme: $themeCode" . ($isHyvaTheme ? ' (Hyvä Theme)' : ' (Magento Standard Theme)'));
-        }
-
-        if ($isHyvaTheme) {
-            return $this->processHyvaThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList);
-        }
-
-        return $this->processMagentoThemeBuild($themeCode, $io, $output, $isVerbose, $progressBar, $successList, $hasStandardTheme);
-    }
-
-    private function processMagentoThemeBuild(
-        string $themeCode,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose,
-        ProgressBar $progressBar,
-        array &$successList,
-        bool $hasStandardTheme
-    ): bool {
-        if (!$this->standardThemeBuilder->build($themeCode, $io, $output, $isVerbose, $successList)) {
-            return false;
-        }
-
-        $progressBar->advance(3);
-        return true;
-    }
-
-    private function processHyvaThemeBuild(
-        string $themeCode,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose,
-        ProgressBar $progressBar,
         array &$successList
     ): bool {
-        $themePath = $this->themePath->getPath($themeCode);
-
-        // Build Hyva theme
-        if (!$this->hyvaThemeBuilder->build($themePath, $io, $output, $isVerbose)) {
-            return false;
-        }
-        $successList[] = "$themeCode: Hyvä theme built successfully";
-        $progressBar->advance(2);
-
-        // Deploy static content
-        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
-            return false;
-        }
-        $successList[] = "$themeCode: Static content deployed (Hyvä Theme)";
-        $progressBar->advance();
-
-        if ($isVerbose) {
-            $io->success("Hyvä theme $themeCode has been successfully built.");
-        }
-
-        return true;
-    }
-
-    private function validateTheme(string $themeCode, SymfonyStyle $io, array &$successList): bool
-    {
+        // Get theme path
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             $io->error("Theme $themeCode is not installed.");
             return false;
         }
 
-        if ($this->hyvaThemeDetector->isHyvaTheme($themePath)) {
-            $io->note("Theme $themeCode is a Hyvä theme. Adjust build process ...");
+        // Find appropriate builder
+        $builder = $this->builderPool->getBuilder($themePath);
+        if ($builder === null) {
+            $io->error("No suitable builder found for theme $themeCode.");
+            return false;
         }
 
-        $successList[] = "✓ Theme $themeCode validated";
+        if ($isVerbose) {
+            $io->section(sprintf("Building theme %s using %s builder", $themeCode, $builder->getName()));
+        }
+
+        // Build the theme
+        if (!$builder->build($themePath, $io, $output, $isVerbose)) {
+            $io->error("Failed to build theme $themeCode.");
+            return false;
+        }
+
+        $successList[] = sprintf("%s: Built successfully using %s builder", $themeCode, $builder->getName());
         return true;
     }
 
-    private function createProgressBar(OutputInterface $output, int $max): ProgressBar
+    private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
-        $progressBar = new ProgressBar($output, $max);
-        $progressBar->setFormat(
-            "\n%current%/%max% [%bar%] %percent:3s%% "
-            . "in %elapsed:6s% | used Memory: %memory:6s%\n%message%"
-        );
-        $progressBar->setMessage('Starting build process...');
-        return $progressBar;
-    }
-
-    private function displayBuildHeader(SymfonyStyle $io, int $themesCount): void
-    {
-        $title = $themesCount > 1
-            ? sprintf('Build %d themes! This can take a while, please wait.', $themesCount)
-            : 'Build the theme. Please wait...';
-        $io->title($title);
-    }
-
-    private function displayBuildSummary(
-        SymfonyStyle $io,
-        OutputInterface $output,
-        ProgressBar $progressBar,
-        array $successList,
-        float $duration
-    ): void {
-        $progressBar->finish();
-        $output->writeln(''); // Add a new line after the progress bar
-        $output->writeln(''); // Add a new line before the summary
-
-        // Group success messages by theme
-        $themeGroups = [];
-        foreach ($successList as $success) {
-            if (strpos($success, 'Global:') === 0) {
-                $themeGroups['global'][] = $success;
-            } else {
-                $themeCode = substr($success, 0, strpos($success, ':'));
-                $themeGroups[$themeCode][] = $success;
-            }
+        if (empty($successList)) {
+            $io->warning('No themes were built successfully.');
+            return;
         }
 
-        // Show global success messages first
-        if (isset($themeGroups['global'])) {
-            $output->writeln('<info>Global Build Steps</info>');
-            $output->writeln(str_repeat('-', 18));
-            foreach ($themeGroups['global'] as $success) {
-                $output->writeln($success);
-            }
-        }
-
-        // Show theme-specific success messages
-        foreach ($themeGroups as $themeCode => $successes) {
-            if ($themeCode !== 'global') {
-                $output->writeln('');
-                $output->writeln("<info>Theme: $themeCode</info>");
-                $output->writeln(str_repeat('-', strlen("Theme: $themeCode")));
-                foreach ($successes as $success) {
-                    $message = substr($success, strpos($success, ':') + 2);
-                    $output->writeln("✓ $message");
-                }
-            }
-        }
-
-        if ($this->isVerbose($output)) {
-            $output->writeln('');
-            $output->writeln('<info>Build process completed.</info>');
-        }
-
-        $output->writeln('');
         $io->success(sprintf(
-            "All themes have been built successfully in %.2f seconds.",
+            "Build process completed in %.2f seconds with the following results:",
             $duration
         ));
-    }
 
-    private function isVerbose(OutputInterface $output): bool
-    {
-        return $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
+        foreach ($successList as $success) {
+            $io->writeln("✓ $success");
+        }
     }
 }

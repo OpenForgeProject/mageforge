@@ -28,4 +28,20 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- Configure Theme Builder Pool -->
+    <type name="OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool">
+        <arguments>
+            <argument name="builders"
+                      xsi:type="array"
+                      >
+                <item name="hyva"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder</item>
+                <item name="standard"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
