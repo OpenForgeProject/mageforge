@@ -19,6 +19,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\HyvaThemeBuilder;
+use OpenForgeProject\MageForge\Service\StandardThemeBuilder;
 
 class BuildThemesCommand extends Command
 {
@@ -27,9 +28,7 @@ class BuildThemesCommand extends Command
         private readonly ThemeList $themeList,
         private readonly File $fileDriver,
         private readonly HyvaThemeDetector $hyvaThemeDetector,
-        private readonly DependencyChecker $dependencyChecker,
-        private readonly GruntTaskRunner $gruntTaskRunner,
-        private readonly StaticContentDeployer $staticContentDeployer,
+        private readonly StandardThemeBuilder $standardThemeBuilder,
         private readonly HyvaThemeBuilder $hyvaThemeBuilder
     ) {
         parent::__construct();
@@ -162,38 +161,11 @@ class BuildThemesCommand extends Command
         array &$successList,
         bool $hasStandardTheme
     ): bool {
-        // Check dependencies only if there are standard themes
-        if ($hasStandardTheme) {
-            if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
-                return false;
-            }
-            $progressBar->advance();
-            $successList[] = "$themeCode: Dependencies checked";
-
-            // Run Grunt tasks
-            static $gruntTasksRun = false;
-            if (!$gruntTasksRun) {
-                $progressBar->setMessage('Running Grunt tasks');
-                if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
-                    return false;
-                }
-                $successList[] = "Global: Grunt tasks executed";
-                $gruntTasksRun = true;
-            }
-            $progressBar->advance();
-        }
-
-        // Deploy static content
-        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->standardThemeBuilder->build($themeCode, $io, $output, $isVerbose, $successList)) {
             return false;
         }
-        $successList[] = "$themeCode: Static content deployed";
-        $progressBar->advance();
 
-        if ($isVerbose) {
-            $io->success("Theme $themeCode has been successfully built.");
-        }
-
+        $progressBar->advance(3);
         return true;
     }
 

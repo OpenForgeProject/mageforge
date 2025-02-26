@@ -60,6 +60,14 @@
         </arguments>
     </type>
 
+    <type name="OpenForgeProject\MageForge\Service\StandardThemeBuilder">
+        <arguments>
+            <argument name="dependencyChecker" xsi:type="object">OpenForgeProject\MageForge\Service\DependencyChecker</argument>
+            <argument name="gruntTaskRunner" xsi:type="object">OpenForgeProject\MageForge\Service\GruntTaskRunner</argument>
+            <argument name="staticContentDeployer" xsi:type="object">OpenForgeProject\MageForge\Service\StaticContentDeployer</argument>
+        </arguments>
+    </type>
+
     <!-- Configure BuildThemesCommand -->
     <type name="OpenForgeProject\MageForge\Console\Command\BuildThemesCommand">
         <arguments>
@@ -71,6 +79,7 @@
             <argument name="gruntTaskRunner" xsi:type="object">OpenForgeProject\MageForge\Service\GruntTaskRunner</argument>
             <argument name="staticContentDeployer" xsi:type="object">OpenForgeProject\MageForge\Service\StaticContentDeployer</argument>
             <argument name="hyvaThemeBuilder" xsi:type="object">OpenForgeProject\MageForge\Service\HyvaThemeBuilder</argument>
+            <argument name="standardThemeBuilder" xsi:type="object">OpenForgeProject\MageForge\Service\StandardThemeBuilder</argument>
         </arguments>
     </type>
 </config>
