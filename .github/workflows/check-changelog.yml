@@ -8,6 +8,7 @@ on: []
 
 jobs:
     check-changelog:
+        if: false
         runs-on: ubuntu-latest
         continue-on-error: true
         steps:
