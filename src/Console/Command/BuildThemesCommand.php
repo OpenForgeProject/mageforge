@@ -29,7 +29,8 @@ class BuildThemesCommand extends Command
         private readonly File $fileDriver,
         private readonly HyvaThemeDetector $hyvaThemeDetector,
         private readonly StandardThemeBuilder $standardThemeBuilder,
-        private readonly HyvaThemeBuilder $hyvaThemeBuilder
+        private readonly HyvaThemeBuilder $hyvaThemeBuilder,
+        private readonly StaticContentDeployer $staticContentDeployer
     ) {
         parent::__construct();
     }
