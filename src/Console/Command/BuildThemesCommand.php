@@ -271,7 +271,8 @@ class BuildThemesCommand extends Command
         float $duration
     ): void {
         $progressBar->finish();
-        $output->writeln('');
+        $output->writeln(''); // Add a new line after the progress bar
+        $output->writeln(''); // Add a new line before the summary
 
         // Group success messages by theme
         $themeGroups = [];
