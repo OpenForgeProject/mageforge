@@ -10,10 +10,6 @@
                 xsi:type="array"
             >
                 <item
-                    name="mageforge_hello"
-                    xsi:type="object"
-                >OpenForgeProject\MageForge\Console\Command\HelloMageForgeCommand</item>
-                <item
                     name="mageforge_version"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\VersionCommand</item>
