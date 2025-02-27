@@ -14,7 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class BuildThemesCommand extends Command
+class BuildThemeCommand extends Command
 {
     public function __construct(
         private readonly ThemePath $themePath,
@@ -26,7 +26,7 @@ class BuildThemesCommand extends Command
 
     protected function configure(): void
     {
-        $this->setName('mageforge:themes:build')
+        $this->setName('mageforge:theme:build')
             ->setDescription('Builds a Magento theme')
             ->addArgument(
                 'themeCodes',
@@ -63,7 +63,7 @@ class BuildThemesCommand extends Command
         }
 
         $table->render();
-        $io->info('Usage: bin/magento mageforge:themes:build <theme-code> [<theme-code>...]');
+        $io->info('Usage: bin/magento mageforge:theme:build <theme-code> [<theme-code>...]');
 
         return Command::SUCCESS;
     }

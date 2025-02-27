@@ -18,13 +18,13 @@
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\SystemCheckCommand</item>
                 <item
-                    name="mageforge_themes_list"
+                    name="mageforge_theme_list"
                     xsi:type="object"
-                >OpenForgeProject\MageForge\Console\Command\ListThemesCommand</item>
+                >OpenForgeProject\MageForge\Console\Command\ListThemeCommand</item>
                 <item
-                    name="mageforge_themes_build"
+                    name="mageforge_theme_build"
                     xsi:type="object"
-                >OpenForgeProject\MageForge\Console\Command\BuildThemesCommand</item>
+                >OpenForgeProject\MageForge\Console\Command\BuildThemeCommand</item>
             </argument>
         </arguments>
     </type>
