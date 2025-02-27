@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service;
 
+use Magento\Framework\App\State;
 use Magento\Framework\Shell;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StaticContentDeployer
 {
     public function __construct(
-        private readonly Shell $shell
+        private readonly Shell $shell,
+        private readonly State $state
     ) {
     }
 
@@ -22,17 +24,29 @@ class StaticContentDeployer
         bool $isVerbose
     ): bool {
         try {
+            // Only deploy if not in developer mode
+            if ($this->state->getMode() === State::MODE_DEVELOPER) {
+                if ($isVerbose) {
+                    $io->info('Skipping static content deployment in developer mode.');
+                }
+                return true;
+            }
+
+            if ($isVerbose) {
+                $io->text('Deploying static content...');
+            }
+
             $sanitizedThemeCode = escapeshellarg($themeCode);
             $shellOutput = $this->shell->execute(
-                "php bin/magento setup:static-content:deploy -t %s -f -q",
+                "php bin/magento setup:static-content:deploy -t %s -f --quiet",
                 [$sanitizedThemeCode]
             );
 
             if ($isVerbose) {
                 $output->writeln($shellOutput);
                 $io->success(sprintf(
-                    "'magento setup:static-content:deploy -t %s -f' has been successfully executed.",
-                    $sanitizedThemeCode
+                    "Static content deployed for theme '%s'.",
+                    $themeCode
                 ));
             }
 

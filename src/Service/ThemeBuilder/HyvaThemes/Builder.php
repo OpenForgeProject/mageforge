@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes;
 
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
+use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,7 +19,8 @@ class Builder implements BuilderInterface
     public function __construct(
         private readonly Shell $shell,
         private readonly File $fileDriver,
-        private readonly StaticContentDeployer $staticContentDeployer
+        private readonly StaticContentDeployer $staticContentDeployer,
+        private readonly CacheCleaner $cacheCleaner
     ) {
     }
 
@@ -28,46 +30,106 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        $this->autoRepair($io,  $output, $themePath);
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Generate Hyva Configuration
+        try {
+            if ($isVerbose) {
+                $io->text('Generating Hyvä configuration...');
+            }
+            $this->shell->execute('bin/magento hyva:config:generate');
+            if ($isVerbose) {
+                $io->success('Hyvä configuration generated successfully.');
+            }
+        } catch (\Exception $e) {
+            $io->error('Failed to generate Hyvä configuration: ' . $e->getMessage());
+            return false;
+        }
 
         // Build Hyva theme
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
-
         if (!$this->fileDriver->isDirectory($tailwindPath)) {
             $io->error("Tailwind directory not found in: $tailwindPath");
             return false;
         }
 
-        // Change to tailwind directory
+        // Change to tailwind directory and run build
         $currentDir = getcwd();
         chdir($tailwindPath);
 
-        if ($isVerbose) {
-            $io->section("Building Hyvä theme in: $tailwindPath");
+        try {
+            if ($isVerbose) {
+                $io->text('Running npm build...');
+            }
+            $this->shell->execute('npm run build --quiet');
+            if ($isVerbose) {
+                $io->success('Hyvä theme build completed successfully.');
+            }
+        } catch (\Exception $e) {
+            $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
+            chdir($currentDir);
+            return false;
         }
 
-        // Run npm run build
-        if ($isVerbose) {
-            $io->text('Running npm run build...');
-        }
-        $this->shell->execute('npm run build --quiet');
-
-        // Change back to original directory
         chdir($currentDir);
 
-        if ($isVerbose) {
-            $io->success('Hyvä theme build completed successfully.');
-        }
-
-        // Deploy static content for the theme
+        // Deploy static content
         $themeCode = basename($themePath);
-        $io->text("Deploying static content for theme: $themeCode");
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
+        // Clean cache using the dedicated service
+        if (!$this->cacheCleaner->clean($io, $isVerbose)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
+        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+
+        // Check for node_modules directory
+        if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
+            if ($isVerbose) {
+                $io->warning('Node modules not found in tailwind directory. Running npm ci...');
+            }
+
+            $currentDir = getcwd();
+            chdir($tailwindPath);
+
+            try {
+                $this->shell->execute('npm ci --quiet');
+                if ($isVerbose) {
+                    $io->success('Node modules installed successfully.');
+                }
+            } catch (\Exception $e) {
+                $io->error('Failed to install node modules: ' . $e->getMessage());
+                chdir($currentDir);
+                return false;
+            }
+
+            chdir($currentDir);
+        }
+
+        // Check for outdated packages
         if ($isVerbose) {
-            $io->success("Hyvä theme has been successfully built.");
+            $currentDir = getcwd();
+            chdir($tailwindPath);
+            try {
+                $outdated = $this->shell->execute('npm outdated --json');
+                if ($outdated) {
+                    $io->warning('Outdated packages found:');
+                    $io->writeln($outdated);
+                }
+            } catch (\Exception $e) {
+                // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+            }
+            chdir($currentDir);
         }
 
         return true;
@@ -79,48 +141,28 @@ class Builder implements BuilderInterface
         $themePath = rtrim($themePath, '/');
 
         // First check for tailwind directory in theme folder
-        if (!file_exists(filename: $themePath . '/web/tailwind')) {
+        if (!$this->fileDriver->isExists($themePath . '/web/tailwind')) {
             return false;
         }
 
-        // Then check composer.json for Hyva module dependency
-        if (file_exists($themePath . '/composer.json')) {
-            $composerContent = file_get_contents($themePath . '/composer.json');
-            if ($composerContent) {
-                $composerJson = json_decode($composerContent, true);
-                if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
-                    return true;
-                }
+        // Check theme.xml for Hyva theme declaration
+        if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
+            $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
+            if (str_contains($themeXmlContent, 'Hyva')) {
+                return true;
             }
         }
 
-        // check theme.xml for Hyva theme declaration
-        if (file_exists($themePath . '/theme.xml')) {
-            $themeXmlContent = file_get_contents($themePath . '/theme.xml');
-            if ($themeXmlContent && str_contains($themeXmlContent, 'Hyva')) {
+        // Check composer.json for Hyva module dependency
+        if ($this->fileDriver->isExists($themePath . '/composer.json')) {
+            $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
+            $composerJson = json_decode($composerContent, true);
+            if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private function autoRepair(SymfonyStyle $io, OutputInterface $output, string $themePath): void
-    {
-        // check if node_modules exists in theme + web/tailwind/node_modules
-        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
-        chdir($tailwindPath);
-
-        if (!$this->fileDriver->isDirectory('node_modules')) {
-            $io->warning('Node modules not found in tailwind directory. Running npm install...');
-            try {
-                $this->shell->execute('npm install --quiet', []);
-                $io->success('Node modules installed successfully.');
-            } catch (\Exception $e) {
-                $io->error('Failed to install node modules: ' . $e->getMessage());
-                throw $e;
-            }
-        }
     }
 
     public function getName(): string

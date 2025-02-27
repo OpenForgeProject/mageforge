@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
 
 use Magento\Framework\Filesystem\Driver\File;
-use OpenForgeProject\MageForge\Service\DependencyChecker;
-use OpenForgeProject\MageForge\Service\GruntTaskRunner;
+use Magento\Framework\Shell;
+use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,10 +17,10 @@ class Builder implements BuilderInterface
     private const THEME_NAME = 'MagentoStandard';
 
     public function __construct(
-        private readonly DependencyChecker $dependencyChecker,
-        private readonly GruntTaskRunner $gruntTaskRunner,
+        private readonly Shell $shell,
+        private readonly File $fileDriver,
         private readonly StaticContentDeployer $staticContentDeployer,
-        private readonly File $fileDriver
+        private readonly CacheCleaner $cacheCleaner
     ) {
     }
 
@@ -30,24 +30,91 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Check dependencies
-        if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
             return false;
         }
 
-        // Run Grunt tasks
-        if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
+        // Run grunt tasks
+        try {
+            if ($isVerbose) {
+                $io->text('Running grunt clean...');
+            }
+            $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+
+            if ($isVerbose) {
+                $io->text('Running grunt less...');
+            }
+            $this->shell->execute('node_modules/.bin/grunt less --quiet');
+
+            if ($isVerbose) {
+                $io->success('Grunt tasks completed successfully.');
+            }
+        } catch (\Exception $e) {
+            $io->error('Failed to run grunt tasks: ' . $e->getMessage());
             return false;
         }
 
-        // Deploy static content for the theme
+        // Deploy static content
         $themeCode = basename($themePath);
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
+        // Clean cache using the dedicated service
+        if (!$this->cacheCleaner->clean($io, $isVerbose)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
+        // Check for node_modules in root
+        if (!$this->fileDriver->isDirectory('node_modules')) {
+            if ($isVerbose) {
+                $io->warning('Node modules not found in root directory. Running npm ci...');
+            }
+            try {
+                $this->shell->execute('npm ci --quiet');
+                if ($isVerbose) {
+                    $io->success('Node modules installed successfully.');
+                }
+            } catch (\Exception $e) {
+                $io->error('Failed to install node modules: ' . $e->getMessage());
+                return false;
+            }
+        }
+
+        // Check for grunt
+        try {
+            $this->shell->execute('which grunt');
+        } catch (\Exception $e) {
+            if ($isVerbose) {
+                $io->warning('Grunt not found globally. Installing grunt...');
+            }
+            try {
+                $this->shell->execute('npm install -g grunt-cli --quiet');
+                if ($isVerbose) {
+                    $io->success('Grunt installed successfully.');
+                }
+            } catch (\Exception $e) {
+                $io->error('Failed to install grunt: ' . $e->getMessage());
+                return false;
+            }
+        }
+
+        // Check for outdated packages
         if ($isVerbose) {
-            $io->success("Standard Magento theme has been successfully built.");
+            try {
+                $outdated = $this->shell->execute('npm outdated --json');
+                if ($outdated) {
+                    $io->warning('Outdated packages found:');
+                    $io->writeln($outdated);
+                }
+            } catch (\Exception $e) {
+                // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+            }
         }
 
         return true;
@@ -55,10 +122,12 @@ class Builder implements BuilderInterface
 
     public function detect(string $themePath): bool
     {
+        // normalize path
+        $themePath = rtrim($themePath, '/');
+
         // Check if this is a standard Magento theme by looking for theme.xml
-        // and ensuring it's not a Hyva theme
-        $themeXmlPath = $themePath . '/theme.xml';
-        return $this->fileDriver->isExists($themeXmlPath)
+        // and ensuring it's not a Hyva theme (no tailwind directory)
+        return $this->fileDriver->isExists($themePath . '/theme.xml')
             && !$this->fileDriver->isExists($themePath . '/web/tailwind');
     }
 
