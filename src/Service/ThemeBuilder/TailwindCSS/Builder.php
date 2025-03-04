@@ -81,10 +81,10 @@ class Builder implements BuilderInterface
             }
             $this->shell->execute('npm run build --quiet');
             if ($isVerbose) {
-                $io->success('Hyvä theme build completed successfully.');
+                $io->success('Custom TailwindCSS theme build completed successfully.');
             }
         } catch (\Exception $e) {
-            $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
+            $io->error('Failed to build custom TailwindCSS theme: ' . $e->getMessage());
             chdir($currentDir);
             return false;
         }
@@ -112,14 +112,18 @@ class Builder implements BuilderInterface
         // Check for node_modules directory
         if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
             if ($isVerbose) {
-                $io->warning('Node modules not found in tailwind directory. Running npm ci...');
+                $io->warning('Node modules not found in tailwind directory. Installing npm dependencies ...');
             }
 
             $currentDir = getcwd();
             chdir($tailwindPath);
 
             try {
-                $this->shell->execute('npm ci --quiet');
+                if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
+                    $this->shell->execute('npm ci --quiet');
+                } else {
+                    $this->shell->execute('npm install --quiet');
+                }
                 if ($isVerbose) {
                     $io->success('Node modules installed successfully.');
                 }
