@@ -33,7 +33,8 @@ class BuildThemeCommand extends Command
                 'themeCodes',
                 InputArgument::IS_ARRAY,
                 'The codes of the theme to build'
-            );
+            )
+            ->setAliases(['frontend:build']);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
