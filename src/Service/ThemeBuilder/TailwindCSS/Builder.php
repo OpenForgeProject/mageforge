@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
+namespace OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS;
 
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Builder implements BuilderInterface
 {
-    private const THEME_NAME = 'MagentoStandard';
+    private const THEME_NAME = 'TailwindCSS';
 
     public function __construct(
         private readonly Shell $shell,
@@ -29,10 +29,29 @@ class Builder implements BuilderInterface
         // normalize path
         $themePath = rtrim($themePath, '/');
 
-        // Check if this is a standard Magento theme by looking for theme.xml
-        // and ensuring it's not a Hyva theme (no tailwind directory)
-        return $this->fileDriver->isExists($themePath . '/theme.xml')
-            && !$this->fileDriver->isExists($themePath . '/web/tailwind');
+        // First check for tailwind directory in theme folder
+        if (!$this->fileDriver->isExists($themePath . '/web/tailwind')) {
+            return false;
+        }
+
+        // Check for theme.xml file in theme folder and ensure it's not a Hyva theme
+        if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
+            $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
+            if (!str_contains($themeXmlContent, 'Hyva')) {
+                return true;
+            }
+        }
+
+        // Check for composer.json file in theme folder and ensure it's not a Hyva theme
+        if ($this->fileDriver->isExists($themePath . '/composer.json')) {
+            $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
+            $composerJson = json_decode($composerContent, true);
+            if (!isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function build(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
@@ -45,25 +64,32 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Run grunt tasks
-        try {
-            if ($isVerbose) {
-                $io->text('Running grunt clean...');
-            }
-            $this->shell->execute('node_modules/.bin/grunt clean --quiet');
-
-            if ($isVerbose) {
-                $io->text('Running grunt less...');
-            }
-            $this->shell->execute('node_modules/.bin/grunt less --quiet');
-
-            if ($isVerbose) {
-                $io->success('Grunt tasks completed successfully.');
-            }
-        } catch (\Exception $e) {
-            $io->error('Failed to run grunt tasks: ' . $e->getMessage());
+        // Build Hyva theme
+        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+        if (!$this->fileDriver->isDirectory($tailwindPath)) {
+            $io->error("Tailwind directory not found in: $tailwindPath");
             return false;
         }
+
+        // Change to tailwind directory and run build
+        $currentDir = getcwd();
+        chdir($tailwindPath);
+
+        try {
+            if ($isVerbose) {
+                $io->text('Running npm build...');
+            }
+            $this->shell->execute('npm run build --quiet');
+            if ($isVerbose) {
+                $io->success('Hyvä theme build completed successfully.');
+            }
+        } catch (\Exception $e) {
+            $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
+            chdir($currentDir);
+            return false;
+        }
+
+        chdir($currentDir);
 
         // Deploy static content
         $themeCode = basename($themePath);
@@ -81,11 +107,17 @@ class Builder implements BuilderInterface
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
-        // Check for node_modules in root
-        if (!$this->fileDriver->isDirectory('node_modules')) {
+        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+
+        // Check for node_modules directory
+        if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
             if ($isVerbose) {
-                $io->warning('Node modules not found in root directory. Running npm ci...');
+                $io->warning('Node modules not found in tailwind directory. Running npm ci...');
             }
+
+            $currentDir = getcwd();
+            chdir($tailwindPath);
+
             try {
                 $this->shell->execute('npm ci --quiet');
                 if ($isVerbose) {
@@ -93,30 +125,17 @@ class Builder implements BuilderInterface
                 }
             } catch (\Exception $e) {
                 $io->error('Failed to install node modules: ' . $e->getMessage());
+                chdir($currentDir);
                 return false;
             }
-        }
 
-        // Check for grunt
-        try {
-            $this->shell->execute('which grunt');
-        } catch (\Exception $e) {
-            if ($isVerbose) {
-                $io->warning('Grunt not found globally. Installing grunt...');
-            }
-            try {
-                $this->shell->execute('npm install -g grunt-cli --quiet');
-                if ($isVerbose) {
-                    $io->success('Grunt installed successfully.');
-                }
-            } catch (\Exception $e) {
-                $io->error('Failed to install grunt: ' . $e->getMessage());
-                return false;
-            }
+            chdir($currentDir);
         }
 
         // Check for outdated packages
         if ($isVerbose) {
+            $currentDir = getcwd();
+            chdir($tailwindPath);
             try {
                 $outdated = $this->shell->execute('npm outdated --json');
                 if ($outdated) {
@@ -126,6 +145,7 @@ class Builder implements BuilderInterface
             } catch (\Exception $e) {
                 // Ignore errors from npm outdated as it returns non-zero when packages are outdated
             }
+            chdir($currentDir);
         }
 
         return true;

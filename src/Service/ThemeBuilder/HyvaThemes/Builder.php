@@ -24,6 +24,36 @@ class Builder implements BuilderInterface
     ) {
     }
 
+    public function detect(string $themePath): bool
+    {
+        // normalize path
+        $themePath = rtrim($themePath, '/');
+
+        // First check for tailwind directory in theme folder
+        if (!$this->fileDriver->isExists($themePath . '/web/tailwind')) {
+            return false;
+        }
+
+        // Check theme.xml for Hyva theme declaration
+        if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
+            $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
+            if (str_contains($themeXmlContent, 'Hyva')) {
+                return true;
+            }
+        }
+
+        // Check composer.json for Hyva module dependency
+        if ($this->fileDriver->isExists($themePath . '/composer.json')) {
+            $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
+            $composerJson = json_decode($composerContent, true);
+            if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function build(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
@@ -133,36 +163,6 @@ class Builder implements BuilderInterface
         }
 
         return true;
-    }
-
-    public function detect(string $themePath): bool
-    {
-        // normalize path
-        $themePath = rtrim($themePath, '/');
-
-        // First check for tailwind directory in theme folder
-        if (!$this->fileDriver->isExists($themePath . '/web/tailwind')) {
-            return false;
-        }
-
-        // Check theme.xml for Hyva theme declaration
-        if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
-            $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
-            if (str_contains($themeXmlContent, 'Hyva')) {
-                return true;
-            }
-        }
-
-        // Check composer.json for Hyva module dependency
-        if ($this->fileDriver->isExists($themePath . '/composer.json')) {
-            $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
-            $composerJson = json_decode($composerContent, true);
-            if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function getName(): string

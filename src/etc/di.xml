@@ -41,6 +41,9 @@
                 <item name="standard"
                       xsi:type="object"
                       >OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
+                <item name="tailwindcss"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS\Builder</item>
             </argument>
         </arguments>
     </type>
