@@ -10,5 +10,8 @@
     "psr-4": {
       "OpenForgeProject\\MageForge\\": "src/"
     }
+  },
+  "require": {
+    "laravel/prompts": "^0.3.5"
   }
 }
