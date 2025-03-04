@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use Laravel\Prompts\MultiSelectPrompt;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
@@ -43,7 +44,18 @@ class BuildThemeCommand extends Command
             $isVerbose = $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
 
             if (empty($themeCodes)) {
-                return $this->displayAvailableThemes($io);
+                $themes = $this->themeList->getAllThemes();
+                $options = array_map(fn($theme) => $theme->getCode(), $themes);
+
+
+                $themeCodesPrompt = new MultiSelectPrompt(
+                    label: 'Select themes to build',
+                    options: $options,
+                    scroll: 10,
+                    hint: 'Arrow keys to navigate, Space to select, Enter to confirm'
+                );
+
+                $themeCodes = $themeCodesPrompt->prompt();
             }
 
             return $this->processBuildThemes($themeCodes, $io, $output, $isVerbose);
