@@ -48,10 +48,10 @@ class ThemeWatchCommand extends Command
 
 
             $themeCodePrompt = new SelectPrompt(
-                label: 'Select theme to build',
+                label: 'Select theme to watch',
                 options: $options,
                 scroll: 10,
-                hint: 'Arrow keys to navigate, Space to select, Enter to confirm',
+                hint: 'Arrow keys to navigate, Enter to confirm',
             );
 
             $themeCode = $themeCodePrompt->prompt();

@@ -174,7 +174,7 @@ class Builder implements BuilderInterface
 
         try {
             chdir($tailwindPath);
-            exec('npx tailwind -i ./src/css/input.css -o ./web/css/styles.css --watch');
+            exec('npm run watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;
