@@ -25,6 +25,9 @@
                     name="mageforge_theme_build"
                     xsi:type="object"
                 >OpenForgeProject\MageForge\Console\Command\BuildThemeCommand</item>
+                <item name="mageforge_theme_watch"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Console\Command\ThemeWatchCommand</item>
             </argument>
         </arguments>
     </type>

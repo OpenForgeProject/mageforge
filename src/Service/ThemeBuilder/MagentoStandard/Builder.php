@@ -131,6 +131,26 @@ class Builder implements BuilderInterface
         return true;
     }
 
+    public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
+        if (!$this->detect($themePath)) {
+            return false;
+        }
+
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        try {
+            exec('node_modules/.bin/grunt watch');
+        } catch (\Exception $e) {
+            $io->error('Failed to start watch mode: ' . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
     public function getName(): string
     {
         return self::THEME_NAME;

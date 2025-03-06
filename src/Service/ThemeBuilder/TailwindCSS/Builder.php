@@ -159,4 +159,27 @@ class Builder implements BuilderInterface
     {
         return self::THEME_NAME;
     }
+
+    public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
+        if (!$this->detect($themePath)) {
+            return false;
+        }
+
+        $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+        if (!$this->fileDriver->isDirectory($tailwindPath)) {
+            $io->error("Tailwind directory not found in: $tailwindPath");
+            return false;
+        }
+
+        try {
+            chdir($tailwindPath);
+            exec('npx tailwind -i ./src/css/input.css -o ./web/css/styles.css --watch');
+        } catch (\Exception $e) {
+            $io->error('Failed to start watch mode: ' . $e->getMessage());
+            return false;
+        }
+
+        return true;
+    }
 }
