@@ -1,4 +1,4 @@
-# MageForge for Magento 2 (Still in development!!)
+# MageForge for Magento 2 (Beta)
 
 ![Mageforge Hero](./.github/assets/mageforge-hero.jpg)
 
@@ -14,16 +14,72 @@ MageForge is a Magento 2 module designed to assist frontend developers in stream
 
 ### Available Commands
 
-| Command                  | Description                                                 |
-|--------------------------|-------------------------------------------------------------|
-| `mageforge:version`      | Displays the current module version and the latest available version. |
-| `mageforge:system-check` | Displays system information like PHP, MySQL, NodeJs, OS, Magento Version etc. |
+| Command                    | Description                                                 |
+|---------------------------|-------------------------------------------------------------|
+| `mageforge:version`       | Shows current and latest version of the module             |
+| `mageforge:system-check`  | Checks system requirements (PHP, MySQL, Node.js, etc.)     |
+| `mageforge:theme:list`    | Lists all available themes                                 |
+| `mageforge:theme:build`   | Builds selected themes (CSS/TailwindCSS)                   |
+| `mageforge:theme:watch`   | Starts watch mode for theme development                    |
 
 ---
 
 ## Installation
 
-...
+1. Add the repository to your `composer.json`:
+   ```json
+   {
+       "repositories": [
+           {
+               "type": "vcs",
+               "url": "https://github.com/OpenForgeProject/mageforge"
+           }
+       ]
+   }
+   ```
+
+2. Install the module via Composer:
+   ```bash
+   composer require openforgeproject/mageforge --dev
+   ```
+
+3. Enable the module:
+   ```bash
+   bin/magento module:enable OpenForgeProject_MageForge
+   bin/magento setup:upgrade
+   ```
+
+## Getting Started
+
+### Theme Development
+
+1. List all available themes:
+   ```bash
+   bin/magento mageforge:theme:list
+   ```
+
+2. Build a specific theme:
+   ```bash
+   bin/magento mageforge:theme:build <theme-code>
+   ```
+   Example: `bin/magento mageforge:theme:build Magento/luma`
+
+3. Start watch mode for development:
+   ```bash
+   bin/magento mageforge:theme:watch <theme-code>
+   ```
+
+### Supported Theme Types
+
+- **Magento Standard Themes**: LESS-based themes
+- **Hyvä Themes**: Tailwind CSS based themes
+- **Custom Tailwind Themes**: Standalone Tailwind implementations
+
+### Tips & Tricks
+
+- Use the `-v` option for more detailed output
+- Watch mode supports hot-reloading for LESS and Tailwind
+- Check system information anytime with `mageforge:system-check`
 
 ## Report Feature or Bugs
 
