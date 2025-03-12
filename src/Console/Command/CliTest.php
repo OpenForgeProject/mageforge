@@ -25,7 +25,9 @@ class CliTest extends Command
      * @param ThemeList $themeList
      */
     public function __construct(
+        private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
+        private readonly BuilderPool $builderPool
     ) {
         parent::__construct();
     }
@@ -43,68 +45,74 @@ class CliTest extends Command
     }
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        for ($i = 5; $i >= 1; $i--) {
-            $output->writeln('Start npm in ' . $i);
-            sleep(1);
-        }
 
-        /**
-         * list all available themes
-         */
-        $themes = $this->themeList->getAllThemes();
-        if (empty($themes)) {
-            $output->writeln('<info>No themes found.</info>');
-            return Cli::RETURN_SUCCESS;
-        }
+        try {
+            for ($i = 5; $i >= 1; $i--) {
+                $output->writeln('Start npm in ' . $i);
+                sleep(1);
+            }
 
-        $output->writeln('<info>Available Themes:</info>');
-        $table = new Table($output);
-        $table->setHeaders(['Code', 'Title', 'Path']);
+            /**
+             * list all available themes
+             */
+            $themes = $this->themeList->getAllThemes();
+            if (empty($themes)) {
+                $output->writeln('<info>No themes found.</info>');
+                return Cli::RETURN_SUCCESS;
+            }
 
-        foreach ($themes as $path => $theme) {
-            $table->addRow([
-                sprintf('<fg=yellow>%s</>', $theme->getCode()),
-                $theme->getThemeTitle(),
-                $path
-            ]);
-        }
+            $output->writeln('<info>Available Themes:</info>');
+            $table = new Table($output);
+            $table->setHeaders(['Code', 'Title', 'Path']);
 
-        $table->render();
+            foreach ($themes as $path => $theme) {
+                $table->addRow([
+                    sprintf('<fg=yellow>%s</>', $theme->getCode()),
+                    $theme->getThemeTitle(),
+                    $path
+                ]);
+            }
 
-        /**
-         * Run NPM Outdated and NPM Install
-         */
-        $output->writeln('Running npm outdated...');
-        exec('npm outdated', $npmOutput, $returnValue);
+            $table->render();
 
-        if ($returnValue !== 0 || !empty($npmOutput)) {
-            $io = new SymfonyStyle($input, $output);
-            $io->warning('Outdated packages found!');
-        } else {
-            $io = new SymfonyStyle($input, $output);
-            $io->success('No outdated packages found, proceeding with installation.');
-        }
+            /**
+             * Run NPM Outdated and NPM Install
+             */
+            $output->writeln('Running npm outdated...');
+            exec('npm outdated', $npmOutput, $returnValue);
 
-        foreach ($npmOutput as $line) {
-            $output->writeln($line);
-        }
+            if ($returnValue !== 0 || !empty($npmOutput)) {
+                $io = new SymfonyStyle($input, $output);
+                $io->warning('Outdated packages found!');
+            } else {
+                $io = new SymfonyStyle($input, $output);
+                $io->success('No outdated packages found, proceeding with installation.');
+            }
 
-        sleep(2);
-        $output->writeln('Running npm install...');
-        exec('npm install', $npmOutput, $returnValue);
-        foreach ($npmOutput as $line) {
-            $output->writeln($line);
-        }
+            foreach ($npmOutput as $line) {
+                $output->writeln($line);
+            }
 
-        if ($returnValue !== 0) {
-            $io = new SymfonyStyle($input, $output);
-            $io->error('Npm install failed!');
+            sleep(2);
+            $output->writeln('Running npm install...');
+            exec('npm install', $npmOutput, $returnValue);
+            foreach ($npmOutput as $line) {
+                $output->writeln($line);
+            }
+
+            if ($returnValue !== 0) {
+                $io = new SymfonyStyle($input, $output);
+                $io->error('Npm install failed!');
+                return Command::FAILURE;
+            }
+
+            $io->success('Npm install completed successfully.');
+
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $io->error($e->getMessage());
             return Command::FAILURE;
         }
-
-        $io->success('Npm install completed successfully.');
-
-        return Command::SUCCESS;
     }
 
 }
