@@ -52,8 +52,6 @@ class CliTest extends Command
             $output->writeln($line);
         }
 
-
-
         sleep(2);
 
         $output->writeln('Running npm install...');
