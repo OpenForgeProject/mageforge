@@ -31,9 +31,15 @@ class CliTest extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        for ($i = 1; $i <= 10; $i++) {
-            $output->writeln($i.'/10');
+        for ($i = 5; $i >= 1; $i--) {
+            $output->writeln('Start npm in ' . $i);
             sleep(1);
+        }
+
+        $output->writeln('Running npm outdated...');
+        exec('npm outdated', $npmOutput, $returnValue);
+        foreach ($npmOutput as $line) {
+            $output->writeln($line);
         }
 
         return Command::SUCCESS;
