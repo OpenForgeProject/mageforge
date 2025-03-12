@@ -36,7 +36,7 @@ class SystemCheckCommand extends Command
      */
     protected function configure(): void
     {
-        $this->setName('mageforge:system-check');
+        $this->setName('mageforge:system:check');
         $this->setDescription('Displays system information like PHP version and Node.js version');
     }
 

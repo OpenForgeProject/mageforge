@@ -28,6 +28,9 @@
                 <item name="mageforge_theme_watch"
                       xsi:type="object"
                       >OpenForgeProject\MageForge\Console\Command\ThemeWatchCommand</item>
+                <item name="mageforge_theme_clitest"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Console\Command\CliTest</item>
             </argument>
         </arguments>
     </type>
