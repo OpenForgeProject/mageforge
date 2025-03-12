@@ -18,6 +18,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class CliTest extends Command
 {
+
+     /**
+     * Constructor
+     *
+     * @param ThemeList $themeList
+     */
+    public function __construct(
+        private readonly ThemeList $themeList,
+    ) {
+        parent::__construct();
+    }
+
     protected function configure(): void
     {
         $this->setName('mageforge:system:clitest')
@@ -29,7 +41,6 @@ class CliTest extends Command
             )
             ->setAliases(['frontend:test']);
     }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         for ($i = 5; $i >= 1; $i--) {
@@ -37,6 +48,32 @@ class CliTest extends Command
             sleep(1);
         }
 
+        /**
+         * list all available themes
+         */
+        $themes = $this->themeList->getAllThemes();
+        if (empty($themes)) {
+            $output->writeln('<info>No themes found.</info>');
+            return Cli::RETURN_SUCCESS;
+        }
+
+        $output->writeln('<info>Available Themes:</info>');
+        $table = new Table($output);
+        $table->setHeaders(['Code', 'Title', 'Path']);
+
+        foreach ($themes as $path => $theme) {
+            $table->addRow([
+                sprintf('<fg=yellow>%s</>', $theme->getCode()),
+                $theme->getThemeTitle(),
+                $path
+            ]);
+        }
+
+        $table->render();
+
+        /**
+         * Run NPM Outdated and NPM Install
+         */
         $output->writeln('Running npm outdated...');
         exec('npm outdated', $npmOutput, $returnValue);
 
@@ -53,7 +90,6 @@ class CliTest extends Command
         }
 
         sleep(2);
-
         $output->writeln('Running npm install...');
         exec('npm install', $npmOutput, $returnValue);
         foreach ($npmOutput as $line) {
