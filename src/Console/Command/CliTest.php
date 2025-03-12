@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use Dotenv\Regex\Success;
 use Laravel\Prompts\MultiSelectPrompt;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
@@ -38,9 +39,36 @@ class CliTest extends Command
 
         $output->writeln('Running npm outdated...');
         exec('npm outdated', $npmOutput, $returnValue);
+
+        if ($returnValue !== 0 || !empty($npmOutput)) {
+            $io = new SymfonyStyle($input, $output);
+            $io->warning('Outdated packages found!');
+        } else {
+            $io = new SymfonyStyle($input, $output);
+            $io->success('No outdated packages found, proceeding with installation.');
+        }
+
         foreach ($npmOutput as $line) {
             $output->writeln($line);
         }
+
+
+
+        sleep(2);
+
+        $output->writeln('Running npm install...');
+        exec('npm install', $npmOutput, $returnValue);
+        foreach ($npmOutput as $line) {
+            $output->writeln($line);
+        }
+
+        if ($returnValue !== 0) {
+            $io = new SymfonyStyle($input, $output);
+            $io->error('Npm install failed!');
+            return Command::FAILURE;
+        }
+
+        $io->success('Npm install completed successfully.');
 
         return Command::SUCCESS;
     }
