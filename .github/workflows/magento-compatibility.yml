@@ -1,4 +1,4 @@
-name: Magento Modul Kompatibilitätstest
+name: Magento Module Compatibility Test
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Magento ${{ matrix.magento-version }} mit PHP ${{ matrix.php-version }} Test
+    name: Magento ${{ matrix.magento-version }} with PHP ${{ matrix.php-version }} Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -40,19 +40,19 @@ jobs:
         options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-    - name: Code auschecken
+    - name: Checkout code
       uses: actions/checkout@v3
       with:
         path: mageforge
 
-    - name: PHP einrichten
+    - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-version }}
         extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
         tools: composer:v2
 
-    - name: Composer-Pakete cachen
+    - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v3
       with:
@@ -60,15 +60,15 @@ jobs:
         key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
         restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
 
-    - name: Magento klonen
+    - name: Clone Magento
       run: |
         git clone --depth=1 --branch=${{ matrix.magento-version }}-p2 https://github.com/magento/magento2.git magento2
 
-    - name: Elasticsearch-Status prüfen
+    - name: Check Elasticsearch status
       run: |
         curl -s http://localhost:9200/_cluster/health
 
-    - name: Magento installieren
+    - name: Install Magento
       working-directory: magento2
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
@@ -76,8 +76,8 @@ jobs:
         composer config minimum-stability dev
         composer config prefer-stable true
         composer install --no-interaction --no-progress
+        composer require openforgeproject/mageforge
         mkdir -p app/code/OpenForgeProject
-        cp -R ../mageforge app/code/OpenForgeProject/MageForge
         bin/magento setup:install \
           --base-url=http://localhost \
           --db-host=127.0.0.1 \
@@ -100,30 +100,30 @@ jobs:
           --elasticsearch-index-prefix=magento \
           --cleanup-database
 
-    - name: MageForge Modul aktivieren
+    - name: Enable MageForge Module
       working-directory: magento2
       run: |
         bin/magento module:enable OpenForgeProject_MageForge
         bin/magento setup:upgrade
 
-    - name: Modul-Befehle überprüfen
+    - name: Check Module Commands
       working-directory: magento2
       run: |
-        echo "Überprüfe, ob Modul aktiviert ist:"
+        echo "Check if module is enabled:"
         bin/magento module:status | grep OpenForgeProject_MageForge
 
-        echo "Überprüfe, ob MageForge-Befehle verfügbar sind:"
+        echo "Check if MageForge commands are available:"
         bin/magento list | grep mageforge
 
-        echo "Teste MageForge Version-Befehl:"
+        echo "Test MageForge Version command:"
         bin/magento mageforge:version
 
-        echo "Teste MageForge System-Check-Befehl:"
+        echo "Test MageForge System Check command:"
         bin/magento mageforge:system:check
 
-        echo "Teste MageForge Theme-List-Befehl:"
+        echo "Test MageForge Theme List command:"
         bin/magento mageforge:theme:list
 
-    - name: Test-Zusammenfassung
+    - name: Test Summary
       run: |
-        echo "MageForge Modul-Kompatibilitätstest mit Magento ${{ matrix.magento-version }} abgeschlossen"
+        echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
