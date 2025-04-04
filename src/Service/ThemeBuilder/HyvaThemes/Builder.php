@@ -64,7 +64,29 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Generate Hyva Configuration
+        if (!$this->generateHyvaConfig($io, $isVerbose)) {
+            return false;
+        }
+
+        if (!$this->buildTheme($themePath, $io, $isVerbose)) {
+            return false;
+        }
+
+        // Deploy static content
+        $themeCode = basename($themePath);
+        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Clean cache using the dedicated service
+        return $this->cacheCleaner->clean($io, $isVerbose);
+    }
+
+    /**
+     * Generate Hyva configuration
+     */
+    private function generateHyvaConfig(SymfonyStyle $io, bool $isVerbose): bool
+    {
         try {
             if ($isVerbose) {
                 $io->text('Generating Hyvä configuration...');
@@ -73,12 +95,18 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->success('Hyvä configuration generated successfully.');
             }
+            return true;
         } catch (\Exception $e) {
             $io->error('Failed to generate Hyvä configuration: ' . $e->getMessage());
             return false;
         }
+    }
 
-        // Build Hyva theme
+    /**
+     * Build the Hyva theme
+     */
+    private function buildTheme(string $themePath, SymfonyStyle $io, bool $isVerbose): bool
+    {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
         if (!$this->fileDriver->isDirectory($tailwindPath)) {
             $io->error("Tailwind directory not found in: $tailwindPath");
@@ -97,26 +125,13 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->success('Hyvä theme build completed successfully.');
             }
+            chdir($currentDir);
+            return true;
         } catch (\Exception $e) {
             $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
             chdir($currentDir);
             return false;
         }
-
-        chdir($currentDir);
-
-        // Deploy static content
-        $themeCode = basename($themePath);
-        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
-            return false;
-        }
-
-        // Clean cache using the dedicated service
-        if (!$this->cacheCleaner->clean($io, $isVerbose)) {
-            return false;
-        }
-
-        return true;
     }
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool

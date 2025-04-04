@@ -82,10 +82,33 @@ class Builder implements BuilderInterface
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         // Check for node_modules in root
+        if (!$this->installNodeModulesIfMissing($io, $isVerbose)) {
+            return false;
+        }
+
+        // Check for grunt
+        if (!$this->installGruntIfMissing($io, $isVerbose)) {
+            return false;
+        }
+
+        // Check for outdated packages
+        if ($isVerbose) {
+            $this->checkOutdatedPackages($io);
+        }
+
+        return true;
+    }
+
+    /**
+     * Install Node modules if they're missing
+     */
+    private function installNodeModulesIfMissing(SymfonyStyle $io, bool $isVerbose): bool
+    {
         if (!$this->fileDriver->isDirectory('node_modules')) {
             if ($isVerbose) {
                 $io->warning('Node modules not found in root directory. Running npm ci...');
             }
+
             try {
                 if ($this->fileDriver->isExists('package-lock.json')) {
                     $this->shell->execute('npm ci --quiet');
@@ -95,47 +118,63 @@ class Builder implements BuilderInterface
                     }
                     $this->shell->execute('npm install --quiet');
                 }
+
                 if ($isVerbose) {
                     $io->success('Node modules installed successfully.');
                 }
+
+                return true;
             } catch (\Exception $e) {
                 $io->error('Failed to install node modules: ' . $e->getMessage());
                 return false;
             }
         }
 
-        // Check for grunt
+        return true;
+    }
+
+    /**
+     * Install Grunt if it's missing
+     */
+    private function installGruntIfMissing(SymfonyStyle $io, bool $isVerbose): bool
+    {
         try {
             $this->shell->execute('which grunt');
+            return true;
         } catch (\Exception $e) {
             if ($isVerbose) {
                 $io->warning('Grunt not found globally. Installing grunt...');
             }
+
             try {
                 $this->shell->execute('npm install -g grunt-cli --quiet');
+
                 if ($isVerbose) {
                     $io->success('Grunt installed successfully.');
                 }
+
+                return true;
             } catch (\Exception $e) {
                 $io->error('Failed to install grunt: ' . $e->getMessage());
                 return false;
             }
         }
+    }
 
-        // Check for outdated packages
-        if ($isVerbose) {
-            try {
-                $outdated = $this->shell->execute('npm outdated --json');
-                if ($outdated) {
-                    $io->warning('Outdated packages found:');
-                    $io->writeln($outdated);
-                }
-            } catch (\Exception $e) {
-                // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+    /**
+     * Check for outdated packages and report them
+     */
+    private function checkOutdatedPackages(SymfonyStyle $io): void
+    {
+        try {
+            $outdated = $this->shell->execute('npm outdated --json');
+            if ($outdated) {
+                $io->warning('Outdated packages found:');
+                $io->writeln($outdated);
             }
+        } catch (\Exception $e) {
+            // Ignore errors from npm outdated as it returns non-zero when packages are outdated
         }
-
-        return true;
     }
 
     public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
