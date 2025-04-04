@@ -14,11 +14,62 @@ The ThemeBuilder architecture consists of the following components:
 2. **BuilderPool**: Manages the available builders and selects the appropriate builder for a theme
 3. **Concrete Builder Implementations**: Specialized builders for different theme types
 
+## Directory Structure for Your Custom Module
+
+To create your own ThemeBuilder, you'll need to set up a custom Magento 2 module with the following structure:
+
+```
+app/code/YourCompany/YourModule/
+├── Console/
+│   └── Command/
+│       └── [Optional custom commands]
+├── Service/
+│   └── ThemeBuilder/
+│       └── YourBuilder/
+│           └── Builder.php
+├── etc/
+│   ├── di.xml
+│   └── module.xml
+└── registration.php
+```
+
+This is a minimal structure for your module. You can add more files and directories as needed for your specific implementation.
+
 ## Creating Your Own ThemeBuilder
 
-### Step 1: Create a New Builder Class
+### Step 1: Create the Module Structure
 
-Create a new class in one of your modules or in a custom MageForge plugin. The structure should look like this:
+First, create the basic module structure as shown above:
+
+1. Create the module directory: `app/code/YourCompany/YourModule/`
+2. Create a registration.php file:
+```php
+<?php
+use Magento\Framework\Component\ComponentRegistrar;
+
+ComponentRegistrar::register(
+    ComponentRegistrar::MODULE,
+    'YourCompany_YourModule',
+    __DIR__
+);
+```
+
+3. Create a module.xml file in the etc directory:
+```xml
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="YourCompany_YourModule" setup_version="1.0.0">
+        <sequence>
+            <module name="OpenForgeProject_MageForge"/>
+        </sequence>
+    </module>
+</config>
+```
+
+### Step 2: Create a New Builder Class
+
+Create a new Builder class in `app/code/YourCompany/YourModule/Service/ThemeBuilder/YourBuilder/Builder.php`:
 
 ```php
 <?php
@@ -121,9 +172,9 @@ class Builder implements BuilderInterface
 }
 ```
 
-### Step 2: Register Your Builder in the DI System
+### Step 3: Register Your Builder in the DI System
 
-To make your builder available to MageForge, you need to register it in Magento's Dependency Injection system. Create a `di.xml` file in your module:
+Create a `di.xml` file in `app/code/YourCompany/YourModule/etc/`:
 
 ```xml
 <?xml version="1.0"?>
@@ -138,6 +189,16 @@ To make your builder available to MageForge, you need to register it in Magento'
     </type>
 </config>
 ```
+
+### Step 4: Install and Enable Your Module
+
+After creating all the required files, you need to enable your module:
+
+1. Run `bin/magento module:enable YourCompany_YourModule`
+2. Run `bin/magento setup:upgrade`
+3. Run `bin/magento cache:clean`
+
+After these steps, your custom ThemeBuilder will be available and integrated with MageForge.
 
 ## Implementation Details
 

@@ -1,0 +1,5 @@
+# Codacy-Konfiguration
+engines:
+  github-workflows:
+    exclude_paths:
+      - .github/workflows/magento-compatibility.yml
