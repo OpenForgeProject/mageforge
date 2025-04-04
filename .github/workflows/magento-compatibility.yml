@@ -98,10 +98,19 @@ jobs:
           --elasticsearch-index-prefix=magento \
           --cleanup-database
 
-    - name: Install MageForge Module
+    - name: Install MageForge Module from current commit
       working-directory: magento2
       run: |
-        composer require openforgeproject/mageforge
+        # Füge ein lokales Repository hinzu, das auf den aktuellen Code verweist
+        composer config repositories.mageforge-local path ../mageforge
+
+        # Installiere das Modul aus dem lokalen Repository
+        composer require --no-update openforgeproject/mageforge:@dev
+
+        # Aktualisiere die Abhängigkeiten
+        composer update openforgeproject/mageforge --with-dependencies
+
+        # Aktiviere das Modul und führe das Setup-Upgrade aus
         bin/magento module:enable OpenForgeProject_MageForge
         bin/magento setup:upgrade
 
