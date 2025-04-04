@@ -12,24 +12,38 @@ MageForge is a Magento 2 module designed to assist frontend developers in stream
 
 ## Magento Requirements
 
-MageForge requires Magento 2.4.6 or higher.
+MageForge requires Magento 2.4.7 or higher.
 Please ensure that your Magento installation meets this requirement before installation.
 
 ## Features
+
+### Supported Theme-Types 🎨
+
+| Theme Type | Support Status |
+|------------|----------------|
+| 🎯 Magento Standard | ✅ Fully Supported |
+| 🚀 Hyvä | ✅ Fully Supported |
+| 🔄 Hyvä Fallback | ✅ Fully Supported |
+| 🎨 Custom TailwindCSS (no Hyvä) | ✅ Fully Supported |
+| 💼 Avanta B2B | ✅ Fully Supported |
+| 🥰 Your Custom Theme | [Create your own Builder](./docs/custom_theme_builders.md) |
+
+---
 
 ### Available Commands
 
 | Command                    | Description                                                 |
 |---------------------------|-------------------------------------------------------------|
 | `mageforge:version`       | Shows current and latest version of the module             |
-| `mageforge:system-check`  | Checks system requirements (PHP, MySQL, Node.js, etc.)     |
+| `mageforge:system-check`  | Get system information (OS, PHP, Database, Node.js, etc.)     |
 | `mageforge:theme:list`    | Lists all available themes                                 |
 | `mageforge:theme:build`   | Builds selected themes (CSS/TailwindCSS)                   |
 | `mageforge:theme:watch`   | Starts watch mode for theme development                    |
 
 ---
 
-## Installation
+## Getting Started
+### Installation
 
 1. Add the repository to your `composer.json`:
    ```json
