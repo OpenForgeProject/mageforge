@@ -19,6 +19,8 @@ jobs:
             php-version: '8.3'
           - magento-version: '2.4.7'
             php-version: '8.4'
+          - magento-version: '2.4.8-beta2'
+            php-version: '8.4'
 
     services:
       mysql:
@@ -62,7 +64,7 @@ jobs:
 
     - name: Clone Magento
       run: |
-        git clone --depth=1 --branch=${{ matrix.magento-version }}-p2 https://github.com/magento/magento2.git magento2
+        git clone --depth=1 --branch=${{ matrix.magento-version }} https://github.com/magento/magento2.git magento2
 
     - name: Check Elasticsearch status
       run: |
