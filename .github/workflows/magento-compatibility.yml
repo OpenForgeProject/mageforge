@@ -76,7 +76,6 @@ jobs:
         composer config minimum-stability dev
         composer config prefer-stable true
         composer install --no-interaction --no-progress
-        composer require openforgeproject/mageforge
         bin/magento setup:install \
           --base-url=http://localhost \
           --db-host=127.0.0.1 \
@@ -99,9 +98,10 @@ jobs:
           --elasticsearch-index-prefix=magento \
           --cleanup-database
 
-    - name: Enable MageForge Module
+    - name: Install MageForge Module
       working-directory: magento2
       run: |
+        composer require openforgeproject/mageforge
         bin/magento module:enable OpenForgeProject_MageForge
         bin/magento setup:upgrade
 
