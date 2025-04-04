@@ -77,7 +77,6 @@ jobs:
         composer config prefer-stable true
         composer install --no-interaction --no-progress
         composer require openforgeproject/mageforge
-        mkdir -p app/code/OpenForgeProject
         bin/magento setup:install \
           --base-url=http://localhost \
           --db-host=127.0.0.1 \
