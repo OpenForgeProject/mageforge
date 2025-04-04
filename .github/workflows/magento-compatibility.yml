@@ -1,0 +1,137 @@
+name: Magento Compatibility Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Magento ${{ matrix.magento-version }} Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        magento-version: ['2.4.5', '2.4.6', '2.4.7']
+        php-version: ['8.1', '8.2', '8.3']
+        include:
+          - magento-version: '2.4.5'
+            php-version: '8.1'
+          - magento-version: '2.4.6'
+            php-version: '8.2'
+          - magento-version: '2.4.7'
+            php-version: '8.3'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: magento
+          MYSQL_DATABASE: magento
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      elasticsearch:
+        image: elasticsearch:7.17.0
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        path: mageforge
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+        tools: composer:v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+
+    - name: Install OS dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libonig-dev libzip-dev libjpeg-dev libpng-dev libfreetype6-dev
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.composer/cache/files
+        key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
+
+    - name: Clone Magento
+      run: |
+        git clone --depth=1 --branch=${{ matrix.magento-version }}-p2 https://github.com/magento/magento2.git magento2
+
+    - name: Install Magento
+      working-directory: magento2
+      env:
+        COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+      run: |
+        composer config minimum-stability dev
+        composer config prefer-stable true
+        composer install --no-interaction --no-progress
+        mkdir -p app/code/OpenForgeProject
+        cp -R ../mageforge app/code/OpenForgeProject/MageForge
+        bin/magento setup:install \
+          --base-url=http://localhost \
+          --db-host=127.0.0.1 \
+          --db-name=magento \
+          --db-user=root \
+          --db-password=magento \
+          --admin-firstname=Admin \
+          --admin-lastname=User \
+          --admin-email=admin@example.com \
+          --admin-user=admin \
+          --admin-password=admin12345 \
+          --language=en_US \
+          --currency=USD \
+          --timezone=Europe/Berlin \
+          --use-rewrites=1 \
+          --search-engine=elasticsearch7 \
+          --elasticsearch-host=localhost \
+          --elasticsearch-port=9200 \
+          --cleanup-database
+
+    - name: Install frontend dependencies
+      working-directory: magento2
+      run: |
+        npm install -g grunt-cli
+        npm install
+        bin/magento setup:static-content:deploy -f
+
+    - name: Enable MageForge Module
+      working-directory: magento2
+      run: |
+        bin/magento module:enable OpenForgeProject_MageForge
+        bin/magento setup:upgrade
+        bin/magento setup:di:compile
+
+    - name: Test MageForge Commands
+      working-directory: magento2
+      run: |
+        bin/magento mageforge:version
+        bin/magento mageforge:system:check
+        bin/magento mageforge:theme:list
+
+        # Optionally try building a theme if this is a realistic test scenario
+        # bin/magento mageforge:theme:build Magento/luma
+
+    - name: Test Summary
+      run: |
+        echo "MageForge compatibility test with Magento ${{ matrix.magento-version }} completed"
