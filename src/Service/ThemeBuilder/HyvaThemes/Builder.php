@@ -140,55 +140,73 @@ class Builder implements BuilderInterface
 
         // Check for node_modules directory
         if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
-            if ($isVerbose) {
-                $io->warning('Node modules not found in tailwind directory. Running npm ci...');
-            }
-
-            $currentDir = getcwd();
-            chdir($tailwindPath);
-
-            try {
-                if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
-                    $this->shell->execute('npm ci --quiet');
-                } else {
-                    if ($isVerbose) {
-                        $io->warning('No package-lock.json found, running npm install...');
-                    }
-                    $this->shell->execute('npm install --quiet');
-                }
-                if ($isVerbose) {
-                    $io->success('Node modules installed successfully.');
-                }
-            } catch (\Exception $e) {
-                if ($isVerbose) {
-                    $io->success('Node modules installed successfully.');
-                }
-            } catch (\Exception $e) {
-                $io->error('Failed to install node modules: ' . $e->getMessage());
-                chdir($currentDir);
+            if (!$this->installNodeModules($tailwindPath, $io, $isVerbose)) {
                 return false;
             }
-
-            chdir($currentDir);
         }
 
         // Check for outdated packages
         if ($isVerbose) {
-            $currentDir = getcwd();
-            chdir($tailwindPath);
-            try {
-                $outdated = $this->shell->execute('npm outdated --json');
-                if ($outdated) {
-                    $io->warning('Outdated packages found:');
-                    $io->writeln($outdated);
-                }
-            } catch (\Exception $e) {
-                // Ignore errors from npm outdated as it returns non-zero when packages are outdated
-            }
-            chdir($currentDir);
+            $this->checkOutdatedPackages($tailwindPath, $io);
         }
 
         return true;
+    }
+
+    /**
+     * Install Node modules in the tailwind directory
+     */
+    private function installNodeModules(string $tailwindPath, SymfonyStyle $io, bool $isVerbose): bool
+    {
+        if ($isVerbose) {
+            $io->warning('Node modules not found in tailwind directory. Running npm ci...');
+        }
+
+        $currentDir = getcwd();
+        chdir($tailwindPath);
+
+        try {
+            if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
+                $this->shell->execute('npm ci --quiet');
+            } else {
+                if ($isVerbose) {
+                    $io->warning('No package-lock.json found, running npm install...');
+                }
+                $this->shell->execute('npm install --quiet');
+            }
+
+            if ($isVerbose) {
+                $io->success('Node modules installed successfully.');
+            }
+
+            chdir($currentDir);
+            return true;
+        } catch (\Exception $e) {
+            $io->error('Failed to install node modules: ' . $e->getMessage());
+            chdir($currentDir);
+            return false;
+        }
+    }
+
+    /**
+     * Check for outdated npm packages and report them
+     */
+    private function checkOutdatedPackages(string $tailwindPath, SymfonyStyle $io): void
+    {
+        $currentDir = getcwd();
+        chdir($tailwindPath);
+
+        try {
+            $outdated = $this->shell->execute('npm outdated --json');
+            if ($outdated) {
+                $io->warning('Outdated packages found:');
+                $io->writeln($outdated);
+            }
+        } catch (\Exception $e) {
+            // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+        }
+
+        chdir($currentDir);
     }
 
     public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
