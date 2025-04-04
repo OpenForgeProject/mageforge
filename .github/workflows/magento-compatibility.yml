@@ -18,9 +18,7 @@ jobs:
           - magento-version: '2.4.7'
             php-version: '8.3'
           - magento-version: '2.4.7-p4'
-            php-version: '8.4'
-          - magento-version: '2.4.8-beta2'
-            php-version: '8.4'
+            php-version: '8.3'
 
     services:
       mysql:
@@ -48,7 +46,7 @@ jobs:
         path: mageforge
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
       with:
         php-version: ${{ matrix.php-version }}
         extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
