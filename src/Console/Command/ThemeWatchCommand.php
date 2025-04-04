@@ -44,8 +44,10 @@ class ThemeWatchCommand extends Command
 
         if (empty($themeCode)) {
             $themes = $this->themeList->getAllThemes();
-            $options = array_map(fn($theme) => $theme->getCode(), $themes);
-
+            $options = [];
+            foreach ($themes as $theme) {
+                $options[] = $theme->getCode();
+            }
 
             $themeCodePrompt = new SelectPrompt(
                 label: 'Select theme to watch',
