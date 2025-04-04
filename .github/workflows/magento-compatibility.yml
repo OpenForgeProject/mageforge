@@ -14,8 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        magento-version: ['2.4.7']
-        php-version: ['8.3']
+        include:
+          - magento-version: '2.4.7'
+            php-version: '8.3'
+          - magento-version: '2.4.6'
+            php-version: '8.2'
 
     services:
       mysql:
@@ -26,6 +29,15 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      elasticsearch:
+        image: elasticsearch:7.17.0
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
     - name: Code auschecken
@@ -51,6 +63,10 @@ jobs:
     - name: Magento klonen
       run: |
         git clone --depth=1 --branch=${{ matrix.magento-version }}-p2 https://github.com/magento/magento2.git magento2
+
+    - name: Elasticsearch-Status prüfen
+      run: |
+        curl -s http://localhost:9200/_cluster/health
 
     - name: Magento installieren
       working-directory: magento2
@@ -78,6 +94,10 @@ jobs:
           --timezone=Europe/Berlin \
           --use-rewrites=1 \
           --backend-frontname=admin \
+          --search-engine=elasticsearch7 \
+          --elasticsearch-host=localhost \
+          --elasticsearch-port=9200 \
+          --elasticsearch-index-prefix=magento \
           --cleanup-database
 
     - name: MageForge Modul aktivieren
