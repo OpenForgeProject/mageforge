@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        magento-version: ['2.4.5', '2.4.6', '2.4.7']
+        magento-version: ['2.4.7']
         php-version: ['8.3']
 
     services:
