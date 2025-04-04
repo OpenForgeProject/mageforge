@@ -10,6 +10,11 @@ MageForge is a Magento 2 module designed to assist frontend developers in stream
 
 [![Join our OpenForgeProject Discord community](./.github/assets/small_logo_blurple_RGB.png)](https://discord.gg/H5CjMXQQHn)
 
+## Magento Requirements
+
+MageForge requires Magento 2.4.6 or higher.
+Please ensure that your Magento installation meets this requirement before installation.
+
 ## Features
 
 ### Available Commands
