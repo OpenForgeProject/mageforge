@@ -41,12 +41,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         path: mageforge
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@94cce3f998189955679ee19d1128423eb36dbec6
+      uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
       with:
         php-version: ${{ matrix.php-version }}
         extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
@@ -54,7 +54,7 @@ jobs:
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v3
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
       with:
         path: ~/.composer/cache/files
         key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
