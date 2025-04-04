@@ -81,6 +81,13 @@ MageForge is a Magento 2 module designed to assist frontend developers in stream
 - Watch mode supports hot-reloading for LESS and Tailwind
 - Check system information anytime with `mageforge:system-check`
 
+## Extending MageForge
+
+MageForge provides a modular architecture that allows developers to create custom theme builders for specific project requirements. For more information, see:
+
+- [Custom Theme Builders Documentation](./docs/custom_theme_builders.md)
+- [Commands Documentation](./docs/commands.md)
+
 ## Report Feature or Bugs
 
 MageForge provides several forms to submit feature requests or report a bug.
@@ -88,12 +95,7 @@ You will find it in the [issue section](https://github.com/OpenForgeProject/mage
 
 ## Contributing
 
-We welcome contributions from the community. To contribute, please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes.
-4. Push your branch and create a pull request.
+We welcome contributions from the community! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for more information on how to get involved.
 
 ## License
 
@@ -101,7 +103,7 @@ See the [LICENSE](LICENSE) file for more details.
 
 ## Support
 
-For support, please open an issue on the [GitHub repository](https://github.com/OpenForgeProject/mageforge/issues).
+For support, please open an issue on the [GitHub repository](https://github.com/OpenForgeProject/mageforge/issues) or join our [Discord community](https://discord.gg/H5CjMXQQHn).
 
 ## Changelog
 
