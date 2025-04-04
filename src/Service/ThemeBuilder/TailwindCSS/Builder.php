@@ -122,6 +122,9 @@ class Builder implements BuilderInterface
                 if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
                     $this->shell->execute('npm ci --quiet');
                 } else {
+                    if ($isVerbose) {
+                        $io->warning('No package-lock.json found, running npm install...');
+                    }
                     $this->shell->execute('npm install --quiet');
                 }
                 if ($isVerbose) {

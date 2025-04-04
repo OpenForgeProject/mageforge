@@ -133,7 +133,18 @@ class Builder implements BuilderInterface
             chdir($tailwindPath);
 
             try {
-                $this->shell->execute('npm ci --quiet');
+                if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
+                    $this->shell->execute('npm ci --quiet');
+                } else {
+                    if ($isVerbose) {
+                        $io->warning('No package-lock.json found, running npm install...');
+                    }
+                    $this->shell->execute('npm install --quiet');
+                }
+                if ($isVerbose) {
+                    $io->success('Node modules installed successfully.');
+                }
+            } catch (\Exception $e) {
                 if ($isVerbose) {
                     $io->success('Node modules installed successfully.');
                 }

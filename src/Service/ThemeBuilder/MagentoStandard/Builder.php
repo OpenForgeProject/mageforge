@@ -87,7 +87,14 @@ class Builder implements BuilderInterface
                 $io->warning('Node modules not found in root directory. Running npm ci...');
             }
             try {
-                $this->shell->execute('npm ci --quiet');
+                if ($this->fileDriver->isExists('package-lock.json')) {
+                    $this->shell->execute('npm ci --quiet');
+                } else {
+                    if ($isVerbose) {
+                        $io->warning('No package-lock.json found, running npm install...');
+                    }
+                    $this->shell->execute('npm install --quiet');
+                }
                 if ($isVerbose) {
                     $io->success('Node modules installed successfully.');
                 }
