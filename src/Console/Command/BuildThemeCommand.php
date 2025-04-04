@@ -57,6 +57,7 @@ class BuildThemeCommand extends Command
                 );
 
                 $themeCodes = $themeCodesPrompt->prompt();
+                \Laravel\Prompts\Prompt::terminal()->restoreTty();
             }
 
             return $this->processBuildThemes($themeCodes, $io, $output, $isVerbose);

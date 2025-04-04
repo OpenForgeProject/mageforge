@@ -55,6 +55,7 @@ class ThemeWatchCommand extends Command
             );
 
             $themeCode = $themeCodePrompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
         }
 
         try {
