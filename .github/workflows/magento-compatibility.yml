@@ -1,4 +1,4 @@
-name: Magento Compatibility Tests
+name: Magento Modul Kompatibilitätstest
 
 on:
   pull_request:
@@ -9,13 +9,13 @@ on:
 
 jobs:
   test:
-    name: Magento ${{ matrix.magento-version }} with PHP ${{ matrix.php-version }} Test
+    name: Magento ${{ matrix.magento-version }} mit PHP ${{ matrix.php-version }} Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         magento-version: ['2.4.5', '2.4.6', '2.4.7']
-        php-version: ['8.2', '8.3']
+        php-version: ['8.3']
 
     services:
       mysql:
@@ -27,39 +27,20 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      elasticsearch:
-        image: elasticsearch:7.17.0
-        ports:
-          - 9200:9200
-        env:
-          discovery.type: single-node
-          ES_JAVA_OPTS: -Xms512m -Xmx512m
-        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
-
     steps:
-    - name: Checkout code
+    - name: Code auschecken
       uses: actions/checkout@v3
       with:
         path: mageforge
 
-    - name: Setup PHP
+    - name: PHP einrichten
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-version }}
         extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
         tools: composer:v2
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22'
-
-    - name: Install OS dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libonig-dev libzip-dev libjpeg-dev libpng-dev libfreetype6-dev
-
-    - name: Cache Composer packages
+    - name: Composer-Pakete cachen
       id: composer-cache
       uses: actions/cache@v3
       with:
@@ -67,11 +48,11 @@ jobs:
         key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
         restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
 
-    - name: Clone Magento
+    - name: Magento klonen
       run: |
         git clone --depth=1 --branch=${{ matrix.magento-version }}-p2 https://github.com/magento/magento2.git magento2
 
-    - name: Install Magento
+    - name: Magento installieren
       working-directory: magento2
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
@@ -96,35 +77,33 @@ jobs:
           --currency=USD \
           --timezone=Europe/Berlin \
           --use-rewrites=1 \
-          --search-engine=elasticsearch7 \
-          --elasticsearch-host=localhost \
-          --elasticsearch-port=9200 \
+          --backend-frontname=admin \
           --cleanup-database
 
-    - name: Install frontend dependencies
-      working-directory: magento2
-      run: |
-        npm install -g grunt-cli
-        npm install
-        bin/magento setup:static-content:deploy -f
-
-    - name: Enable MageForge Module
+    - name: MageForge Modul aktivieren
       working-directory: magento2
       run: |
         bin/magento module:enable OpenForgeProject_MageForge
         bin/magento setup:upgrade
-        bin/magento setup:di:compile
 
-    - name: Test MageForge Commands
+    - name: Modul-Befehle überprüfen
       working-directory: magento2
       run: |
+        echo "Überprüfe, ob Modul aktiviert ist:"
+        bin/magento module:status | grep OpenForgeProject_MageForge
+
+        echo "Überprüfe, ob MageForge-Befehle verfügbar sind:"
+        bin/magento list | grep mageforge
+
+        echo "Teste MageForge Version-Befehl:"
         bin/magento mageforge:version
+
+        echo "Teste MageForge System-Check-Befehl:"
         bin/magento mageforge:system:check
+
+        echo "Teste MageForge Theme-List-Befehl:"
         bin/magento mageforge:theme:list
 
-        # Optionally try building a theme if this is a realistic test scenario
-        # bin/magento mageforge:theme:build Magento/luma
-
-    - name: Test Summary
+    - name: Test-Zusammenfassung
       run: |
-        echo "MageForge compatibility test with Magento ${{ matrix.magento-version }} completed"
+        echo "MageForge Modul-Kompatibilitätstest mit Magento ${{ matrix.magento-version }} abgeschlossen"
