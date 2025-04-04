@@ -21,9 +21,6 @@ class SystemCheckCommand extends Command
 {
     private const NODE_LTS_URL = 'https://nodejs.org/dist/index.json';
 
-    /**
-     * @inheritDoc
-     */
     public function __construct(
         private readonly ProductMetadataInterface $productMetadata,
         private readonly Escaper $escaper,
@@ -31,18 +28,12 @@ class SystemCheckCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * @inheritDoc
-     */
     protected function configure(): void
     {
         $this->setName('mageforge:system:check');
         $this->setDescription('Displays system information like PHP version and Node.js version');
     }
 
-    /**
-     * @inheritDoc
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -99,18 +90,14 @@ class SystemCheckCommand extends Command
             ]
         );
 
-        // Display PHP extensions in a separate table
         if (!empty($phpExtensions)) {
             $io->section('PHP Extensions');
-            $io->table(['Extension', 'Status'], $phpExtensions);
+            $io->table(['Component', 'Version/Status'], $phpExtensions);
         }
 
         return Cli::RETURN_SUCCESS;
     }
 
-    /**
-     * Get the latest LTS Node.js version from the Node.js API
-     */
     private function getLatestLtsNodeVersion(): string
     {
         try {
@@ -137,9 +124,6 @@ class SystemCheckCommand extends Command
         }
     }
 
-    /**
-     * Get a shortened MySQL version string
-     */
     private function getShortMysqlVersion(): string
     {
         return $this->extractVersionFromCommand('mysql -V') ??
@@ -147,15 +131,11 @@ class SystemCheckCommand extends Command
                'Unknown';
     }
 
-    /**
-     * Extract version number from command output using different patterns
-     */
     private function extractVersionFromCommand(string $command): ?string
     {
         try {
             $output = $this->runCommand($command);
 
-            // List of patterns to try, in order of preference
             $patterns = [
                 '/mysql Ver\s+(\d+\.\d+\.\d+)/',   // Standard MySQL Format
                 '/Distrib\s+(\d+\.\d+\.\d+)/',     // Alternative format with Distrib
@@ -169,15 +149,12 @@ class SystemCheckCommand extends Command
                 }
             }
 
-            return $output; // Return the full output if no pattern matches
+            return $output;
         } catch (\Exception $e) {
             return null;
         }
     }
 
-    /**
-     * Get database type (MySQL or MariaDB)
-     */
     private function getDatabaseType(): string
     {
         return $this->detectDatabaseTypeFromCommand('mysql -V') ??
@@ -185,9 +162,6 @@ class SystemCheckCommand extends Command
                'Unknown';
     }
 
-    /**
-     * Detect database type from command output
-     */
     private function detectDatabaseTypeFromCommand(string $command): ?string
     {
         try {
@@ -207,28 +181,18 @@ class SystemCheckCommand extends Command
         }
     }
 
-    /**
-     * Get a shortened OS information string
-     */
     private function getShortOsInfo(): string
     {
         list($osName, , $osVersion) = explode(' ', php_uname());
         return ($osName ?? 'Unknown') . ' ' . ($osVersion ?? 'Unknown');
     }
 
-    /**
-     * Get the Node.js version
-     */
     private function getNodeVersion(): string
     {
         return $this->runCommand('node -v');
     }
 
     /**
-     * Run a command and return the output
-     *
-     * @param string $command
-     * @return string
      * @throws ProcessFailedException
      */
     private function runCommand(string $command): string
@@ -239,65 +203,47 @@ class SystemCheckCommand extends Command
         if (!$process->isSuccessful()) {
             $errorOutput = $this->escaper->escapeHtml($process->getErrorOutput());
             $output = $this->escaper->escapeHtml($process->getOutput());
-            $process->setErrorOutput($errorOutput);
-            $process->setOutput($output);
-            throw new ProcessFailedException($process);
+
+            $safeProcess = new Process(explode(' ', $command));
+            $safeProcess->setOutput($output);
+            $safeProcess->setErrorOutput($errorOutput);
+
+            throw new ProcessFailedException($safeProcess);
         }
 
         return $this->escaper->escapeHtml(trim($process->getOutput()));
     }
 
-    /**
-     * Get the Composer version
-     */
     private function getComposerVersion(): string
     {
         return $this->runCommand('composer -V');
     }
 
-    /**
-     * Get the NPM version
-     */
     private function getNpmVersion(): string
     {
         return $this->runCommand('npm -v');
     }
 
-    /**
-     * Get the Git version
-     */
     private function getGitVersion(): string
     {
         return $this->runCommand('git --version');
     }
 
-    /**
-     * Get the Xdebug status
-     */
     private function getXdebugStatus(): string
     {
         return extension_loaded('xdebug') ? 'Enabled' : 'Disabled';
     }
 
-    /**
-     * Get the Redis status
-     */
     private function getRedisStatus(): string
     {
         return extension_loaded('redis') ? 'Enabled' : 'Disabled';
     }
 
-    /**
-     * Get the search engine status
-     */
     private function getSearchEngineStatus(): string
     {
         return extension_loaded('elasticsearch') ? 'Enabled' : 'Disabled';
     }
 
-    /**
-     * Get important PHP extensions
-     */
     private function getImportantPhpExtensions(): array
     {
         $extensions = [
@@ -320,17 +266,11 @@ class SystemCheckCommand extends Command
         return $result;
     }
 
-    /**
-     * Get the PHP memory limit
-     */
     private function getPhpMemoryLimit(): string
     {
         return ini_get('memory_limit');
     }
 
-    /**
-     * Get the disk space
-     */
     private function getDiskSpace(): string
     {
         $freeSpace = disk_free_space('/');
@@ -343,9 +283,6 @@ class SystemCheckCommand extends Command
         );
     }
 
-    /**
-     * Format bytes to a human-readable format
-     */
     private function formatBytes(float $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
