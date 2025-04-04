@@ -105,7 +105,7 @@ jobs:
         composer config repositories.mageforge-local path ../mageforge
 
         # Installiere das Modul aus dem lokalen Repository
-        composer require --no-update openforgeproject/mageforge
+        composer require --no-update openforgeproject/mageforge:@dev
 
         # Aktualisiere die Abhängigkeiten
         composer update openforgeproject/mageforge --with-dependencies
