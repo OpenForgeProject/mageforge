@@ -45,7 +45,7 @@ Please ensure that your Magento installation meets this requirement before insta
 
 2. Install the module via Composer:
    ```bash
-   composer require openforgeproject/mageforge --dev
+   composer require openforgeproject/mageforge
    ```
 
 3. Enable the module:
