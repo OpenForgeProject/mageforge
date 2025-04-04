@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Console\Command;
 
 use Laravel\Prompts\MultiSelectPrompt;
+use Laravel\Prompts\Spinner;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
@@ -93,12 +94,23 @@ class BuildThemeCommand extends Command
 
         if ($isVerbose) {
             $io->title(sprintf('Building %d theme(s)', count($themeCodes)));
-        }
 
-        foreach ($themeCodes as $themeCode) {
-            if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
-                continue;
+            foreach ($themeCodes as $themeCode) {
+                if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
+                    continue;
+                }
             }
+        } else {
+            // Nutze Spinner mit der korrekten API
+            $spinner = new Spinner('✨ Building theme ...');
+            $spinner->spin(function() use ($themeCodes, $io, $output, $isVerbose, &$successList) {
+                foreach ($themeCodes as $themeCode) {
+                    if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
+                        continue;
+                    }
+                }
+                return true;
+            });
         }
 
         $this->displayBuildSummary($io, $successList, microtime(true) - $startTime);
