@@ -9,20 +9,13 @@ on:
 
 jobs:
   test:
-    name: Magento ${{ matrix.magento-version }} Test
+    name: Magento ${{ matrix.magento-version }} with PHP ${{ matrix.php-version }} Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         magento-version: ['2.4.5', '2.4.6', '2.4.7']
-        php-version: ['8.1', '8.2', '8.3']
-        include:
-          - magento-version: '2.4.5'
-            php-version: '8.1'
-          - magento-version: '2.4.6'
-            php-version: '8.2'
-          - magento-version: '2.4.7'
-            php-version: '8.3'
+        php-version: ['8.2', '8.3']
 
     services:
       mysql:
