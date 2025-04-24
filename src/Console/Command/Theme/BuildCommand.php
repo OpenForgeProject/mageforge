@@ -2,21 +2,31 @@
 
 declare(strict_types=1);
 
-namespace OpenForgeProject\MageForge\Console\Command;
+namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Laravel\Prompts\MultiSelectPrompt;
 use Laravel\Prompts\Spinner;
+use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class BuildThemeCommand extends AbstractCommand
+/**
+ * Command for building Magento themes
+ */
+class BuildCommand extends AbstractCommand
 {
+    /**
+     * @param ThemePath $themePath
+     * @param ThemeList $themeList
+     * @param BuilderPool $builderPool
+     */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
@@ -25,9 +35,12 @@ class BuildThemeCommand extends AbstractCommand
         parent::__construct();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function configure(): void
     {
-        $this->setName('mageforge:theme:build')
+        $this->setName($this->getCommandName('theme', 'build'))
             ->setDescription('Builds a Magento theme')
             ->addArgument(
                 'themeCodes',
@@ -37,6 +50,9 @@ class BuildThemeCommand extends AbstractCommand
             ->setAliases(['frontend:build']);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $themeCodes = $input->getArgument('themeCodes');
@@ -60,6 +76,12 @@ class BuildThemeCommand extends AbstractCommand
         return $this->processBuildThemes($themeCodes, $this->io, $output, $isVerbose);
     }
 
+    /**
+     * Display available themes
+     *
+     * @param SymfonyStyle $io
+     * @return int
+     */
     private function displayAvailableThemes(SymfonyStyle $io): int
     {
         $table = new Table($io);
@@ -75,6 +97,15 @@ class BuildThemeCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * Process theme building
+     *
+     * @param array $themeCodes
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return int
+     */
     private function processBuildThemes(
         array $themeCodes,
         SymfonyStyle $io,
@@ -110,6 +141,16 @@ class BuildThemeCommand extends AbstractCommand
         return Command::SUCCESS;
     }
 
+    /**
+     * Process a single theme
+     *
+     * @param string $themeCode
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @param array $successList
+     * @return bool
+     */
     private function processTheme(
         string $themeCode,
         SymfonyStyle $io,
@@ -145,6 +186,13 @@ class BuildThemeCommand extends AbstractCommand
         return true;
     }
 
+    /**
+     * Display build summary
+     *
+     * @param SymfonyStyle $io
+     * @param array $successList
+     * @param float $duration
+     */
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
         if (empty($successList)) {

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OpenForgeProject\MageForge\Console\Command;
+namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Laravel\Prompts\SelectPrompt;
+use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
@@ -12,8 +13,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ThemeWatchCommand extends AbstractCommand
+/**
+ * Command for watching theme changes
+ */
+class WatchCommand extends AbstractCommand
 {
+    /**
+     * @param BuilderPool $builderPool
+     * @param ThemeList $themeList
+     * @param ThemePath $themePath
+     */
     public function __construct(
         private readonly BuilderPool $builderPool,
         private readonly ThemeList $themeList,
@@ -22,9 +31,12 @@ class ThemeWatchCommand extends AbstractCommand
         parent::__construct();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function configure()
     {
-        $this->setName('mageforge:theme:watch')
+        $this->setName($this->getCommandName('theme', 'watch'))
             ->setDescription('Watches theme files for changes and rebuilds them automatically')
             ->addOption(
                 'theme',
@@ -35,6 +47,9 @@ class ThemeWatchCommand extends AbstractCommand
             ->setAliases(['frontend:watch']);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $themeCode = $input->getOption('theme');

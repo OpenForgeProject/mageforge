@@ -2,19 +2,21 @@
 
 declare(strict_types=1);
 
-namespace OpenForgeProject\MageForge\Console\Command;
+namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Magento\Framework\Console\Cli;
+use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ListThemeCommand extends AbstractCommand
+/**
+ * Command for listing available Magento themes
+ */
+class ListCommand extends AbstractCommand
 {
     /**
-     * Constructor
-     *
      * @param ThemeList $themeList
      */
     public function __construct(
@@ -24,25 +26,20 @@ class ListThemeCommand extends AbstractCommand
     }
 
     /**
-     * Configure the command
+     * {@inheritdoc}
      */
     protected function configure(): void
     {
-        $this->setName('mageforge:theme:list');
-        $this->setDescription('Lists all available themes');
+        $this->setName($this->getCommandName('theme', 'list'))
+            ->setDescription('Lists all available Magento themes')
+            ->setAliases(['frontend:list']);
     }
 
     /**
-     * Execute the command logic
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
+     * {@inheritdoc}
      */
-    protected function executeCommand(
-        InputInterface $input,
-        OutputInterface $output,
-    ): int {
+    protected function executeCommand(InputInterface $input, OutputInterface $output): int
+    {
         $themes = $this->themeList->getAllThemes();
 
         if (empty($themes)) {

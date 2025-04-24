@@ -18,9 +18,26 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 abstract class AbstractCommand extends Command
 {
     /**
+     * Default command group prefix
+     */
+    protected const COMMAND_PREFIX = 'mageforge';
+
+    /**
      * @var SymfonyStyle
      */
     protected SymfonyStyle $io;
+
+    /**
+     * Get the command name with proper group structure
+     *
+     * @param string $group The command group (e.g. 'theme', 'system')
+     * @param string $command The specific command (e.g. 'build', 'watch')
+     * @return string The properly formatted command name
+     */
+    protected function getCommandName(string $group, string $command): string
+    {
+        return sprintf('%s:%s:%s', static::COMMAND_PREFIX, $group, $command);
+    }
 
     /**
      * Execute the command
