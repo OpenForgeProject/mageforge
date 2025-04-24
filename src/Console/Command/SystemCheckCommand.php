@@ -4,20 +4,18 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
-use Symfony\Component\Console\Command\Command;
+use Composer\Semver\Comparator;
+use GuzzleHttp\Client;
+use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\Console\Cli;
+use Magento\Framework\Escaper;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Helper\TableSeparator;
-use Magento\Framework\Console\Cli;
-use GuzzleHttp\Client;
-use Composer\Semver\Comparator;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use Magento\Framework\App\ProductMetadataInterface;
-use Magento\Framework\Escaper;
+use Symfony\Component\Process\Process;
 
-class SystemCheckCommand extends Command
+class SystemCheckCommand extends AbstractCommand
 {
     private const NODE_LTS_URL = 'https://nodejs.org/dist/index.json';
 
@@ -34,10 +32,8 @@ class SystemCheckCommand extends Command
         $this->setDescription('Displays system information like PHP version and Node.js version');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-
         $phpVersion = phpversion();
         $nodeVersion = $this->getNodeVersion();
         $mysqlVersion = $this->getShortMysqlVersion();
@@ -60,8 +56,8 @@ class SystemCheckCommand extends Command
 
         $dbDisplay = $dbType . ' ' . $mysqlVersion;
 
-        $io->section('System Components');
-        $io->table(
+        $this->io->section('System Components');
+        $this->io->table(
             ['Component', 'Version/Status'],
             [
                 ['PHP', $phpVersion . ' (Memory limit: ' . $this->getPhpMemoryLimit() . ')'],
@@ -91,8 +87,8 @@ class SystemCheckCommand extends Command
         );
 
         if (!empty($phpExtensions)) {
-            $io->section('PHP Extensions');
-            $io->table(['Component', 'Version/Status'], $phpExtensions);
+            $this->io->section('PHP Extensions');
+            $this->io->table(['Component', 'Version/Status'], $phpExtensions);
         }
 
         return Cli::RETURN_SUCCESS;

@@ -6,12 +6,11 @@ namespace OpenForgeProject\MageForge\Console\Command;
 
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Model\ThemeList;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ListThemeCommand extends Command
+class ListThemeCommand extends AbstractCommand
 {
     /**
      * Constructor
@@ -34,24 +33,24 @@ class ListThemeCommand extends Command
     }
 
     /**
-     * Execute the command
+     * Execute the command logic
      *
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
      */
-    protected function execute(
+    protected function executeCommand(
         InputInterface $input,
         OutputInterface $output,
     ): int {
         $themes = $this->themeList->getAllThemes();
 
         if (empty($themes)) {
-            $output->writeln('<info>No themes found.</info>');
+            $this->io->info('No themes found.');
             return Cli::RETURN_SUCCESS;
         }
 
-        $output->writeln('<info>Available Themes:</info>');
+        $this->io->section('Available Themes:');
         $table = new Table($output);
         $table->setHeaders(['Code', 'Title', 'Path']);
 

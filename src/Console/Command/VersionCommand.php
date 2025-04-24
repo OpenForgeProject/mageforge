@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use GuzzleHttp\Client;
+use Magento\Framework\Console\Cli;
+use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Exception\FetchLatestVersionException;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Magento\Framework\Console\Cli;
-use GuzzleHttp\Client;
-use Magento\Framework\Filesystem\Driver\File;
 
-class VersionCommand extends Command
+class VersionCommand extends AbstractCommand
 {
     private const API_URL = 'https://api.github.com/repos/openforgeproject/mageforge/releases/latest';
     private const PACKAGE_NAME = 'openforgeproject/mageforge';
@@ -40,18 +38,20 @@ class VersionCommand extends Command
     }
 
     /**
-     * @inheritDoc
+     * Execute command logic
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-
         $moduleVersion = $this->getModuleVersion();
         $latestVersion = $this->getLatestVersion();
 
-        $io->title('MageForge Version Information');
-        $io->section('Versions');
-        $io->listing([
+        $this->io->title('MageForge Version Information');
+        $this->io->section('Versions');
+        $this->io->listing([
             "Module Version: $moduleVersion",
             "Latest Version: $latestVersion"
         ]);

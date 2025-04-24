@@ -6,15 +6,13 @@ namespace OpenForgeProject\MageForge\Console\Command;
 
 use Laravel\Prompts\SelectPrompt;
 use OpenForgeProject\MageForge\Model\ThemeList;
+use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use OpenForgeProject\MageForge\Model\ThemePath;
 
-class ThemeWatchCommand extends Command
+class ThemeWatchCommand extends AbstractCommand
 {
     public function __construct(
         private readonly BuilderPool $builderPool,
@@ -37,9 +35,8 @@ class ThemeWatchCommand extends Command
             ->setAliases(['frontend:watch']);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
         $themeCode = $input->getOption('theme');
 
         if (empty($themeCode)) {
@@ -60,18 +57,13 @@ class ThemeWatchCommand extends Command
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
         }
 
-        try {
-            $themePath = $this->themePath->getPath($themeCode);
-            if ($themePath === null) {
-                $io->error("Theme $themeCode is not installed.");
-                return Command::FAILURE;
-            }
-
-            $builder = $this->builderPool->getBuilder($themePath);
-            return $builder->watch($themePath, $io, $output, true) ? Command::SUCCESS : Command::FAILURE;
-        } catch (\Exception $e) {
-            $io->error('Error: ' . $e->getMessage());
-            return Command::FAILURE;
+        $themePath = $this->themePath->getPath($themeCode);
+        if ($themePath === null) {
+            $this->io->error("Theme $themeCode is not installed.");
+            return self::FAILURE;
         }
+
+        $builder = $this->builderPool->getBuilder($themePath);
+        return $builder->watch($themePath, $this->io, $output, true) ? self::SUCCESS : self::FAILURE;
     }
 }

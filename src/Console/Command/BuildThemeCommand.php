@@ -9,14 +9,13 @@ use Laravel\Prompts\Spinner;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class BuildThemeCommand extends Command
+class BuildThemeCommand extends AbstractCommand
 {
     public function __construct(
         private readonly ThemePath $themePath,
@@ -38,34 +37,27 @@ class BuildThemeCommand extends Command
             ->setAliases(['frontend:build']);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        try {
-            $io = new SymfonyStyle($input, $output);
-            $themeCodes = $input->getArgument('themeCodes');
-            $isVerbose = $output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
+        $themeCodes = $input->getArgument('themeCodes');
+        $isVerbose = $this->isVerbose($output);
 
-            if (empty($themeCodes)) {
-                $themes = $this->themeList->getAllThemes();
-                $options = array_map(fn($theme) => $theme->getCode(), $themes);
+        if (empty($themeCodes)) {
+            $themes = $this->themeList->getAllThemes();
+            $options = array_map(fn($theme) => $theme->getCode(), $themes);
 
+            $themeCodesPrompt = new MultiSelectPrompt(
+                label: 'Select themes to build',
+                options: $options,
+                scroll: 10,
+                hint: 'Arrow keys to navigate, Space to select, Enter to confirm',
+            );
 
-                $themeCodesPrompt = new MultiSelectPrompt(
-                    label: 'Select themes to build',
-                    options: $options,
-                    scroll: 10,
-                    hint: 'Arrow keys to navigate, Space to select, Enter to confirm'
-                );
-
-                $themeCodes = $themeCodesPrompt->prompt();
-                \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            }
-
-            return $this->processBuildThemes($themeCodes, $io, $output, $isVerbose);
-        } catch (\Exception $e) {
-            $io->error($e->getMessage());
-            return Command::FAILURE;
+            $themeCodes = $themeCodesPrompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
         }
+
+        return $this->processBuildThemes($themeCodes, $this->io, $output, $isVerbose);
     }
 
     private function displayAvailableThemes(SymfonyStyle $io): int
