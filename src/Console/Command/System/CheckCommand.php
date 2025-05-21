@@ -105,7 +105,207 @@ class CheckCommand extends AbstractCommand
         return Cli::RETURN_SUCCESS;
     }
 
-    // ... [Hier folgen die bestehenden privaten Methoden für die Systemchecks]
-    // Die privaten Hilfsmethoden wurden hier aus Platzgründen weggelassen,
-    // sollten aber aus der alten Klasse übernommen werden
+    /**
+     * Get Node.js version
+     *
+     * @return string
+     */
+    private function getNodeVersion(): string
+    {
+        exec('node -v 2>/dev/null', $output, $returnCode);
+        return $returnCode === 0 && !empty($output) ? trim($output[0], 'v') : 'Not installed';
+    }
+
+    /**
+     * Get latest LTS Node.js version
+     *
+     * @return string
+     */
+    private function getLatestLtsNodeVersion(): string
+    {
+        try {
+            $nodeData = file_get_contents(self::NODE_LTS_URL);
+            if ($nodeData === false) {
+                return 'Unknown';
+            }
+
+            $nodes = json_decode($nodeData, true);
+            if (!is_array($nodes)) {
+                return 'Unknown';
+            }
+
+            foreach ($nodes as $node) {
+                if (isset($node['lts']) && $node['lts'] !== false) {
+                    return trim($node['version'], 'v');
+                }
+            }
+            return 'Unknown';
+        } catch (\Exception $e) {
+            return 'Unknown';
+        }
+    }
+
+    /**
+     * Get MySQL version
+     *
+     * @return string
+     */
+    private function getShortMysqlVersion(): string
+    {
+        exec('mysql --version 2>/dev/null', $output, $returnCode);
+        if ($returnCode !== 0 || empty($output)) {
+            return 'Not available';
+        }
+
+        $versionString = $output[0];
+        preg_match('/Distrib ([0-9.]+)/', $versionString, $matches);
+        return isset($matches[1]) ? $matches[1] : 'Unknown';
+    }
+
+    /**
+     * Get database type
+     *
+     * @return string
+     */
+    private function getDatabaseType(): string
+    {
+        return 'MySQL'; // In der aktuellen Version ist nur MySQL unterstützt
+    }
+
+    /**
+     * Get OS info
+     *
+     * @return string
+     */
+    private function getShortOsInfo(): string
+    {
+        return php_uname('s') . ' ' . php_uname('r');
+    }
+
+    /**
+     * Get Composer version
+     *
+     * @return string
+     */
+    private function getComposerVersion(): string
+    {
+        exec('composer --version 2>/dev/null', $output, $returnCode);
+        if ($returnCode !== 0 || empty($output)) {
+            return 'Not installed';
+        }
+
+        preg_match('/Composer version ([^ ]+)/', $output[0], $matches);
+        return isset($matches[1]) ? $matches[1] : 'Unknown';
+    }
+
+    /**
+     * Get NPM version
+     *
+     * @return string
+     */
+    private function getNpmVersion(): string
+    {
+        exec('npm --version 2>/dev/null', $output, $returnCode);
+        return $returnCode === 0 && !empty($output) ? trim($output[0]) : 'Not installed';
+    }
+
+    /**
+     * Get Git version
+     *
+     * @return string
+     */
+    private function getGitVersion(): string
+    {
+        exec('git --version 2>/dev/null', $output, $returnCode);
+        if ($returnCode !== 0 || empty($output)) {
+            return 'Not installed';
+        }
+
+        preg_match('/git version (.+)/', $output[0], $matches);
+        return isset($matches[1]) ? $matches[1] : 'Unknown';
+    }
+
+    /**
+     * Get Xdebug status
+     *
+     * @return string
+     */
+    private function getXdebugStatus(): string
+    {
+        return extension_loaded('xdebug') ? 'Enabled' : 'Disabled';
+    }
+
+    /**
+     * Get Redis status
+     *
+     * @return string
+     */
+    private function getRedisStatus(): string
+    {
+        return extension_loaded('redis') ? 'Enabled' : 'Disabled';
+    }
+
+    /**
+     * Get search engine status
+     *
+     * @return string
+     */
+    private function getSearchEngineStatus(): string
+    {
+        if (extension_loaded('elasticsearch')) {
+            return 'Elasticsearch Available';
+        } elseif (extension_loaded('opensearch')) {
+            return 'OpenSearch Available';
+        }
+        return 'Not Available';
+    }
+
+    /**
+     * Get important PHP extensions
+     *
+     * @return array
+     */
+    private function getImportantPhpExtensions(): array
+    {
+        $extensions = [];
+        $requiredExtensions = [
+            'curl', 'dom', 'fileinfo', 'gd', 'intl', 'json', 'mbstring',
+            'openssl', 'pdo_mysql', 'simplexml', 'soap', 'xml', 'zip'
+        ];
+
+        foreach ($requiredExtensions as $ext) {
+            $status = extension_loaded($ext) ? 'Enabled' : 'Disabled';
+            $extensions[] = [$ext, $status];
+        }
+
+        return $extensions;
+    }
+
+    /**
+     * Get PHP memory limit
+     *
+     * @return string
+     */
+    private function getPhpMemoryLimit(): string
+    {
+        return ini_get('memory_limit');
+    }
+
+    /**
+     * Get disk space
+     *
+     * @return string
+     */
+    private function getDiskSpace(): string
+    {
+        $totalSpace = disk_total_space('.');
+        $freeSpace = disk_free_space('.');
+
+        $totalGB = round($totalSpace / 1024 / 1024 / 1024, 2);
+        $freeGB = round($freeSpace / 1024 / 1024 / 1024, 2);
+        $usedGB = round($totalGB - $freeGB, 2);
+        $usedPercent = round(($usedGB / $totalGB) * 100, 2);
+
+        return "$usedGB GB / $totalGB GB ($usedPercent%)";
+    }
 }
