@@ -124,7 +124,7 @@ jobs:
         bin/magento list | grep mageforge
 
         echo "Test MageForge Version command:"
-        bin/magento mageforge:version
+        bin/magento mageforge:system:version
 
         echo "Test MageForge System Check command:"
         bin/magento mageforge:system:check
