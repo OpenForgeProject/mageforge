@@ -1,4 +1,4 @@
-name: Magento Module Compatibility Test
+name: Magento Compatibility Test
 
 on:
   pull_request:
