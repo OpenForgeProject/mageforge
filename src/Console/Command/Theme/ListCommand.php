@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Command for listing available Magento themes
- * Todo: Improve Command Description 
+ * # Todo: Improve Command Description 
  */
 class ListCommand extends AbstractCommand
 {
