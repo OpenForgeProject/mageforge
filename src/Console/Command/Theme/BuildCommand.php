@@ -125,10 +125,10 @@ class BuildCommand extends AbstractCommand
                 }
             }
         } else {
-            // Nutze den bisherigen Spinner mit einer angepassten Nachricht
+            // Use the existing spinner with a customized message
             foreach ($themeCodes as $index => $themeCode) {
                 $currentTheme = $index + 1;
-                // Zeige an, welches Theme gerade gebaut wird
+                // Show which theme is currently being built
                 $themeNameCyan = sprintf("<fg=cyan>%s</>", $themeCode);
                 $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
                 $success = false;
@@ -139,10 +139,10 @@ class BuildCommand extends AbstractCommand
                 });
 
                 if ($success) {
-                    // Zeige an, dass das Theme erfolgreich gebaut wurde
+                    // Show that the theme was successfully built
                     $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=green>done</>", $themeNameCyan, $currentTheme, $totalThemes));
                 } else {
-                    // Zeige an, dass beim Bauen des Themes ein Fehler aufgetreten ist
+                    // Show that an error occurred while building the theme
                     $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes));
                 }
             }
@@ -225,7 +225,7 @@ class BuildCommand extends AbstractCommand
             if (count($parts) === 2) {
                 $themeName = $parts[0];
                 $details = $parts[1];
-                // Den Builder-Namen in Magenta einfärben
+                // Color the builder name in magenta
                 if (preg_match('/(using\s+)([^\s]+)(\s+builder)/', $details, $matches)) {
                     $details = str_replace(
                         $matches[0],
