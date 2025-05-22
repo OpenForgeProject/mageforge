@@ -46,28 +46,16 @@ Please ensure that your Magento installation meets this requirement before insta
 ## Getting Started
 ### Installation
 
-1. Add the repository to your `composer.json`:
-   ```json
-   {
-       "repositories": [
-           {
-               "type": "vcs",
-               "url": "https://github.com/OpenForgeProject/mageforge"
-           }
-       ]
-   }
-   ```
+Install the module via Composer:
+```bash
+composer require openforgeproject/mageforge
+```
 
-2. Install the module via Composer:
-   ```bash
-   composer require openforgeproject/mageforge
-   ```
-
-3. Enable the module:
-   ```bash
-   bin/magento module:enable OpenForgeProject_MageForge
-   bin/magento setup:upgrade
-   ```
+Enable the module:
+```bash
+bin/magento module:enable OpenForgeProject_MageForge
+bin/magento setup:upgrade
+```
 
 ## Getting Started
 
