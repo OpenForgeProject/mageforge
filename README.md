@@ -36,13 +36,14 @@ Please ensure that your Magento installation meets this requirement before insta
 
 ### Available Commands
 
-| Command                    | Description                                                 |
-|---------------------------|-------------------------------------------------------------|
-| `mageforge:version`       | Shows current and latest version of the module             |
-| `mageforge:system-check`  | Get system information (OS, PHP, Database, Node.js, etc.)     |
-| `mageforge:theme:list`    | Lists all available themes                                 |
-| `mageforge:theme:build`   | Builds selected themes (CSS/TailwindCSS)                   |
-| `mageforge:theme:watch`   | Starts watch mode for theme development                    |
+| Command                    | Description                                                 | Shortcodes                         |
+|---------------------------|-------------------------------------------------------------|-----------------------------------|
+| `mageforge:system:version`       | Shows current and latest version of the module             | `m:s:v`                            |
+| `mageforge:system:check`  | Get system information (OS, PHP, Database, Node.js, etc.)     | `m:s:c`                            |
+| `mageforge:theme:list`    | Lists all available themes                                 | `m:t:l`                            |
+| `mageforge:theme:build`   | Builds selected themes (CSS/TailwindCSS)                   | `m:t:b`, `frontend:build`          |
+| `mageforge:theme:watch`   | Starts watch mode for theme development                    | `m:t:w`, `frontend:watch`          |
+
 
 ---
 
@@ -90,7 +91,9 @@ bin/magento setup:upgrade
 
 - Use the `-v` option for more detailed output
 - Watch mode supports hot-reloading for LESS and Tailwind
-- Check system information anytime with `mageforge:system-check`
+- Check system information anytime with `mageforge:system:check`
+- Use shortcodes for faster command execution, for example `bin/magento m:t:b` instead of `bin/magento mageforge:theme:build`
+- Theme build and watch commands have special aliases: `frontend:build` and `frontend:watch`
 
 ## Extending MageForge
 

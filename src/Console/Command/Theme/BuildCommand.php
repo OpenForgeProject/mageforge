@@ -114,9 +114,10 @@ class BuildCommand extends AbstractCommand
     ): int {
         $startTime = microtime(true);
         $successList = [];
+        $totalThemes = count($themeCodes);
 
         if ($isVerbose) {
-            $io->title(sprintf('Building %d theme(s)', count($themeCodes)));
+            $io->title(sprintf('Building %d theme(s)', $totalThemes));
 
             foreach ($themeCodes as $themeCode) {
                 if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
@@ -124,16 +125,27 @@ class BuildCommand extends AbstractCommand
                 }
             }
         } else {
-            // Nutze Spinner mit der korrekten API
-            $spinner = new Spinner('✨ Building theme ...');
-            $spinner->spin(function() use ($themeCodes, $io, $output, $isVerbose, &$successList) {
-                foreach ($themeCodes as $themeCode) {
-                    if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
-                        continue;
-                    }
+            // Use the existing spinner with a customized message
+            foreach ($themeCodes as $index => $themeCode) {
+                $currentTheme = $index + 1;
+                // Show which theme is currently being built
+                $themeNameCyan = sprintf("<fg=cyan>%s</>", $themeCode);
+                $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
+                $success = false;
+
+                $spinner->spin(function() use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
+                    $success = $this->processTheme($themeCode, $io, $output, $isVerbose, $successList);
+                    return true;
+                });
+
+                if ($success) {
+                    // Show that the theme was successfully built
+                    $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=green>done</>", $themeNameCyan, $currentTheme, $totalThemes));
+                } else {
+                    // Show that an error occurred while building the theme
+                    $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes));
                 }
-                return true;
-            });
+            }
         }
 
         $this->displayBuildSummary($io, $successList, microtime(true) - $startTime);
@@ -195,18 +207,38 @@ class BuildCommand extends AbstractCommand
      */
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
+        $io->newLine();
+        $io->success(sprintf(
+            "🚀 Build process completed in %.2f seconds with the following results:",
+            $duration
+        ));
+        $io->writeln("Summary:");
+        $io->newLine();
+
         if (empty($successList)) {
             $io->warning('No themes were built successfully.');
             return;
         }
 
-        $io->success(sprintf(
-            "Build process completed in %.2f seconds with the following results:",
-            $duration
-        ));
-
         foreach ($successList as $success) {
-            $io->writeln("✓ $success");
+            $parts = explode(': ', $success, 2);
+            if (count($parts) === 2) {
+                $themeName = $parts[0];
+                $details = $parts[1];
+                // Color the builder name in magenta
+                if (preg_match('/(using\s+)([^\s]+)(\s+builder)/', $details, $matches)) {
+                    $details = str_replace(
+                        $matches[0],
+                        $matches[1] . '<fg=magenta>' . $matches[2] . '</>' . $matches[3],
+                        $details
+                    );
+                }
+                $io->writeln(sprintf("✅ <fg=cyan>%s</>: %s", $themeName, $details));
+            } else {
+                $io->writeln("✅ $success");
+            }
         }
+
+        $io->newLine();
     }
 }
