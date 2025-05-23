@@ -18,7 +18,10 @@ Please ensure that your Magento installation meets this requirement before insta
 
 ## Features
 
+
 ### Supported Theme-Types 🎨
+
+![Mageforge Hero](./.github/assets/cli-chooser.png)
 
 | Theme Type | Support Status |
 |------------|----------------|
