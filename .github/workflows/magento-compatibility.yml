@@ -17,10 +17,19 @@ jobs:
         include:
           - magento-version: '2.4.7'
             php-version: '8.3'
+            search-engine: 'elasticsearch'
+            search-image: 'elasticsearch:7.17.0'
+            search-engine-name: 'elasticsearch7'
           - magento-version: '2.4.7-p5'
             php-version: '8.3'
+            search-engine: 'elasticsearch'
+            search-image: 'elasticsearch:7.17.0'
+            search-engine-name: 'elasticsearch7'
           - magento-version: '2.4.8'
             php-version: '8.4'
+            search-engine: 'opensearch'
+            search-image: 'opensearchproject/opensearch:2.11.0'
+            search-engine-name: 'opensearch'
 
     services:
       mysql:
@@ -32,12 +41,14 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      elasticsearch:
-        image: elasticsearch:7.17.0
+      search:
+        image: ${{ matrix.search-image }}
         ports:
           - 9200:9200
         env:
           discovery.type: single-node
+          plugins.security.disabled: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
           ES_JAVA_OPTS: -Xms512m -Xmx512m
         options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
@@ -66,7 +77,7 @@ jobs:
       run: |
         git clone --depth=1 --branch=${{ matrix.magento-version }} https://github.com/magento/magento2.git magento2
 
-    - name: Check Elasticsearch status
+    - name: Check Search Engine status
       run: |
         curl -s http://localhost:9200/_cluster/health
 
@@ -94,25 +105,25 @@ jobs:
           --timezone=Europe/Berlin \
           --use-rewrites=1 \
           --backend-frontname=admin \
-          --search-engine=elasticsearch7 \
-          --elasticsearch-host=localhost \
-          --elasticsearch-port=9200 \
-          --elasticsearch-index-prefix=magento \
+          --search-engine=${{ matrix.search-engine-name }} \
+          --${{ matrix.search-engine }}-host=localhost \
+          --${{ matrix.search-engine }}-port=9200 \
+          --${{ matrix.search-engine }}-index-prefix=magento \
           --cleanup-database
 
     - name: Install MageForge Module from current commit
       working-directory: magento2
       run: |
-        # Füge ein lokales Repository hinzu, das auf den aktuellen Code verweist
+        # Add a local repository pointing to the current code
         composer config repositories.mageforge-local path ../mageforge
 
-        # Installiere das Modul aus dem lokalen Repository
+        # Install the module from the local repository
         composer require --no-update openforgeproject/mageforge:@dev
 
-        # Aktualisiere die Abhängigkeiten
+        # Update dependencies
         composer update openforgeproject/mageforge --with-dependencies
 
-        # Aktiviere das Modul und führe das Setup-Upgrade aus
+        # Enable the module and run setup upgrade
         bin/magento module:enable OpenForgeProject_MageForge
         bin/magento setup:upgrade
 
