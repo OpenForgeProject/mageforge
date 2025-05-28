@@ -6,12 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- docs: clean up `CHANGELOG.md`
+
 
 ## Latest Release
 
-- docs: clean up `CHANGELOG.md`
-
-## [0.1.0] - 2025-05-23
+### [0.1.0] - 2025-05-23
 
 - docs: add cli-chooser image to README.md
 - docs: simplify installation instructions in README.md
