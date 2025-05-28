@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## UNRELEASED
 
 - docs: clean up `CHANGELOG.md`
-- feat: add PHP 8.4 and Magento 2.4.8 compatibilty check
+- feat: add PHP 8.4 and Magento 2.4.8 compatibilty check with opensearch support
 - removed: removed Github Action to watch for Changelog edits
 
 ## Latest Release
