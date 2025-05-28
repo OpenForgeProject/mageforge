@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## UNRELEASED
 
 - docs: clean up `CHANGELOG.md`
-
+- removed: removed Github Action to watch for Changelog edits
 
 ## Latest Release
 
