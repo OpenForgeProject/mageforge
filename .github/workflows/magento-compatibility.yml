@@ -19,6 +19,8 @@ jobs:
             php-version: '8.3'
           - magento-version: '2.4.7-p5'
             php-version: '8.3'
+          - magento-version: '2.4.7-p5'
+            php-version: '8.4'
 
     services:
       mysql:
