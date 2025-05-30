@@ -187,8 +187,13 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        // Check for node_modules in root
+        if (!$this->installNodeModulesIfMissing($io, $isVerbose)) {
+            return false;
+        }
+
         try {
-            exec('node_modules/.bin/grunt watch');
+            passthru('node_modules/.bin/grunt watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

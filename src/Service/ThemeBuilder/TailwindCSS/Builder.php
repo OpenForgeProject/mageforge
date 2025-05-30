@@ -193,9 +193,13 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
         try {
             chdir($tailwindPath);
-            exec('npm run watch');
+            passthru('npm run watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;
