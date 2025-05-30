@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - feat: add PHP 8.4 and Magento 2.4.8 compatibilty check with opensearch support
 - feat: enhance MySQL and Search Engine checks for `mageforge:system:check` command
 - removed: removed Github Action to watch for Changelog edits
+- fix: fixed issue where missing node_modules were not being installed
+- fix: fixed issue where watch output was not displayed correctly
 
 ## Latest Release
 
