@@ -152,9 +152,9 @@ class CheckCommand extends AbstractCommand
      */
     private function getShortMysqlVersion(): string
     {
-        // Versuch 1: Überprüfe über PHP-Datenbankverbindung
+        // Attempt 1: Check via PHP database connection
         try {
-            // Versuche Magento-Verbindung zu verwenden
+            // Try to use Magento connection
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $resource = $objectManager->get(\Magento\Framework\App\ResourceConnection::class);
             $connection = $resource->getConnection();
@@ -163,10 +163,10 @@ class CheckCommand extends AbstractCommand
                 return $version;
             }
         } catch (\Exception $e) {
-            // Fallback zur direkten PDO-Verbindung, wenn Magento-Verbindung fehlschlägt
+            // Fallback to direct PDO connection if Magento connection fails
         }
 
-        // Versuch 2: Versuche den MySQL-Client
+        // Attempt 2: Try the MySQL client
         exec('mysql --version 2>/dev/null', $output, $returnCode);
         if ($returnCode === 0 && !empty($output)) {
             $versionString = $output[0];
@@ -176,8 +176,8 @@ class CheckCommand extends AbstractCommand
             }
         }
 
-        // Versuch 3: Versuche generische Datenbankverbindung
-        // Lese ENV-Variablen, die in verschiedenen Umgebungen vorhanden sein könnten
+        // Attempt 3: Try generic database connection
+        // Read ENV variables that might be present in different environments
         try {
             $envMapping = [
                 'host' => ['DB_HOST', 'MYSQL_HOST', 'MAGENTO_DB_HOST'],
@@ -190,15 +190,20 @@ class CheckCommand extends AbstractCommand
             $config = [];
             foreach ($envMapping as $key => $envVars) {
                 foreach ($envVars as $env) {
-                    $value = getenv($env);
-                    if ($value !== false) {
-                        $config[$key] = $value;
+                    // First check $_SERVER
+                    if (isset($_SERVER[$env])) {
+                        $config[$key] = $_SERVER[$env];
+                        break;
+                    }
+                    // Then check $_ENV
+                    elseif (isset($_ENV[$env])) {
+                        $config[$key] = $_ENV[$env];
                         break;
                     }
                 }
             }
 
-            // Standardwerte, wenn nichts gefunden wurde
+            // Default values if nothing is found
             $host = $config['host'] ?? 'localhost';
             $port = $config['port'] ?? '3306';
             $user = $config['user'] ?? 'root';
@@ -211,7 +216,7 @@ class CheckCommand extends AbstractCommand
                 return $version;
             }
         } catch (\Exception $e) {
-            // Ignoriere Fehler und gib Unknown zurück
+            // Ignore errors and return Unknown
         }
 
         return 'Unknown';
@@ -224,7 +229,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getDatabaseType(): string
     {
-        return 'MySQL'; // In der aktuellen Version ist nur MySQL unterstützt
+        return 'MySQL'; // Only MySQL is supported in the current version
     }
 
     /**
@@ -307,21 +312,46 @@ class CheckCommand extends AbstractCommand
      */
     private function getSearchEngineStatus(): string
     {
-        // Schritt 1: Zuerst versuche, die Magento-Konfiguration zu prüfen
+        // Method 1: Check Magento configuration
+        $magentoConfigResult = $this->getSearchEngineFromMagentoConfig();
+        if ($magentoConfigResult) {
+            return $magentoConfigResult;
+        }
+
+        // Method 2: Check PHP extensions
+        $extensionResult = $this->checkSearchEngineExtensions();
+        if ($extensionResult) {
+            return $extensionResult;
+        }
+
+        // Method 3: Check HTTP connection
+        $connectionResult = $this->checkSearchEngineConnections();
+        if ($connectionResult) {
+            return $connectionResult;
+        }
+
+        return 'Not Available';
+    }
+
+    /**
+     * Check search engine from Magento configuration
+     *
+     * @return string|null
+     */
+    private function getSearchEngineFromMagentoConfig(): ?string
+    {
         try {
-            // Verwende ObjectManager, um die aktuelle Suchmaschine aus der Magento-Konfiguration zu ermitteln
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-            // Prüfe zuerst die Suchmaschinen-Einstellung
+            // Method 1a: Via DeploymentConfig
             try {
                 $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
                 $engineConfig = $deploymentConfig->get('system/search/engine');
+
                 if (!empty($engineConfig)) {
-                    // Prüfe die Verbindung zur Suchmaschine basierend auf der Konfiguration
                     $host = $deploymentConfig->get('system/search/engine_host') ?: 'localhost';
                     $port = $deploymentConfig->get('system/search/engine_port') ?: '9200';
 
-                    // Versuche zu verbinden
                     $url = "http://{$host}:{$port}";
                     if ($this->testElasticsearchConnection($url)) {
                         return ucfirst($engineConfig) . ' (Magento config)';
@@ -330,10 +360,10 @@ class CheckCommand extends AbstractCommand
                     return ucfirst($engineConfig) . ' (Configured but not reachable)';
                 }
             } catch (\Exception $e) {
-                // Ignorieren und zum nächsten Versuch übergehen
+                // Proceed to next attempt
             }
 
-            // Alternative Methode für Magento 2.3+
+            // Method 1b: Via EngineResolver for Magento 2.3+
             try {
                 $engineResolver = $objectManager->get(\Magento\Framework\Search\EngineResolverInterface::class);
                 if ($engineResolver) {
@@ -343,59 +373,104 @@ class CheckCommand extends AbstractCommand
                     }
                 }
             } catch (\Exception $e) {
-                // Ignorieren und zum nächsten Versuch übergehen
+                // Proceed to next attempt
             }
         } catch (\Exception $e) {
-            // Ignoriere Fehler beim Zugriff auf Magento-Konfiguration
+            // Ignore
         }
 
-        // Schritt 2: Prüfe, ob die PHP-Erweiterungen vorhanden sind
+        return null;
+    }
+
+    /**
+     * Check for search engine PHP extensions
+     *
+     * @return string|null
+     */
+    private function checkSearchEngineExtensions(): ?string
+    {
         if (extension_loaded('elasticsearch')) {
             return 'Elasticsearch Available (PHP Extension)';
-        } elseif (extension_loaded('opensearch')) {
+        }
+
+        if (extension_loaded('opensearch')) {
             return 'OpenSearch Available (PHP Extension)';
         }
 
-        // Schritt 3: Prüfe, ob Elasticsearch über HTTP erreichbar ist (generische Ansatz)
+        return null;
+    }
+
+    /**
+     * Check available search engine connections
+     *
+     * @return string|null
+     */
+    private function checkSearchEngineConnections(): ?string
+    {
         try {
-            // Versuche mehrere übliche Hostnamen und Ports
-            $elasticHosts = [
-                'http://localhost:9200',
-                'http://127.0.0.1:9200',
-                'http://elasticsearch:9200',
-                'http://opensearch:9200'
-            ];
+            $elasticHosts = $this->getSearchEngineHosts();
 
-            // Env-Variablen prüfen für Hostkonfiguration
-            $envHosts = [
-                'ELASTICSEARCH_HOST', 'ES_HOST', 'OPENSEARCH_HOST'
-            ];
-
-            foreach ($envHosts as $envVar) {
-                $hostValue = getenv($envVar);
-                if (!empty($hostValue)) {
-                    $port = getenv('ELASTICSEARCH_PORT') ?: getenv('ES_PORT') ?: getenv('OPENSEARCH_PORT') ?: '9200';
-                    $elasticHosts[] = "http://{$hostValue}:{$port}";
-                }
-            }
-
-            // Teste alle möglichen Verbindungen
             foreach ($elasticHosts as $url) {
                 $info = $this->testElasticsearchConnection($url);
                 if ($info !== false) {
-                    if (isset($info['version']['distribution']) && $info['version']['distribution'] === 'opensearch') {
-                        return 'OpenSearch ' . $info['version']['number'];
-                    } elseif (isset($info['version']['number'])) {
-                        return 'Elasticsearch ' . $info['version']['number'];
-                    }
-                    return 'Search Engine Available';
+                    return $this->formatSearchEngineVersion($info);
                 }
             }
         } catch (\Exception $e) {
-            // Fehler beim Prüfen ignorieren
+            // Ignore
         }
 
-        return 'Not Available';
+        return null;
+    }
+
+    /**
+     * Get potential search engine hosts
+     *
+     * @return array
+     */
+    private function getSearchEngineHosts(): array
+    {
+        $elasticHosts = [
+            'http://localhost:9200',
+            'http://127.0.0.1:9200',
+            'http://elasticsearch:9200',
+            'http://opensearch:9200'
+        ];
+
+        $envHosts = [
+            'ELASTICSEARCH_HOST', 'ES_HOST', 'OPENSEARCH_HOST'
+        ];
+
+        foreach ($envHosts as $envVar) {
+            $hostValue = $_SERVER[$envVar] ?? $_ENV[$envVar] ?? null;
+            if (!empty($hostValue)) {
+                $port = $_SERVER['ELASTICSEARCH_PORT'] ?? $_ENV['ELASTICSEARCH_PORT'] ??
+                       $_SERVER['ES_PORT'] ?? $_ENV['ES_PORT'] ??
+                       $_SERVER['OPENSEARCH_PORT'] ?? $_ENV['OPENSEARCH_PORT'] ?? '9200';
+                $elasticHosts[] = "http://{$hostValue}:{$port}";
+            }
+        }
+
+        return $elasticHosts;
+    }
+
+    /**
+     * Format search engine version output
+     *
+     * @param array $info
+     * @return string
+     */
+    private function formatSearchEngineVersion(array $info): string
+    {
+        if (isset($info['version']['distribution']) && $info['version']['distribution'] === 'opensearch') {
+            return 'OpenSearch ' . $info['version']['number'];
+        }
+
+        if (isset($info['version']['number'])) {
+            return 'Elasticsearch ' . $info['version']['number'];
+        }
+
+        return 'Search Engine Available';
     }
 
     /**
@@ -406,24 +481,56 @@ class CheckCommand extends AbstractCommand
      */
     private function testElasticsearchConnection(string $url)
     {
-        if (!function_exists('curl_init')) {
-            return false;
-        }
+        try {
+            // Use Magento's HTTP client if available
+            try {
+                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+                $httpClientFactory = $objectManager->get(\Magento\Framework\HTTP\ClientFactory::class);
+                $httpClient = $httpClientFactory->create();
+                $httpClient->setTimeout(2);
+                $httpClient->get($url);
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_NOBODY, false);
-        $response = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        curl_close($ch);
+                $status = $httpClient->getStatus();
+                $response = $httpClient->getBody();
 
-        if ($info['http_code'] === 200 && !empty($response)) {
-            $data = json_decode($response, true);
-            if (is_array($data)) {
-                return $data;
+                if ($status === 200 && !empty($response)) {
+                    $data = json_decode($response, true);
+                    if (is_array($data)) {
+                        return $data;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fall back to a native PHP approach
+                $context = stream_context_create([
+                    'http' => [
+                        'timeout' => 2.0,
+                        'ignore_errors' => true
+                    ]
+                ]);
+
+                // Using file_get_contents with a timeout context is safer than curl
+                $response = @file_get_contents($url, false, $context);
+
+                if ($response !== false) {
+                    // Check headers for status code
+                    $status = 0;
+                    foreach ($http_response_header ?? [] as $header) {
+                        if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/', $header, $matches)) {
+                            $status = (int)$matches[1];
+                            break;
+                        }
+                    }
+
+                    if ($status === 200 && !empty($response)) {
+                        $data = json_decode($response, true);
+                        if (is_array($data)) {
+                            return $data;
+                        }
+                    }
+                }
             }
+        } catch (\Exception $e) {
+            // Ignore exceptions and return false
         }
 
         return false;
