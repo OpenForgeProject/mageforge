@@ -337,43 +337,75 @@ class CheckCommand extends AbstractCommand
     {
         try {
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-
-            // Method 1a: Via DeploymentConfig
-            try {
-                $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
-                $engineConfig = $deploymentConfig->get('system/search/engine');
-
-                if (!empty($engineConfig)) {
-                    $host = $deploymentConfig->get('system/search/engine_host') ?: 'localhost';
-                    $port = $deploymentConfig->get('system/search/engine_port') ?: '9200';
-
-                    $url = "http://{$host}:{$port}";
-                    if ($this->testElasticsearchConnection($url)) {
-                        return ucfirst($engineConfig) . ' (Magento config)';
-                    }
-
-                    return ucfirst($engineConfig) . ' (Configured but not reachable)';
-                }
-            } catch (\Exception $e) {
-                // Proceed to next attempt
+            
+            // First try via deployment config
+            $configResult = $this->checkSearchEngineViaDeploymentConfig($objectManager);
+            if ($configResult !== null) {
+                return $configResult;
             }
-
-            // Method 1b: Via EngineResolver for Magento 2.3+
-            try {
-                $engineResolver = $objectManager->get(\Magento\Framework\Search\EngineResolverInterface::class);
-                if ($engineResolver) {
-                    $currentEngine = $engineResolver->getCurrentSearchEngine();
-                    if (!empty($currentEngine)) {
-                        return ucfirst($currentEngine) . ' (Magento config)';
-                    }
-                }
-            } catch (\Exception $e) {
-                // Proceed to next attempt
+            
+            // Then try via engine resolver
+            $resolverResult = $this->checkSearchEngineViaEngineResolver($objectManager);
+            if ($resolverResult !== null) {
+                return $resolverResult;
             }
         } catch (\Exception $e) {
-            // Ignore
+            // Ignore general exceptions
         }
 
+        return null;
+    }
+    
+    /**
+     * Check search engine via Magento deployment config
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @return string|null
+     */
+    private function checkSearchEngineViaDeploymentConfig($objectManager): ?string
+    {
+        try {
+            $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
+            $engineConfig = $deploymentConfig->get('system/search/engine');
+
+            if (!empty($engineConfig)) {
+                $host = $deploymentConfig->get('system/search/engine_host') ?: 'localhost';
+                $port = $deploymentConfig->get('system/search/engine_port') ?: '9200';
+
+                $url = "http://{$host}:{$port}";
+                if ($this->testElasticsearchConnection($url)) {
+                    return ucfirst($engineConfig) . ' (Magento config)';
+                }
+
+                return ucfirst($engineConfig) . ' (Configured but not reachable)';
+            }
+        } catch (\Exception $e) {
+            // Ignore specific exceptions
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Check search engine via Magento engine resolver
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @return string|null
+     */
+    private function checkSearchEngineViaEngineResolver($objectManager): ?string
+    {
+        try {
+            $engineResolver = $objectManager->get(\Magento\Framework\Search\EngineResolverInterface::class);
+            if ($engineResolver) {
+                $currentEngine = $engineResolver->getCurrentSearchEngine();
+                if (!empty($currentEngine)) {
+                    return ucfirst($currentEngine) . ' (Magento config)';
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore specific exceptions
+        }
+        
         return null;
     }
 
@@ -466,9 +498,7 @@ class CheckCommand extends AbstractCommand
         }
 
         return 'Search Engine Available';
-    }
-
-    /**
+    }    /**
      * Test Elasticsearch connection and return version info
      *
      * @param string $url
@@ -477,58 +507,50 @@ class CheckCommand extends AbstractCommand
     private function testElasticsearchConnection(string $url)
     {
         try {
-            // Use Magento's HTTP client if available
-            try {
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $httpClientFactory = $objectManager->get(\Magento\Framework\HTTP\ClientFactory::class);
-                $httpClient = $httpClientFactory->create();
-                $httpClient->setTimeout(2);
-                $httpClient->get($url);
-
-                $status = $httpClient->getStatus();
-                $response = $httpClient->getBody();
-
-                if ($status === 200 && !empty($response)) {
-                    $data = json_decode($response, true);
-                    if (is_array($data)) {
-                        return $data;
-                    }
-                }
-            } catch (\Exception $e) {
-                // Fall back to a native PHP approach
-                $context = stream_context_create([
-                    'http' => [
-                        'timeout' => 2.0,
-                        'ignore_errors' => true
-                    ]
-                ]);
-
-                // Using file_get_contents with a timeout context is safer than curl
-                $response = @file_get_contents($url, false, $context);
-
-                if ($response !== false) {
-                    // Check headers for status code
-                    $status = 0;
-                    foreach ($http_response_header ?? [] as $header) {
-                        if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/', $header, $matches)) {
-                            $status = (int)$matches[1];
-                            break;
-                        }
-                    }
-
-                    if ($status === 200 && !empty($response)) {
-                        $data = json_decode($response, true);
-                        if (is_array($data)) {
-                            return $data;
-                        }
-                    }
-                }
+            // First attempt: Try using Magento's HTTP client
+            $magentoClientResult = $this->tryMagentoHttpClient($url);
+            if ($magentoClientResult !== null) {
+                return $magentoClientResult;
             }
+
+            // No fallback to native approaches anymore - rely on Magento's HTTP client only
+            // This avoids using discouraged functions
         } catch (\Exception $e) {
             // Ignore exceptions and return false
         }
 
         return false;
+    }
+    
+    /**
+     * Try to connect using Magento's HTTP client
+     *
+     * @param string $url
+     * @return array|null
+     */
+    private function tryMagentoHttpClient(string $url): ?array
+    {
+        try {
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $httpClientFactory = $objectManager->get(\Magento\Framework\HTTP\ClientFactory::class);
+            $httpClient = $httpClientFactory->create();
+            $httpClient->setTimeout(2);
+            $httpClient->get($url);
+            
+            $status = $httpClient->getStatus();
+            $response = $httpClient->getBody();
+            
+            if ($status === 200 && !empty($response)) {
+                $data = json_decode($response, true);
+                if (is_array($data)) {
+                    return $data;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore exceptions
+        }
+        
+        return null;
     }
 
     /**
@@ -578,9 +600,7 @@ class CheckCommand extends AbstractCommand
         $usedPercent = round(($usedGB / $totalGB) * 100, 2);
 
         return "$usedGB GB / $totalGB GB ($usedPercent%)";
-    }
-
-    /**
+    }    /**
      * Safely get environment variable value
      *
      * @param string $name Environment variable name
@@ -589,48 +609,127 @@ class CheckCommand extends AbstractCommand
      */
     private function getEnvironmentVariable(string $name, ?string $default = null): ?string
     {
+        // Try Magento-specific methods first
+        $magentoValue = $this->getMagentoEnvironmentValue($name);
+        if ($magentoValue !== null) {
+            return $magentoValue;
+        }
+        
+        // Try system environment variables
+        $systemValue = $this->getSystemEnvironmentValue($name);
+        if ($systemValue !== null) {
+            return $systemValue;
+        }
+        
+        return $default;
+    }
+    
+    /**
+     * Get environment variable from Magento
+     *
+     * @param string $name Environment variable name
+     * @return string|null
+     */
+    private function getMagentoEnvironmentValue(string $name): ?string
+    {
         try {
-            // Try to use Magento's deployment config to get environment variables
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-
-            try {
-                $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
-                $envValue = $deploymentConfig->get('system/default/environment/' . $name);
-                if ($envValue !== null) {
-                    return (string)$envValue;
-                }
-            } catch (\Exception $e) {
-                // Continue with other methods
+            
+            // Try via deployment config
+            $deploymentValue = $this->getValueFromDeploymentConfig($objectManager, $name);
+            if ($deploymentValue !== null) {
+                return $deploymentValue;
             }
-
-            // Try to use Magento's environment service
-            try {
-                $environmentService = $objectManager->get(\Magento\Framework\App\EnvironmentInterface::class);
-                $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($name))));
-                if (method_exists($environmentService, $method)) {
-                    $value = $environmentService->$method();
-                    if ($value !== null) {
-                        return (string)$value;
-                    }
-                }
-            } catch (\Exception $e) {
-                // Continue with other methods
+            
+            // Try via environment service
+            $serviceValue = $this->getValueFromEnvironmentService($objectManager, $name);
+            if ($serviceValue !== null) {
+                return $serviceValue;
             }
         } catch (\Exception $e) {
-            // Skip Magento-specific methods if ObjectManager is not available
+            // Ignore exceptions
         }
-
-        // Fallback to a safer method than direct superglobals
-        $value = null;
-
-        // PHP 7+ safe way to access environment variables
-        if (function_exists('getenv')) {
-            $value = @getenv($name, true) ?: @getenv($name);
+        
+        return null;
+    }
+    
+    /**
+     * Get value from Magento deployment config
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @param string $name
+     * @return string|null
+     */
+    private function getValueFromDeploymentConfig($objectManager, string $name): ?string
+    {
+        try {
+            $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
+            $envValue = $deploymentConfig->get('system/default/environment/' . $name);
+            if ($envValue !== null) {
+                return (string)$envValue;
+            }
+        } catch (\Exception $e) {
+            // Ignore exceptions
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get value from Magento environment service
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @param string $name
+     * @return string|null
+     */
+    private function getValueFromEnvironmentService($objectManager, string $name): ?string
+    {
+        try {
+            $environmentService = $objectManager->get(\Magento\Framework\App\EnvironmentInterface::class);
+            $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($name))));
+            if (method_exists($environmentService, $method)) {
+                $value = $environmentService->$method();
+                if ($value !== null) {
+                    return (string)$value;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore exceptions
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get environment variable from the system
+     * 
+     * @param string $name Environment variable name
+     * @return string|null
+     */
+    private function getSystemEnvironmentValue(string $name): ?string
+    {
+        // Use ini_get for certain system variables as a safer alternative
+        if (in_array($name, ['memory_limit', 'max_execution_time'])) {
+            $value = ini_get($name);
             if ($value !== false) {
                 return $value;
             }
         }
-
-        return $default;
+        
+        // Use Environment class if available (Magento 2.3+)
+        try {
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $env = $objectManager->get(\Magento\Framework\App\Environment::class);
+            if (method_exists($env, 'getEnv')) {
+                $value = $env->getEnv($name);
+                if ($value !== false && $value !== null) {
+                    return $value;
+                }
+            }
+        } catch (\Exception $e) {
+            // Continue with other methods
+        }
+        
+        return null;
     }
 }
