@@ -190,14 +190,9 @@ class CheckCommand extends AbstractCommand
             $config = [];
             foreach ($envMapping as $key => $envVars) {
                 foreach ($envVars as $env) {
-                    // First check $_SERVER
-                    if (isset($_SERVER[$env])) {
-                        $config[$key] = $_SERVER[$env];
-                        break;
-                    }
-                    // Then check $_ENV
-                    elseif (isset($_ENV[$env])) {
-                        $config[$key] = $_ENV[$env];
+                    $value = $this->getEnvironmentVariable($env);
+                    if ($value !== null) {
+                        $config[$key] = $value;
                         break;
                     }
                 }
@@ -442,11 +437,11 @@ class CheckCommand extends AbstractCommand
         ];
 
         foreach ($envHosts as $envVar) {
-            $hostValue = $_SERVER[$envVar] ?? $_ENV[$envVar] ?? null;
+            $hostValue = $this->getEnvironmentVariable($envVar);
             if (!empty($hostValue)) {
-                $port = $_SERVER['ELASTICSEARCH_PORT'] ?? $_ENV['ELASTICSEARCH_PORT'] ??
-                       $_SERVER['ES_PORT'] ?? $_ENV['ES_PORT'] ??
-                       $_SERVER['OPENSEARCH_PORT'] ?? $_ENV['OPENSEARCH_PORT'] ?? '9200';
+                $port = $this->getEnvironmentVariable('ELASTICSEARCH_PORT') ??
+                       $this->getEnvironmentVariable('ES_PORT') ??
+                       $this->getEnvironmentVariable('OPENSEARCH_PORT') ?? '9200';
                 $elasticHosts[] = "http://{$hostValue}:{$port}";
             }
         }
@@ -583,5 +578,59 @@ class CheckCommand extends AbstractCommand
         $usedPercent = round(($usedGB / $totalGB) * 100, 2);
 
         return "$usedGB GB / $totalGB GB ($usedPercent%)";
+    }
+
+    /**
+     * Safely get environment variable value
+     *
+     * @param string $name Environment variable name
+     * @param string|null $default Default value if not found
+     * @return string|null
+     */
+    private function getEnvironmentVariable(string $name, ?string $default = null): ?string
+    {
+        try {
+            // Try to use Magento's deployment config to get environment variables
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+
+            try {
+                $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
+                $envValue = $deploymentConfig->get('system/default/environment/' . $name);
+                if ($envValue !== null) {
+                    return (string)$envValue;
+                }
+            } catch (\Exception $e) {
+                // Continue with other methods
+            }
+
+            // Try to use Magento's environment service
+            try {
+                $environmentService = $objectManager->get(\Magento\Framework\App\EnvironmentInterface::class);
+                $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($name))));
+                if (method_exists($environmentService, $method)) {
+                    $value = $environmentService->$method();
+                    if ($value !== null) {
+                        return (string)$value;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Continue with other methods
+            }
+        } catch (\Exception $e) {
+            // Skip Magento-specific methods if ObjectManager is not available
+        }
+
+        // Fallback to a safer method than direct superglobals
+        $value = null;
+
+        // PHP 7+ safe way to access environment variables
+        if (function_exists('getenv')) {
+            $value = @getenv($name, true) ?: @getenv($name);
+            if ($value !== false) {
+                return $value;
+            }
+        }
+
+        return $default;
     }
 }
