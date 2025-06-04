@@ -85,7 +85,33 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 ---
 
-### 4. SystemCheckCommand (`mageforge:system:check`)
+### 4. ThemeCheckCommand (`mageforge:theme:check`)
+
+**Purpose**: Checks themes for outdated dependencies (Composer packages and NPM packages).
+
+**File**: `/src/Console/Command/Theme/CheckCommand.php`
+
+**Dependencies**:
+- `ThemeList` - Service to retrieve theme information
+- `ThemePath` - Service to resolve theme paths
+
+**Usage**:
+```bash
+bin/magento mageforge:theme:check [<themeCodes>...]
+```
+
+**Implementation Details**:
+- If no theme codes are provided, displays an interactive prompt to select themes
+- For each selected theme:
+  1. Resolves the theme path
+  2. Checks for outdated Composer dependencies
+  3. Checks for outdated NPM packages
+- Displays detailed results and a summary of found issues
+- Provides clear output and recommendations for updating dependencies
+
+---
+
+### 5. SystemCheckCommand (`mageforge:system:check`)
 
 **Purpose**: Displays system information relevant to Magento development.
 
