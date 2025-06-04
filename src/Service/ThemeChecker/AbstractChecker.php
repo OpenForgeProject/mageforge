@@ -5,7 +5,88 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Service\ThemeChecker;
 
 abstract class AbstractChecker implements CheckerInterface
-{
+{    /**
+     * Execute a system command safely
+     *
+     * @param string $command The command to execute
+     * @param array $output Command output will be stored here
+     * @param int|null $returnVar Command return code will be stored here
+     * @return bool True on success, false on failure
+     */
+    protected function safeExec(string $command, array &$output = [], int &$returnVar = null): bool
+    {
+        // List of allowed commands for security
+        $allowedCommands = [
+            'which composer',
+            'which npm',
+            'composer outdated --direct --format=json 2>/dev/null',
+            'composer outdated --direct 2>/dev/null',
+            'npm outdated --json 2>/dev/null',
+            'npm outdated 2>/dev/null'
+        ];
+
+        // Check if command is exactly one of the allowed commands
+        if (!in_array($command, $allowedCommands, true)) {
+            // Command not in the allowed list
+            $returnVar = 1;
+            $output = ['Error: Command not allowed for security reasons.'];
+            return false;
+        }
+
+        // Execute the command in a safe manner
+        exec($command, $output, $returnVar);
+        return $returnVar === 0;
+    }
+
+    /**
+     * Execute a system command safely with arguments
+     *
+     * @param string $baseCommand The base command to execute (e.g., 'npm', 'composer')
+     * @param array $allowedArgs List of allowed arguments
+     * @param array $args Arguments to use
+     * @param array $output Command output will be stored here
+     * @param int|null $returnVar Command return code will be stored here
+     * @return bool True on success, false on failure
+     */
+    protected function safeExecWithArgs(string $baseCommand, array $allowedArgs, array $args, array &$output = [], int &$returnVar = null): bool
+    {
+        // List of allowed base commands
+        $allowedBaseCommands = ['composer', 'npm', 'which'];
+
+        // Check if base command is allowed
+        if (!in_array($baseCommand, $allowedBaseCommands, true)) {
+            $returnVar = 1;
+            $output = ['Error: Base command not allowed for security reasons.'];
+            return false;
+        }
+
+        // Validate and sanitize arguments
+        $safeArgs = [];
+        foreach ($args as $arg) {
+            // Remove any potentially dangerous characters
+            $sanitizedArg = preg_replace('/[;&|`$(){}]/', '', $arg);
+
+            // Check if the sanitized argument is in the allowed list
+            if (!in_array($sanitizedArg, $allowedArgs, true)) {
+                $returnVar = 1;
+                $output = ['Error: Argument not allowed for security reasons: ' . $arg];
+                return false;
+            }
+
+            $safeArgs[] = $sanitizedArg;
+        }
+
+        // Build the safe command
+        $command = $baseCommand;
+        if (!empty($safeArgs)) {
+            $command .= ' ' . implode(' ', $safeArgs);
+        }
+
+        // Execute the command
+        exec($command, $output, $returnVar);
+        return $returnVar === 0;
+    }
+
     /**
      * Check if composer is installed
      *
@@ -14,8 +95,8 @@ abstract class AbstractChecker implements CheckerInterface
     protected function isComposerInstalled(): bool
     {
         $returnVar = null;
-        // @phpcs:ignore PHPMD.UnusedLocalVariable
-        exec('which composer', $unusedOutput, $returnVar);
+        $output = [];
+        $this->safeExec('which composer', $output, $returnVar);
         return $returnVar === 0;
     }
 
@@ -27,8 +108,8 @@ abstract class AbstractChecker implements CheckerInterface
     protected function isNpmInstalled(): bool
     {
         $returnVar = null;
-        // @phpcs:ignore PHPMD.UnusedLocalVariable
-        exec('which npm', $unusedOutput, $returnVar);
+        $output = [];
+        $this->safeExec('which npm', $output, $returnVar);
         return $returnVar === 0;
     }
 

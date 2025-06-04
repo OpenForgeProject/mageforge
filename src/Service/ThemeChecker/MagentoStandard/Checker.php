@@ -63,7 +63,7 @@ class Checker extends AbstractChecker
         chdir($composerPath);
         $output = [];
         $exitCode = 0;
-        exec('composer outdated --direct --format=json 2>/dev/null', $output, $exitCode);
+        $this->safeExec('composer outdated --direct --format=json 2>/dev/null', $output, $exitCode);
         chdir($cwd);
 
         // Parse JSON output if available
@@ -86,7 +86,7 @@ class Checker extends AbstractChecker
         // If JSON parsing failed or no structured output, try the table format
         $output = [];
         chdir($composerPath);
-        exec('composer outdated --direct 2>/dev/null', $output);
+        $this->safeExec('composer outdated --direct 2>/dev/null', $output);
         chdir($cwd);
 
         if (!empty($output)) {
@@ -165,7 +165,7 @@ class Checker extends AbstractChecker
         chdir($packageJsonPath);
         $output = [];
         $exitCode = null;
-        exec('npm outdated --json 2>/dev/null', $output, $exitCode);
+        $this->safeExec('npm outdated --json 2>/dev/null', $output, $exitCode);
         chdir($cwd);
 
         // Check if we have output regardless of exit code
@@ -187,7 +187,7 @@ class Checker extends AbstractChecker
         if ($exitCode === 1) {
             // Try the non-JSON format and parse it manually
             $output = [];
-            exec('npm outdated 2>/dev/null', $output);
+            $this->safeExec('npm outdated 2>/dev/null', $output);
 
             if (!empty($output)) {
                 $result = $this->parseNpmOutdatedOutput($output);

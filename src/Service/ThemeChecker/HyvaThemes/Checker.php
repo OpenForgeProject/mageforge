@@ -79,7 +79,7 @@ class Checker extends StandardChecker
         chdir($packageJsonPath);
         $output = [];
         $exitCode = null;
-        exec('npm outdated --json 2>/dev/null', $output, $exitCode);
+        $this->safeExec('npm outdated --json 2>/dev/null', $output, $exitCode);
         chdir($cwd);
 
         // Check if we have output regardless of exit code
@@ -108,7 +108,7 @@ class Checker extends StandardChecker
         if ($exitCode === 1) {
             // Try the non-JSON format and parse it manually
             $output = [];
-            exec('npm outdated 2>/dev/null', $output);
+            $this->safeExec('npm outdated 2>/dev/null', $output);
 
             if (!empty($output)) {
                 $result = $this->parseNpmOutdatedOutput($output);
