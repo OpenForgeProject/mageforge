@@ -45,7 +45,7 @@ class BuildCommand extends AbstractCommand
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
-                'The codes of the theme to build'
+                'Themecodes to build (format: Vendor/theme, Vendor/theme 2, ...)'
             )
             ->setAliases(['frontend:build']);
     }

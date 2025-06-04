@@ -9,6 +9,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,6 +39,11 @@ class WatchCommand extends AbstractCommand
     {
         $this->setName($this->getCommandName('theme', 'watch'))
             ->setDescription('Watches theme files for changes and rebuilds them automatically')
+            ->addArgument(
+                'themeCode',
+                InputArgument::OPTIONAL,
+                'Theme to watch (format: Vendor/theme)'
+            )
             ->addOption(
                 'theme',
                 't',
@@ -52,7 +58,13 @@ class WatchCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $themeCode = $input->getOption('theme');
+        // Prüfen auf Argument und Option für den Theme-Code
+        $themeCode = $input->getArgument('themeCode');
+
+        // Falls kein Argument vorhanden, prüfe auf Option (für Abwärtskompatibilität)
+        if (empty($themeCode)) {
+            $themeCode = $input->getOption('theme');
+        }
 
         if (empty($themeCode)) {
             $themes = $this->themeList->getAllThemes();
