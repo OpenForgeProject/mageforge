@@ -5,7 +5,21 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Service\ThemeChecker;
 
 abstract class AbstractChecker implements CheckerInterface
-{    /**
+{
+    /**
+     * @var FileSystem
+     */
+    protected FileSystem $fileSystem;
+
+    /**
+     * AbstractChecker constructor
+     */
+    public function __construct()
+    {
+        $this->fileSystem = new FileSystem();
+    }
+
+    /**
      * Execute a system command safely
      *
      * @param string $command The command to execute
@@ -121,16 +135,16 @@ abstract class AbstractChecker implements CheckerInterface
     protected function findProjectRoot(): string
     {
         // Start with the current working directory
-        $path = getcwd();
+        $path = $this->fileSystem->getCurrentDir();
 
         // Go up the directory tree looking for app/etc/env.php, which indicates the Magento root
         while ($path !== '/' && $path !== '') {
-            if (file_exists($path . '/app/etc/env.php')) {
+            if ($this->fileSystem->fileExists($path . '/app/etc/env.php')) {
                 return $path;
             }
 
             // Go one directory up
-            $path = dirname($path);
+            $path = $this->fileSystem->getDirname($path);
         }
 
         return '';

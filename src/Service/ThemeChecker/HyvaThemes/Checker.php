@@ -17,21 +17,21 @@ class Checker extends StandardChecker
         $themePath = rtrim($themePath, '/');
 
         // First check for tailwind directory in theme folder
-        if (!file_exists($themePath . '/web/tailwind')) {
+        if (!$this->fileSystem->fileExists($themePath . '/web/tailwind')) {
             return false;
         }
 
         // Check theme.xml for Hyva theme declaration
-        if (file_exists($themePath . '/theme.xml')) {
-            $themeXmlContent = file_get_contents($themePath . '/theme.xml');
+        if ($this->fileSystem->fileExists($themePath . '/theme.xml')) {
+            $themeXmlContent = $this->fileSystem->getFileContents($themePath . '/theme.xml');
             if ($themeXmlContent && stripos($themeXmlContent, 'hyva') !== false) {
                 return true;
             }
         }
 
         // Check composer.json for Hyva module dependency
-        if (file_exists($themePath . '/composer.json')) {
-            $composerContent = file_get_contents($themePath . '/composer.json');
+        if ($this->fileSystem->fileExists($themePath . '/composer.json')) {
+            $composerContent = $this->fileSystem->getFileContents($themePath . '/composer.json');
             if ($composerContent) {
                 $composerJson = json_decode($composerContent, true);
                 if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
@@ -60,10 +60,10 @@ class Checker extends StandardChecker
         $themePath = rtrim($themePath, '/');
 
         // For Hyvä themes, check in web/tailwind
-        if (file_exists($themePath . '/web/tailwind/package.json')) {
+        if ($this->fileSystem->fileExists($themePath . '/web/tailwind/package.json')) {
             $packageJsonPath = $themePath . '/web/tailwind';
         } else {
-            if (!file_exists($themePath . '/package.json')) {
+            if (!$this->fileSystem->fileExists($themePath . '/package.json')) {
                 return [];
             }
             $packageJsonPath = $themePath;
@@ -75,12 +75,12 @@ class Checker extends StandardChecker
         }
 
         // Run npm outdated
-        $cwd = getcwd();
-        chdir($packageJsonPath);
+        $cwd = $this->fileSystem->getCurrentDir();
+        $this->fileSystem->changeDir($packageJsonPath);
         $output = [];
         $exitCode = null;
         $this->safeExec('npm outdated --json 2>/dev/null', $output, $exitCode);
-        chdir($cwd);
+        $this->fileSystem->changeDir($cwd);
 
         // Check if we have output regardless of exit code
         if (!empty($output)) {

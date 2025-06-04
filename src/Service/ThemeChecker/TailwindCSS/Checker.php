@@ -17,11 +17,11 @@ class Checker extends StandardChecker
         $themePath = rtrim($themePath, '/');
 
         // Check for package.json with TailwindCSS dependency
-        if (!file_exists($themePath . '/package.json')) {
+        if (!$this->fileSystem->fileExists($themePath . '/package.json')) {
             return false;
         }
 
-        $packageJsonContent = file_get_contents($themePath . '/package.json');
+        $packageJsonContent = $this->fileSystem->getFileContents($themePath . '/package.json');
         if (!$packageJsonContent) {
             return false;
         }

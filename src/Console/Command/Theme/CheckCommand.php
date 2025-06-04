@@ -95,7 +95,7 @@ class CheckCommand extends AbstractCommand
             return Command::SUCCESS;
         }
 
-        $symfonyStyle->title(sprintf('Analyzing %d theme(s) for outdated dependencies', $totalThemes));
+        $symfonyStyle->title(sprintf('Checking %d theme(s) for outdated dependencies', $totalThemes));
 
         // Process each theme
         foreach ($themeCodes as $index => $themeCode) {

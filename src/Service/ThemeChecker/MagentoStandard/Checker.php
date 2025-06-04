@@ -14,7 +14,7 @@ class Checker extends AbstractChecker
     public function detect(string $themePath): bool
     {
         // Any Magento theme is acceptable for this checker
-        return file_exists($themePath . '/theme.xml');
+        return $this->fileSystem->fileExists($themePath . '/theme.xml');
     }
 
     /**
@@ -31,7 +31,7 @@ class Checker extends AbstractChecker
     public function checkComposerDependencies(string $themePath): array
     {
         $composerJsonPath = $themePath . '/composer.json';
-        if (!file_exists($composerJsonPath)) {
+        if (!$this->fileSystem->fileExists($composerJsonPath)) {
             return [];
         }
 
@@ -41,16 +41,14 @@ class Checker extends AbstractChecker
         }
 
         // Check if the theme has a vendor directory
-        $hasVendorDir = is_dir($themePath . '/vendor');
+        $hasVendorDir = $this->fileSystem->isDir($themePath . '/vendor');
 
         // If there is no vendor directory in the theme, try to use the project root vendor
         if (!$hasVendorDir) {
             $projectRoot = $this->findProjectRoot();
-            if (empty($projectRoot) || !is_dir($projectRoot . '/vendor')) {
+            if (empty($projectRoot) || !$this->fileSystem->isDir($projectRoot . '/vendor')) {
                 return ['warning' => 'No vendor directory found in theme or project root.'];
             }
-
-            // Use the project root for checking dependencies
             $usingProjectRoot = true;
             $composerPath = $projectRoot;
         } else {
@@ -59,12 +57,12 @@ class Checker extends AbstractChecker
         }
 
         // Run composer outdated
-        $cwd = getcwd();
-        chdir($composerPath);
+        $cwd = $this->fileSystem->getCurrentDir();
+        $this->fileSystem->changeDir($composerPath);
         $output = [];
         $exitCode = 0;
         $this->safeExec('composer outdated --direct --format=json 2>/dev/null', $output, $exitCode);
-        chdir($cwd);
+        $this->fileSystem->changeDir($cwd);
 
         // Parse JSON output if available
         if (!empty($output)) {
@@ -85,9 +83,9 @@ class Checker extends AbstractChecker
 
         // If JSON parsing failed or no structured output, try the table format
         $output = [];
-        chdir($composerPath);
+        $this->fileSystem->changeDir($composerPath);
         $this->safeExec('composer outdated --direct 2>/dev/null', $output);
-        chdir($cwd);
+        $this->fileSystem->changeDir($cwd);
 
         if (!empty($output)) {
             $result = $this->parseComposerOutdatedOutput($output);
@@ -133,7 +131,7 @@ class Checker extends AbstractChecker
     protected function findPackageJsonPath(string $themePath): array
     {
         // First check theme directory
-        if (file_exists($themePath . '/package.json')) {
+        if ($this->fileSystem->fileExists($themePath . '/package.json')) {
             return [
                 'path' => $themePath,
                 'using_project_root' => false
@@ -142,7 +140,7 @@ class Checker extends AbstractChecker
 
         // If not in theme directory, try project root
         $projectRoot = $this->findProjectRoot();
-        if (!empty($projectRoot) && file_exists($projectRoot . '/package.json')) {
+        if (!empty($projectRoot) && $this->fileSystem->fileExists($projectRoot . '/package.json')) {
             return [
                 'path' => $projectRoot,
                 'using_project_root' => true
@@ -161,12 +159,12 @@ class Checker extends AbstractChecker
      */
     protected function executeNpmOutdated(string $packageJsonPath, bool $usingProjectRoot): array
     {
-        $cwd = getcwd();
-        chdir($packageJsonPath);
+        $cwd = $this->fileSystem->getCurrentDir();
+        $this->fileSystem->changeDir($packageJsonPath);
         $output = [];
         $exitCode = null;
         $this->safeExec('npm outdated --json 2>/dev/null', $output, $exitCode);
-        chdir($cwd);
+        $this->fileSystem->changeDir($cwd);
 
         // Check if we have output regardless of exit code
         if (!empty($output)) {
