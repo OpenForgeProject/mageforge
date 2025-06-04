@@ -152,51 +152,71 @@ class CheckCommand extends AbstractCommand
      */
     private function getShortMysqlVersion(): string
     {
-        // Attempt 1: Check via PHP database connection
+        // Try different methods to get MySQL version
+        $version = $this->getMysqlVersionViaMagento();
+        if (!empty($version)) {
+            return $version;
+        }
+
+        $version = $this->getMysqlVersionViaClient();
+        if (!empty($version)) {
+            return $version;
+        }
+
+        $version = $this->getMysqlVersionViaPdo();
+        if (!empty($version)) {
+            return $version;
+        }
+
+        return 'Unknown';
+    }
+
+    /**
+     * Get MySQL version via Magento connection
+     *
+     * @return string|null
+     */
+    private function getMysqlVersionViaMagento(): ?string
+    {
         try {
-            // Try to use Magento connection
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $resource = $objectManager->get(\Magento\Framework\App\ResourceConnection::class);
             $connection = $resource->getConnection();
             $version = $connection->fetchOne('SELECT VERSION()');
-            if (!empty($version)) {
-                return $version;
-            }
-        } catch (\Exception $e) {
-            // Fallback to direct PDO connection if Magento connection fails
-        }
 
-        // Attempt 2: Try the MySQL client
+            return !empty($version) ? $version : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get MySQL version via command line client
+     *
+     * @return string|null
+     */
+    private function getMysqlVersionViaClient(): ?string
+    {
         exec('mysql --version 2>/dev/null', $output, $returnCode);
         if ($returnCode === 0 && !empty($output)) {
             $versionString = $output[0];
             preg_match('/Distrib ([0-9.]+)/', $versionString, $matches);
-            if (isset($matches[1])) {
-                return $matches[1];
-            }
+
+            return isset($matches[1]) ? $matches[1] : null;
         }
 
-        // Attempt 3: Try generic database connection
-        // Read ENV variables that might be present in different environments
-        try {
-            $envMapping = [
-                'host' => ['DB_HOST', 'MYSQL_HOST', 'MAGENTO_DB_HOST'],
-                'port' => ['DB_PORT', 'MYSQL_PORT', 'MAGENTO_DB_PORT', '3306'],
-                'user' => ['DB_USER', 'MYSQL_USER', 'MAGENTO_DB_USER'],
-                'pass' => ['DB_PASSWORD', 'MYSQL_PASSWORD', 'MAGENTO_DB_PASSWORD'],
-                'name' => ['DB_NAME', 'MYSQL_DATABASE', 'MAGENTO_DB_NAME'],
-            ];
+        return null;
+    }
 
-            $config = [];
-            foreach ($envMapping as $key => $envVars) {
-                foreach ($envVars as $env) {
-                    $value = $this->getEnvironmentVariable($env);
-                    if ($value !== null) {
-                        $config[$key] = $value;
-                        break;
-                    }
-                }
-            }
+    /**
+     * Get MySQL version via PDO connection
+     *
+     * @return string|null
+     */
+    private function getMysqlVersionViaPdo(): ?string
+    {
+        try {
+            $config = $this->getDatabaseConfig();
 
             // Default values if nothing is found
             $host = $config['host'] ?? 'localhost';
@@ -207,14 +227,40 @@ class CheckCommand extends AbstractCommand
             $dsn = "mysql:host=$host;port=$port";
             $pdo = new \PDO($dsn, $user, $pass, [\PDO::ATTR_TIMEOUT => 1]);
             $version = $pdo->query('SELECT VERSION()')->fetchColumn();
-            if (!empty($version)) {
-                return $version;
-            }
+
+            return !empty($version) ? $version : null;
         } catch (\Exception $e) {
-            // Ignore errors and return Unknown
+            return null;
+        }
+    }
+
+    /**
+     * Get database configuration from environment variables
+     *
+     * @return array
+     */
+    private function getDatabaseConfig(): array
+    {
+        $envMapping = [
+            'host' => ['DB_HOST', 'MYSQL_HOST', 'MAGENTO_DB_HOST'],
+            'port' => ['DB_PORT', 'MYSQL_PORT', 'MAGENTO_DB_PORT', '3306'],
+            'user' => ['DB_USER', 'MYSQL_USER', 'MAGENTO_DB_USER'],
+            'pass' => ['DB_PASSWORD', 'MYSQL_PASSWORD', 'MAGENTO_DB_PASSWORD'],
+            'name' => ['DB_NAME', 'MYSQL_DATABASE', 'MAGENTO_DB_NAME'],
+        ];
+
+        $config = [];
+        foreach ($envMapping as $key => $envVars) {
+            foreach ($envVars as $env) {
+                $value = $this->getEnvironmentVariable($env);
+                if ($value !== null) {
+                    $config[$key] = $value;
+                    break;
+                }
+            }
         }
 
-        return 'Unknown';
+        return $config;
     }
 
     /**
@@ -337,13 +383,13 @@ class CheckCommand extends AbstractCommand
     {
         try {
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            
+
             // First try via deployment config
             $configResult = $this->checkSearchEngineViaDeploymentConfig($objectManager);
             if ($configResult !== null) {
                 return $configResult;
             }
-            
+
             // Then try via engine resolver
             $resolverResult = $this->checkSearchEngineViaEngineResolver($objectManager);
             if ($resolverResult !== null) {
@@ -355,7 +401,7 @@ class CheckCommand extends AbstractCommand
 
         return null;
     }
-    
+
     /**
      * Check search engine via Magento deployment config
      *
@@ -382,10 +428,10 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore specific exceptions
         }
-        
+
         return null;
     }
-    
+
     /**
      * Check search engine via Magento engine resolver
      *
@@ -405,7 +451,7 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore specific exceptions
         }
-        
+
         return null;
     }
 
@@ -521,7 +567,7 @@ class CheckCommand extends AbstractCommand
 
         return false;
     }
-    
+
     /**
      * Try to connect using Magento's HTTP client
      *
@@ -536,10 +582,10 @@ class CheckCommand extends AbstractCommand
             $httpClient = $httpClientFactory->create();
             $httpClient->setTimeout(2);
             $httpClient->get($url);
-            
+
             $status = $httpClient->getStatus();
             $response = $httpClient->getBody();
-            
+
             if ($status === 200 && !empty($response)) {
                 $data = json_decode($response, true);
                 if (is_array($data)) {
@@ -549,7 +595,7 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore exceptions
         }
-        
+
         return null;
     }
 
@@ -614,16 +660,16 @@ class CheckCommand extends AbstractCommand
         if ($magentoValue !== null) {
             return $magentoValue;
         }
-        
+
         // Try system environment variables
         $systemValue = $this->getSystemEnvironmentValue($name);
         if ($systemValue !== null) {
             return $systemValue;
         }
-        
+
         return $default;
     }
-    
+
     /**
      * Get environment variable from Magento
      *
@@ -634,13 +680,13 @@ class CheckCommand extends AbstractCommand
     {
         try {
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            
+
             // Try via deployment config
             $deploymentValue = $this->getValueFromDeploymentConfig($objectManager, $name);
             if ($deploymentValue !== null) {
                 return $deploymentValue;
             }
-            
+
             // Try via environment service
             $serviceValue = $this->getValueFromEnvironmentService($objectManager, $name);
             if ($serviceValue !== null) {
@@ -649,10 +695,10 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore exceptions
         }
-        
+
         return null;
     }
-    
+
     /**
      * Get value from Magento deployment config
      *
@@ -671,10 +717,10 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore exceptions
         }
-        
+
         return null;
     }
-    
+
     /**
      * Get value from Magento environment service
      *
@@ -696,13 +742,13 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Ignore exceptions
         }
-        
+
         return null;
     }
-    
+
     /**
      * Get environment variable from the system
-     * 
+     *
      * @param string $name Environment variable name
      * @return string|null
      */
@@ -715,7 +761,7 @@ class CheckCommand extends AbstractCommand
                 return $value;
             }
         }
-        
+
         // Use Environment class if available (Magento 2.3+)
         try {
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
@@ -729,7 +775,7 @@ class CheckCommand extends AbstractCommand
         } catch (\Exception $e) {
             // Continue with other methods
         }
-        
+
         return null;
     }
 }
