@@ -37,7 +37,7 @@ class Builder implements BuilderInterface
         // Check theme.xml for Hyva theme declaration
         if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
             $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
-            if (str_contains($themeXmlContent, 'Hyva')) {
+            if (str_contains(strtolower($themeXmlContent), 'hyva')) {
                 return true;
             }
         }
