@@ -49,4 +49,26 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- Configure Theme Checker Pool -->
+    <type name="OpenForgeProject\MageForge\Service\ThemeChecker\CheckerPool">
+        <arguments>
+            <argument name="checkers"
+                      xsi:type="array"
+                      >
+                <item name="hyva"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeChecker\HyvaThemes\Checker</item>
+                <item name="tailwindcss"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeChecker\TailwindCSS\Checker</item>
+                <item name="standard"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeChecker\MagentoStandard\Checker</item>
+                <item name="custom"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Service\ThemeChecker\Custom\Checker</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

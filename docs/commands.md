@@ -94,6 +94,7 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 **Dependencies**:
 - `ThemeList` - Service to retrieve theme information
 - `ThemePath` - Service to resolve theme paths
+- `CheckerPool` - Service to get appropriate checkers for themes
 
 **Usage**:
 ```bash

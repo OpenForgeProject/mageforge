@@ -9,6 +9,7 @@ use Laravel\Prompts\Spinner;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\ThemeChecker\CheckerPool;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -24,10 +25,12 @@ class CheckCommand extends AbstractCommand
     /**
      * @param ThemePath $themePath
      * @param ThemeList $themeList
+     * @param CheckerPool $checkerPool
      */
     public function __construct(
         private readonly ThemePath $themePath,
-        private readonly ThemeList $themeList
+        private readonly ThemeList $themeList,
+        private readonly CheckerPool $checkerPool
     ) {
         parent::__construct();
     }
@@ -135,129 +138,23 @@ class CheckCommand extends AbstractCommand
             return ['error' => "Theme $themeCode is not installed."];
         }
 
+        // Get the appropriate checker for this theme
+        $checker = $this->checkerPool->getChecker($themePath);
+        if ($checker === null) {
+            return ['error' => "No suitable checker found for theme $themeCode."];
+        }
+
         $results = [
             'path' => $themePath,
-            'composer' => $this->checkComposerDependencies($themePath),
-            'npm' => $this->checkNpmDependencies($themePath),
+            'type' => $checker->getName(),
+            'composer' => $checker->checkComposerDependencies($themePath),
+            'npm' => $checker->checkNpmDependencies($themePath),
         ];
 
         return $results;
     }
 
-    /**
-     * Check composer dependencies
-     *
-     * @param string $themePath
-     * @return array
-     */
-    private function checkComposerDependencies(string $themePath): array
-    {
-        $composerJsonPath = $themePath . '/composer.json';
-        if (!file_exists($composerJsonPath)) {
-            return [];
-        }
-
-        // Check if composer is installed
-        $composerCheckOutput = [];
-        exec('which composer', $composerCheckOutput, $returnVar);
-        if ($returnVar !== 0) {
-            return ['error' => 'Composer not found on the system.'];
-        }
-
-        // Check if the theme has a vendor directory
-        $hasVendorDir = is_dir($themePath . '/vendor');
-
-        // If there is no vendor directory in the theme, try to use the project root vendor
-        if (!$hasVendorDir) {
-            $projectRoot = $this->findProjectRoot();
-            if (empty($projectRoot) || !is_dir($projectRoot . '/vendor')) {
-                return ['warning' => 'No vendor directory found in theme or project root.'];
-            }
-
-            // Add a note that we're using the project root vendor
-            $usingProjectRoot = true;
-        } else {
-            $usingProjectRoot = false;
-        }
-
-        // Determine the path where to run composer outdated
-        $composerPath = $usingProjectRoot ? $this->findProjectRoot() : $themePath;
-
-        // Run composer outdated
-        $cwd = getcwd();
-        chdir($composerPath);
-        $output = [];
-        $exitCode = 0;
-        exec('composer outdated --direct --format=json 2>/dev/null', $output, $exitCode);
-        chdir($cwd);
-
-        // Parse JSON output if available
-        if (!empty($output)) {
-            $jsonOutput = implode('', $output);
-            $outdated = json_decode($jsonOutput, true);
-
-            if (json_last_error() === JSON_ERROR_NONE && isset($outdated['installed'])) {
-                $result = $outdated['installed'];
-                if ($usingProjectRoot) {
-                    $result['_meta'] = [
-                        'using_project_root' => true,
-                        'project_root' => $composerPath
-                    ];
-                }
-                return $result;
-            }
-        }
-
-        // If JSON parsing failed or no structured output, try the table format
-        $output = [];
-        chdir($composerPath);
-        exec('composer outdated --direct 2>/dev/null', $output);
-        chdir($cwd);
-
-        if (!empty($output)) {
-            $result = $this->parseComposerOutdatedOutput($output);
-            if ($usingProjectRoot) {
-                $result['_meta'] = [
-                    'using_project_root' => true,
-                    'project_root' => $composerPath
-                ];
-            }
-            return $result;
-        }
-
-        return ['error' => 'Error parsing composer outdated output.'];
-    }
-
-    /**
-     * Check NPM dependencies
-     *
-     * @param string $themePath
-     * @return array
-     */
-    private function checkNpmDependencies(string $themePath): array
-    {
-        // Determine the correct path to check for npm dependencies
-        $packageJsonPath = $this->determineNpmPackagePath($themePath);
-
-        // If no package.json found, return empty result
-        if (empty($packageJsonPath)) {
-            return [];
-        }
-
-        // Get npm dependency information
-        $outdatedInfo = $this->executeNpmOutdated($packageJsonPath);
-
-        // Add Hyvä theme metadata if needed
-        $isHyvaTheme = $this->isHyvaTheme($themePath);
-        if ($isHyvaTheme && !isset($outdatedInfo['error'])) {
-            $outdatedInfo['_meta'] = [
-                'path' => 'web/tailwind',
-                'type' => 'Hyvä theme'
-            ];
-        }
-
-        return $outdatedInfo;
-    }
+    // Implementation moved to the Theme Checker services
 
     /**
      * Display check results
@@ -290,6 +187,12 @@ class CheckCommand extends AbstractCommand
                 continue;
             }
 
+            // Display theme type if available
+            if (isset($themeResults['type'])) {
+                $symfonyStyle->writeln(sprintf("Theme type: <info>%s</info>", $themeResults['type']));
+                $symfonyStyle->newLine();
+            }
+
             $this->displayComposerResults($symfonyStyle, $themeResults, $composerIssuesCount);
             $this->displayNpmResults($symfonyStyle, $themeResults, $npmIssuesCount);
         }
@@ -304,7 +207,8 @@ class CheckCommand extends AbstractCommand
      * @param SymfonyStyle $symfonyStyle
      * @param array $themeResults
      * @param int &$composerIssuesCount
-     */    private function displayComposerResults(SymfonyStyle $symfonyStyle, array $themeResults, int &$composerIssuesCount): void
+     */
+    private function displayComposerResults(SymfonyStyle $symfonyStyle, array $themeResults, int &$composerIssuesCount): void
     {
         // Display Composer outdated packages
         if (empty($themeResults['composer'])) {
@@ -476,61 +380,26 @@ class CheckCommand extends AbstractCommand
     }
 
     /**
-     * Check if a theme is a Hyvä theme
-     *
-     * @param string $themePath
-     * @return bool
-     */
-    private function isHyvaTheme(string $themePath): bool
-    {
-        // normalize path
-        $themePath = rtrim($themePath, '/');
-
-        // First check for tailwind directory in theme folder
-        if (!file_exists($themePath . '/web/tailwind')) {
-            return false;
-        }
-
-        // Check theme.xml for Hyva theme declaration
-        if (file_exists($themePath . '/theme.xml')) {
-            $themeXmlContent = file_get_contents($themePath . '/theme.xml');
-            if ($themeXmlContent && stripos($themeXmlContent, 'hyva') !== false) {
-                return true;
-            }
-        }
-
-        // Check composer.json for Hyva module dependency
-        if (file_exists($themePath . '/composer.json')) {
-            $composerContent = file_get_contents($themePath . '/composer.json');
-            if ($composerContent) {
-                $composerJson = json_decode($composerContent, true);
-                if (isset($composerJson['name']) && str_contains($composerJson['name'], 'hyva')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Get path info string for Hyvä themes
+     * Get path info string for themes with meta information
      *
      * @param array $themeResults
      * @return string
      */
     private function getHyvaThemePathInfo(array &$themeResults): string
     {
-        // Check if this is a Hyvä theme by looking at the _meta information
-        $isHyvaTheme = isset($themeResults['npm']['_meta']) &&
-                       isset($themeResults['npm']['_meta']['type']) &&
-                       $themeResults['npm']['_meta']['type'] === 'Hyvä theme';
-
-        if (!$isHyvaTheme) {
+        // Check if this theme has meta information
+        if (!isset($themeResults['npm']['_meta'])) {
             return '';
         }
 
-        $pathInfo = sprintf(" <fg=blue>[Hyvä theme, checked in %s]</>", $themeResults['npm']['_meta']['path']);
+        $themeName = $themeResults['npm']['_meta']['type'] ?? 'theme';
+        $path = $themeResults['npm']['_meta']['path'] ?? '';
+
+        if (empty($path)) {
+            return '';
+        }
+
+        $pathInfo = sprintf(" <fg=blue>[%s, checked in %s]</>", $themeName, $path);
 
         // Remove meta information to prevent it from appearing in the results
         unset($themeResults['npm']['_meta']);
@@ -538,268 +407,5 @@ class CheckCommand extends AbstractCommand
         return $pathInfo;
     }
 
-    /**
-     * Determine the correct path for npm package.json
-     *
-     * @param string $themePath
-     * @return string
-     */
-    private function determineNpmPackagePath(string $themePath): string
-    {
-        // Normalize path
-        $themePath = rtrim($themePath, '/');
-
-        // Determine if this is a Hyvä theme
-        $isHyvaTheme = $this->isHyvaTheme($themePath);
-
-        // For Hyvä themes, check in web/tailwind
-        if ($isHyvaTheme && file_exists($themePath . '/web/tailwind/package.json')) {
-            return $themePath . '/web/tailwind';
-        }
-
-        // For standard themes, check in theme root
-        if (file_exists($themePath . '/package.json')) {
-            return $themePath;
-        }
-
-        // No package.json found
-        return '';
-    }
-
-    /**
-     * Execute npm outdated command and return results
-     *
-     * @param string $packagePath
-     * @return array
-     */
-    private function executeNpmOutdated(string $packagePath): array
-    {
-        if (empty($packagePath)) {
-            return [];
-        }
-
-        // Check if npm is installed
-        $npmCheckOutput = [];
-        exec('which npm', $npmCheckOutput, $returnVar);
-        if ($returnVar !== 0) {
-            return ['error' => 'NPM not found on the system.'];
-        }
-
-        // Run npm outdated
-        $cwd = getcwd();
-        chdir($packagePath);
-
-        // Important: 'npm outdated' returns exit code 1 if there are outdated packages,
-        // which is NOT an error in this context - it's the expected behavior.
-        $output = [];
-        $exitCode = null;
-        exec('npm outdated --json 2>/dev/null', $output, $exitCode);
-        chdir($cwd);
-
-        // Check if we have output regardless of exit code
-        if (!empty($output)) {
-            $jsonOutput = implode('', $output);
-            if (empty($jsonOutput) || $jsonOutput === '{}') {
-                return []; // No outdated packages
-            }
-
-            // Parse JSON output
-            $outdated = json_decode($jsonOutput, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $outdated;
-            }
-        }
-
-        // If we're here and exit code is 1, it likely means outdated packages were found
-        // but npm had some issue with JSON output formatting
-        if ($exitCode === 1) {
-            // Try the non-JSON format and parse it manually
-            $output = [];
-            exec('npm outdated 2>/dev/null', $output);
-
-            if (!empty($output)) {
-                return $this->parseNpmOutdatedOutput($output);
-            }
-        }
-
-        return ['error' => 'Error executing npm outdated command.'];
-    }
-
-    /**
-     * Parse npm outdated output in non-JSON format
-     *
-     * @param array $output Lines of output from npm outdated command
-     * @return array
-     */
-    private function parseNpmOutdatedOutput(array $output): array
-    {
-        $result = [];
-
-        // Skip the first line which is the header
-        if (count($output) > 1) {
-            array_shift($output);
-
-            foreach ($output as $line) {
-                // Split by whitespace, but respect multiple spaces
-                $parts = preg_split('/\s+/', trim($line));
-
-                if (count($parts) >= 4) {
-                    $package = $parts[0];
-                    $current = $parts[1];
-                    $wanted = $parts[2];
-                    $latest = $parts[3];
-                    $location = isset($parts[4]) ? $parts[4] : '';
-
-                    $result[$package] = [
-                        'current' => $current,
-                        'wanted' => $wanted,
-                        'latest' => $latest,
-                        'location' => $location,
-                        'type' => $this->determinePackageType($location)
-                    ];
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Determine npm package type based on its location
-     *
-     * @param string $location
-     * @return string
-     */
-    private function determinePackageType(string $location): string
-    {
-        if (strpos($location, 'node_modules') !== false) {
-            if (strpos($location, 'dependencies') !== false) {
-                return 'dependencies';
-            } elseif (strpos($location, 'devDependencies') !== false) {
-                return 'devDependencies';
-            } elseif (strpos($location, 'peerDependencies') !== false) {
-                return 'peerDependencies';
-            }
-        }
-
-        return 'dependencies'; // Default
-    }
-
-    /**
-     * Parse composer outdated output in non-JSON format
-     *
-     * @param array $output Lines of output from composer outdated command
-     * @return array
-     */
-    private function parseComposerOutdatedOutput(array $output): array
-    {
-        $result = [];
-
-        // Skip header lines (first 3 lines usually)
-        $startParsing = false;
-        foreach ($output as $line) {
-            $line = trim($line);
-
-            // Look for the separator line with dashes
-            if (!$startParsing && strpos($line, '---') === 0) {
-                $startParsing = true;
-                continue;
-            }
-
-            // Parse actual package lines
-            if ($startParsing && !empty($line) && $line !== '---') {
-                // Split by whitespace, but respect multiple spaces
-                $parts = preg_split('/\s+/', $line);
-
-                if (count($parts) >= 3) {
-                    $name = trim($parts[0]);
-                    $version = trim($parts[1]);
-                    $latest = trim($parts[2]);
-
-                    // Determine latest-status
-                    $status = $this->determineComposerVersionStatus($version, $latest);
-
-                    $result[] = [
-                        'name' => $name,
-                        'version' => $version,
-                        'latest' => $latest,
-                        'latest-status' => $status
-                    ];
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Determine the version status based on semver differences
-     *
-     * @param string $currentVersion
-     * @param string $latestVersion
-     * @return string
-     */
-    private function determineComposerVersionStatus(string $currentVersion, string $latestVersion): string
-    {
-        // Remove any prefixes like v, V, etc.
-        $currentVersion = ltrim($currentVersion, 'vV');
-        $latestVersion = ltrim($latestVersion, 'vV');
-
-        // Extract version components
-        $current = explode('.', $currentVersion);
-        $latest = explode('.', $latestVersion);
-
-        // Ensure we have at least three components (major.minor.patch)
-        $currentCount = count($current);
-        for ($i = $currentCount; $i < 3; $i++) {
-            $current[] = '0';
-        }
-
-        $latestCount = count($latest);
-        for ($i = $latestCount; $i < 3; $i++) {
-            $latest[] = '0';
-        }
-
-        // Compare major versions
-        if ((int)$latest[0] > (int)$current[0]) {
-            return 'semver:major';
-        }
-
-        // Compare minor versions (if major is the same)
-        if ((int)$latest[0] === (int)$current[0] && (int)$latest[1] > (int)$current[1]) {
-            return 'semver:minor';
-        }
-
-        // Compare patch versions (if major and minor are the same)
-        if ((int)$latest[0] === (int)$current[0] &&
-            (int)$latest[1] === (int)$current[1] &&
-            (int)$latest[2] > (int)$current[2]) {
-            return 'semver:patch';
-        }
-
-        return 'up-to-date';
-    }
-
-    /**
-     * Find the Magento project root directory
-     *
-     * @return string
-     */
-    private function findProjectRoot(): string
-    {
-        // Start with the current working directory
-        $path = getcwd();
-
-        // Go up the directory tree looking for app/etc/env.php, which indicates the Magento root
-        while ($path !== '/' && $path !== '') {
-            if (file_exists($path . '/app/etc/env.php')) {
-                return $path;
-            }
-
-            // Go one directory up
-            $path = dirname($path);
-        }
-
-        return '';
-    }
+    // Implementation moved to the Theme Checker services
 }

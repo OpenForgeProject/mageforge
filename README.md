@@ -97,7 +97,10 @@ bin/magento setup:upgrade
 
 ## Extending MageForge
 
-MageForge provides a modular architecture that allows developers to create custom theme builders for specific project requirements. For more information, see:
+MageForge provides a modular architecture that allows developers to extend and customize functionality:
+
+- [Create Custom Theme Builders](./docs/custom_theme_builders.md) - Extend building functionality for custom themes
+- [Theme Checker System](./docs/theme_checker.md) - Learn about the modular theme dependency checker
 
 - [Custom Theme Builders Documentation](./docs/custom_theme_builders.md)
 - [Commands Documentation](./docs/commands.md)
