@@ -58,7 +58,10 @@ class CheckCommand extends AbstractCommand
 
         if (empty($themeCodes)) {
             $themes = $this->themeList->getAllThemes();
-            $options = array_map(fn($theme) => $theme->getCode(), $themes);
+            $options = [];
+            foreach ($themes as $theme) {
+                $options[] = $theme->getCode();
+            }
 
             $themeCodesPrompt = new MultiSelectPrompt(
                 label: 'Select themes to check',

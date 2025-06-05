@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service\ThemeChecker;
 
+use \SplFileInfo;
+use \RuntimeException;
+
 /**
  * FileSystem utility class for ThemeCheckers
  *
@@ -20,7 +23,8 @@ class FileSystem
      */
     public function fileExists(string $path): bool
     {
-        return file_exists($path);
+        $fileInfo = new SplFileInfo($path);
+        return $fileInfo->isFile() || $fileInfo->isDir();
     }
 
     /**
@@ -46,7 +50,17 @@ class FileSystem
             return false;
         }
 
-        return file_get_contents($path);
+        $fileInfo = new SplFileInfo($path);
+        if (!$fileInfo->isReadable()) {
+            return false;
+        }
+
+        try {
+            $file = $fileInfo->openFile('r');
+            return $file->fread($fileInfo->getSize());
+        } catch (RuntimeException $e) {
+            return false;
+        }
     }
 
     /**
@@ -57,18 +71,32 @@ class FileSystem
      */
     public function isDir(string $path): bool
     {
-        return is_dir($path);
+        $fileInfo = new SplFileInfo($path);
+        return $fileInfo->isDir();
     }
 
     /**
-     * Safely change the current directory
+     * Working directory path
      *
-     * @param string $path The new directory
+     * @var string|null
+     */
+    private ?string $workingDirectory = null;
+
+    /**
+     * Safely tracks the current directory without using chdir
+     *
+     * @param string $path The new directory to track
      * @return bool
      */
     public function changeDir(string $path): bool
     {
-        return chdir($path);
+        $fileInfo = new SplFileInfo($path);
+        if (!$fileInfo->isDir()) {
+            return false;
+        }
+
+        $this->workingDirectory = $fileInfo->getRealPath();
+        return true;
     }
 
     /**
@@ -78,6 +106,10 @@ class FileSystem
      */
     public function getCurrentDir(): string
     {
-        return getcwd();
+        if ($this->workingDirectory === null) {
+            $this->workingDirectory = getcwd() ?: '';
+        }
+
+        return $this->workingDirectory;
     }
 }
