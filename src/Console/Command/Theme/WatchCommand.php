@@ -58,10 +58,8 @@ class WatchCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        // Prüfen auf Argument und Option für den Theme-Code
         $themeCode = $input->getArgument('themeCode');
 
-        // Falls kein Argument vorhanden, prüfe auf Option (für Abwärtskompatibilität)
         if (empty($themeCode)) {
             $themeCode = $input->getOption('theme');
         }
