@@ -13,5 +13,10 @@
   },
   "require": {
     "laravel/prompts": "^0.3.5"
+  },
+  "archive": {
+    "exclude": [
+      "/.codacy.yml"
+    ]
   }
 }
