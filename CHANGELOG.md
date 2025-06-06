@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+### [0.2.2] - 2025-06-05
+
+- feat: enhance theme command arguments for better clarity and compatibility
+
+### [0.2.1] - 2025-06-04
+
+- feat: reduce cyclomatic complexity
+- fix: normalize theme name check to be case-insensitive for Hyva themes
+
 ### [0.2.0] - 2025-05-30
 
 - docs: clean up `CHANGELOG.md`
