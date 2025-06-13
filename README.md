@@ -1,16 +1,14 @@
-# MageForge for Magento 2 (Beta)
+# MageForge for Magento 2
 
 ![Mageforge Hero](./.github/assets/mageforge-hero.jpg)
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7d7c46d7492043c7ada514ed1d4a4c05)](https://app.codacy.com/gh/OpenForgeProject/mageforge/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)  [![CodeFactor](https://www.codefactor.io/repository/github/openforgeproject/mageforge/badge)](https://www.codefactor.io/repository/github/openforgeproject/mageforge)
 
-MageForge is a Magento 2 module designed to assist frontend developers in streamlining their workflow and enhancing productivity.
-
----
+MageForge is a powerful CLI front-end development toolkit for Magento 2 that simplifies theme development workflows. It provides tools for many types of Magento themes and can be easily extended for your custom theme. With MageForge, themes can be built lightning fast, without your developers having to worry about the details. MageForge eliminates complex configuration requirements and significantly reduces setup time, allowing Magento developers to focus on creative aspects instead of struggling with build processes.
 
 [![Join our OpenForgeProject Discord community](./.github/assets/small_logo_blurple_RGB.png)](https://discord.gg/H5CjMXQQHn)
 
-## Magento Requirements
+## Supported Magento Versions
 
 MageForge requires Magento 2.4.7 or higher.
 Please ensure that your Magento installation meets this requirement before installation.
@@ -47,82 +45,57 @@ Please ensure that your Magento installation meets this requirement before insta
 ---
 
 ## Getting Started
+
 ### Installation
 
-Install the module via Composer:
-```bash
-composer require openforgeproject/mageforge
-```
+1. Install the module via Composer:
+   ```bash
+   composer require openforgeproject/mageforge
+   ```
 
-Enable the module:
-```bash
-bin/magento module:enable OpenForgeProject_MageForge
-bin/magento setup:upgrade
-```
+2. Enable the module:
+   ```bash
+   bin/magento module:enable OpenForgeProject_MageForge
+   bin/magento setup:upgrade
+   ```
 
-## Getting Started
+### Quick Start Guide
 
-### Theme Development
-
-1. List all available themes:
+1. List available themes:
    ```bash
    bin/magento mageforge:theme:list
    ```
 
-2. Build a specific theme:
+2. Build a theme:
    ```bash
    bin/magento mageforge:theme:build <theme-code>
    ```
    Example: `bin/magento mageforge:theme:build Magento/luma`
 
-3. Start watch mode for development:
+3. Start development watch mode:
    ```bash
    bin/magento mageforge:theme:watch <theme-code>
    ```
 
-### Supported Theme Types
+4. Enjoy automatic CSS rebuilding you work on your theme files!
 
-- **Magento Standard Themes**: LESS-based themes
-- **Hyvä Themes**: Tailwind CSS based themes
-- **Custom Tailwind Themes**: Standalone Tailwind implementations
+## Additional Documentation
 
-### Tips & Tricks
+- [Advanced Usage Guide](./docs/advanced_usage.md) - Tips, tricks and troubleshooting
+- [Custom Theme Builders Documentation](./docs/custom_theme_builders.md) - Extend MageForge for your custom themes
+- [Commands Documentation](./docs/commands.md) - Detailed command reference
 
-- Use the `-v` option for more detailed output
-- Watch mode supports hot-reloading for LESS and Tailwind
-- Check system information anytime with `mageforge:system:check`
-- Use shortcodes for faster command execution, for example `bin/magento m:t:b` instead of `bin/magento mageforge:theme:build`
-- Theme build and watch commands have special aliases: `frontend:build` and `frontend:watch`
+## Community & Support
 
-## Extending MageForge
+- **Report Bugs/Features**: [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues)
+- **Get Help**: [Discord Community](https://discord.gg/H5CjMXQQHn)
+- **Contributing**: See [Contributing Guidelines](./CONTRIBUTING.md)
 
-MageForge provides a modular architecture that allows developers to create custom theme builders for specific project requirements. For more information, see:
+## Project Information
 
-- [Custom Theme Builders Documentation](./docs/custom_theme_builders.md)
-- [Commands Documentation](./docs/commands.md)
-
-## Report Feature or Bugs
-
-MageForge provides several forms to submit feature requests or report a bug.
-You will find it in the [issue section](https://github.com/OpenForgeProject/mageforge/issues) of GitHub.
-
-## Contributing
-
-We welcome contributions from the community! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for more information on how to get involved.
-
-## License
-
-See the [LICENSE](LICENSE) file for more details.
-
-## Support
-
-For support, please open an issue on the [GitHub repository](https://github.com/OpenForgeProject/mageforge/issues) or join our [Discord community](https://discord.gg/H5CjMXQQHn).
-
-## Changelog
-
-All notable changes to this project will be documented in the [CHANGELOG](CHANGELOG.md) file.
+- **License**: [LICENSE](LICENSE)
+- **Changelog**: [CHANGELOG](CHANGELOG.md)
 
 ---
 
 Thank you for using MageForge!
-We hope it makes your development process smoother and more efficient.
