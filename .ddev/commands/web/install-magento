@@ -9,6 +9,8 @@
 MAGENTO_FOLDER="magento"
 MODULE_FOLDER="src/"
 
+npm install grunt-cli -g
+
 # check if MODULE_FOLDER directory is empty
 if [ -n "$(ls ${MODULE_FOLDER})" ]; then
     echo "${MODULE_FOLDER} directory is not empty. Skipping execution of install-magento."
@@ -34,6 +36,13 @@ rm -rf magento-temp
 
 # change to magento directory
 cd ${MAGENTO_FOLDER} || exit 1
+
+# Remove *.sample extension
+find . -name "*.sample" -type f -exec sh -c 'mv "$1" "${1%.sample}"' _ {} \;
+rm package-lock.json # remove basic package-lock.json to avoid conflicts
+
+# create missing local-themes.js file for grunt tasks
+echo 'module.exports = {};' > dev/tools/grunt/configs/local-themes.js
 
 # install magento
 bin/magento setup:install \
