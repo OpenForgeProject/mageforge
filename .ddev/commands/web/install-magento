@@ -9,7 +9,7 @@
 MAGENTO_FOLDER="magento"
 MODULE_FOLDER="src/"
 
-# check if magento directory is empty
+# check if MODULE_FOLDER directory is empty
 if [ -n "$(ls ${MODULE_FOLDER})" ]; then
     echo "${MODULE_FOLDER} directory is not empty. Skipping execution of install-magento."
     exit 0
@@ -20,6 +20,11 @@ composer create-project \
     --repository-url=https://mirror.mage-os.org/ \
     magento/project-community-edition \
     magento-temp
+
+# Create Magento Folder if not exist
+if [ ! -d "${MAGENTO_FOLDER}" ]; then
+    mkdir -p "${MAGENTO_FOLDER}"
+fi
 
 # copy everything from magento-temp into magento folder
 cp -r magento-temp/* ${MAGENTO_FOLDER}
