@@ -62,15 +62,49 @@ class BuildCommand extends AbstractCommand
             $themes = $this->themeList->getAllThemes();
             $options = array_map(fn($theme) => $theme->getCode(), $themes);
 
+            // Ensure proper terminal settings for Laravel Prompts
+            if (function_exists('posix_isatty') && !posix_isatty(STDOUT)) {
+                // Fallback for non-TTY environments
+                $this->displayAvailableThemes($this->io);
+                return Command::SUCCESS;
+            }
+
+            // Improve terminal compatibility
+            putenv('COLUMNS=80');
+            putenv('LINES=30');
+            putenv('TERM=xterm-256color');
+
+            // Force output buffer flush before prompts
+            if (ob_get_level()) {
+                ob_end_flush();
+            }
+
+            $this->io->newLine();
+            $this->io->text("Available themes: " . implode(', ', $options));
+            $this->io->newLine();
+
             $themeCodesPrompt = new MultiSelectPrompt(
                 label: 'Select themes to build',
                 options: $options,
-                scroll: 10,
-                hint: 'Arrow keys to navigate, Space to select, Enter to confirm',
+                hint: 'Use arrow keys to navigate, Space to select/deselect, Enter to confirm',
+                required: false,
             );
 
-            $themeCodes = $themeCodesPrompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            try {
+                $themeCodes = $themeCodesPrompt->prompt();
+                \Laravel\Prompts\Prompt::terminal()->restoreTty();
+
+                // If no themes selected, show available themes
+                if (empty($themeCodes)) {
+                    $this->io->info('No themes selected.');
+                    return Command::SUCCESS;
+                }
+            } catch (\Exception $e) {
+                // Fallback if prompt fails
+                $this->io->error('Interactive mode failed: ' . $e->getMessage());
+                $this->displayAvailableThemes($this->io);
+                return Command::SUCCESS;
+            }
         }
 
         return $this->processBuildThemes($themeCodes, $this->io, $output, $isVerbose);
