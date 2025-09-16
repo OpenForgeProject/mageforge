@@ -22,6 +22,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class BuildCommand extends AbstractCommand
 {
+    private array $originalEnv = [];
+
     /**
      * @param ThemePath $themePath
      * @param ThemeList $themeList
@@ -316,10 +318,17 @@ class BuildCommand extends AbstractCommand
      */
     private function setPromptEnvironment(): void
     {
-        // Set terminal environment variables using putenv() - needed for Laravel Prompts
-        putenv('COLUMNS=100');
-        putenv('LINES=40');
-        putenv('TERM=xterm-256color');
+        // Store original values for reset
+        $this->originalEnv = [
+            'COLUMNS' => $_ENV['COLUMNS'] ?? null,
+            'LINES' => $_ENV['LINES'] ?? null,
+            'TERM' => $_ENV['TERM'] ?? null,
+        ];
+
+        // Set terminal environment variables using $_ENV superglobal
+        $_ENV['COLUMNS'] = '100';
+        $_ENV['LINES'] = '40';
+        $_ENV['TERM'] = 'xterm-256color';
     }
 
     /**
@@ -328,7 +337,12 @@ class BuildCommand extends AbstractCommand
     private function resetPromptEnvironment(): void
     {
         // Reset environment variables to original state
-        putenv('COLUMNS');
-        putenv('LINES');
+        foreach ($this->originalEnv as $key => $value) {
+            if ($value === null) {
+                unset($_ENV[$key]);
+            } else {
+                $_ENV[$key] = $value;
+            }
+        }
     }
 }
