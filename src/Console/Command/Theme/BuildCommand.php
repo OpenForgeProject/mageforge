@@ -275,6 +275,62 @@ class BuildCommand extends AbstractCommand
     }
 
     /**
+     * Safely get environment variable with sanitization
+     */
+    private function getEnvVar(string $name): ?string
+    {
+        $value = $_ENV[$name] ?? getenv($name);
+
+        if ($value === false || $value === '') {
+            return null;
+        }
+
+        // For terminal environment variables, allow alphanumeric, dash, underscore, and dots
+        // Also allow numbers for COLUMNS/LINES
+        $sanitized = preg_replace('/[^\w\-.]/', '', (string) $value);
+        return $sanitized === '' ? null : $sanitized;
+    }
+
+    /**
+     * Safely get server variable with sanitization
+     */
+    private function getServerVar(string $name): ?string
+    {
+        $value = $_SERVER[$name] ?? null;
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        // Similar sanitization for server variables
+        $sanitized = preg_replace('/[^\w\-.]/', '', (string) $value);
+        return $sanitized === '' ? null : $sanitized;
+    }
+
+    /**
+     * Safely set environment variable with validation
+     */
+    private function setEnvVar(string $name, string $value): void
+    {
+        // Validate input parameters
+        if (empty($name) || !is_string($name)) {
+            return;
+        }
+
+        // For terminal variables like COLUMNS, LINES, TERM - allow specific patterns
+        $sanitizedValue = match($name) {
+            'COLUMNS', 'LINES' => filter_var($value, FILTER_VALIDATE_INT) ? $value : null,
+            'TERM' => preg_match('/^[a-zA-Z0-9\-]+$/', $value) ? $value : null,
+            default => preg_replace('/[^\w\-.]/', '', $value)
+        };
+
+        if ($sanitizedValue !== null && $sanitizedValue !== '' && strlen($sanitizedValue) <= 255) {
+            $_ENV[$name] = $sanitizedValue;
+            putenv("$name=$sanitizedValue");
+        }
+    }
+
+    /**
      * Check if the current environment supports interactive terminal input
      *
      * @param OutputInterface $output
@@ -294,15 +350,15 @@ class BuildCommand extends AbstractCommand
 
         // Check for common non-interactive environments
         $nonInteractiveEnvs = [
-            'CI' => true,
-            'GITHUB_ACTIONS' => true,
-            'GITLAB_CI' => true,
-            'JENKINS_URL' => true,
-            'TEAMCITY_VERSION' => true,
+            'CI',
+            'GITHUB_ACTIONS',
+            'GITLAB_CI',
+            'JENKINS_URL',
+            'TEAMCITY_VERSION',
         ];
 
-        foreach ($nonInteractiveEnvs as $env => $_) {
-            if (isset($_ENV[$env]) || isset($_SERVER[$env])) {
+        foreach ($nonInteractiveEnvs as $env) {
+            if ($this->getEnvVar($env) || $this->getServerVar($env)) {
                 return false;
             }
         }
@@ -320,15 +376,15 @@ class BuildCommand extends AbstractCommand
     {
         // Store original values for reset
         $this->originalEnv = [
-            'COLUMNS' => $_ENV['COLUMNS'] ?? null,
-            'LINES' => $_ENV['LINES'] ?? null,
-            'TERM' => $_ENV['TERM'] ?? null,
+            'COLUMNS' => $this->getEnvVar('COLUMNS'),
+            'LINES' => $this->getEnvVar('LINES'),
+            'TERM' => $this->getEnvVar('TERM'),
         ];
 
-        // Set terminal environment variables using $_ENV superglobal
-        $_ENV['COLUMNS'] = '100';
-        $_ENV['LINES'] = '40';
-        $_ENV['TERM'] = 'xterm-256color';
+        // Set terminal environment variables using safe method
+        $this->setEnvVar('COLUMNS', '100');
+        $this->setEnvVar('LINES', '40');
+        $this->setEnvVar('TERM', 'xterm-256color');
     }
 
     /**
@@ -340,8 +396,9 @@ class BuildCommand extends AbstractCommand
         foreach ($this->originalEnv as $key => $value) {
             if ($value === null) {
                 unset($_ENV[$key]);
+                putenv($key);
             } else {
-                $_ENV[$key] = $value;
+                $this->setEnvVar($key, $value);
             }
         }
     }
