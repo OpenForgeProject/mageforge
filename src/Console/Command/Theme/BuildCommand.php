@@ -62,31 +62,21 @@ class BuildCommand extends AbstractCommand
             $themes = $this->themeList->getAllThemes();
             $options = array_map(fn($theme) => $theme->getCode(), $themes);
 
-            // Ensure proper terminal settings for Laravel Prompts
-            if (function_exists('posix_isatty') && !posix_isatty(STDOUT)) {
-                // Fallback for non-TTY environments
+            // Check if we're in an interactive terminal environment
+            if (!$this->isInteractiveTerminal($output)) {
+                // Fallback for non-interactive environments
                 $this->displayAvailableThemes($this->io);
                 return Command::SUCCESS;
             }
 
-            // Improve terminal compatibility
-            putenv('COLUMNS=80');
-            putenv('LINES=30');
-            putenv('TERM=xterm-256color');
-
-            // Force output buffer flush before prompts
-            if (ob_get_level()) {
-                ob_end_flush();
-            }
-
-            $this->io->newLine();
-            $this->io->text("Available themes: " . implode(', ', $options));
-            $this->io->newLine();
+            // Set environment variables for Laravel Prompts
+            $this->setPromptEnvironment();
 
             $themeCodesPrompt = new MultiSelectPrompt(
                 label: 'Select themes to build',
                 options: $options,
-                hint: 'Use arrow keys to navigate, Space to select/deselect, Enter to confirm',
+                default: [], // No default selection
+                hint: 'Arrow keys to navigate, Space to toggle, Enter to confirm (scroll with arrows if needed)',
                 required: false,
             );
 
@@ -94,15 +84,21 @@ class BuildCommand extends AbstractCommand
                 $themeCodes = $themeCodesPrompt->prompt();
                 \Laravel\Prompts\Prompt::terminal()->restoreTty();
 
+                // Reset environment
+                $this->resetPromptEnvironment();
+
                 // If no themes selected, show available themes
                 if (empty($themeCodes)) {
                     $this->io->info('No themes selected.');
                     return Command::SUCCESS;
                 }
             } catch (\Exception $e) {
+                // Reset environment on exception
+                $this->resetPromptEnvironment();
                 // Fallback if prompt fails
                 $this->io->error('Interactive mode failed: ' . $e->getMessage());
                 $this->displayAvailableThemes($this->io);
+                $this->io->newLine();
                 return Command::SUCCESS;
             }
         }
@@ -274,5 +270,65 @@ class BuildCommand extends AbstractCommand
         }
 
         $io->newLine();
+    }
+
+    /**
+     * Check if the current environment supports interactive terminal input
+     *
+     * @param OutputInterface $output
+     * @return bool
+     */
+    private function isInteractiveTerminal(OutputInterface $output): bool
+    {
+        // Check if output is decorated (supports ANSI codes)
+        if (!$output->isDecorated()) {
+            return false;
+        }
+
+        // Check if STDIN is available and readable
+        if (!defined('STDIN') || !is_resource(STDIN)) {
+            return false;
+        }
+
+        // Check for common non-interactive environments
+        $nonInteractiveEnvs = [
+            'CI' => true,
+            'GITHUB_ACTIONS' => true,
+            'GITLAB_CI' => true,
+            'JENKINS_URL' => true,
+            'TEAMCITY_VERSION' => true,
+        ];
+
+        foreach ($nonInteractiveEnvs as $env => $value) {
+            if (getenv($env) !== false) {
+                return false;
+            }
+        }
+
+        // Additional check: try to detect if running in a proper TTY
+        // This is a safer alternative to posix_isatty()
+        $sttyOutput = shell_exec('stty -g 2>/dev/null');
+        return !empty($sttyOutput);
+    }
+
+    /**
+     * Set environment for Laravel Prompts to work properly in Docker/DDEV
+     */
+    private function setPromptEnvironment(): void
+    {
+        // Set terminal environment variables using putenv() - needed for Laravel Prompts
+        putenv('COLUMNS=100');
+        putenv('LINES=40');
+        putenv('TERM=xterm-256color');
+    }
+
+    /**
+     * Reset terminal environment after prompts
+     */
+    private function resetPromptEnvironment(): void
+    {
+        // Reset environment variables to original state
+        putenv('COLUMNS');
+        putenv('LINES');
     }
 }
