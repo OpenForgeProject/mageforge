@@ -299,8 +299,8 @@ class BuildCommand extends AbstractCommand
             'TEAMCITY_VERSION' => true,
         ];
 
-        foreach ($nonInteractiveEnvs as $env => $value) {
-            if (getenv($env) !== false) {
+        foreach ($nonInteractiveEnvs as $env => $_) {
+            if (isset($_ENV[$env]) || isset($_SERVER[$env])) {
                 return false;
             }
         }
