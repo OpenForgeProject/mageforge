@@ -533,7 +533,10 @@ class BuildCommand extends AbstractCommand
      */
     private function removeSecureEnvironmentValue(string $name): void
     {
-        // Clear the environment cache to remove the variable
+        // Remove the specific variable from our secure storage
+        unset($this->secureEnvStorage[$name]);
+
+        // Clear the static cache to force refresh on next access
         $this->clearEnvironmentCache();
     }
 }
