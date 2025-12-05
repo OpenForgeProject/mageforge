@@ -47,8 +47,11 @@ class CssGenerator
      */
     public function write(string $content, string $outputPath): bool
     {
-        // Ensure the directory exists
-        $directory = dirname($outputPath);
+        // Ensure the directory exists by extracting parent directory path
+        $pathParts = explode('/', $outputPath);
+        array_pop($pathParts); // Remove filename
+        $directory = implode('/', $pathParts);
+        
         if (!$this->fileDriver->isDirectory($directory)) {
             $this->fileDriver->createDirectory($directory, 0750);
         }
