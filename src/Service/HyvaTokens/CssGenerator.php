@@ -50,7 +50,7 @@ class CssGenerator
         // Ensure the directory exists
         $directory = dirname($outputPath);
         if (!$this->fileDriver->isDirectory($directory)) {
-            $this->fileDriver->createDirectory($directory, 0755);
+            $this->fileDriver->createDirectory($directory, 0750);
         }
 
         try {

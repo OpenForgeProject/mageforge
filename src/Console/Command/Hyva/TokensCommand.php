@@ -86,10 +86,11 @@ class TokensCommand extends AbstractCommand
 
             try {
                 $themeCode = $themeCodePrompt->prompt();
-                \Laravel\Prompts\Prompt::terminal()->restoreTty();
             } catch (\Exception $e) {
                 $this->io->error('Interactive mode failed: ' . $e->getMessage());
                 return Command::FAILURE;
+            } finally {
+                \Laravel\Prompts\Prompt::terminal()->restoreTty();
             }
         }
 

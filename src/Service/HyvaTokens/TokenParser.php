@@ -33,15 +33,16 @@ class TokenParser
         }
 
         // Otherwise, read from file
-        if ($filePath === null || !$this->fileDriver->isExists($filePath)) {
+        if ($filePath === null || !$this->fileDriver->isFile($filePath)) {
             throw new \Exception("Token source file not found: " . ($filePath ?? 'null'));
         }
 
         $content = $this->fileDriver->fileGetContents($filePath);
-        $tokens = json_decode($content, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception("Invalid JSON in token file: " . json_last_error_msg());
+        
+        try {
+            $tokens = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \Exception("Invalid JSON in token file: " . $e->getMessage());
         }
 
         return $this->normalizeTokens($tokens, $format);
