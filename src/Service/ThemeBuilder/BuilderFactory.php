@@ -16,7 +16,7 @@ class BuilderFactory
     public function create(string $type): BuilderInterface
     {
         if (!isset($this->builders[$type])) {
-            throw new \InvalidArgumentException("Builder $type not found");
+            throw new \InvalidArgumentException("Builder " . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . " not found");
         }
 
         return $this->builders[$type];

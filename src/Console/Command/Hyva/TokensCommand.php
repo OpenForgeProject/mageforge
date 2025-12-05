@@ -76,8 +76,11 @@ class TokensCommand extends AbstractCommand
                 return Command::SUCCESS;
             }
 
-            $options = array_map(fn($theme) => $theme->getCode(), $hyvaThemes);
-            
+            $options = [];
+            foreach ($hyvaThemes as $theme) {
+                $options[] = $theme->getCode();
+            }
+
             $themeCodePrompt = new SelectPrompt(
                 label: 'Select Hyvä theme to generate tokens for',
                 options: $options,

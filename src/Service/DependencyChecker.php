@@ -7,7 +7,6 @@ namespace OpenForgeProject\MageForge\Service;
 use Magento\Framework\Filesystem\Driver\File;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Magento\Framework\Shell;
-
 class DependencyChecker
 {
     private const PACKAGE_JSON = 'package.json';

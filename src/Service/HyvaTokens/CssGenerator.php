@@ -51,7 +51,7 @@ class CssGenerator
         $pathParts = explode('/', $outputPath);
         array_pop($pathParts); // Remove filename
         $directory = implode('/', $pathParts);
-        
+
         if (!$this->fileDriver->isDirectory($directory)) {
             $this->fileDriver->createDirectory($directory, 0750);
         }
@@ -60,7 +60,7 @@ class CssGenerator
             $this->fileDriver->filePutContents($outputPath, $content);
             return true;
         } catch (\Exception $e) {
-            throw new \Exception("Failed to write CSS file: " . $e->getMessage());
+            throw new \Exception("Failed to write CSS file: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
         }
     }
 }

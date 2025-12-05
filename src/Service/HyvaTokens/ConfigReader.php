@@ -30,7 +30,7 @@ class ConfigReader
     public function getConfig(string $themePath): array
     {
         $configPath = $this->getConfigPath($themePath);
-        
+
         // Default configuration
         $config = [
             'src' => self::DEFAULT_SOURCE,
@@ -41,16 +41,16 @@ class ConfigReader
 
         if ($this->fileDriver->isExists($configPath)) {
             $configContent = $this->fileDriver->fileGetContents($configPath);
-            
+
             try {
                 $jsonConfig = json_decode($configContent, true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
-                throw new \Exception("Invalid JSON in configuration file: " . $e->getMessage());
+                throw new \Exception("Invalid JSON in configuration file: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
             }
 
             if (isset($jsonConfig['tokens'])) {
                 $tokensConfig = $jsonConfig['tokens'];
-                
+
                 // Override with config file values
                 if (isset($tokensConfig['src'])) {
                     $config['src'] = $tokensConfig['src'];
