@@ -47,6 +47,86 @@ MageForge streamlines Hyvä theme development with:
 - Automatic TailwindCSS compilation
 - PurgeCSS optimization
 - Component scanning
+- Design tokens support for consistent theming
+
+#### Hyvä Design Tokens
+
+The `mageforge:hyva:tokens` command allows you to generate CSS custom properties from design token definitions, making it easier to maintain consistent design systems across your Hyvä theme.
+
+**Basic Usage:**
+```bash
+bin/magento mageforge:hyva:tokens <theme-code>
+```
+
+**Configuration Options:**
+
+Create a `hyva.config.json` file in your theme's `web/tailwind` directory to customize token generation:
+
+1. **Using a token file (default format):**
+   ```json
+   {
+       "tokens": {
+           "src": "design.tokens.json"
+       }
+   }
+   ```
+
+   Then create `design.tokens.json`:
+   ```json
+   {
+       "colors": {
+           "primary": {
+               "lighter": "oklch(62.3% 0.214 259.815)",
+               "DEFAULT": "oklch(54.6% 0.245 262.881)",
+               "darker": "oklch(37.9% 0.146 265.522)"
+           }
+       },
+       "spacing": {
+           "small": "8px",
+           "medium": "16px",
+           "large": "24px"
+       }
+   }
+   ```
+
+2. **Using Figma tokens:**
+   ```json
+   {
+       "tokens": {
+           "src": "acme.figma-tokens.json",
+           "format": "figma"
+       }
+   }
+   ```
+
+3. **Using inline token values:**
+   ```json
+   {
+       "tokens": {
+           "values": {
+               "colors": {
+                   "primary": {
+                       "lighter": "oklch(62.3% 0.214 259.815)",
+                       "DEFAULT": "oklch(54.6% 0.245 262.881)",
+                       "darker": "oklch(37.9% 0.146 265.522)"
+                   }
+               }
+           }
+       }
+   }
+   ```
+
+4. **Using custom CSS selector (for Tailwind v3):**
+   ```json
+   {
+       "tokens": {
+           "src": "design.tokens.json",
+           "cssSelector": ":root"
+       }
+   }
+   ```
+
+The command generates `generated/hyva-tokens.css` with CSS custom properties that you can import in your Tailwind configuration.
 
 ### Custom Tailwind CSS Implementations
 
