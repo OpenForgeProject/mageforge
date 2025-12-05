@@ -111,7 +111,81 @@ bin/magento mageforge:system:check
 
 ---
 
-### 5. VersionCommand (`mageforge:version`)
+### 5. HyvaTokensCommand (`mageforge:hyva:tokens`)
+
+**Purpose**: Generates Hyvä design tokens CSS from token definitions.
+
+**File**: `/src/Console/Command/Hyva/TokensCommand.php`
+
+**Dependencies**:
+- `ThemePath` - Service to resolve theme paths
+- `ThemeList` - Service to retrieve theme information
+- `TokenProcessor` - Service to process and generate token CSS
+- `HyvaBuilder` - Service to detect Hyvä themes
+
+**Usage**:
+```bash
+bin/magento mageforge:hyva:tokens [<theme-code>]
+```
+
+**Implementation Details**:
+- If no theme code is provided, displays an interactive prompt to select from available Hyvä themes
+- Verifies that the selected theme is a Hyvä theme
+- Reads configuration from `hyva.config.json` or uses defaults
+- Supports multiple token sources:
+  - `design.tokens.json` file (default)
+  - Custom token file specified in configuration
+  - Inline token values in `hyva.config.json`
+  - Figma tokens format
+- Generates `generated/hyva-tokens.css` in the theme's `web/tailwind` directory
+- Supports customization via `hyva.config.json`:
+  - `tokens.src`: Source file path (default: `design.tokens.json`)
+  - `tokens.format`: Token format - `default` or `figma` (default: `default`)
+  - `tokens.cssSelector`: CSS selector for generated tokens (default: `@theme` for Tailwind v4, use `:root` for v3)
+  - `tokens.values`: Inline token definitions
+
+**Configuration Examples**:
+
+Using a Figma tokens file:
+```json
+{
+    "tokens": {
+        "src": "acme.figma-tokens.json",
+        "format": "figma"
+    }
+}
+```
+
+Using inline token values:
+```json
+{
+    "tokens": {
+        "values": {
+            "colors": {
+                "primary": {
+                    "lighter": "oklch(62.3% 0.214 259.815)",
+                    "DEFAULT": "oklch(54.6% 0.245 262.881)",
+                    "darker": "oklch(37.9% 0.146 265.522)"
+                }
+            }
+        }
+    }
+}
+```
+
+Using custom CSS selector for Tailwind v3:
+```json
+{
+    "tokens": {
+        "src": "design.tokens.json",
+        "cssSelector": ":root"
+    }
+}
+```
+
+---
+
+### 6. VersionCommand (`mageforge:version`)
 
 **Purpose**: Displays the current and latest version of the MageForge module.
 
