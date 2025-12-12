@@ -197,9 +197,19 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        $io->info('Starting watch mode for TailwindCSS theme...');
+        $io->text("Watching directory: $tailwindPath");
+        $io->newLine();
+
         try {
             chdir($tailwindPath);
-            passthru('npm run watch');
+            $returnCode = 0;
+            passthru('npm run watch', $returnCode);
+            
+            if ($returnCode !== 0) {
+                $io->error("Watch process exited with error code: $returnCode");
+                return false;
+            }
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

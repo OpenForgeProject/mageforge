@@ -192,8 +192,18 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        $io->info('Starting watch mode for Magento Standard theme...');
+        $io->text("Theme path: $themePath");
+        $io->newLine();
+
         try {
-            passthru('node_modules/.bin/grunt watch');
+            $returnCode = 0;
+            passthru('node_modules/.bin/grunt watch', $returnCode);
+            
+            if ($returnCode !== 0) {
+                $io->error("Watch process exited with error code: $returnCode");
+                return false;
+            }
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;
