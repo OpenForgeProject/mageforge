@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Hyva;
 
-use Laravel\Prompts\SelectPrompt;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
-use OpenForgeProject\MageForge\Model\ThemeList;
-use OpenForgeProject\MageForge\Model\ThemePath;
-use OpenForgeProject\MageForge\Service\EnvironmentService;
 use OpenForgeProject\MageForge\Service\HyvaTokens\ConfigReader;
 use OpenForgeProject\MageForge\Service\HyvaTokens\TokenProcessor;
-use OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder as HyvaBuilder;
+use OpenForgeProject\MageForge\Service\ThemeSelectionService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,20 +19,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class TokensCommand extends AbstractCommand
 {
     /**
-     * @param ThemePath $themePath
-     * @param ThemeList $themeList
+     * @param ThemeSelectionService $themeSelectionService
      * @param TokenProcessor $tokenProcessor
-     * @param HyvaBuilder $hyvaBuilder
      * @param ConfigReader $configReader
-     * @param EnvironmentService $environmentService
      */
     public function __construct(
-        private readonly ThemePath $themePath,
-        private readonly ThemeList $themeList,
+        private readonly ThemeSelectionService $themeSelectionService,
         private readonly TokenProcessor $tokenProcessor,
-        private readonly HyvaBuilder $hyvaBuilder,
         private readonly ConfigReader $configReader,
-        private readonly EnvironmentService $environmentService,
     ) {
         parent::__construct();
     }
@@ -64,7 +54,7 @@ class TokensCommand extends AbstractCommand
 
         // If no theme code provided, select interactively
         if (empty($themeCode)) {
-            $themeCode = $this->selectThemeInteractively($output);
+            $themeCode = $this->themeSelectionService->selectHyvaTheme($this->io);
             if ($themeCode === null) {
                 return Command::FAILURE;
             }
@@ -81,84 +71,6 @@ class TokensCommand extends AbstractCommand
     }
 
     /**
-     * Select theme interactively
-     *
-     * @param OutputInterface $output
-     * @return string|null
-     */
-    private function selectThemeInteractively(OutputInterface $output): ?string
-    {
-        $hyvaThemes = $this->getHyvaThemes();
-
-        if (empty($hyvaThemes)) {
-            $this->io->error('No Hyvä themes found in this installation.');
-            return null;
-        }
-
-        // Check if we're in an interactive terminal environment
-        if (!$this->environmentService->isInteractiveTerminal()) {
-            $this->displayAvailableThemes($hyvaThemes);
-            return null;
-        }
-
-        return $this->promptForTheme($hyvaThemes);
-    }
-
-    /**
-     * Display available themes for non-interactive environments
-     *
-     * @param array $hyvaThemes
-     * @return void
-     */
-    private function displayAvailableThemes(array $hyvaThemes): void
-    {
-        $this->io->info('Available Hyvä themes:');
-        foreach ($hyvaThemes as $theme) {
-            $this->io->writeln(' - ' . $theme->getCode());
-        }
-        $this->io->newLine();
-        $this->io->info('Usage: bin/magento mageforge:hyva:tokens <theme-code>');
-    }
-
-    /**
-     * Prompt user to select a theme
-     *
-     * @param array $hyvaThemes
-     * @return string|null
-     */
-    private function promptForTheme(array $hyvaThemes): ?string
-    {
-        $options = [];
-        foreach ($hyvaThemes as $theme) {
-            $options[] = $theme->getCode();
-        }
-
-        // Set environment variables for Laravel Prompts
-        $this->environmentService->setPromptEnvironment();
-
-        $themeCodePrompt = new SelectPrompt(
-            label: 'Select Hyvä theme to generate tokens for',
-            options: $options,
-            hint: 'Arrow keys to navigate, Enter to confirm'
-        );
-
-        try {
-            $selectedTheme = $themeCodePrompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
-
-            // Reset environment
-            $this->environmentService->resetPromptEnvironment();
-
-            return $selectedTheme;
-        } catch (\Exception $e) {
-            // Reset environment on exception
-            $this->environmentService->resetPromptEnvironment();
-            $this->io->error('Interactive mode failed: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
      * Validate theme exists and is a Hyva theme
      *
      * @param string $themeCode
@@ -166,16 +78,10 @@ class TokensCommand extends AbstractCommand
      */
     private function validateTheme(string $themeCode): ?string
     {
-        // Get theme path
-        $themePath = $this->themePath->getPath($themeCode);
+        // Validate theme
+        $themePath = $this->themeSelectionService->validateTheme($themeCode, true);
         if ($themePath === null) {
-            $this->io->error("Theme $themeCode is not installed.");
-            return null;
-        }
-
-        // Verify this is a Hyva theme
-        if (!$this->hyvaBuilder->detect($themePath)) {
-            $this->io->error("Theme $themeCode is not a Hyvä theme. This command only works with Hyvä themes.");
+            $this->io->error("Theme $themeCode is not installed or is not a Hyvä theme.");
             return null;
         }
 
@@ -275,25 +181,5 @@ class TokensCommand extends AbstractCommand
 }
 JSON);
         return Command::FAILURE;
-    }
-
-    /**
-     * Get list of Hyva themes
-     *
-     * @return array
-     */
-    private function getHyvaThemes(): array
-    {
-        $allThemes = $this->themeList->getAllThemes();
-        $hyvaThemes = [];
-
-        foreach ($allThemes as $theme) {
-            $themePath = $this->themePath->getPath($theme->getCode());
-            if ($themePath && $this->hyvaBuilder->detect($themePath)) {
-                $hyvaThemes[] = $theme;
-            }
-        }
-
-        return $hyvaThemes;
     }
 }
