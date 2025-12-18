@@ -60,7 +60,7 @@ class CssGenerator
             $this->fileDriver->filePutContents($outputPath, $content);
             return true;
         } catch (\Exception $e) {
-            throw new \Exception("Failed to write CSS file: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+            throw new \Exception("Failed to write CSS file: " . $e->getMessage());
         }
     }
 }

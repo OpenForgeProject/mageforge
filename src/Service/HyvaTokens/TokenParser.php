@@ -34,7 +34,7 @@ class TokenParser
 
         // Otherwise, read from file
         if ($filePath === null || !$this->fileDriver->isFile($filePath)) {
-            throw new \Exception("Token source file not found: " . htmlspecialchars($filePath ?? 'null', ENT_QUOTES, 'UTF-8'));
+            throw new \Exception("Token source file not found: " . ($filePath ?? 'null'));
         }
 
         $content = $this->fileDriver->fileGetContents($filePath);
@@ -42,7 +42,7 @@ class TokenParser
         try {
             $tokens = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new \Exception("Invalid JSON in token file: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+            throw new \Exception("Invalid JSON in token file: " . $e->getMessage());
         }
 
         return $this->normalizeTokens($tokens, $format);

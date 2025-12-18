@@ -45,7 +45,7 @@ class ConfigReader
             try {
                 $jsonConfig = json_decode($configContent, true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
-                throw new \Exception("Invalid JSON in configuration file: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+                throw new \Exception("Invalid JSON in configuration file: " . $e->getMessage());
             }
 
             if (isset($jsonConfig['tokens'])) {

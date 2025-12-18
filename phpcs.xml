@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ruleset name="MageForge">
+    <description>MageForge PHP_CodeSniffer Configuration</description>
+
+    <!-- Scan all PHP files in src directory -->
+    <file>src</file>
+
+    <!-- Exclude vendor and generated directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/generated/*</exclude-pattern>
+
+    <!-- Use PSR-12 as base standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Disable WordPress-specific rules (this is a Magento project) -->
+    <rule ref="WordPress.Security.EscapeOutput">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Show progress -->
+    <arg name="colors"/>
+    <arg value="sp"/>
+</ruleset>

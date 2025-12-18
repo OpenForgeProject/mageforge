@@ -16,8 +16,7 @@ class BuilderFactory
     public function create(string $type): BuilderInterface
     {
         if (!isset($this->builders[$type])) {
-            // phpcs:ignore WordPress.Security.EscapeOutput -- Exception message is properly escaped with htmlspecialchars
-            throw new \InvalidArgumentException("Builder " . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . " not found");
+            throw new \InvalidArgumentException("Builder $type not found");
         }
 
         return $this->builders[$type];
