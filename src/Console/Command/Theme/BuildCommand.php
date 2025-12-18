@@ -170,7 +170,7 @@ class BuildCommand extends AbstractCommand
                 $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
                 $success = false;
 
-                $spinner->spin(function() use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
+                $spinner->spin(function () use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
                     $success = $this->processTheme($themeCode, $io, $output, $isVerbose, $successList);
                     return true;
                 });
@@ -345,7 +345,7 @@ class BuildCommand extends AbstractCommand
      */
     private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
-        return match($name) {
+        return match ($name) {
             'COLUMNS', 'LINES' => $this->sanitizeNumericValue($value),
             'TERM' => $this->sanitizeTermValue($value),
             'CI', 'GITHUB_ACTIONS', 'GITLAB_CI' => $this->sanitizeBooleanValue($value),
