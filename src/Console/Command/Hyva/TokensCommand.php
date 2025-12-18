@@ -56,83 +56,171 @@ class TokensCommand extends AbstractCommand
     {
         $themeCode = $input->getArgument('themeCode');
 
-        // If no theme code provided, show interactive prompt for Hyva themes only
+        // If no theme code provided, select interactively
         if (empty($themeCode)) {
-            $hyvaThemes = $this->getHyvaThemes();
-
-            if (empty($hyvaThemes)) {
-                $this->io->error('No Hyvä themes found in this installation.');
+            $themeCode = $this->selectThemeInteractively($output);
+            if ($themeCode === null) {
                 return Command::FAILURE;
-            }
-
-            // Check if we're in an interactive terminal environment
-            if (!$this->isInteractiveTerminal($output)) {
-                $this->io->info('Available Hyvä themes:');
-                foreach ($hyvaThemes as $theme) {
-                    $this->io->writeln(' - ' . $theme->getCode());
-                }
-                $this->io->newLine();
-                $this->io->info('Usage: bin/magento mageforge:hyva:tokens <theme-code>');
-                return Command::SUCCESS;
-            }
-
-            $options = [];
-            foreach ($hyvaThemes as $theme) {
-                $options[] = $theme->getCode();
-            }
-
-            $themeCodePrompt = new SelectPrompt(
-                label: 'Select Hyvä theme to generate tokens for',
-                options: $options,
-                hint: 'Arrow keys to navigate, Enter to confirm'
-            );
-
-            try {
-                $themeCode = $themeCodePrompt->prompt();
-            } catch (\Exception $e) {
-                $this->io->error('Interactive mode failed: ' . $e->getMessage());
-                return Command::FAILURE;
-            } finally {
-                \Laravel\Prompts\Prompt::terminal()->restoreTty();
             }
         }
 
+        // Validate theme
+        $themePath = $this->validateTheme($themeCode);
+        if ($themePath === null) {
+            return Command::FAILURE;
+        }
+
+        // Process tokens and return result
+        return $this->processTokens($themeCode, $themePath);
+    }
+
+    /**
+     * Select theme interactively
+     *
+     * @param OutputInterface $output
+     * @return string|null
+     */
+    private function selectThemeInteractively(OutputInterface $output): ?string
+    {
+        $hyvaThemes = $this->getHyvaThemes();
+
+        if (empty($hyvaThemes)) {
+            $this->io->error('No Hyvä themes found in this installation.');
+            return null;
+        }
+
+        // Check if we're in an interactive terminal environment
+        if (!$this->isInteractiveTerminal($output)) {
+            $this->displayAvailableThemes($hyvaThemes);
+            return null;
+        }
+
+        return $this->promptForTheme($hyvaThemes);
+    }
+
+    /**
+     * Display available themes for non-interactive environments
+     *
+     * @param array $hyvaThemes
+     * @return void
+     */
+    private function displayAvailableThemes(array $hyvaThemes): void
+    {
+        $this->io->info('Available Hyvä themes:');
+        foreach ($hyvaThemes as $theme) {
+            $this->io->writeln(' - ' . $theme->getCode());
+        }
+        $this->io->newLine();
+        $this->io->info('Usage: bin/magento mageforge:hyva:tokens <theme-code>');
+    }
+
+    /**
+     * Prompt user to select a theme
+     *
+     * @param array $hyvaThemes
+     * @return string|null
+     */
+    private function promptForTheme(array $hyvaThemes): ?string
+    {
+        $options = [];
+        foreach ($hyvaThemes as $theme) {
+            $options[] = $theme->getCode();
+        }
+
+        $themeCodePrompt = new SelectPrompt(
+            label: 'Select Hyvä theme to generate tokens for',
+            options: $options,
+            hint: 'Arrow keys to navigate, Enter to confirm'
+        );
+
+        try {
+            return $themeCodePrompt->prompt();
+        } catch (\Exception $e) {
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+            return null;
+        } finally {
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+        }
+    }
+
+    /**
+     * Validate theme exists and is a Hyva theme
+     *
+     * @param string $themeCode
+     * @return string|null
+     */
+    private function validateTheme(string $themeCode): ?string
+    {
         // Get theme path
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             $this->io->error("Theme $themeCode is not installed.");
-            return Command::FAILURE;
+            return null;
         }
 
         // Verify this is a Hyva theme
         if (!$this->hyvaBuilder->detect($themePath)) {
             $this->io->error("Theme $themeCode is not a Hyvä theme. This command only works with Hyvä themes.");
-            return Command::FAILURE;
+            return null;
         }
 
-        // Process tokens
+        return $themePath;
+    }
+
+    /**
+     * Process tokens and display results
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @return int
+     */
+    private function processTokens(string $themeCode, string $themePath): int
+    {
         $this->io->text("Processing design tokens for theme: <fg=cyan>$themeCode</>");
         $result = $this->tokenProcessor->process($themePath);
 
         if ($result['success']) {
-            $this->io->newLine();
-            $this->io->success($result['message']);
-            $this->io->writeln("Output file: <fg=green>{$result['outputPath']}</>");
-            $this->io->newLine();
-            $this->io->text('ℹ️  Make sure to import this file in your Tailwind CSS configuration.');
-            return Command::SUCCESS;
-        } else {
-            $this->io->error($result['message']);
-            $this->io->newLine();
-            $this->io->text('ℹ️  To use this command, you need one of the following:');
-            $this->io->listing([
-                'A design.tokens.json file in the theme\'s web/tailwind directory',
-                'A custom token file specified in hyva.config.json',
-                'Inline token values in hyva.config.json',
-            ]);
-            $this->io->newLine();
-            $this->io->text('Example hyva.config.json with inline tokens:');
-            $this->io->text(<<<JSON
+            return $this->handleSuccess($result);
+        }
+
+        return $this->handleFailure($result);
+    }
+
+    /**
+     * Handle successful token processing
+     *
+     * @param array $result
+     * @return int
+     */
+    private function handleSuccess(array $result): int
+    {
+        $this->io->newLine();
+        $this->io->success($result['message']);
+        $this->io->writeln("Output file: <fg=green>{$result['outputPath']}</>");
+        $this->io->newLine();
+        $this->io->text('ℹ️  Make sure to import this file in your Tailwind CSS configuration.');
+        return Command::SUCCESS;
+    }
+
+    /**
+     * Handle token processing failure
+     *
+     * @param array $result
+     * @return int
+     */
+    private function handleFailure(array $result): int
+    {
+        $this->io->error($result['message']);
+        $this->io->newLine();
+        $this->io->text('ℹ️  To use this command, you need one of the following:');
+        $this->io->listing([
+            'A design.tokens.json file in the theme\'s web/tailwind directory',
+            'A custom token file specified in hyva.config.json',
+            'Inline token values in hyva.config.json',
+        ]);
+        $this->io->newLine();
+        $this->io->text('Example hyva.config.json with inline tokens:');
+        $this->io->text(<<<JSON
 {
     "tokens": {
         "values": {
@@ -147,8 +235,7 @@ class TokensCommand extends AbstractCommand
     }
 }
 JSON);
-            return Command::FAILURE;
-        }
+        return Command::FAILURE;
     }
 
     /**
