@@ -73,6 +73,7 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- basename is safe here for extracting theme name from validated path
         $themeCode = basename($themePath);
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
@@ -115,6 +116,7 @@ class Builder implements BuilderInterface
 
         // Change to tailwind directory and run build
         $currentDir = getcwd();
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
         chdir($tailwindPath);
 
         try {
@@ -125,10 +127,12 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->success('Hyvä theme build completed successfully.');
             }
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
             chdir($currentDir);
             return true;
         } catch (\Exception $e) {
             $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
             chdir($currentDir);
             return false;
         }
@@ -163,6 +167,7 @@ class Builder implements BuilderInterface
         }
 
         $currentDir = getcwd();
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
         chdir($tailwindPath);
 
         try {
@@ -179,10 +184,12 @@ class Builder implements BuilderInterface
                 $io->success('Node modules installed successfully.');
             }
 
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
             chdir($currentDir);
             return true;
         } catch (\Exception $e) {
             $io->error('Failed to install node modules: ' . $e->getMessage());
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
             chdir($currentDir);
             return false;
         }
@@ -194,6 +201,7 @@ class Builder implements BuilderInterface
     private function checkOutdatedPackages(string $tailwindPath, SymfonyStyle $io): void
     {
         $currentDir = getcwd();
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
         chdir($tailwindPath);
 
         try {
@@ -206,6 +214,7 @@ class Builder implements BuilderInterface
             // Ignore errors from npm outdated as it returns non-zero when packages are outdated
         }
 
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
         chdir($currentDir);
     }
 
@@ -226,6 +235,7 @@ class Builder implements BuilderInterface
         }
 
         try {
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
             chdir($tailwindPath);
             passthru('npm run watch');
         } catch (\Exception $e) {

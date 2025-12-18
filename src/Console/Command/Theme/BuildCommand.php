@@ -19,6 +19,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Command for building Magento themes
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  */
 class BuildCommand extends AbstractCommand
 {
@@ -63,6 +66,7 @@ class BuildCommand extends AbstractCommand
 
         if (empty($themeCodes)) {
             $themes = $this->themeList->getAllThemes();
+            // phpcs:ignore Security.BadFunctions.CallbackFunctions -- array_map with safe callback is acceptable
             $options = array_map(fn($theme) => $theme->getCode(), $themes);
 
             // Check if we're in an interactive terminal environment

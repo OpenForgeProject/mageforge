@@ -36,6 +36,7 @@ class StaticContentDeployer
                 $io->text('Deploying static content...');
             }
 
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- escapeshellarg is the correct function for sanitizing shell arguments
             $sanitizedThemeCode = escapeshellarg($themeCode);
             $shellOutput = $this->shell->execute(
                 "php bin/magento setup:static-content:deploy -t %s -f --quiet",

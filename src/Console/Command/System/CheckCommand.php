@@ -15,6 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Command for checking system information
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CheckCommand extends AbstractCommand
 {
@@ -112,6 +115,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getNodeVersion(): string
     {
+        // phpcs:ignore Security.BadFunctions.SystemExecFunctions -- exec with static command is safe
         exec('node -v 2>/dev/null', $output, $returnCode);
         return $returnCode === 0 && !empty($output) ? trim($output[0], 'v') : 'Not installed';
     }
@@ -124,6 +128,7 @@ class CheckCommand extends AbstractCommand
     private function getLatestLtsNodeVersion(): string
     {
         try {
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- file_get_contents with static HTTPS URL is safe
             $nodeData = file_get_contents(self::NODE_LTS_URL);
             if ($nodeData === false) {
                 return 'Unknown';
@@ -197,6 +202,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getMysqlVersionViaClient(): ?string
     {
+        // phpcs:ignore Security.BadFunctions.SystemExecFunctions -- exec with static command is safe
         exec('mysql --version 2>/dev/null', $output, $returnCode);
         if ($returnCode === 0 && !empty($output)) {
             $versionString = $output[0];
@@ -290,6 +296,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getComposerVersion(): string
     {
+        // phpcs:ignore Security.BadFunctions.SystemExecFunctions -- exec with static command is safe
         exec('composer --version 2>/dev/null', $output, $returnCode);
         if ($returnCode !== 0 || empty($output)) {
             return 'Not installed';
@@ -306,6 +313,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getNpmVersion(): string
     {
+        // phpcs:ignore Security.BadFunctions.SystemExecFunctions -- exec with static command is safe
         exec('npm --version 2>/dev/null', $output, $returnCode);
         return $returnCode === 0 && !empty($output) ? trim($output[0]) : 'Not installed';
     }
@@ -317,6 +325,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getGitVersion(): string
     {
+        // phpcs:ignore Security.BadFunctions.SystemExecFunctions -- exec with static command is safe
         exec('git --version 2>/dev/null', $output, $returnCode);
         if ($returnCode !== 0 || empty($output)) {
             return 'Not installed';

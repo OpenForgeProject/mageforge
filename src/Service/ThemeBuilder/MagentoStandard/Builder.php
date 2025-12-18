@@ -66,6 +66,7 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- basename is safe here for extracting theme name from validated path
         $themeCode = basename($themePath);
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
