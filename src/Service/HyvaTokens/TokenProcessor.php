@@ -32,7 +32,8 @@ class TokenProcessor
             if (!$this->configReader->hasTokenSource($themePath, $config)) {
                 return [
                     'success' => false,
-                    'message' => "No token source found. Create a {$config['src']} file or add 'values' to hyva.config.json",
+                    'message' => "No token source found. Create a {$config['src']} file " .
+                                 "or add 'values' to hyva.config.json",
                     'outputPath' => null,
                 ];
             }

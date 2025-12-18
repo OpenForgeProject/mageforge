@@ -167,7 +167,9 @@ class BuildCommand extends AbstractCommand
                 $currentTheme = $index + 1;
                 // Show which theme is currently being built
                 $themeNameCyan = sprintf("<fg=cyan>%s</>", $themeCode);
-                $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
+                $spinner = new Spinner(
+                    sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes)
+                );
                 $success = false;
 
                 $spinner->spin(function () use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
@@ -177,10 +179,14 @@ class BuildCommand extends AbstractCommand
 
                 if ($success) {
                     // Show that the theme was successfully built
-                    $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=green>done</>", $themeNameCyan, $currentTheme, $totalThemes));
+                    $io->writeln(
+                        sprintf("   Building %s (%d of %d) ... <fg=green>done</>", $themeNameCyan, $currentTheme, $totalThemes)
+                    );
                 } else {
                     // Show that an error occurred while building the theme
-                    $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes));
+                    $io->writeln(
+                        sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes)
+                    );
                 }
             }
         }
@@ -321,7 +327,9 @@ class BuildCommand extends AbstractCommand
         if ($cachedEnv === null) {
             $cachedEnv = [];
             // Only cache the specific variables we need
-            $allowedVars = ['COLUMNS', 'LINES', 'TERM', 'CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'JENKINS_URL', 'TEAMCITY_VERSION'];
+            $allowedVars = [
+                'COLUMNS', 'LINES', 'TERM', 'CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'JENKINS_URL', 'TEAMCITY_VERSION'
+            ];
 
             foreach ($allowedVars as $var) {
                 // Check secure storage first
