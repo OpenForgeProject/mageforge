@@ -227,7 +227,7 @@ class TokensCommand extends AbstractCommand
         $this->io->writeln("Output file: <fg=green>{$result['outputPath']}</>");
         $this->io->newLine();
         $this->io->text('ℹ️  Make sure to import this file in your Tailwind CSS configuration.');
-        
+
         if ($this->configReader->isVendorTheme($themePath)) {
             $this->io->newLine();
             $this->io->note([
@@ -237,7 +237,7 @@ class TokensCommand extends AbstractCommand
                 '3. Add it to your build process to regenerate after cache:clean',
             ]);
         }
-        
+
         return Command::SUCCESS;
     }
 
