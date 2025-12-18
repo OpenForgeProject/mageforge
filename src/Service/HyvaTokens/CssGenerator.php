@@ -29,12 +29,34 @@ class CssGenerator
 
         foreach ($tokens as $name => $value) {
             $cssVarName = '--' . $name;
-            $css .= "    {$cssVarName}: {$value};\n";
+            // Sanitize value to prevent CSS syntax issues
+            $sanitizedValue = $this->sanitizeCssValue($value);
+            $css .= "    {$cssVarName}: {$sanitizedValue};\n";
         }
 
         $css .= "}\n";
 
         return $css;
+    }
+
+    /**
+     * Sanitize CSS value to prevent syntax issues
+     *
+     * @param string $value
+     * @return string
+     */
+    private function sanitizeCssValue(string $value): string
+    {
+        // Remove newlines and control characters
+        $value = preg_replace('/[\r\n\t\x00-\x1F\x7F]/', '', $value);
+        
+        // Remove potentially problematic characters
+        // Allow: alphanumeric, spaces, parentheses, commas, periods, hyphens, underscores, 
+        // percent signs, hash symbols, and forward slashes
+        $sanitized = preg_replace('/[^\w\s(),.%#\/-]/', '', $value);
+        
+        // Trim whitespace
+        return trim($sanitized ?? '');
     }
 
     /**
@@ -47,10 +69,8 @@ class CssGenerator
      */
     public function write(string $content, string $outputPath): bool
     {
-        // Ensure the directory exists by extracting parent directory path
-        $pathParts = explode('/', $outputPath);
-        array_pop($pathParts); // Remove filename
-        $directory = implode('/', $pathParts);
+        // Ensure the directory exists
+        $directory = \dirname($outputPath);
 
         if (!$this->fileDriver->isDirectory($directory)) {
             $this->fileDriver->createDirectory($directory, 0750);

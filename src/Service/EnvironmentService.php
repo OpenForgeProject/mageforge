@@ -35,6 +35,7 @@ class EnvironmentService
         }
 
         // Additional check: try to detect if running in a proper TTY
+        // phpcs:ignore Magento2.Security.InsecureFunction -- Safe static 'stty -g' usage for TTY detection with error redirection; no user input
         $sttyOutput = shell_exec('stty -g 2>/dev/null');
         return !empty($sttyOutput);
     }

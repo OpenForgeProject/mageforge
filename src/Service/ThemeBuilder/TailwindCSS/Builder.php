@@ -217,9 +217,10 @@ class Builder implements BuilderInterface
             $this->shell->execute('npm run watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
+            return false;
+        } finally {
             // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
             chdir($currentDir);
-            return false;
         }
 
         return true;

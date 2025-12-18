@@ -119,7 +119,7 @@ class ConfigReader
      */
     public function isVendorTheme(string $themePath): bool
     {
-        return strpos($themePath, '/vendor/') !== false;
+        return str_contains($themePath, '/vendor/');
     }
 
     /**
@@ -131,12 +131,32 @@ class ConfigReader
     private function getVendorThemeOutputPath(string $themePath): string
     {
         // Extract theme identifier from path
-        // e.g., /path/to/vendor/hyva-themes/magento2-default-theme -> hyva-themes/magento2-default-theme
+        // e.g., /path/to/vendor/hyva-themes/magento2-default-theme
+        //   -> hyva-themes/magento2-default-theme
         preg_match('#/vendor/([^/]+/[^/]+)#', $themePath, $matches);
-        $themeIdentifier = $matches[1] ?? 'unknown';
+
+        if (isset($matches[1])) {
+            $themeIdentifier = $matches[1];
+        } else {
+            // Fallback: derive identifier from the last two path segments
+            $normalizedPath = str_replace('\\', '/', rtrim($themePath, '/'));
+            $pathSegments = explode('/', $normalizedPath);
+            $segmentCount = count($pathSegments);
+
+            if ($segmentCount >= 2) {
+                $themeIdentifier = $pathSegments[$segmentCount - 2]
+                    . '/' . $pathSegments[$segmentCount - 1];
+            } else {
+                // Ensure a unique, deterministic identifier as a last resort
+                $themeIdentifier = 'theme_' . md5($themePath);
+            }
+        }
 
         $varPath = $this->directoryList->getPath(DirectoryList::VAR_DIR);
-        return $varPath . '/view_preprocessed/hyva-tokens/' . $themeIdentifier . '/hyva-tokens.css';
+        return $varPath
+            . '/view_preprocessed/hyva-tokens/'
+            . $themeIdentifier
+            . '/hyva-tokens.css';
     }
 
     /**
