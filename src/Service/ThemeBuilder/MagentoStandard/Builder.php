@@ -194,7 +194,10 @@ class Builder implements BuilderInterface
         }
 
         try {
-            passthru('node_modules/.bin/grunt watch');
+            if ($isVerbose) {
+                $io->text('Starting watch mode...');
+            }
+            $this->shell->execute('node_modules/.bin/grunt watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

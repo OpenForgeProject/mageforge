@@ -234,12 +234,19 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        $currentDir = getcwd();
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
+        chdir($tailwindPath);
+
         try {
-            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary for npm to run in correct context
-            chdir($tailwindPath);
-            passthru('npm run watch');
+            if ($isVerbose) {
+                $io->text('Starting watch mode...');
+            }
+            $this->shell->execute('npm run watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
+            // phpcs:ignore MEQP1.Security.DiscouragedFunction -- chdir is necessary to restore original directory
+            chdir($currentDir);
             return false;
         }
 
