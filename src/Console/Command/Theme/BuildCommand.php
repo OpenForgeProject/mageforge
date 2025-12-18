@@ -179,14 +179,20 @@ class BuildCommand extends AbstractCommand
 
                 if ($success) {
                     // Show that the theme was successfully built
-                    $io->writeln(
-                        sprintf("   Building %s (%d of %d) ... <fg=green>done</>", $themeNameCyan, $currentTheme, $totalThemes)
-                    );
+                    $io->writeln(sprintf(
+                        "   Building %s (%d of %d) ... <fg=green>done</>",
+                        $themeNameCyan,
+                        $currentTheme,
+                        $totalThemes
+                    ));
                 } else {
                     // Show that an error occurred while building the theme
-                    $io->writeln(
-                        sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes)
-                    );
+                    $io->writeln(sprintf(
+                        "   Building %s (%d of %d) ... <fg=red>failed</>",
+                        $themeNameCyan,
+                        $currentTheme,
+                        $totalThemes
+                    ));
                 }
             }
         }
@@ -353,7 +359,7 @@ class BuildCommand extends AbstractCommand
      */
     private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
-        return match ($name) {
+        return match($name) {
             'COLUMNS', 'LINES' => $this->sanitizeNumericValue($value),
             'TERM' => $this->sanitizeTermValue($value),
             'CI', 'GITHUB_ACTIONS', 'GITLAB_CI' => $this->sanitizeBooleanValue($value),
