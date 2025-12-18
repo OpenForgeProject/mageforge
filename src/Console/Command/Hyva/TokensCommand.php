@@ -8,6 +8,8 @@ use Laravel\Prompts\SelectPrompt;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\EnvironmentService;
+use OpenForgeProject\MageForge\Service\HyvaTokens\ConfigReader;
 use OpenForgeProject\MageForge\Service\HyvaTokens\TokenProcessor;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder as HyvaBuilder;
 use Symfony\Component\Console\Command\Command;
@@ -25,12 +27,16 @@ class TokensCommand extends AbstractCommand
      * @param ThemeList $themeList
      * @param TokenProcessor $tokenProcessor
      * @param HyvaBuilder $hyvaBuilder
+     * @param ConfigReader $configReader
+     * @param EnvironmentService $environmentService
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
         private readonly TokenProcessor $tokenProcessor,
-        private readonly HyvaBuilder $hyvaBuilder
+        private readonly HyvaBuilder $hyvaBuilder,
+        private readonly ConfigReader $configReader,
+        private readonly EnvironmentService $environmentService,
     ) {
         parent::__construct();
     }
@@ -90,7 +96,7 @@ class TokensCommand extends AbstractCommand
         }
 
         // Check if we're in an interactive terminal environment
-        if (!$this->isInteractiveTerminal($output)) {
+        if (!$this->environmentService->isInteractiveTerminal()) {
             $this->displayAvailableThemes($hyvaThemes);
             return null;
         }
@@ -127,6 +133,9 @@ class TokensCommand extends AbstractCommand
             $options[] = $theme->getCode();
         }
 
+        // Set environment variables for Laravel Prompts
+        $this->environmentService->setPromptEnvironment();
+
         $themeCodePrompt = new SelectPrompt(
             label: 'Select Hyvä theme to generate tokens for',
             options: $options,
@@ -134,12 +143,18 @@ class TokensCommand extends AbstractCommand
         );
 
         try {
-            return $themeCodePrompt->prompt();
+            $selectedTheme = $themeCodePrompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+
+            // Reset environment
+            $this->environmentService->resetPromptEnvironment();
+
+            return $selectedTheme;
         } catch (\Exception $e) {
+            // Reset environment on exception
+            $this->environmentService->resetPromptEnvironment();
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             return null;
-        } finally {
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
         }
     }
 
@@ -176,11 +191,23 @@ class TokensCommand extends AbstractCommand
      */
     private function processTokens(string $themeCode, string $themePath): int
     {
+        // Check if this is a vendor theme and inform user
+        if ($this->configReader->isVendorTheme($themePath)) {
+            $this->io->warning([
+                'This is a vendor theme. The generated CSS will be stored in:',
+                'var/view_preprocessed/hyva-tokens/[vendor]/[theme]/',
+                '',
+                '⚠️  Important: This location is temporary and may be cleared by cache operations.',
+                'Consider copying the tokens.css to your custom theme or project.',
+            ]);
+            $this->io->newLine();
+        }
+
         $this->io->text("Processing design tokens for theme: <fg=cyan>$themeCode</>");
         $result = $this->tokenProcessor->process($themePath);
 
         if ($result['success']) {
-            return $this->handleSuccess($result);
+            return $this->handleSuccess($result, $themePath);
         }
 
         return $this->handleFailure($result);
@@ -190,15 +217,27 @@ class TokensCommand extends AbstractCommand
      * Handle successful token processing
      *
      * @param array $result
+     * @param string $themePath
      * @return int
      */
-    private function handleSuccess(array $result): int
+    private function handleSuccess(array $result, string $themePath): int
     {
         $this->io->newLine();
         $this->io->success($result['message']);
         $this->io->writeln("Output file: <fg=green>{$result['outputPath']}</>");
         $this->io->newLine();
         $this->io->text('ℹ️  Make sure to import this file in your Tailwind CSS configuration.');
+        
+        if ($this->configReader->isVendorTheme($themePath)) {
+            $this->io->newLine();
+            $this->io->note([
+                'Since this is a vendor theme, consider one of these options:',
+                '1. Copy the generated CSS to your custom theme',
+                '2. Reference it in your Tailwind config with an absolute path',
+                '3. Add it to your build process to regenerate after cache:clean',
+            ]);
+        }
+        
         return Command::SUCCESS;
     }
 
@@ -256,28 +295,5 @@ JSON);
         }
 
         return $hyvaThemes;
-    }
-
-    /**
-     * Check if the current environment supports interactive terminal input
-     *
-     * @param OutputInterface $output
-     * @return bool
-     */
-    private function isInteractiveTerminal(OutputInterface $output): bool
-    {
-        // Check if output is decorated (supports ANSI codes)
-        if (!$output->isDecorated()) {
-            return false;
-        }
-
-        // Check if STDIN is available and readable
-        if (!defined('STDIN') || !is_resource(STDIN)) {
-            return false;
-        }
-
-        // Additional check: try to detect if running in a proper TTY
-        $sttyOutput = shell_exec('stty -g 2>/dev/null');
-        return !empty($sttyOutput);
     }
 }

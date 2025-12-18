@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service\HyvaTokens;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 
 /**
@@ -16,7 +17,8 @@ class ConfigReader
     private const DEFAULT_FORMAT = 'default';
 
     public function __construct(
-        private readonly File $fileDriver
+        private readonly File $fileDriver,
+        private readonly DirectoryList $directoryList
     ) {
     }
 
@@ -101,7 +103,40 @@ class ConfigReader
      */
     public function getOutputPath(string $themePath): string
     {
+        // Check if theme is in vendor directory
+        if ($this->isVendorTheme($themePath)) {
+            return $this->getVendorThemeOutputPath($themePath);
+        }
+
         return rtrim($themePath, '/') . '/web/tailwind/generated/hyva-tokens.css';
+    }
+
+    /**
+     * Check if theme path is in vendor directory
+     *
+     * @param string $themePath
+     * @return bool
+     */
+    public function isVendorTheme(string $themePath): bool
+    {
+        return strpos($themePath, '/vendor/') !== false;
+    }
+
+    /**
+     * Get output path for vendor themes in var/view_preprocessed
+     *
+     * @param string $themePath
+     * @return string
+     */
+    private function getVendorThemeOutputPath(string $themePath): string
+    {
+        // Extract theme identifier from path
+        // e.g., /path/to/vendor/hyva-themes/magento2-default-theme -> hyva-themes/magento2-default-theme
+        preg_match('#/vendor/([^/]+/[^/]+)#', $themePath, $matches);
+        $themeIdentifier = $matches[1] ?? 'unknown';
+
+        $varPath = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+        return $varPath . '/view_preprocessed/hyva-tokens/' . $themeIdentifier . '/hyva-tokens.css';
     }
 
     /**
