@@ -48,7 +48,7 @@ class TokensCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function executeCommand(InputInterface $input, OutputInterface $output): int
+    protected function executeCommand(InputInterface $input, OutputInterface $_output): int
     {
         $themeCode = $input->getArgument('themeCode');
 
