@@ -9,14 +9,8 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/generated/*</exclude-pattern>
 
-    <!-- Use PSR-12 as base standard -->
-    <rule ref="PSR12"/>
-
-    <!-- Disable WordPress-specific rules (this is a Magento project) -->
-    <rule ref="WordPress.Security.EscapeOutput">
-        <severity>0</severity>
-    </rule>
-
+    <!-- Use Magento 2 coding standard as base standard -->
+    <rule ref="Magento2"/>
     <!-- Show progress -->
     <arg name="colors"/>
     <arg value="sp"/>
