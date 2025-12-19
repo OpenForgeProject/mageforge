@@ -66,6 +66,7 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
+        // phpcs:ignore MEQP1.Security.DiscouragedFunction -- basename is safe here for extracting theme name from validated path
         $themeCode = basename($themePath);
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
@@ -81,6 +82,10 @@ class Builder implements BuilderInterface
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
+        if ($isVerbose) {
+            $io->writeln(sprintf('Auto-repairing Magento standard theme at: %s', $themePath), OutputInterface::VERBOSITY_VERBOSE);
+        }
+
         // Check for node_modules in root
         if (!$this->installNodeModulesIfMissing($io, $isVerbose)) {
             return false;
@@ -193,7 +198,10 @@ class Builder implements BuilderInterface
         }
 
         try {
-            passthru('node_modules/.bin/grunt watch');
+            if ($isVerbose) {
+                $io->text('Starting watch mode...');
+            }
+            $this->shell->execute('node_modules/.bin/grunt watch');
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

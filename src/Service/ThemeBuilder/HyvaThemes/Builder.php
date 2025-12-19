@@ -138,6 +138,10 @@ class Builder implements BuilderInterface
     {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
 
+        if ($isVerbose) {
+            $io->writeln(sprintf('Auto-repairing theme at: %s', $themePath), OutputInterface::VERBOSITY_VERBOSE);
+        }
+
         // Check for node_modules directory
         if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
             if (!$this->installNodeModules($tailwindPath, $io, $isVerbose)) {
