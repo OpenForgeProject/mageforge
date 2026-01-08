@@ -267,7 +267,11 @@ class CleanCommand extends AbstractCommand
                 return false;
             }
 
-            // Check if directory is writable
+            // Check if directory is readable and writable
+            if (!is_readable($dir)) {
+                throw new \RuntimeException(sprintf('Directory is not readable: %s', $dir));
+            }
+
             if (!is_writable($dir)) {
                 throw new \RuntimeException(sprintf('Directory is not writable: %s', $dir));
             }
@@ -299,9 +303,12 @@ class CleanCommand extends AbstractCommand
                     if (!is_writable($path)) {
                         throw new \RuntimeException(sprintf('File is not writable: %s', $path));
                     }
-                    // Re-check file exists before unlinking
-                    if (file_exists($path) && !unlink($path)) {
-                        throw new \RuntimeException(sprintf('Failed to remove file: %s', $path));
+                    // Unlink directly - it will return false if file doesn't exist
+                    if (!unlink($path)) {
+                        // Only throw if file still exists (not a race condition)
+                        if (file_exists($path)) {
+                            throw new \RuntimeException(sprintf('Failed to remove file: %s', $path));
+                        }
                     }
                 }
             }
