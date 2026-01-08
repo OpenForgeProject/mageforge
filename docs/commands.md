@@ -130,6 +130,52 @@ bin/magento mageforge:version
 - Fetches the latest version from GitHub API
 - Displays both versions for comparison
 
+---
+
+### 6. CleanCommand (`mageforge:static:clean`)
+
+**Purpose**: Cleans static files from `var/view_preprocessed` and `pub/static` directories for specific theme(s).
+
+**File**: `/src/Console/Command/Static/CleanCommand.php`
+
+**Dependencies**:
+- `ThemeList` - Service to retrieve theme information
+- `Filesystem` - Magento filesystem component for directory operations
+
+**Usage**:
+```bash
+bin/magento mageforge:static:clean [<themeCodes>...]
+```
+
+**Examples**:
+```bash
+# Clean a single theme
+bin/magento mageforge:static:clean Magento/luma
+
+# Clean multiple themes
+bin/magento mageforge:static:clean Magento/luma Vendor/custom-theme
+
+# Show available themes (when no theme code provided)
+bin/magento mageforge:static:clean
+```
+
+**Implementation Details**:
+- If no theme codes are provided, displays available themes and usage information
+- For each specified theme:
+  1. Validates that the theme exists
+  2. Cleans matching directories from `var/view_preprocessed/`
+  3. Cleans matching directories from `pub/static/`
+  4. Uses pattern matching to find theme-specific directories (e.g., `frontend/Vendor/theme`)
+- Displays a summary showing which themes were successfully cleaned
+- Uses recursive directory removal with proper error handling
+- Returns success status even if some operations fail (with appropriate error messages)
+
+**Use Cases**:
+- Clear generated static files before a fresh build
+- Remove old static files after theme updates
+- Clean up disk space by removing unnecessary cached files
+- Troubleshoot theme-related issues by clearing all cached assets
+
 ## Command Services
 
 The commands rely on several services for their functionality:
