@@ -102,10 +102,14 @@ class CleanCommand extends AbstractCommand
 
         $this->io->title(sprintf('Cleaning static files for %d theme(s)', $totalThemes));
 
+        // Get themes list once for validation
+        $installedThemes = $this->themeList->getAllThemes();
+        $installedThemeCodes = array_map(fn($theme) => $theme->getCode(), $installedThemes);
+
         foreach ($themeCodes as $themeCode) {
             $this->io->section(sprintf('Cleaning theme: %s', $themeCode));
 
-            if (!$this->validateTheme($themeCode)) {
+            if (!in_array($themeCode, $installedThemeCodes, true)) {
                 $failureList[] = $themeCode;
                 $this->io->error("Theme $themeCode is not installed.");
                 continue;
@@ -124,25 +128,6 @@ class CleanCommand extends AbstractCommand
         $this->displayCleanSummary($successList, $failureList, microtime(true) - $startTime);
 
         return Cli::RETURN_SUCCESS;
-    }
-
-    /**
-     * Validate if theme exists
-     *
-     * @param string $themeCode
-     * @return bool
-     */
-    private function validateTheme(string $themeCode): bool
-    {
-        $themes = $this->themeList->getAllThemes();
-
-        foreach ($themes as $theme) {
-            if ($theme->getCode() === $themeCode) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -278,7 +263,17 @@ class CleanCommand extends AbstractCommand
                 return false;
             }
 
-            $files = array_diff(scandir($dir), ['.', '..']);
+            // Check if directory is writable
+            if (!is_writable($dir)) {
+                throw new \RuntimeException(sprintf('Directory is not writable: %s', $dir));
+            }
+
+            $files = scandir($dir);
+            if ($files === false) {
+                throw new \RuntimeException(sprintf('Failed to scan directory: %s', $dir));
+            }
+
+            $files = array_diff($files, ['.', '..']);
             foreach ($files as $file) {
                 $path = $dir . DIRECTORY_SEPARATOR . $file;
                 if (is_dir($path)) {
@@ -286,13 +281,16 @@ class CleanCommand extends AbstractCommand
                         throw new \RuntimeException(sprintf('Failed to remove directory: %s', $path));
                     }
                 } else {
-                    if (!@unlink($path)) {
+                    if (!is_writable($path)) {
+                        throw new \RuntimeException(sprintf('File is not writable: %s', $path));
+                    }
+                    if (!unlink($path)) {
                         throw new \RuntimeException(sprintf('Failed to remove file: %s', $path));
                     }
                 }
             }
 
-            if (!@rmdir($dir)) {
+            if (!rmdir($dir)) {
                 throw new \RuntimeException(sprintf('Failed to remove directory: %s', $dir));
             }
 
