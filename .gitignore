@@ -1,3 +1,9 @@
 .vscode
 /magento/
 /magento-temp/
+
+# Trunk - exclude everything except configuration
+/.trunk/*
+!/.trunk/trunk.yaml
+!/.trunk/.gitignore
+!/.trunk/configs/

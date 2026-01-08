@@ -6,14 +6,14 @@
 ## Example: ddev phpcs
 
 TEMP_DIR="/tmp/magento-coding-standard"
-PHPCS_BIN="$TEMP_DIR/vendor/bin/phpcs"
+PHPCS_BIN="${TEMP_DIR}/vendor/bin/phpcs"
 
 # Check if Magento Coding Standard is installed
-if [ ! -d "$TEMP_DIR" ]; then
-  echo "Magento Coding Standard not found. Installing..."
-  composer create-project magento/magento-coding-standard --stability=dev "$TEMP_DIR"
+if [[ ! -d ${TEMP_DIR} ]]; then
+	echo "Magento Coding Standard not found. Installing..."
+	composer create-project magento/magento-coding-standard --stability=dev "${TEMP_DIR}"
 fi
 
 # Run PHPCS
 cd magento/vendor/mageforge/base || exit 1
-"$PHPCS_BIN" -p -s --standard=Magento2 src/
+"${PHPCS_BIN}" -p -s --standard=Magento2 src/
