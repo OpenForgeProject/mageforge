@@ -20,6 +20,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CleanCommand extends AbstractCommand
 {
     /**
+     * Areas to clean for themes
+     */
+    private const AREAS = ['frontend', 'adminhtml'];
+
+    /**
      * @param ThemeList $themeList
      * @param Filesystem $filesystem
      */
@@ -231,8 +236,7 @@ class CleanCommand extends AbstractCommand
         $cleaned = 0;
 
         // Scan for areas (frontend, adminhtml, etc.)
-        $areas = ['frontend', 'adminhtml'];
-        foreach ($areas as $area) {
+        foreach (self::AREAS as $area) {
             $areaPath = $basePath . DIRECTORY_SEPARATOR . $area;
             if (!is_dir($areaPath)) {
                 continue;
@@ -268,6 +272,11 @@ class CleanCommand extends AbstractCommand
                 throw new \RuntimeException(sprintf('Directory is not writable: %s', $dir));
             }
 
+            // Re-check directory exists to handle race conditions
+            if (!is_dir($dir)) {
+                return true;
+            }
+
             $files = scandir($dir);
             if ($files === false) {
                 throw new \RuntimeException(sprintf('Failed to scan directory: %s', $dir));
@@ -276,6 +285,12 @@ class CleanCommand extends AbstractCommand
             $files = array_diff($files, ['.', '..']);
             foreach ($files as $file) {
                 $path = $dir . DIRECTORY_SEPARATOR . $file;
+                
+                // Check if path still exists (handle race conditions)
+                if (!file_exists($path)) {
+                    continue;
+                }
+
                 if (is_dir($path)) {
                     if (!$this->removeDirectory($path)) {
                         throw new \RuntimeException(sprintf('Failed to remove directory: %s', $path));
@@ -284,13 +299,15 @@ class CleanCommand extends AbstractCommand
                     if (!is_writable($path)) {
                         throw new \RuntimeException(sprintf('File is not writable: %s', $path));
                     }
-                    if (!unlink($path)) {
+                    // Re-check file exists before unlinking
+                    if (file_exists($path) && !unlink($path)) {
                         throw new \RuntimeException(sprintf('Failed to remove file: %s', $path));
                     }
                 }
             }
 
-            if (!rmdir($dir)) {
+            // Re-check directory exists before removing
+            if (is_dir($dir) && !rmdir($dir)) {
                 throw new \RuntimeException(sprintf('Failed to remove directory: %s', $dir));
             }
 
