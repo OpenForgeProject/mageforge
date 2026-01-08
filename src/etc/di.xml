@@ -24,6 +24,9 @@
                 <item name="mageforge_theme_watch"
                       xsi:type="object"
                       >OpenForgeProject\MageForge\Console\Command\Theme\WatchCommand</item>
+                <item name="mageforge_static_clean"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Console\Command\Static\CleanCommand</item>
             </argument>
         </arguments>
     </type>
