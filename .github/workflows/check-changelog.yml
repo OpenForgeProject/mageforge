@@ -1,30 +1,30 @@
 name: Check for CHANGELOG.md Update
 
 permissions:
-    contents: read
+  contents: read
 
 on: [pull_request]
 
 jobs:
-    check-changelog:
-        runs-on: ubuntu-latest
-        continue-on-error: true
-        steps:
-            - name: Check out the repository
-              uses: actions/checkout@v3
+  check-changelog:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
 
-            - name: Get the list of modified files
-              id: changed-files
-              run: |
-                  git fetch origin ${{ github.base_ref }} --depth=1
-                  git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} > changed_files.txt
-                  cat changed_files.txt
+      - name: Get the list of modified files
+        id: changed-files
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} > changed_files.txt
+          cat changed_files.txt
 
-            - name: Check if CHANGELOG.md was updated
-              run: |
-                  if ! grep -q "^CHANGELOG.md$" changed_files.txt; then
-                    echo "::error::CHANGELOG.md was not updated!"
-                    exit 1
-                  else
-                    echo "CHANGELOG.md has been updated."
-                  fi
+      - name: Check if CHANGELOG.md was updated
+        run: |
+          if ! grep -q "^CHANGELOG.md$" changed_files.txt; then
+            echo "::error::CHANGELOG.md was not updated!"
+            exit 1
+          else
+            echo "CHANGELOG.md has been updated."
+          fi
