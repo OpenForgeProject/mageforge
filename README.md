@@ -6,7 +6,7 @@ Welcome to the **MageForge** development repository! This is where the MageForge
 
 Understanding the structure is crucial for contributing:
 
-```
+```bash
 /mageforge
 ├── /src/                  # ⭐ The actual MageForge module code
 │   ├── /Console/         # CLI commands
@@ -63,7 +63,6 @@ Understanding the structure is crucial for contributing:
    ```
 
    This script:
-
    - Installs a fresh Magento 2.4.7 instance in `/magento`
    - Creates sample data and test themes
    - Symlinks `/src` → `/magento/app/code/OpenForgeProject/MageForge`
