@@ -183,38 +183,14 @@ class CleanCommand extends AbstractCommand
             $viewPreprocessedPath = $varDir->getAbsolutePath('view_preprocessed');
 
             if (!is_dir($viewPreprocessedPath)) {
-                $this->io->info('var/view_preprocessed directory does not exist.');
+                $this->io->writeln('  ℹ var/view_preprocessed directory does not exist');
                 return true;
             }
 
-            // Convert Vendor/theme to frontend/Vendor/theme pattern
-            $themePattern = $this->getThemePattern($themeCode);
-            $cleaned = 0;
-
-            // Scan for matching theme directories
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($viewPreprocessedPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::SELF_FIRST
-            );
-
-            $dirsToDelete = [];
-            foreach ($iterator as $file) {
-                $path = $file->getPathname();
-                if ($file->isDir() && strpos($path, $themePattern) !== false) {
-                    $dirsToDelete[] = $path;
-                }
-            }
-
-            // Delete directories from deepest to shallowest
-            rsort($dirsToDelete);
-            foreach ($dirsToDelete as $dir) {
-                if ($this->removeDirectory($dir)) {
-                    $cleaned++;
-                }
-            }
+            $cleaned = $this->cleanThemeDirectories($viewPreprocessedPath, $themeCode);
 
             if ($cleaned > 0) {
-                $this->io->writeln(sprintf('  ✓ Cleaned %d directories from var/view_preprocessed', $cleaned));
+                $this->io->writeln(sprintf('  ✓ Cleaned %d item(s) from var/view_preprocessed', $cleaned));
             } else {
                 $this->io->writeln('  ℹ No files found in var/view_preprocessed');
             }
@@ -239,38 +215,14 @@ class CleanCommand extends AbstractCommand
             $staticPath = $staticDir->getAbsolutePath();
 
             if (!is_dir($staticPath)) {
-                $this->io->info('pub/static directory does not exist.');
+                $this->io->writeln('  ℹ pub/static directory does not exist');
                 return true;
             }
 
-            // Convert Vendor/theme to frontend/Vendor/theme pattern
-            $themePattern = $this->getThemePattern($themeCode);
-            $cleaned = 0;
-
-            // Scan for matching theme directories
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($staticPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::SELF_FIRST
-            );
-
-            $dirsToDelete = [];
-            foreach ($iterator as $file) {
-                $path = $file->getPathname();
-                if ($file->isDir() && strpos($path, $themePattern) !== false) {
-                    $dirsToDelete[] = $path;
-                }
-            }
-
-            // Delete directories from deepest to shallowest
-            rsort($dirsToDelete);
-            foreach ($dirsToDelete as $dir) {
-                if ($this->removeDirectory($dir)) {
-                    $cleaned++;
-                }
-            }
+            $cleaned = $this->cleanThemeDirectories($staticPath, $themeCode);
 
             if ($cleaned > 0) {
-                $this->io->writeln(sprintf('  ✓ Cleaned %d directories from pub/static', $cleaned));
+                $this->io->writeln(sprintf('  ✓ Cleaned %d item(s) from pub/static', $cleaned));
             } else {
                 $this->io->writeln('  ℹ No files found in pub/static');
             }
@@ -283,16 +235,34 @@ class CleanCommand extends AbstractCommand
     }
 
     /**
-     * Get theme pattern for matching directories
+     * Clean theme directories from a base path
      *
+     * @param string $basePath
      * @param string $themeCode
-     * @return string
+     * @return int Number of items cleaned
      */
-    private function getThemePattern(string $themeCode): string
+    private function cleanThemeDirectories(string $basePath, string $themeCode): int
     {
-        // Theme code format: Vendor/theme
-        // Pattern in directories: frontend/Vendor/theme
-        return 'frontend/' . $themeCode;
+        $cleaned = 0;
+
+        // Scan for areas (frontend, adminhtml, etc.)
+        $areas = ['frontend'];
+        foreach ($areas as $area) {
+            $areaPath = $basePath . DIRECTORY_SEPARATOR . $area;
+            if (!is_dir($areaPath)) {
+                continue;
+            }
+
+            // Look for the specific theme directory
+            $themePath = $areaPath . DIRECTORY_SEPARATOR . $themeCode;
+            if (is_dir($themePath)) {
+                if ($this->removeDirectory($themePath)) {
+                    $cleaned++;
+                }
+            }
+        }
+
+        return $cleaned;
     }
 
     /**
