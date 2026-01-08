@@ -10,9 +10,9 @@
 cd magento || exit 1
 
 if ! command -v bin/magento >/dev/null; then
-  echo 'bin/magento is not available in your installation.'
-  echo 'Please verify that you installed the shop in your working dir.'
-  exit 1
+	echo 'bin/magento is not available in your installation.'
+	echo 'Please verify that you installed the shop in your working dir.'
+	exit 1
 fi
 
 bin/magento "$@"
