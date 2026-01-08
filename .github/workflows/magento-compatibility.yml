@@ -2,9 +2,9 @@ name: Magento Compatibility Test
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -15,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - magento-version: '2.4.7'
-            php-version: '8.3'
-            search-engine-name: 'elasticsearch7'
-          - magento-version: '2.4.7-p7'
-            php-version: '8.3'
-            search-engine-name: 'elasticsearch7'
+          - magento-version: "2.4.7"
+            php-version: "8.3"
+            search-engine-name: "elasticsearch7"
+          - magento-version: "2.4.7-p8"
+            php-version: "8.3"
+            search-engine-name: "elasticsearch7"
 
     services:
       mysql:
@@ -42,101 +42,101 @@ jobs:
         options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      with:
-        path: mageforge
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: mageforge
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
-      with:
-        php-version: ${{ matrix.php-version }}
-        extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
-        tools: composer:v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-      with:
-        path: ~/.composer/cache/files
-        key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
-        restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
 
-    - name: Clone Magento
-      run: |
-        git clone --depth=1 --branch=${{ matrix.magento-version }} https://github.com/magento/magento2.git magento2
+      - name: Clone Magento
+        run: |
+          git clone --depth=1 --branch=${{ matrix.magento-version }} https://github.com/magento/magento2.git magento2
 
-    - name: Check Search Engine status
-      run: |
-        curl -s http://localhost:9200/_cluster/health
+      - name: Check Search Engine status
+        run: |
+          curl -s http://localhost:9200/_cluster/health
 
-    - name: Install Magento
-      working-directory: magento2
-      env:
-        COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
-      run: |
-        composer config minimum-stability stable
-        composer config prefer-stable true
-        composer install --no-interaction --no-progress
-        bin/magento setup:install \
-          --base-url=http://localhost \
-          --db-host=127.0.0.1 \
-          --db-name=magento \
-          --db-user=root \
-          --db-password=magento \
-          --admin-firstname=Admin \
-          --admin-lastname=User \
-          --admin-email=admin@example.com \
-          --admin-user=admin \
-          --admin-password=admin12345 \
-          --language=en_US \
-          --currency=USD \
-          --timezone=Europe/Berlin \
-          --use-rewrites=1 \
-          --backend-frontname=admin \
-          --search-engine=${{ matrix.search-engine-name }} \
-          --elasticsearch-host=localhost \
-          --elasticsearch-port=9200 \
-          --elasticsearch-index-prefix=magento \
-          --cleanup-database
+      - name: Install Magento
+        working-directory: magento2
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer config minimum-stability stable
+          composer config prefer-stable true
+          composer install --no-interaction --no-progress
+          bin/magento setup:install \
+            --base-url=http://localhost \
+            --db-host=127.0.0.1 \
+            --db-name=magento \
+            --db-user=root \
+            --db-password=magento \
+            --admin-firstname=Admin \
+            --admin-lastname=User \
+            --admin-email=admin@example.com \
+            --admin-user=admin \
+            --admin-password=admin12345 \
+            --language=en_US \
+            --currency=USD \
+            --timezone=Europe/Berlin \
+            --use-rewrites=1 \
+            --backend-frontname=admin \
+            --search-engine=${{ matrix.search-engine-name }} \
+            --elasticsearch-host=localhost \
+            --elasticsearch-port=9200 \
+            --elasticsearch-index-prefix=magento \
+            --cleanup-database
 
-    - name: Install MageForge Module from current commit
-      working-directory: magento2
-      run: |
-        # Add a local repository pointing to the current code
-        composer config repositories.mageforge-local path ../mageforge
+      - name: Install MageForge Module from current commit
+        working-directory: magento2
+        run: |
+          # Add a local repository pointing to the current code
+          composer config repositories.mageforge-local path ../mageforge
 
-        # Install the module from the local repository
-        composer require --no-update openforgeproject/mageforge:@dev
+          # Install the module from the local repository
+          composer require --no-update openforgeproject/mageforge:@dev
 
-        # Update dependencies
-        composer update openforgeproject/mageforge --with-dependencies
+          # Update dependencies
+          composer update openforgeproject/mageforge --with-dependencies
 
-        # Enable the module and run setup upgrade
-        bin/magento module:enable OpenForgeProject_MageForge
-        bin/magento setup:upgrade
+          # Enable the module and run setup upgrade
+          bin/magento module:enable OpenForgeProject_MageForge
+          bin/magento setup:upgrade
 
-    - name: Check Module Commands
-      working-directory: magento2
-      run: |
-        echo "Check if module is enabled:"
-        bin/magento module:status | grep OpenForgeProject_MageForge
+      - name: Check Module Commands
+        working-directory: magento2
+        run: |
+          echo "Check if module is enabled:"
+          bin/magento module:status | grep OpenForgeProject_MageForge
 
-        echo "Check if MageForge commands are available:"
-        bin/magento list | grep mageforge
+          echo "Check if MageForge commands are available:"
+          bin/magento list | grep mageforge
 
-        echo "Test MageForge Version command:"
-        bin/magento mageforge:system:version
+          echo "Test MageForge Version command:"
+          bin/magento mageforge:system:version
 
-        echo "Test MageForge System Check command:"
-        bin/magento mageforge:system:check
+          echo "Test MageForge System Check command:"
+          bin/magento mageforge:system:check
 
-        echo "Test MageForge Theme List command:"
-        bin/magento mageforge:theme:list
+          echo "Test MageForge Theme List command:"
+          bin/magento mageforge:theme:list
 
-    - name: Test Summary
-      run: |
-        echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
+      - name: Test Summary
+        run: |
+          echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
 
   test-opensearch:
     name: Magento 2.4.8 with PHP 8.4 Test
@@ -163,98 +163,98 @@ jobs:
         options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      with:
-        path: mageforge
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: mageforge
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
-      with:
-        php-version: '8.4'
-        extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
-        tools: composer:v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-      with:
-        path: ~/.composer/cache/files
-        key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
-        restore-keys: ${{ runner.os }}-composer-2.4.8
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-2.4.8
 
-    - name: Clone Magento
-      run: |
-        git clone --depth=1 --branch=2.4.8 https://github.com/magento/magento2.git magento2
+      - name: Clone Magento
+        run: |
+          git clone --depth=1 --branch=2.4.8 https://github.com/magento/magento2.git magento2
 
-    - name: Check Search Engine status
-      run: |
-        curl -s http://localhost:9200/_cluster/health
+      - name: Check Search Engine status
+        run: |
+          curl -s http://localhost:9200/_cluster/health
 
-    - name: Install Magento
-      working-directory: magento2
-      env:
-        COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
-      run: |
-        composer config minimum-stability stable
-        composer config prefer-stable true
-        composer install --no-interaction --no-progress
-        bin/magento setup:install \
-          --base-url=http://localhost \
-          --db-host=127.0.0.1 \
-          --db-name=magento \
-          --db-user=root \
-          --db-password=magento \
-          --admin-firstname=Admin \
-          --admin-lastname=User \
-          --admin-email=admin@example.com \
-          --admin-user=admin \
-          --admin-password=admin12345 \
-          --language=en_US \
-          --currency=USD \
-          --timezone=Europe/Berlin \
-          --use-rewrites=1 \
-          --backend-frontname=admin \
-          --search-engine=opensearch \
-          --opensearch-host=localhost \
-          --opensearch-port=9200 \
-          --opensearch-index-prefix=magento \
-          --cleanup-database
+      - name: Install Magento
+        working-directory: magento2
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer config minimum-stability stable
+          composer config prefer-stable true
+          composer install --no-interaction --no-progress
+          bin/magento setup:install \
+            --base-url=http://localhost \
+            --db-host=127.0.0.1 \
+            --db-name=magento \
+            --db-user=root \
+            --db-password=magento \
+            --admin-firstname=Admin \
+            --admin-lastname=User \
+            --admin-email=admin@example.com \
+            --admin-user=admin \
+            --admin-password=admin12345 \
+            --language=en_US \
+            --currency=USD \
+            --timezone=Europe/Berlin \
+            --use-rewrites=1 \
+            --backend-frontname=admin \
+            --search-engine=opensearch \
+            --opensearch-host=localhost \
+            --opensearch-port=9200 \
+            --opensearch-index-prefix=magento \
+            --cleanup-database
 
-    - name: Install MageForge Module from current commit
-      working-directory: magento2
-      run: |
-        # Add a local repository pointing to the current code
-        composer config repositories.mageforge-local path ../mageforge
+      - name: Install MageForge Module from current commit
+        working-directory: magento2
+        run: |
+          # Add a local repository pointing to the current code
+          composer config repositories.mageforge-local path ../mageforge
 
-        # Install the module from the local repository
-        composer require --no-update openforgeproject/mageforge:@dev
+          # Install the module from the local repository
+          composer require --no-update openforgeproject/mageforge:@dev
 
-        # Update dependencies
-        composer update openforgeproject/mageforge --with-dependencies
+          # Update dependencies
+          composer update openforgeproject/mageforge --with-dependencies
 
-        # Enable the module and run setup upgrade
-        bin/magento module:enable OpenForgeProject_MageForge
-        bin/magento setup:upgrade
+          # Enable the module and run setup upgrade
+          bin/magento module:enable OpenForgeProject_MageForge
+          bin/magento setup:upgrade
 
-    - name: Check Module Commands
-      working-directory: magento2
-      run: |
-        echo "Check if module is enabled:"
-        bin/magento module:status | grep OpenForgeProject_MageForge
+      - name: Check Module Commands
+        working-directory: magento2
+        run: |
+          echo "Check if module is enabled:"
+          bin/magento module:status | grep OpenForgeProject_MageForge
 
-        echo "Check if MageForge commands are available:"
-        bin/magento list | grep mageforge
+          echo "Check if MageForge commands are available:"
+          bin/magento list | grep mageforge
 
-        echo "Test MageForge Version command:"
-        bin/magento mageforge:system:version
+          echo "Test MageForge Version command:"
+          bin/magento mageforge:system:version
 
-        echo "Test MageForge System Check command:"
-        bin/magento mageforge:system:check
+          echo "Test MageForge System Check command:"
+          bin/magento mageforge:system:check
 
-        echo "Test MageForge Theme List command:"
-        bin/magento mageforge:theme:list
+          echo "Test MageForge Theme List command:"
+          bin/magento mageforge:theme:list
 
-    - name: Test Summary
-      run: |
-        echo "MageForge module compatibility test with Magento 2.4.8 completed"
+      - name: Test Summary
+        run: |
+          echo "MageForge module compatibility test with Magento 2.4.8 completed"
