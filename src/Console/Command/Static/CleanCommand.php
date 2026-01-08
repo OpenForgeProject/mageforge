@@ -246,7 +246,7 @@ class CleanCommand extends AbstractCommand
         $cleaned = 0;
 
         // Scan for areas (frontend, adminhtml, etc.)
-        $areas = ['frontend'];
+        $areas = ['frontend', 'adminhtml'];
         foreach ($areas as $area) {
             $areaPath = $basePath . DIRECTORY_SEPARATOR . $area;
             if (!is_dir($areaPath)) {
@@ -281,10 +281,22 @@ class CleanCommand extends AbstractCommand
             $files = array_diff(scandir($dir), ['.', '..']);
             foreach ($files as $file) {
                 $path = $dir . DIRECTORY_SEPARATOR . $file;
-                is_dir($path) ? $this->removeDirectory($path) : unlink($path);
+                if (is_dir($path)) {
+                    if (!$this->removeDirectory($path)) {
+                        throw new \RuntimeException(sprintf('Failed to remove directory: %s', $path));
+                    }
+                } else {
+                    if (!@unlink($path)) {
+                        throw new \RuntimeException(sprintf('Failed to remove file: %s', $path));
+                    }
+                }
             }
 
-            return rmdir($dir);
+            if (!@rmdir($dir)) {
+                throw new \RuntimeException(sprintf('Failed to remove directory: %s', $dir));
+            }
+
+            return true;
         } catch (\Exception $e) {
             $this->io->error('Failed to remove directory: ' . $e->getMessage());
             return false;
