@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+- feat: add `mageforge:theme:tokens` command to generate Hyvä design tokens from design.tokens.json or hyva.config.json
+
 ## Latest Release
 
 ### [0.2.2] - 2025-06-05
