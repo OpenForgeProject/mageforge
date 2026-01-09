@@ -259,6 +259,8 @@ class CleanCommand extends AbstractCommand
         try {
             // Get all items in generated directory
             $items = $generatedDirectory->read();
+            $deletedCount = 0;
+            
             foreach ($items as $item) {
                 // Skip .htaccess file
                 if ($item === '.htaccess') {
@@ -267,12 +269,13 @@ class CleanCommand extends AbstractCommand
                 
                 try {
                     $generatedDirectory->delete($item);
+                    $deletedCount++;
                 } catch (\Exception $e) {
                     $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/%s - %s', $item, $e->getMessage()));
                 }
             }
             
-            if (!empty($items)) {
+            if ($deletedCount > 0) {
                 $this->io->writeln('  <fg=green>✓</> Cleaned: generated/*');
                 $cleaned++;
             }
