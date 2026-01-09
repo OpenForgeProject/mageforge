@@ -134,6 +134,10 @@ jobs:
           echo "Test MageForge Theme List command:"
           bin/magento mageforge:theme:list
 
+          echo "Test MageForge Hyvä Compatibility Check command:"
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento m:h:c:c --help
+
       - name: Test Summary
         run: |
           echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
@@ -254,6 +258,10 @@ jobs:
 
           echo "Test MageForge Theme List command:"
           bin/magento mageforge:theme:list
+
+          echo "Test MageForge Hyvä Compatibility Check command:"
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento m:h:c:c --help
 
       - name: Test Summary
         run: |

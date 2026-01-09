@@ -130,9 +130,110 @@ bin/magento mageforge:version
 - Fetches the latest version from GitHub API
 - Displays both versions for comparison
 
+---
+
+### 6. CompatibilityCheckCommand (`mageforge:hyva:compatibility:check`)
+
+**Purpose**: Scans all Magento modules for Hyvä theme compatibility issues such as RequireJS, Knockout.js, jQuery, and UI Components usage.
+
+**File**: `/src/Console/Command/Hyva/CompatibilityCheckCommand.php`
+
+**Dependencies**:
+- `CompatibilityChecker` - Main orchestrator service for scanning modules
+
+**Usage**:
+```bash
+bin/magento mageforge:hyva:compatibility:check [options]
+```
+
+**Aliases**:
+- `m:h:c:c`
+- `hyva:check`
+
+**Options**:
+- `--show-all` / `-a` - Show all modules including compatible ones
+- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento_* modules)
+- `--include-vendor` - Include vendor modules in scan (default: excluded)
+- `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
+
+**Examples**:
+```bash
+# Basic compatibility check
+bin/magento m:h:c:c
+
+# Check only third-party modules with details
+bin/magento m:h:c:c -t -d
+
+# Show all modules including compatible ones
+bin/magento m:h:c:c -a --include-vendor
+
+# Using full command name
+bin/magento mageforge:hyva:compatibility:check --detailed
+```
+
+**Implementation Details**:
+- Scans module directories for JS, XML, and PHTML files
+- Detects incompatibility patterns:
+  - **Critical Issues**:
+    - RequireJS `define()` and `require()` usage
+    - Knockout.js observables and computed properties
+    - Magento UI Components in XML
+    - `data-mage-init` and `x-magento-init` in templates
+  - **Warnings**:
+    - jQuery AJAX direct usage
+    - jQuery DOM manipulation
+    - Block removal in layout XML (review needed)
+- Displays results in formatted tables with color-coded status:
+  - ✓ Green: Compatible modules
+  - ⚠ Yellow: Warnings (non-critical issues)
+  - ✗ Red: Incompatible (critical issues)
+  - ✓ Hyvä-Aware: Modules with Hyvä compatibility packages
+- Provides summary statistics:
+  - Total modules scanned
+  - Compatible vs. incompatible count
+  - Hyvä-aware modules count
+  - Critical issues and warnings count
+- Shows detailed file paths and line numbers with `--detailed` flag
+- Provides helpful recommendations for resolving issues
+- Returns exit code 1 if critical issues found, 0 otherwise
+
+**Detected Patterns**:
+
+*JavaScript Files (.js)*:
+- `define([` - RequireJS module definition
+- `require([` - RequireJS dependency loading
+- `ko.observable` / `ko.observableArray` / `ko.computed` - Knockout.js
+- `$.ajax` / `jQuery.ajax` - jQuery AJAX
+- `mage/` - Magento RequireJS module references
+
+*XML Files (.xml)*:
+- `<uiComponent` - UI Component declarations
+- `component="uiComponent"` - UI Component references
+- `component="Magento_Ui/js/` - Magento UI JS components
+- `<referenceBlock.*remove="true"` - Block removals
+
+*PHTML Files (.phtml)*:
+- `data-mage-init=` - Magento JavaScript initialization
+- `x-magento-init` - Magento 2.4+ JavaScript initialization
+- `$(.*).` - jQuery DOM manipulation patterns
+- `require([` - RequireJS in templates
+
+**Recommendations Provided**:
+- Check for Hyvä compatibility packages on hyva.io/compatibility
+- Review module vendor documentation for Hyvä support
+- Consider refactoring RequireJS/Knockout to Alpine.js
+- Contact module vendors for Hyvä-compatible versions
+
+---
+
 ## Command Services
 
 The commands rely on several services for their functionality:
+
+### Hyvä Services
+- `CompatibilityChecker`: Main orchestrator for Hyvä compatibility scanning
+- `ModuleScanner`: Recursively scans module directories for relevant files
+- `IncompatibilityDetector`: Pattern matching service for detecting incompatibilities
 
 ### Builder Services
 - `BuilderPool`: Manages theme builders and selects appropriate builders for themes
