@@ -650,6 +650,7 @@ class CleanCommand extends AbstractCommand
     private function clearEnvironmentCache(): void
     {
         $this->secureEnvStorage = [];
+        self::$cachedEnv = null;
     }
 
     /**
