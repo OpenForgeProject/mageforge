@@ -252,6 +252,28 @@ For every change:
 3. Watch mode: `ddev magento m:t:w <theme-code>` (Ctrl+C to exit)
 4. System check: `ddev magento m:s:c` (shows PHP, Node, DB, etc.)
 
+### CI/CD Integration
+
+**CRITICAL**: When adding new CLI commands, ALWAYS update `.github/workflows/magento-compatibility.yml`:
+
+1. Add command test to **both** jobs: `test-elasticsearch` and `test-opensearch`
+2. Test basic command execution in "Check Module Commands" step
+3. Use `--dry-run` or `--help` for commands that modify files
+4. Test all aliases (e.g., `m:t:b`, `frontend:build`)
+
+**Example**:
+
+```yaml
+echo "Test New Command:"
+bin/magento mageforge:new:command --dry-run
+
+echo "Test Command Aliases:"
+bin/magento m:n:c --help
+bin/magento new-alias --help
+```
+
+**Why**: Ensures command compatibility across all supported Magento versions (2.4.7, 2.4.7-p8, 2.4.8) and search engines (Elasticsearch, OpenSearch).
+
 ### Theme Codes for Testing
 
 - **Standard**: `Magento/luma`, `Magento/blank`
