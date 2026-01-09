@@ -43,7 +43,11 @@ class CleanCommand extends AbstractCommand
     protected function configure(): void
     {
         $this->setName($this->getCommandName('static', 'clean'))
-            ->setDescription('Clean var/view_preprocessed, pub/static, var/page_cache, var/tmp and generated directories for specific theme')
+            ->setDescription(
+                'Clean theme-specific static files (var/view_preprocessed, pub/static) '
+                . 'for selected themes and global cache directories '
+                . '(var/page_cache, var/tmp, generated)'
+            )
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
