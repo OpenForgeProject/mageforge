@@ -85,7 +85,35 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 ---
 
-### 4. SystemCheckCommand (`mageforge:system:check`)
+### 4. CleanCommand (`mageforge:static:clean`)
+
+**Purpose**: Cleans var/view_preprocessed and pub/static directories for specific theme.
+
+**File**: `/src/Console/Command/Static/CleanCommand.php`
+
+**Dependencies**:
+- `Filesystem` - Magento filesystem component for file operations
+- `ThemeList` - Service to retrieve theme information
+- `ThemePath` - Service to resolve theme paths
+
+**Usage**:
+```bash
+bin/magento mageforge:static:clean [<themename>]
+```
+
+**Implementation Details**:
+- If no theme name is provided, displays available themes
+- Validates that the specified theme exists
+- Cleans the following directories for the theme:
+  - `var/view_preprocessed/css/frontend/Vendor/theme`
+  - `var/view_preprocessed/source/frontend/Vendor/theme`
+  - `pub/static/frontend/Vendor/theme`
+- Displays a summary of cleaned directories
+- Returns success status code
+
+---
+
+### 5. SystemCheckCommand (`mageforge:system:check`)
 
 **Purpose**: Displays system information relevant to Magento development.
 
@@ -111,7 +139,7 @@ bin/magento mageforge:system:check
 
 ---
 
-### 5. VersionCommand (`mageforge:version`)
+### 6. VersionCommand (`mageforge:version`)
 
 **Purpose**: Displays the current and latest version of the MageForge module.
 
