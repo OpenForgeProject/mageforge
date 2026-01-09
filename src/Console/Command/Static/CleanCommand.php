@@ -38,7 +38,7 @@ class CleanCommand extends AbstractCommand
     protected function configure(): void
     {
         $this->setName($this->getCommandName('static', 'clean'))
-            ->setDescription('Clean var/view_preprocessed and pub/static directories for specific theme')
+            ->setDescription('Clean var/view_preprocessed, pub/static, var/page_cache, var/tmp and generated directories for specific theme')
             ->addArgument(
                 'themename',
                 InputArgument::OPTIONAL,
@@ -90,6 +90,15 @@ class CleanCommand extends AbstractCommand
 
         // Clean pub/static
         $cleaned += $this->cleanPubStatic($themeName);
+
+        // Clean var/page_cache
+        $cleaned += $this->cleanPageCache();
+
+        // Clean var/tmp
+        $cleaned += $this->cleanVarTmp();
+
+        // Clean generated
+        $cleaned += $this->cleanGenerated();
 
         if ($cleaned > 0) {
             $this->io->success(sprintf(
@@ -186,6 +195,89 @@ class CleanCommand extends AbstractCommand
             } catch (\Exception $e) {
                 $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: pub/static/%s - %s', $pathToClean, $e->getMessage()));
             }
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Clean var/page_cache directory
+     *
+     * @return int Number of directories cleaned
+     */
+    private function cleanPageCache(): int
+    {
+        $cleaned = 0;
+        $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
+
+        if ($varDirectory->isDirectory('page_cache')) {
+            try {
+                $varDirectory->delete('page_cache');
+                $this->io->writeln('  <fg=green>✓</> Cleaned: var/page_cache');
+                $cleaned++;
+            } catch (\Exception $e) {
+                $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/page_cache - %s', $e->getMessage()));
+            }
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Clean var/tmp directory
+     *
+     * @return int Number of directories cleaned
+     */
+    private function cleanVarTmp(): int
+    {
+        $cleaned = 0;
+        $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
+
+        if ($varDirectory->isDirectory('tmp')) {
+            try {
+                $varDirectory->delete('tmp');
+                $this->io->writeln('  <fg=green>✓</> Cleaned: var/tmp');
+                $cleaned++;
+            } catch (\Exception $e) {
+                $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/tmp - %s', $e->getMessage()));
+            }
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Clean generated directory
+     *
+     * @return int Number of directories cleaned
+     */
+    private function cleanGenerated(): int
+    {
+        $cleaned = 0;
+        $generatedDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::GENERATED);
+
+        try {
+            // Get all items in generated directory
+            $items = $generatedDirectory->read();
+            foreach ($items as $item) {
+                // Skip .htaccess file
+                if ($item === '.htaccess') {
+                    continue;
+                }
+                
+                try {
+                    $generatedDirectory->delete($item);
+                } catch (\Exception $e) {
+                    $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/%s - %s', $item, $e->getMessage()));
+                }
+            }
+            
+            if (!empty($items)) {
+                $this->io->writeln('  <fg=green>✓</> Cleaned: generated/*');
+                $cleaned++;
+            }
+        } catch (\Exception $e) {
+            $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated - %s', $e->getMessage()));
         }
 
         return $cleaned;
