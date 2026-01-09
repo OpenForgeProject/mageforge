@@ -85,7 +85,86 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 ---
 
-### 4. SystemCheckCommand (`mageforge:system:check`)
+### 4. TokensCommand (`mageforge:theme:tokens`)
+
+**Purpose**: Generates Hyvä design tokens from design.tokens.json or hyva.config.json configuration files.
+
+**File**: `/src/Console/Command/Theme/TokensCommand.php`
+
+**Dependencies**:
+- `ThemePath` - Service to resolve theme paths
+- `ThemeList` - Service to retrieve theme information
+- `BuilderPool` - Service to verify theme is a Hyvä theme
+- `File` - Filesystem driver for checking directories
+
+**Usage**:
+```bash
+bin/magento mageforge:theme:tokens [<themeCode>]
+```
+
+**Implementation Details**:
+- If no theme code is provided, displays an interactive prompt to select a theme
+- Verifies that the selected theme is a Hyvä theme
+- Checks for the presence of the tailwind directory and node_modules
+- Executes `npx hyva-tokens` in the theme's tailwind directory
+- Generates `generated/hyva-tokens.css` file based on:
+  - `design.tokens.json` (default)
+  - `acme.figma-tokens.json` (when configured in hyva.config.json)
+  - Direct token values in hyva.config.json
+- Supports custom CSS selectors (e.g., `:root` for Tailwind v3)
+
+**Token Configuration**:
+The command supports various token sources configured in `hyva.config.json`:
+
+1. **Default tokens file**:
+   ```json
+   {
+       "tokens": {
+           "src": "design.tokens.json"
+       }
+   }
+   ```
+
+2. **Figma tokens**:
+   ```json
+   {
+       "tokens": {
+           "src": "acme.figma-tokens.json",
+           "format": "figma"
+       }
+   }
+   ```
+
+3. **Inline tokens**:
+   ```json
+   {
+       "tokens": {
+           "values": {
+               "colors": {
+                   "primary": {
+                       "lighter": "oklch(62.3% 0.214 259.815)",
+                       "DEFAULT": "oklch(54.6% 0.245 262.881)",
+                       "darker": "oklch(37.9% 0.146 265.522)"
+                   }
+               }
+           }
+       }
+   }
+   ```
+
+4. **Custom CSS selector**:
+   ```json
+   {
+       "tokens": {
+           "src": "design.tokens.json",
+           "cssSelector": ":root"
+       }
+   }
+   ```
+
+---
+
+### 5. SystemCheckCommand (`mageforge:system:check`)
 
 **Purpose**: Displays system information relevant to Magento development.
 
@@ -111,7 +190,7 @@ bin/magento mageforge:system:check
 
 ---
 
-### 5. VersionCommand (`mageforge:version`)
+### 6. VersionCommand (`mageforge:version`)
 
 **Purpose**: Displays the current and latest version of the MageForge module.
 

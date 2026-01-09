@@ -37,6 +37,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:theme:list`     | Lists all available themes                                | `m:t:l`                   |
 | `mageforge:theme:build`    | Builds selected themes (CSS/TailwindCSS)                  | `m:t:b`, `frontend:build` |
 | `mageforge:theme:watch`    | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
+| `mageforge:theme:tokens`   | Generate Hyvä design tokens (Hyvä themes only)            | `m:t:t`                   |
 
 ---
 
