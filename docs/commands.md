@@ -102,7 +102,9 @@ bin/magento mageforge:static:clean [<themename>]
 ```
 
 **Implementation Details**:
-- If no theme name is provided, displays available themes
+- If no theme name is provided:
+  - In interactive terminals, displays an interactive prompt to select the theme to clean
+  - In non-interactive environments, prints the list of available themes and exits, requiring an explicit theme name
 - Validates that the specified theme exists
 - Cleans the following directories for the theme:
   - `var/view_preprocessed/css/frontend/Vendor/theme`
