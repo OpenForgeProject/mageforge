@@ -138,6 +138,8 @@ jobs:
           bin/magento mageforge:static:clean --all --dry-run
 
           echo "Test MageForge Static Clean aliases:"
+          bin/magento mageforge:static:clean --all --dry-run
+          echo "Test MageForge Static Clean aliases:"
           bin/magento m:s:c --help
           bin/magento frontend:clean --help
 
