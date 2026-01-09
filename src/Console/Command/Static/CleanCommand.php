@@ -519,25 +519,23 @@ class CleanCommand extends AbstractCommand
      */
     private function getCachedEnvironmentVariables(): array
     {
-        static $cachedEnv = null;
-
-        if ($cachedEnv === null) {
-            $cachedEnv = [];
+        if (self::$cachedEnv === null) {
+            self::$cachedEnv = [];
             $allowedVars = ['COLUMNS', 'LINES', 'TERM', 'CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'JENKINS_URL', 'TEAMCITY_VERSION'];
 
             foreach ($allowedVars as $var) {
                 if (isset($this->secureEnvStorage[$var])) {
-                    $cachedEnv[$var] = $this->secureEnvStorage[$var];
+                    self::$cachedEnv[$var] = $this->secureEnvStorage[$var];
                 } else {
                     $globalEnv = filter_input_array(INPUT_ENV) ?: [];
                     if (array_key_exists($var, $globalEnv)) {
-                        $cachedEnv[$var] = (string) $globalEnv[$var];
+                        self::$cachedEnv[$var] = (string) $globalEnv[$var];
                     }
                 }
             }
         }
 
-        return $cachedEnv;
+        return self::$cachedEnv;
     }
 
     /**
