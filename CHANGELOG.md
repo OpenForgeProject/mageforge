@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - feat: add interactive multi-theme selection for static:clean command using Laravel Prompts
 - feat: add `--all` option to clean all themes at once
 - feat: add `--dry-run` option to preview what would be cleaned without deleting
-- feat: add command aliases `m:s:c` and `frontend:clean` for quick access
+- feat: add command alias `frontend:clean` for quick access
 - feat: add CI/CD tests for static:clean command in compatibility workflow
 
 ### Changed
