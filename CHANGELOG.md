@@ -6,6 +6,20 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+### Added
+
+- feat: add `mageforge:static:clean` command for comprehensive cache and generated files cleanup
+- feat: add interactive multi-theme selection for static:clean command using Laravel Prompts
+- feat: add `--all` option to clean all themes at once
+- feat: add `--dry-run` option to preview what would be cleaned without deleting
+- feat: add command aliases `m:s:c` and `frontend:clean` for quick access
+- feat: add CI/CD tests for static:clean command in compatibility workflow
+
+### Changed
+
+- refactor: split complex executeCommand method into smaller, focused methods to reduce cyclomatic complexity
+- docs: update copilot-instructions.md with CI/CD integration guidelines for new commands
+
 ## Latest Release
 
 ### [0.2.2] - 2025-06-05
