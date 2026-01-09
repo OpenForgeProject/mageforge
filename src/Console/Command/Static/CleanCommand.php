@@ -7,7 +7,6 @@ namespace OpenForgeProject\MageForge\Console\Command\Static;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem;
-use Magento\Framework\Filesystem\Directory\WriteInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
@@ -118,8 +117,8 @@ class CleanCommand extends AbstractCommand
         $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
         
         // Extract vendor and theme parts
-        $themeParts = explode('/', $themeName);
-        if (count($themeParts) !== 2) {
+        $themeParts = $this->parseThemeName($themeName);
+        if ($themeParts === null) {
             return 0;
         }
 
@@ -164,8 +163,8 @@ class CleanCommand extends AbstractCommand
         $staticDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::STATIC_VIEW);
         
         // Extract vendor and theme parts
-        $themeParts = explode('/', $themeName);
-        if (count($themeParts) !== 2) {
+        $themeParts = $this->parseThemeName($themeName);
+        if ($themeParts === null) {
             return 0;
         }
 
@@ -190,5 +189,21 @@ class CleanCommand extends AbstractCommand
         }
 
         return $cleaned;
+    }
+
+    /**
+     * Parse theme name into vendor and theme parts
+     *
+     * @param string $themeName
+     * @return array|null Array with [vendor, theme] or null if invalid format
+     */
+    private function parseThemeName(string $themeName): ?array
+    {
+        $themeParts = explode('/', $themeName);
+        if (count($themeParts) !== 2) {
+            return null;
+        }
+
+        return $themeParts;
     }
 }
