@@ -111,7 +111,7 @@ bin/magento mageforge:static:clean [<themename>]
 - Additionally cleans these global directories:
   - `var/page_cache/*`
   - `var/tmp/*`
-  - `generated/*` (preserves .htaccess)
+  - `generated/*`
 - Displays a summary of cleaned directories
 - Returns success status code
 
