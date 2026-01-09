@@ -291,13 +291,18 @@ class CleanCommand extends AbstractCommand
      */
     private function cleanThemeDirectories(string $themeName, bool $dryRun): int
     {
+        static $globalCleaned = false;
+
         $cleaned = 0;
         $cleaned += $this->cleanViewPreprocessed($themeName, $dryRun);
         $cleaned += $this->cleanPubStatic($themeName, $dryRun);
-        $cleaned += $this->cleanPageCache($dryRun);
-        $cleaned += $this->cleanVarTmp($dryRun);
-        $cleaned += $this->cleanGenerated($dryRun);
 
+        if (!$globalCleaned) {
+            $cleaned += $this->cleanPageCache($dryRun);
+            $cleaned += $this->cleanVarTmp($dryRun);
+            $cleaned += $this->cleanGenerated($dryRun);
+            $globalCleaned = true;
+        }
         return $cleaned;
     }
 
