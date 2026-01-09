@@ -79,7 +79,15 @@ Please ensure that your Magento installation meets this requirement before insta
    bin/magento mageforge:theme:watch <theme-code>
    ```
 
-4. Enjoy automatic CSS rebuilding you work on your theme files!
+4. Generate Hyvä design tokens (for Hyvä themes):
+
+   ```bash
+   bin/magento mageforge:theme:tokens <theme-code>
+   ```
+   
+   This creates a `generated/hyva-tokens.css` file from your design tokens configuration.
+
+5. Enjoy automatic CSS rebuilding as you work on your theme files!
 
 ## Additional Documentation
 

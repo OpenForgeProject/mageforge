@@ -116,14 +116,14 @@ class TokensCommand extends AbstractCommand
                 $this->io->text('Running npx hyva-tokens...');
                 passthru('npx hyva-tokens', $returnCode);
             } else {
-                exec('npx hyva-tokens 2>&1', $output_lines, $returnCode);
+                exec('npx hyva-tokens 2>&1', $commandOutput, $returnCode);
                 
                 if ($returnCode === 0) {
                     $this->io->success('Hyvä design tokens generated successfully.');
                 } else {
                     $this->io->error('Failed to generate Hyvä design tokens.');
-                    if (!empty($output_lines)) {
-                        $this->io->writeln($output_lines);
+                    if (!empty($commandOutput)) {
+                        $this->io->writeln($commandOutput);
                     }
                 }
             }
