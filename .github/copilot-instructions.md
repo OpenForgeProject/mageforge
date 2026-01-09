@@ -35,6 +35,30 @@ ddev ssh                      # SSH into container
 - **Webserver**: nginx-fpm
 - **Node.js**: For theme builders (npm/grunt run in containers)
 
+### Running Commands
+
+**CRITICAL**: All Magento CLI commands MUST be executed from `/magento` directory using DDEV:
+
+```bash
+cd /Users/melle/sites/private/mageforge/magento
+ddev magento <command>
+```
+
+**Examples**:
+
+```bash
+ddev magento mageforge:theme:build Hyva/default    # Build theme
+ddev magento mageforge:static:clean Magento/luma   # Clean theme cache
+ddev magento setup:upgrade                         # Upgrade Magento
+ddev magento cache:clean                           # Clear cache
+```
+
+**DO NOT**:
+
+- Run `bin/magento` directly (outside DDEV container)
+- Execute commands from `/src` directory
+- Use `php bin/magento` without DDEV wrapper
+
 ### Testing Changes
 
 After module changes:
