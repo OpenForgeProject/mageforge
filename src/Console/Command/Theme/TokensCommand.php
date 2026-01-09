@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Console\Command\Theme;
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
@@ -25,12 +26,14 @@ class TokensCommand extends AbstractCommand
      * @param ThemePath $themePath
      * @param BuilderPool $builderPool
      * @param File $fileDriver
+     * @param Shell $shell
      */
     public function __construct(
         private readonly ThemeList $themeList,
         private readonly ThemePath $themePath,
         private readonly BuilderPool $builderPool,
         private readonly File $fileDriver,
+        private readonly Shell $shell,
     ) {
         parent::__construct();
     }
@@ -114,28 +117,15 @@ class TokensCommand extends AbstractCommand
         try {
             if ($isVerbose) {
                 $this->io->text('Running npx hyva-tokens...');
-                passthru('npx hyva-tokens', $returnCode);
-            } else {
-                exec('npx hyva-tokens 2>&1', $commandOutput, $returnCode);
-                
-                if ($returnCode === 0) {
-                    $this->io->success('Hyvä design tokens generated successfully.');
-                } else {
-                    $this->io->error('Failed to generate Hyvä design tokens.');
-                    if (!empty($commandOutput)) {
-                        $this->io->writeln($commandOutput);
-                    }
-                }
             }
-
+            
+            $this->shell->execute('npx hyva-tokens');
+            
             chdir($currentDir);
 
-            if ($returnCode !== 0) {
-                return Cli::RETURN_FAILURE;
-            }
-
+            $this->io->success('Hyvä design tokens generated successfully.');
+            
             if ($isVerbose) {
-                $this->io->success('Hyvä design tokens generated successfully.');
                 $this->io->newLine();
                 $this->io->text('The generated file can be found at:');
                 $this->io->text($tailwindPath . '/generated/hyva-tokens.css');
