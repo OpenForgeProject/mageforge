@@ -65,16 +65,19 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
-        // Determine vendor filter logic
-        // If third-party-only OR include-vendor is set, don't exclude vendor modules
-        $excludeVendor = !$includeVendor && !$thirdPartyOnly;
+        // Determine filter logic:
+        // - Default (no flags): Scan third-party only (exclude Magento_* but include vendor third-party)
+        // - With --include-vendor: Scan everything including Magento_*
+        // - With --third-party-only: Explicitly scan only third-party
+        $scanThirdPartyOnly = $thirdPartyOnly || (!$includeVendor && !$thirdPartyOnly);
+        $excludeVendor = false; // Always include vendor for third-party scanning
 
         // Run the compatibility check
         $results = $this->compatibilityChecker->check(
             $this->io,
             $output,
             $showAll,
-            $thirdPartyOnly,
+            $scanThirdPartyOnly,
             $excludeVendor
         );
 

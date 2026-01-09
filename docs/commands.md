@@ -153,19 +153,25 @@ bin/magento mageforge:hyva:compatibility:check [options]
 **Options**:
 - `--show-all` / `-a` - Show all modules including compatible ones
 - `--third-party-only` / `-t` - Check only third-party modules (exclude Magento_* modules)
-- `--include-vendor` - Include vendor modules in scan (default: excluded)
+- `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
+
+**Default Behavior**:
+Without any flags, the command scans **third-party modules only** (excludes `Magento_*` modules but includes vendor third-party like Hyva, PayPal, Mollie, etc.).
 
 **Examples**:
 ```bash
-# Basic compatibility check
+# Basic scan (third-party modules only - DEFAULT)
 bin/magento m:h:c:c
 
-# Check only third-party modules with details
-bin/magento m:h:c:c -t -d
+# Include Magento core modules
+bin/magento m:h:c:c --include-vendor
 
 # Show all modules including compatible ones
-bin/magento m:h:c:c -a --include-vendor
+bin/magento m:h:c:c -a
+
+# Show detailed file-level issues
+bin/magento m:h:c:c -d
 
 # Using full command name
 bin/magento mageforge:hyva:compatibility:check --detailed
