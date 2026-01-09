@@ -69,96 +69,159 @@ class CleanCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $themeCodes = $input->getArgument('themeCodes');
-        $cleanAll = $input->getOption('all');
         $dryRun = $input->getOption('dry-run');
 
         if ($dryRun) {
             $this->io->note('DRY RUN MODE: No files will be deleted');
         }
 
-        // If --all option is set, get all themes
+        $themeCodes = $this->resolveThemeCodes($input, $output);
+
+        if ($themeCodes === null) {
+            return Cli::RETURN_SUCCESS;
+        }
+
+        [$totalCleaned, $failedThemes] = $this->processThemes($themeCodes, $dryRun);
+
+        $this->displaySummary($themeCodes, $totalCleaned, $failedThemes, $dryRun);
+
+        return Cli::RETURN_SUCCESS;
+    }
+
+    /**
+     * Resolve which themes to clean based on input
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return array|null Array of theme codes or null to exit
+     */
+    private function resolveThemeCodes(InputInterface $input, OutputInterface $output): ?array
+    {
+        $themeCodes = $input->getArgument('themeCodes');
+        $cleanAll = $input->getOption('all');
+
         if ($cleanAll) {
-            $themes = $this->themeList->getAllThemes();
-            $themeCodes = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+            return $this->getAllThemeCodes();
+        }
+
+        if (empty($themeCodes)) {
+            return $this->selectThemesInteractively($output);
+        }
+
+        return $themeCodes;
+    }
+
+    /**
+     * Get all theme codes
+     *
+     * @return array|null
+     */
+    private function getAllThemeCodes(): ?array
+    {
+        $themes = $this->themeList->getAllThemes();
+        $themeCodes = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+
+        if (empty($themeCodes)) {
+            $this->io->info('No themes found.');
+            return null;
+        }
+
+        $this->io->info(sprintf('Cleaning all %d theme%s...', count($themeCodes), count($themeCodes) === 1 ? '' : 's'));
+
+        return $themeCodes;
+    }
+
+    /**
+     * Select themes interactively
+     *
+     * @param OutputInterface $output
+     * @return array|null
+     */
+    private function selectThemesInteractively(OutputInterface $output): ?array
+    {
+        $themes = $this->themeList->getAllThemes();
+        $options = array_map(fn($theme) => $theme->getCode(), $themes);
+
+        if (!$this->isInteractiveTerminal($output)) {
+            $this->displayAvailableThemes($themes);
+            return null;
+        }
+
+        return $this->promptForThemes($options, $themes);
+    }
+
+    /**
+     * Display available themes for non-interactive environments
+     *
+     * @param array $themes
+     * @return void
+     */
+    private function displayAvailableThemes(array $themes): void
+    {
+        $this->io->warning('No theme specified. Available themes:');
+
+        if (empty($themes)) {
+            $this->io->info('No themes found.');
+            return;
+        }
+
+        foreach ($themes as $theme) {
+            $this->io->writeln(sprintf('  - <fg=cyan>%s</> (%s)', $theme->getCode(), $theme->getThemeTitle()));
+        }
+
+        $this->io->newLine();
+        $this->io->info('Usage: bin/magento mageforge:static:clean <theme-code> [<theme-code>...]');
+        $this->io->info('       bin/magento mageforge:static:clean --all');
+        $this->io->info('Example: bin/magento mageforge:static:clean Magento/luma');
+    }
+
+    /**
+     * Prompt user to select themes
+     *
+     * @param array $options
+     * @param array $themes
+     * @return array|null
+     */
+    private function promptForThemes(array $options, array $themes): ?array
+    {
+        $this->setPromptEnvironment();
+
+        $themeCodesPrompt = new MultiSelectPrompt(
+            label: 'Select themes to clean',
+            options: $options,
+            default: [],
+            hint: 'Arrow keys to navigate, Space to toggle, Enter to confirm (scroll with arrows if needed)',
+            required: false,
+        );
+
+        try {
+            $themeCodes = $themeCodesPrompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
 
             if (empty($themeCodes)) {
-                $this->io->info('No themes found.');
-                return Cli::RETURN_SUCCESS;
+                $this->io->info('No themes selected.');
+                return null;
             }
 
-            $this->io->info(sprintf('Cleaning all %d theme%s...', count($themeCodes), count($themeCodes) === 1 ? '' : 's'));
+            return $themeCodes;
+        } catch (\Exception $e) {
+            $this->resetPromptEnvironment();
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+            $this->displayAvailableThemes($themes);
+            return null;
         }
+    }
 
-        // If no theme specified and --all not set, show theme selection
-        if (empty($themeCodes)) {
-            $themes = $this->themeList->getAllThemes();
-            $options = array_map(fn($theme) => $theme->getCode(), $themes);
-
-            // Check if we're in an interactive terminal environment
-            if (!$this->isInteractiveTerminal($output)) {
-                // Fallback for non-interactive environments
-                $this->io->warning('No theme specified. Available themes:');
-
-                if (empty($themes)) {
-                    $this->io->info('No themes found.');
-                    return Cli::RETURN_SUCCESS;
-                }
-
-                foreach ($themes as $theme) {
-                    $this->io->writeln(sprintf('  - <fg=cyan>%s</> (%s)', $theme->getCode(), $theme->getThemeTitle()));
-                }
-
-                $this->io->newLine();
-                $this->io->info('Usage: bin/magento mageforge:static:clean <theme-code> [<theme-code>...]');
-                $this->io->info('       bin/magento mageforge:static:clean --all');
-                $this->io->info('Example: bin/magento mageforge:static:clean Magento/luma');
-
-                return Cli::RETURN_SUCCESS;
-            }
-
-            // Set environment variables for Laravel Prompts
-            $this->setPromptEnvironment();
-
-            $themeCodesPrompt = new MultiSelectPrompt(
-                label: 'Select themes to clean',
-                options: $options,
-                default: [],
-                hint: 'Arrow keys to navigate, Space to toggle, Enter to confirm (scroll with arrows if needed)',
-                required: false,
-            );
-
-            try {
-                $themeCodes = $themeCodesPrompt->prompt();
-                \Laravel\Prompts\Prompt::terminal()->restoreTty();
-
-                // Reset environment
-                $this->resetPromptEnvironment();
-
-                // If no themes selected, show info and exit
-                if (empty($themeCodes)) {
-                    $this->io->info('No themes selected.');
-                    return Cli::RETURN_SUCCESS;
-                }
-            } catch (\Exception $e) {
-                // Reset environment on exception
-                $this->resetPromptEnvironment();
-                // Fallback if prompt fails
-                $this->io->error('Interactive mode failed: ' . $e->getMessage());
-                $this->io->warning('No theme specified. Available themes:');
-
-                foreach ($themes as $theme) {
-                    $this->io->writeln(sprintf('  - <fg=cyan>%s</> (%s)', $theme->getCode(), $theme->getThemeTitle()));
-                }
-
-                $this->io->newLine();
-                $this->io->info('Usage: bin/magento mageforge:static:clean <theme-code> [<theme-code>...]');
-
-                return Cli::RETURN_SUCCESS;
-            }
-        }
-
-        // Process all selected themes
+    /**
+     * Process cleaning for all selected themes
+     *
+     * @param array $themeCodes
+     * @param bool $dryRun
+     * @return array [totalCleaned, failedThemes]
+     */
+    private function processThemes(array $themeCodes, bool $dryRun): array
+    {
         $totalThemes = count($themeCodes);
         $totalCleaned = 0;
         $failedThemes = [];
@@ -166,94 +229,182 @@ class CleanCommand extends AbstractCommand
         foreach ($themeCodes as $index => $themeName) {
             $currentTheme = $index + 1;
 
-            // Validate theme exists
-            $themePath = $this->themePath->getPath($themeName);
-            if ($themePath === null) {
-                $this->io->error(sprintf("Theme '%s' not found.", $themeName));
-                $failedThemes[] = $themeName;
+            if (!$this->validateTheme($themeName, $failedThemes)) {
                 continue;
             }
 
-            if ($totalThemes > 1) {
-                $this->io->section(sprintf("Cleaning theme %d of %d: %s", $currentTheme, $totalThemes, $themeName));
-            } else {
-                $this->io->section(sprintf("Cleaning static files for theme: %s", $themeName));
-            }
+            $this->displayThemeHeader($themeName, $currentTheme, $totalThemes);
 
-            $cleaned = 0;
+            $cleaned = $this->cleanThemeDirectories($themeName, $dryRun);
 
-            // Clean var/view_preprocessed
-            $cleaned += $this->cleanViewPreprocessed($themeName, $dryRun);
+            $this->displayThemeResult($themeName, $cleaned, $dryRun);
 
-            // Clean pub/static
-            $cleaned += $this->cleanPubStatic($themeName, $dryRun);
-
-            // Clean var/page_cache
-            $cleaned += $this->cleanPageCache($dryRun);
-
-            // Clean var/tmp
-            $cleaned += $this->cleanVarTmp($dryRun);
-
-            // Clean generated
-            $cleaned += $this->cleanGenerated($dryRun);
-
-            if ($cleaned > 0) {
-                $action = $dryRun ? 'Would clean' : 'Cleaned';
-                $this->io->writeln(sprintf(
-                    "  <fg=green>✓</> %s %d director%s for theme '%s'",
-                    $action,
-                    $cleaned,
-                    $cleaned === 1 ? 'y' : 'ies',
-                    $themeName
-                ));
-                $totalCleaned += $cleaned;
-            } else {
-                $this->io->writeln(sprintf("  <fg=yellow>ℹ</> No files to clean for theme '%s'", $themeName));
-            }
+            $totalCleaned += $cleaned;
         }
 
-        // Display summary
-        $this->io->newLine();
-        if ($totalThemes === 1) {
-            if ($totalCleaned > 0) {
-                $action = $dryRun ? 'Would clean' : 'Successfully cleaned';
-                $this->io->success(sprintf(
-                    "%s %d director%s for theme '%s'",
-                    $action,
-                    $totalCleaned,
-                    $totalCleaned === 1 ? 'y' : 'ies',
-                    $themeCodes[0]
-                ));
-            } else {
-                $this->io->info(sprintf("No files to clean for theme '%s'", $themeCodes[0]));
-            }
+        return [$totalCleaned, $failedThemes];
+    }
+
+    /**
+     * Validate theme exists
+     *
+     * @param string $themeName
+     * @param array &$failedThemes
+     * @return bool
+     */
+    private function validateTheme(string $themeName, array &$failedThemes): bool
+    {
+        $themePath = $this->themePath->getPath($themeName);
+
+        if ($themePath === null) {
+            $this->io->error(sprintf("Theme '%s' not found.", $themeName));
+            $failedThemes[] = $themeName;
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Display header for theme being cleaned
+     *
+     * @param string $themeName
+     * @param int $currentTheme
+     * @param int $totalThemes
+     * @return void
+     */
+    private function displayThemeHeader(string $themeName, int $currentTheme, int $totalThemes): void
+    {
+        if ($totalThemes > 1) {
+            $this->io->section(sprintf("Cleaning theme %d of %d: %s", $currentTheme, $totalThemes, $themeName));
         } else {
-            $successCount = $totalThemes - count($failedThemes);
-            if ($successCount > 0 && $totalCleaned > 0) {
-                $action = $dryRun ? 'Would clean' : 'Successfully cleaned';
-                $this->io->success(sprintf(
-                    "%s %d director%s across %d theme%s",
-                    $action,
-                    $totalCleaned,
-                    $totalCleaned === 1 ? 'y' : 'ies',
-                    $successCount,
-                    $successCount === 1 ? '' : 's'
-                ));
-            } else {
-                $this->io->info('No files were cleaned.');
-            }
+            $this->io->section(sprintf("Cleaning static files for theme: %s", $themeName));
+        }
+    }
 
-            if (!empty($failedThemes)) {
-                $this->io->warning(sprintf(
-                    "Failed to process %d theme%s: %s",
-                    count($failedThemes),
-                    count($failedThemes) === 1 ? '' : 's',
-                    implode(', ', $failedThemes)
-                ));
-            }
+    /**
+     * Clean all directories for a theme
+     *
+     * @param string $themeName
+     * @param bool $dryRun
+     * @return int Number of directories cleaned
+     */
+    private function cleanThemeDirectories(string $themeName, bool $dryRun): int
+    {
+        $cleaned = 0;
+        $cleaned += $this->cleanViewPreprocessed($themeName, $dryRun);
+        $cleaned += $this->cleanPubStatic($themeName, $dryRun);
+        $cleaned += $this->cleanPageCache($dryRun);
+        $cleaned += $this->cleanVarTmp($dryRun);
+        $cleaned += $this->cleanGenerated($dryRun);
+
+        return $cleaned;
+    }
+
+    /**
+     * Display result for individual theme
+     *
+     * @param string $themeName
+     * @param int $cleaned
+     * @param bool $dryRun
+     * @return void
+     */
+    private function displayThemeResult(string $themeName, int $cleaned, bool $dryRun): void
+    {
+        if ($cleaned > 0) {
+            $action = $dryRun ? 'Would clean' : 'Cleaned';
+            $this->io->writeln(sprintf(
+                "  <fg=green>✓</> %s %d director%s for theme '%s'",
+                $action,
+                $cleaned,
+                $cleaned === 1 ? 'y' : 'ies',
+                $themeName
+            ));
+        } else {
+            $this->io->writeln(sprintf("  <fg=yellow>ℹ</> No files to clean for theme '%s'", $themeName));
+        }
+    }
+
+    /**
+     * Display summary of cleaning operation
+     *
+     * @param array $themeCodes
+     * @param int $totalCleaned
+     * @param array $failedThemes
+     * @param bool $dryRun
+     * @return void
+     */
+    private function displaySummary(array $themeCodes, int $totalCleaned, array $failedThemes, bool $dryRun): void
+    {
+        $this->io->newLine();
+        $totalThemes = count($themeCodes);
+
+        if ($totalThemes === 1) {
+            $this->displaySingleThemeSummary($themeCodes[0], $totalCleaned, $dryRun);
+        } else {
+            $this->displayMultiThemeSummary($totalThemes, $totalCleaned, $failedThemes, $dryRun);
+        }
+    }
+
+    /**
+     * Display summary for single theme
+     *
+     * @param string $themeCode
+     * @param int $totalCleaned
+     * @param bool $dryRun
+     * @return void
+     */
+    private function displaySingleThemeSummary(string $themeCode, int $totalCleaned, bool $dryRun): void
+    {
+        if ($totalCleaned > 0) {
+            $action = $dryRun ? 'Would clean' : 'Successfully cleaned';
+            $this->io->success(sprintf(
+                "%s %d director%s for theme '%s'",
+                $action,
+                $totalCleaned,
+                $totalCleaned === 1 ? 'y' : 'ies',
+                $themeCode
+            ));
+        } else {
+            $this->io->info(sprintf("No files to clean for theme '%s'", $themeCode));
+        }
+    }
+
+    /**
+     * Display summary for multiple themes
+     *
+     * @param int $totalThemes
+     * @param int $totalCleaned
+     * @param array $failedThemes
+     * @param bool $dryRun
+     * @return void
+     */
+    private function displayMultiThemeSummary(int $totalThemes, int $totalCleaned, array $failedThemes, bool $dryRun): void
+    {
+        $successCount = $totalThemes - count($failedThemes);
+
+        if ($successCount > 0 && $totalCleaned > 0) {
+            $action = $dryRun ? 'Would clean' : 'Successfully cleaned';
+            $this->io->success(sprintf(
+                "%s %d director%s across %d theme%s",
+                $action,
+                $totalCleaned,
+                $totalCleaned === 1 ? 'y' : 'ies',
+                $successCount,
+                $successCount === 1 ? '' : 's'
+            ));
+        } else {
+            $this->io->info('No files were cleaned.');
         }
 
-        return Cli::RETURN_SUCCESS;
+        if (!empty($failedThemes)) {
+            $this->io->warning(sprintf(
+                "Failed to process %d theme%s: %s",
+                count($failedThemes),
+                count($failedThemes) === 1 ? '' : 's',
+                implode(', ', $failedThemes)
+            ));
+        }
     }
 
     /**
