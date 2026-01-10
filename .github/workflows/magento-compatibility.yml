@@ -138,6 +138,15 @@ jobs:
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento m:h:c:c --help
 
+          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
+          bin/magento mageforge:hyva:compatibility:check --show-all
+
+          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
+          bin/magento m:h:c:c --third-party-only
+
+          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
+          bin/magento m:h:c:c --show-all --detailed
+
       - name: Test Summary
         run: |
           echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
@@ -262,6 +271,15 @@ jobs:
           echo "Test MageForge Hyvä Compatibility Check command:"
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento m:h:c:c --help
+
+          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
+          bin/magento mageforge:hyva:compatibility:check --show-all
+
+          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
+          bin/magento m:h:c:c --third-party-only
+
+          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
+          bin/magento m:h:c:c --show-all --detailed
 
       - name: Test Summary
         run: |
