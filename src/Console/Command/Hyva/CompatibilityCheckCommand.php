@@ -94,7 +94,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                     'include-vendor' => 'Include Magento core modules (default: third-party only)',
                     'detailed' => 'Show detailed file-level issues with line numbers',
                 ],
-                default: ['incompatible-only'],
+                default: [],
                 hint: 'Space to toggle, Enter to confirm. Default: third-party modules only',
                 required: false,
             );
