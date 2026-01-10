@@ -165,11 +165,14 @@ bin/magento m:h:c:c
 ```
 
 The menu allows you to select:
+- ☑ Show only incompatible modules (default behavior)
 - ☐ Show all modules including compatible ones
 - ☐ Include Magento core modules (default: third-party only)
 - ☐ Show detailed file-level issues with line numbers
 
 Use **Space** to toggle options, **Enter** to confirm and start the scan.
+
+**Note**: "Show only incompatible" is pre-selected by default, ensuring you only see modules with issues.
 
 **Default Behavior**:
 Without any flags, the command scans **third-party modules only** (excludes `Magento_*` modules but includes vendor third-party like Hyva, PayPal, Mollie, etc.).

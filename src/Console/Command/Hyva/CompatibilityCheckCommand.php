@@ -90,10 +90,11 @@ class CompatibilityCheckCommand extends AbstractCommand
                 label: 'Select scan options',
                 options: [
                     'show-all' => 'Show all modules including compatible ones',
+                    'incompatible-only' => 'Show only incompatible modules (default behavior)',
                     'include-vendor' => 'Include Magento core modules (default: third-party only)',
                     'detailed' => 'Show detailed file-level issues with line numbers',
                 ],
-                default: [],
+                default: ['incompatible-only'],
                 hint: 'Space to toggle, Enter to confirm. Default: third-party modules only',
                 required: false,
             );
@@ -104,6 +105,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             // Apply selected options to input
             $showAll = in_array('show-all', $selectedOptions);
+            $incompatibleOnly = in_array('incompatible-only', $selectedOptions);
             $includeVendor = in_array('include-vendor', $selectedOptions);
             $detailed = in_array('detailed', $selectedOptions);
             $thirdPartyOnly = false; // Not needed in interactive mode
@@ -113,6 +115,10 @@ class CompatibilityCheckCommand extends AbstractCommand
             $config = [];
             if ($showAll) {
                 $config[] = 'Show all modules';
+            } elseif ($incompatibleOnly) {
+                $config[] = 'Show incompatible only';
+            } else {
+                $config[] = 'Show modules with issues';
             }
             if ($includeVendor) {
                 $config[] = 'Include Magento core';
@@ -125,8 +131,8 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->comment('Configuration: ' . implode(', ', $config));
             $this->io->newLine();
 
-            // Run scan with selected options
-            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $output);
+            // Run scan with selected options (pass incompatibleOnly flag)
+            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly, $output);
         } catch (\Exception $e) {
             $this->resetPromptEnvironment();
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
@@ -148,7 +154,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
-        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $output);
+        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false, $output);
     }
 
     /**
@@ -159,6 +165,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         bool $thirdPartyOnly,
         bool $includeVendor,
         bool $detailed,
+        bool $incompatibleOnly,
         OutputInterface $output
     ): int {
 
@@ -178,8 +185,17 @@ class CompatibilityCheckCommand extends AbstractCommand
             $excludeVendor
         );
 
+        // Determine display mode based on flags
+        // If incompatibleOnly is set, only show modules with issues
+        // If showAll is set, show everything
+        // Otherwise, show default (incompatible only)
+        $displayShowAll = $showAll;
+        if ($incompatibleOnly && !$showAll) {
+            $displayShowAll = false; // Only show incompatible
+        }
+
         // Display results
-        $this->displayResults($results, $showAll || $detailed);
+        $this->displayResults($results, $displayShowAll || $detailed);
 
         // Display detailed issues if requested
         if ($detailed && $results['hasIncompatibilities']) {
