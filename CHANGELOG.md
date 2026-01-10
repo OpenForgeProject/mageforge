@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+### Added
+
+- feat: add Hyvä compatibility checker command (`mageforge:hyva:compatibility:check`)
+  - Scans Magento modules for Hyvä theme compatibility issues
+  - Detects RequireJS, Knockout.js, jQuery, and UI Components usage
+  - Interactive menu with Laravel Prompts for scan options
+  - Options: `--show-all`, `--third-party-only`, `--include-vendor`, `--detailed`
+  - Color-coded output (✓ Compatible, ⚠ Warnings, ✗ Incompatible)
+  - Detailed file-level issues with line numbers
+  - Exit code 1 for critical issues, 0 for success
+  - Command aliases: `m:h:c:c`, `hyva:check`
+
 ## Latest Release
 
 ### [0.2.2] - 2025-06-05
