@@ -59,7 +59,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/<referenceBlock.*remove="true"/',
+                'pattern' => '/<referenceBlock.*remove="true">/',
                 'description' => 'Block removal (review for Hyvä compatibility)',
                 'severity' => self::SEVERITY_WARNING,
             ],

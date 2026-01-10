@@ -19,14 +19,17 @@ All commands in MageForge follow a consistent structure based on Symfony's Conso
 **File**: `/src/Console/Command/ListThemeCommand.php`
 
 **Dependencies**:
+
 - `ThemeList` - Service to retrieve theme information
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:list
 ```
 
 **Implementation Details**:
+
 - Retrieves all themes from the `ThemeList` service
 - Displays a formatted table with theme information (code, title, path)
 - Returns success status code
@@ -40,16 +43,19 @@ bin/magento mageforge:theme:list
 **File**: `/src/Console/Command/BuildThemeCommand.php`
 
 **Dependencies**:
+
 - `ThemePath` - Service to resolve theme paths
 - `ThemeList` - Service to retrieve theme information
 - `BuilderPool` - Service to get appropriate builders for themes
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:build [<themeCodes>...]
 ```
 
 **Implementation Details**:
+
 - If no theme codes are provided, displays an interactive prompt to select themes
 - For each selected theme:
   1. Resolves the theme path
@@ -67,16 +73,19 @@ bin/magento mageforge:theme:build [<themeCodes>...]
 **File**: `/src/Console/Command/ThemeWatchCommand.php`
 
 **Dependencies**:
+
 - `BuilderPool` - Service to get appropriate builders for themes
 - `ThemeList` - Service to retrieve theme information
 - `ThemePath` - Service to resolve theme paths
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:watch [--theme=THEME]
 ```
 
 **Implementation Details**:
+
 - If no theme code is provided, displays an interactive prompt to select a theme
 - Resolves the theme path
 - Determines the appropriate builder for the theme type
@@ -92,15 +101,18 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 **File**: `/src/Console/Command/SystemCheckCommand.php`
 
 **Dependencies**:
+
 - `ProductMetadataInterface` - For retrieving Magento version
 - `Escaper` - For HTML escaping output
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:system:check
 ```
 
 **Implementation Details**:
+
 - Retrieves and displays:
   - PHP version
   - Node.js version (with comparison to latest LTS)
@@ -118,14 +130,17 @@ bin/magento mageforge:system:check
 **File**: `/src/Console/Command/VersionCommand.php`
 
 **Dependencies**:
+
 - `File` - Filesystem driver for reading files
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:version
 ```
 
 **Implementation Details**:
+
 - Reads the current module version from `composer.lock`
 - Fetches the latest version from GitHub API
 - Displays both versions for comparison
@@ -139,20 +154,24 @@ bin/magento mageforge:version
 **File**: `/src/Console/Command/Hyva/CompatibilityCheckCommand.php`
 
 **Dependencies**:
+
 - `CompatibilityChecker` - Main orchestrator service for scanning modules
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:hyva:compatibility:check [options]
 ```
 
 **Aliases**:
+
 - `m:h:c:c`
 - `hyva:check`
 
 **Options**:
+
 - `--show-all` / `-a` - Show all modules including compatible ones
-- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento_* modules)
+- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento\_\* modules)
 - `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
 
@@ -165,6 +184,7 @@ bin/magento m:h:c:c
 ```
 
 The menu allows you to select:
+
 - ☐ Show all modules including compatible ones
 - ☐ Show only incompatible modules (default behavior)
 - ☐ Include Magento core modules (default: third-party only)
@@ -176,6 +196,7 @@ Use **Space** to toggle options, **Enter** to confirm and start the scan.
 Without any flags, the command scans **third-party modules only** (excludes `Magento_*` modules but includes vendor third-party like Hyva, PayPal, Mollie, etc.).
 
 **Examples**:
+
 ```bash
 # Basic scan (third-party modules only - DEFAULT)
 bin/magento m:h:c:c
@@ -194,6 +215,7 @@ bin/magento mageforge:hyva:compatibility:check --detailed
 ```
 
 **Implementation Details**:
+
 - Scans module directories for JS, XML, and PHTML files
 - Detects incompatibility patterns:
   - **Critical Issues**:
@@ -221,26 +243,30 @@ bin/magento mageforge:hyva:compatibility:check --detailed
 
 **Detected Patterns**:
 
-*JavaScript Files (.js)*:
+_JavaScript Files (.js)_:
+
 - `define([` - RequireJS module definition
 - `require([` - RequireJS dependency loading
 - `ko.observable` / `ko.observableArray` / `ko.computed` - Knockout.js
 - `$.ajax` / `jQuery.ajax` - jQuery AJAX
 - `mage/` - Magento RequireJS module references
 
-*XML Files (.xml)*:
+_XML Files (.xml)_:
+
 - `<uiComponent` - UI Component declarations
 - `component="uiComponent"` - UI Component references
 - `component="Magento_Ui/js/` - Magento UI JS components
 - `<referenceBlock.*remove="true"` - Block removals
 
-*PHTML Files (.phtml)*:
+_PHTML Files (.phtml)_:
+
 - `data-mage-init=` - Magento JavaScript initialization
 - `x-magento-init` - Magento 2.4+ JavaScript initialization
 - `$(.*).` - jQuery DOM manipulation patterns
 - `require([` - RequireJS in templates
 
 **Recommendations Provided**:
+
 - Check for Hyvä compatibility packages on hyva.io/compatibility
 - Review module vendor documentation for Hyvä support
 - Consider refactoring RequireJS/Knockout to Alpine.js
@@ -253,23 +279,27 @@ bin/magento mageforge:hyva:compatibility:check --detailed
 The commands rely on several services for their functionality:
 
 ### Hyvä Services
+
 - `CompatibilityChecker`: Main orchestrator for Hyvä compatibility scanning
 - `ModuleScanner`: Recursively scans module directories for relevant files
 - `IncompatibilityDetector`: Pattern matching service for detecting incompatibilities
 
 ### Builder Services
+
 - `BuilderPool`: Manages theme builders and selects appropriate builders for themes
 - `BuilderInterface`: Implemented by all theme builders
 - `MagentoStandard\Builder`: Processes standard Magento LESS-based themes
 - Various other builders for different theme types
 
 ### Theme Services
+
 - `ThemeList`: Retrieves all installed themes
 - `ThemePath`: Resolves theme codes to filesystem paths
 - `StaticContentDeployer`: Handles static content deployment
 - `CacheCleaner`: Manages cache cleaning after theme builds
 
 ### Utility Services
+
 - `DependencyChecker`: Verifies required dependencies for theme building
 - `GruntTaskRunner`: Executes Grunt tasks for theme compilation
 
