@@ -156,6 +156,21 @@ bin/magento mageforge:hyva:compatibility:check [options]
 - `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
 
+**Interactive Mode**:
+When running **without any options**, the command launches an interactive menu (using Laravel Prompts):
+
+```bash
+# Launch interactive menu
+bin/magento m:h:c:c
+```
+
+The menu allows you to select:
+- ☐ Show all modules including compatible ones
+- ☐ Include Magento core modules (default: third-party only)
+- ☐ Show detailed file-level issues with line numbers
+
+Use **Space** to toggle options, **Enter** to confirm and start the scan.
+
 **Default Behavior**:
 Without any flags, the command scans **third-party modules only** (excludes `Magento_*` modules but includes vendor third-party like Hyva, PayPal, Mollie, etc.).
 
