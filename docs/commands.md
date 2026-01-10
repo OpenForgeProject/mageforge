@@ -217,7 +217,7 @@ bin/magento mageforge:hyva:compatibility:check --detailed
   - Critical issues and warnings count
 - Shows detailed file paths and line numbers with `--detailed` flag
 - Provides helpful recommendations for resolving issues
-- Returns exit code 1 if critical issues found, 0 otherwise
+- Returns exit code 1 if critical issues are found, 0 otherwise (even if warnings exist)
 
 **Detected Patterns**:
 
