@@ -366,11 +366,19 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         // Additional check: detect if running in a proper TTY using safer methods
         if (\function_exists('stream_isatty') && \defined('STDIN')) {
-            return @\stream_isatty(\STDIN);
+            try {
+                return \stream_isatty(\STDIN);
+            } catch (\Throwable $e) {
+                // Fall through to next check
+            }
         }
 
         if (\function_exists('posix_isatty') && \defined('STDIN')) {
-            return @\posix_isatty(\STDIN);
+            try {
+                return \posix_isatty(\STDIN);
+            } catch (\Throwable $e) {
+                // Fall through to default
+            }
         }
 
         // Conservative default if no TTY-detection functions are available
