@@ -205,7 +205,7 @@ bin/magento mageforge:hyva:compatibility:check [options]
 **Options**:
 
 - `--show-all` / `-a` - Show all modules including compatible ones
-- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento_* modules)
+- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento\_\* modules)
 - `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
 

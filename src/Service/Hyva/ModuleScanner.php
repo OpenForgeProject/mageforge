@@ -107,7 +107,31 @@ class ModuleScanner
     }
 
     /**
-     * Check if module has Hyvä compatibility package
+     * Check if module has Hyvä compatibility package based on composer data
+     *
+     * @param array $composerData Parsed composer.json data
+     */
+    private function isHyvaCompatibilityPackage(array $composerData): bool
+    {
+        // Check if this IS a Hyvä compatibility package
+        $packageName = $composerData['name'] ?? '';
+        if (str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
+            return true;
+        }
+
+        // Check dependencies for Hyvä packages
+        $requires = $composerData['require'] ?? [];
+        foreach ($requires as $package => $version) {
+            if (str_starts_with($package, 'hyva-themes/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if module has Hyvä compatibility package (public wrapper)
      */
     public function hasHyvaCompatibilityPackage(string $modulePath): bool
     {
@@ -125,21 +149,7 @@ class ModuleScanner
                 return false;
             }
 
-            // Check if this IS a Hyvä compatibility package
-            $packageName = $composerData['name'] ?? '';
-            if (str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
-                return true;
-            }
-
-            // Check dependencies for Hyvä packages
-            $requires = $composerData['require'] ?? [];
-            foreach ($requires as $package => $version) {
-                if (str_starts_with($package, 'hyva-themes/')) {
-                    return true;
-                }
-            }
-
-            return false;
+            return $this->isHyvaCompatibilityPackage($composerData);
         } catch (\Exception $e) {
             // Log error when debugging to help identify JSON or file read issues
             if (getenv('MAGEFORGE_DEBUG')) {
