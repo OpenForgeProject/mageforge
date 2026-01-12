@@ -6,7 +6,6 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
-
 ### Added
 
 - feat: add verbose output support for watch task with `-v` flag
@@ -30,6 +29,10 @@ All notable changes to this project will be documented in this file.
   - feat: add `--dry-run` option to preview what would be cleaned without deleting
   - feat: add command alias `frontend:clean` for quick access
   - feat: add CI/CD tests for static:clean command in compatibility workflow
+
+### Fixed
+
+- fix: remove duplicate `--verbose` option from WatchCommand that conflicted with Symfony Console's built-in verbose option
 
 ### Changed
 
