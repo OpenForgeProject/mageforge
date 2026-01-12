@@ -56,7 +56,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 self::OPTION_INCLUDE_VENDOR,
                 null,
                 InputOption::VALUE_NONE,
-                'Include vendor modules in scan (default: excluded, but included with --third-party-only)'
+                'Include Magento core modules (default: third-party modules only)'
             )
             ->addOption(
                 self::OPTION_DETAILED,
@@ -175,13 +175,12 @@ class CompatibilityCheckCommand extends AbstractCommand
         OutputInterface $output
     ): int {
 
-        // Determine filter logic for vendor and third-party modules:
-        // - excludeVendor controls whether to scan modules in the vendor/ directory
-        // - By default (no flags): scan third-party modules including those in vendor/
-        // - With --include-vendor: scan everything including Magento_* core modules
-        // - With --third-party-only: explicitly scan only third-party modules
-        $scanThirdPartyOnly = $thirdPartyOnly || (!$includeVendor && !$thirdPartyOnly);
-        $excludeVendor = false; // Always include vendor for third-party scanning
+        // Determine filter logic:
+        // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
+        // - includeVendor: Also scan Magento_* core modules
+        // - excludeVendor: Whether to exclude vendor/ directory (always false for now)
+        $scanThirdPartyOnly = !$includeVendor;
+        $excludeVendor = false;
 
         // Run the compatibility check
         $results = $this->compatibilityChecker->check(
@@ -192,17 +191,14 @@ class CompatibilityCheckCommand extends AbstractCommand
             $excludeVendor
         );
 
-        // Determine display mode based on flags
-        // If incompatibleOnly is set, only show modules with issues
-        // If showAll is set, show everything
-        // Otherwise, show default (incompatible only)
-        $displayShowAll = $showAll;
-        if ($incompatibleOnly && !$showAll) {
-            $displayShowAll = false; // Only show incompatible
-        }
+        // Determine display mode:
+        // showAll = show all modules including compatible ones
+        // incompatibleOnly = show only modules with critical issues
+        // default = show modules with any issues (critical or warnings)
+        $displayShowAll = $showAll && !$incompatibleOnly;
 
         // Display results
-        $this->displayResults($results, $displayShowAll || $detailed);
+        $this->displayResults($results, $displayShowAll);
 
         // Display detailed issues if requested
         if ($detailed && $results['hasIncompatibilities']) {
@@ -414,11 +410,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     private function removeSecureEnvironmentValue(string $name): void
     {
-        // Remove the specific variable from our secure storage
         unset($this->secureEnvStorage[$name]);
-
-        // Clear the static cache to force refresh on next access
-        $this->clearEnvironmentCache();
     }
 
     /**
@@ -453,16 +445,5 @@ class CompatibilityCheckCommand extends AbstractCommand
         putenv("$name=$value");
     }
 
-    /**
-     * Clear environment cache
-     */
-    private function clearEnvironmentCache(): void
-    {
-        // Force refresh on next access by clearing our storage
-        $this->secureEnvStorage = array_filter(
-            $this->secureEnvStorage,
-            fn($key) => in_array($key, ['COLUMNS', 'LINES', 'TERM']),
-            ARRAY_FILTER_USE_KEY
-        );
-    }
+
 }
