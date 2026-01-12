@@ -43,7 +43,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_WARNING,
             ],
             [
-                'pattern' => '/(?:define|require)\s*\(\s*\[[^\]]*["\']mage\/[^"\']*["\']/',
+                'pattern' => '/(?:define|require)\s*\(\s*\[[^\]]*(["\'])mage\/[^"\']*\1[^\]]*\]/',
                 'description' => 'Magento RequireJS module reference',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
@@ -65,7 +65,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/<referenceBlock.*remove="true">/',
+                'pattern' => '/<referenceBlock\b[^>]*\bremove\s*=\s*"true"[^>]*>/s',
                 'description' => 'Block removal (review for Hyvä compatibility)',
                 'severity' => self::SEVERITY_WARNING,
             ],
@@ -82,7 +82,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/\$\(.*\)\..*\(/',
+                'pattern' => '/\$\([^)]*\)\s*\.(on|click|ready|change|keyup|keydown|submit|ajax|each|css|hide|show|addClass|removeClass|toggleClass|append|prepend|html|text|val|attr|prop|data|trigger|find|parent|children)\s*\(/',
                 'description' => 'jQuery DOM manipulation',
                 'severity' => self::SEVERITY_WARNING,
             ],
