@@ -49,15 +49,17 @@ class Builder implements BuilderInterface
         try {
             if ($isVerbose) {
                 $io->text('Running grunt clean...');
+                $this->shell->execute('node_modules/.bin/grunt clean');
+            } else {
+                $this->shell->execute('node_modules/.bin/grunt clean --quiet');
             }
-            // Use --quiet only in non-verbose mode to suppress routine output
-            $quietFlag = $isVerbose ? '' : '--quiet';
-            $this->shell->execute("node_modules/.bin/grunt clean $quietFlag");
 
             if ($isVerbose) {
                 $io->text('Running grunt less...');
+                $this->shell->execute('node_modules/.bin/grunt less');
+            } else {
+                $this->shell->execute('node_modules/.bin/grunt less --quiet');
             }
-            $this->shell->execute("node_modules/.bin/grunt less $quietFlag");
 
             if ($isVerbose) {
                 $io->success('Grunt tasks completed successfully.');
