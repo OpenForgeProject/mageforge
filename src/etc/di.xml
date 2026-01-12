@@ -60,6 +60,9 @@
                 <item name="mageforge_static_clean"
                       xsi:type="object"
                       >OpenForgeProject\MageForge\Console\Command\Static\CleanCommand</item>
+                <item name="mageforge_hyva_compatibility_check"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand</item>
             </argument>
         </arguments>
     </type>
