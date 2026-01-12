@@ -8,7 +8,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
-### [0.3.0] - 2025-06-10
+### [0.3.1] - 2026-01-12
+
+#### Fixed
+
+- fix: add missing static property `$cachedEnv` in CleanCommand to resolve undeclared property error
+
+### [0.3.0] - 2026-01-12
 
 #### Added
 
