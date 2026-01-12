@@ -6,6 +6,12 @@ namespace OpenForgeProject\MageForge\Service\Hyva;
 
 use Magento\Framework\Filesystem\Driver\File;
 
+/**
+ * Service that detects Hyvä incompatibility patterns in JavaScript, XML, and PHTML files
+ *
+ * Uses pattern matching to identify RequireJS, Knockout.js, jQuery, and UI Components
+ * usage that would be problematic in a Hyvä environment.
+ */
 class IncompatibilityDetector
 {
     private const SEVERITY_CRITICAL = 'critical';

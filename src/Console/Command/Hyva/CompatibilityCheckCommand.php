@@ -13,6 +13,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Command to check Magento modules for Hyvä theme compatibility issues
+ *
+ * Scans modules for RequireJS, Knockout.js, jQuery, and UI Components usage
+ * that would be incompatible with Hyvä themes.
+ */
 class CompatibilityCheckCommand extends AbstractCommand
 {
     private const OPTION_SHOW_ALL = 'show-all';
@@ -169,10 +175,11 @@ class CompatibilityCheckCommand extends AbstractCommand
         OutputInterface $output
     ): int {
 
-        // Determine filter logic:
-        // - Default (no flags): Scan third-party only (exclude Magento_* but include vendor third-party)
-        // - With --include-vendor: Scan everything including Magento_*
-        // - With --third-party-only: Explicitly scan only third-party
+        // Determine filter logic for vendor and third-party modules:
+        // - excludeVendor controls whether to scan modules in the vendor/ directory
+        // - By default (no flags): scan third-party modules including those in vendor/
+        // - With --include-vendor: scan everything including Magento_* core modules
+        // - With --third-party-only: explicitly scan only third-party modules
         $scanThirdPartyOnly = $thirdPartyOnly || (!$includeVendor && !$thirdPartyOnly);
         $excludeVendor = false; // Always include vendor for third-party scanning
 

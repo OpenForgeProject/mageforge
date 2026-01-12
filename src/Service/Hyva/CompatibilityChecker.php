@@ -9,6 +9,12 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Service that orchestrates Hyvä compatibility checking across Magento modules
+ *
+ * This service scans modules, detects incompatibilities with Hyvä theme framework,
+ * and provides formatted results with summary statistics.
+ */
 class CompatibilityChecker
 {
     public function __construct(
@@ -21,6 +27,11 @@ class CompatibilityChecker
     /**
      * Check all modules for Hyvä compatibility
      *
+     * @param SymfonyStyle $io Symfony Style IO for output
+     * @param OutputInterface $output Console output interface
+     * @param bool $showAll Whether to show all modules (including compatible ones)
+     * @param bool $thirdPartyOnly Whether to scan only third-party modules (excludes Magento_* modules)
+     * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory (true = exclude, false = include)
      * @return array Results with structure: ['modules' => [], 'summary' => [], 'hasIncompatibilities' => bool]
      */
     public function check(
@@ -90,7 +101,9 @@ class CompatibilityChecker
             }
 
             $results['summary']['criticalIssues'] += $scanResult['criticalIssues'];
-            $results['summary']['warningIssues'] += ($scanResult['totalIssues'] - $scanResult['criticalIssues']);
+            // Calculate warnings explicitly to support future severity levels
+            $warningCount = max(0, $scanResult['totalIssues'] - $scanResult['criticalIssues']);
+            $results['summary']['warningIssues'] += $warningCount;
         }
 
         return $results;
@@ -172,7 +185,8 @@ class CompatibilityChecker
             $parts[] = sprintf('<fg=red>%d critical</>', $scanResult['criticalIssues']);
         }
 
-        $warnings = $scanResult['totalIssues'] - $scanResult['criticalIssues'];
+        // Calculate warnings explicitly to ensure non-negative values
+        $warnings = max(0, $scanResult['totalIssues'] - $scanResult['criticalIssues']);
         if ($warnings > 0) {
             $parts[] = sprintf('<fg=yellow>%d warning(s)</>', $warnings);
         }
@@ -185,7 +199,17 @@ class CompatibilityChecker
      */
     public function getDetailedIssues(string $moduleName, array $moduleData): array
     {
-        $files = $moduleData['scanResult']['files'] ?? [];
+        // Safely access nested array structure
+        $scanResult = $moduleData['scanResult'] ?? [];
+        if (!is_array($scanResult)) {
+            return [];
+        }
+
+        $files = $scanResult['files'] ?? [];
+        if (!is_array($files)) {
+            return [];
+        }
+
         $details = [];
 
         foreach ($files as $filePath => $issues) {
