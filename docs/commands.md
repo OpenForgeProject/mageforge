@@ -101,16 +101,19 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 **File**: `/src/Console/Command/Static/CleanCommand.php`
 
 **Dependencies**:
+
 - `Filesystem` - Magento filesystem component for file operations
 - `ThemeList` - Service to retrieve theme information
 - `ThemePath` - Service to resolve theme paths
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:static:clean [<themename>]
 ```
 
 **Implementation Details**:
+
 - If no theme name is provided:
   - In interactive terminals, displays an interactive prompt to select the theme to clean
   - In non-interactive environments, prints the list of available themes and exits, requiring an explicit theme name
@@ -157,7 +160,7 @@ bin/magento mageforge:system:check
 
 ---
 
-### 6. VersionCommand (`mageforge:version`)
+### 5. VersionCommand (`mageforge:version`)
 
 **Purpose**: Displays the current and latest version of the MageForge module.
 
@@ -305,6 +308,80 @@ _PHTML Files (.phtml)_:
 - Review module vendor documentation for Hyvä support
 - Consider refactoring RequireJS/Knockout to Alpine.js
 - Contact module vendors for Hyvä-compatible versions
+
+---
+
+### 7. TokensCommand (`mageforge:hyva:tokens`)
+
+**Purpose**: Generates Hyvä design tokens from design.tokens.json or hyva.config.json configuration files.
+
+**File**: `/src/Console/Command/Theme/TokensCommand.php`
+
+**Dependencies**:
+
+- `ThemeList` - Service to retrieve theme information
+- `ThemePath` - Service to resolve theme paths
+- `BuilderPool` - Service to verify Hyvä theme type
+- `File` - Filesystem driver for directory checks
+- `Shell` - Shell command executor
+
+**Usage**:
+
+```bash
+bin/magento mageforge:hyva:tokens [<themeCode>]
+```
+
+**Aliases**:
+
+- `m:h:t`
+
+**Arguments**:
+
+- `themeCode` (optional) - Theme code in format Vendor/theme
+
+**Examples**:
+
+```bash
+# Interactive mode - select theme from list
+bin/magento m:h:t
+
+# Direct execution
+bin/magento mageforge:hyva:tokens Hyva/default
+```
+
+**Implementation Details**:
+
+- If no theme code is provided, displays an interactive prompt to select a Hyvä theme
+- Validates that the theme is installed and is a Hyvä theme
+- Checks if the theme has been built (node_modules exists)
+- Changes to the theme's `web/tailwind` directory
+- Executes `npx hyva-tokens` to generate design tokens
+- For themes in `app/design/frontend/`:
+  - Generates tokens in `web/tailwind/generated/hyva-tokens.css`
+- For vendor themes (in `vendor/` directory):
+  - Generates tokens in `web/tailwind/generated/hyva-tokens.css` first
+  - Copies the generated file to `var/generated/hyva-token/{ThemeCode}/hyva-tokens.css`
+  - Displays a note informing that tokens were saved to var/generated location
+- Returns success status code or error message
+
+**Requirements**:
+
+- Theme must be a Hyvä theme
+- Theme must be built first (`mageforge:theme:build`)
+- Node.js and npm must be available
+- `hyva-tokens` package must be installed (via theme build)
+
+**Output Locations**:
+
+- **Custom themes** (app/design): `{theme-path}/web/tailwind/generated/hyva-tokens.css`
+- **Vendor themes** (vendor/): `var/generated/hyva-token/{ThemeCode}/hyva-tokens.css`
+
+**Error Handling**:
+
+- Returns error if theme is not installed
+- Returns error if theme is not a Hyvä theme
+- Returns warning if node_modules not found (build required)
+- Returns error if tailwind directory doesn't exist
 
 ---
 

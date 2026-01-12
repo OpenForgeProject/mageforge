@@ -43,7 +43,8 @@ class TokensCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'tokens'))
+        $this->setName($this->getCommandName('hyva', 'tokens'))
+            ->setAliases(['m:h:t'])
             ->setDescription('Generate Hyvä design tokens from design.tokens.json or hyva.config.json')
             ->addArgument(
                 'themeCode',
@@ -118,18 +119,40 @@ class TokensCommand extends AbstractCommand
             if ($isVerbose) {
                 $this->io->text('Running npx hyva-tokens...');
             }
-            
+
             $this->shell->execute('npx hyva-tokens');
-            
+
             chdir($currentDir);
 
-            $this->io->success('Hyvä design tokens generated successfully.');
-            
-            if ($isVerbose) {
-                $this->io->newLine();
-                $this->io->text('The generated file can be found at:');
-                $this->io->text($tailwindPath . '/generated/hyva-tokens.css');
+            // Determine output path based on theme location
+            $isVendorTheme = str_contains($themePath, '/vendor/');
+            $sourceFilePath = $tailwindPath . '/generated/hyva-tokens.css';
+
+            if ($isVendorTheme) {
+                // Store in var/generated/hyva-token/{ThemeCode}/ for vendor themes
+                $varGeneratedPath = $currentDir . '/var/generated/hyva-token/' . str_replace('/', '/', $themeCode);
+
+                if (!$this->fileDriver->isDirectory($varGeneratedPath)) {
+                    $this->fileDriver->createDirectory($varGeneratedPath, 0755);
+                }
+
+                $generatedFilePath = $varGeneratedPath . '/hyva-tokens.css';
+
+                // Copy file to var/generated location
+                if ($this->fileDriver->isExists($sourceFilePath)) {
+                    $this->fileDriver->copy($sourceFilePath, $generatedFilePath);
+                }
+
+                $this->io->success('Hyvä design tokens generated successfully.');
+                $this->io->note('This is a vendor theme. Tokens have been saved to var/generated/hyva-token/ instead.');
+                $this->io->text('Generated file: ' . $generatedFilePath);
+            } else {
+                $generatedFilePath = $sourceFilePath;
+                $this->io->success('Hyvä design tokens generated successfully.');
+                $this->io->text('Generated file: ' . $generatedFilePath);
             }
+
+            $this->io->newLine();
 
             return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {

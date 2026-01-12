@@ -37,7 +37,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:theme:list`     | Lists all available themes                                | `m:t:l`                   |
 | `mageforge:theme:build`    | Builds selected themes (CSS/TailwindCSS)                  | `m:t:b`, `frontend:build` |
 | `mageforge:theme:watch`    | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
-| `mageforge:theme:tokens`   | Generate Hyvä design tokens (Hyvä themes only)            | `m:t:t`                   |
+| `mageforge:hyva:tokens`    | Generate Hyvä design tokens (Hyvä themes only)            | `m:h:t`                   |
 | `mageforge:static:clean`   | Clean static files, cache and generated files for a theme | `m:st:c`,`frontend:clean` |
 
 ---
@@ -83,9 +83,9 @@ Please ensure that your Magento installation meets this requirement before insta
 4. Generate Hyvä design tokens (for Hyvä themes):
 
    ```bash
-   bin/magento mageforge:theme:tokens <theme-code>
+   bin/magento mageforge:hyva:tokens <theme-code>
    ```
-   
+
    This creates a `generated/hyva-tokens.css` file from your design tokens configuration.
 
 5. Enjoy automatic CSS rebuilding as you work on your theme files!
