@@ -19,14 +19,17 @@ All commands in MageForge follow a consistent structure based on Symfony's Conso
 **File**: `/src/Console/Command/ListThemeCommand.php`
 
 **Dependencies**:
+
 - `ThemeList` - Service to retrieve theme information
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:list
 ```
 
 **Implementation Details**:
+
 - Retrieves all themes from the `ThemeList` service
 - Displays a formatted table with theme information (code, title, path)
 - Returns success status code
@@ -40,16 +43,19 @@ bin/magento mageforge:theme:list
 **File**: `/src/Console/Command/BuildThemeCommand.php`
 
 **Dependencies**:
+
 - `ThemePath` - Service to resolve theme paths
 - `ThemeList` - Service to retrieve theme information
 - `BuilderPool` - Service to get appropriate builders for themes
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:build [<themeCodes>...]
 ```
 
 **Implementation Details**:
+
 - If no theme codes are provided, displays an interactive prompt to select themes
 - For each selected theme:
   1. Resolves the theme path
@@ -67,16 +73,19 @@ bin/magento mageforge:theme:build [<themeCodes>...]
 **File**: `/src/Console/Command/ThemeWatchCommand.php`
 
 **Dependencies**:
+
 - `BuilderPool` - Service to get appropriate builders for themes
 - `ThemeList` - Service to retrieve theme information
 - `ThemePath` - Service to resolve theme paths
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:theme:watch [--theme=THEME]
 ```
 
 **Implementation Details**:
+
 - If no theme code is provided, displays an interactive prompt to select a theme
 - Resolves the theme path
 - Determines the appropriate builder for the theme type
@@ -85,82 +94,37 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 ---
 
-### 4. TokensCommand (`mageforge:theme:tokens`)
+### 4. CleanCommand (`mageforge:static:clean`)
 
-**Purpose**: Generates Hyvä design tokens from design.tokens.json or hyva.config.json configuration files.
+**Purpose**: Cleans var/view_preprocessed, pub/static, var/page_cache, var/tmp and generated directories for specific theme.
 
-**File**: `/src/Console/Command/Theme/TokensCommand.php`
+**File**: `/src/Console/Command/Static/CleanCommand.php`
 
 **Dependencies**:
-- `ThemePath` - Service to resolve theme paths
+- `Filesystem` - Magento filesystem component for file operations
 - `ThemeList` - Service to retrieve theme information
-- `BuilderPool` - Service to verify theme is a Hyvä theme
-- `File` - Filesystem driver for checking directories
+- `ThemePath` - Service to resolve theme paths
 
 **Usage**:
 ```bash
-bin/magento mageforge:theme:tokens [<themeCode>]
+bin/magento mageforge:static:clean [<themename>]
 ```
 
 **Implementation Details**:
-- If no theme code is provided, displays an interactive prompt to select a theme
-- Verifies that the selected theme is a Hyvä theme
-- Checks for the presence of the tailwind directory and node_modules
-- Executes `npx hyva-tokens` in the theme's tailwind directory
-- Generates `generated/hyva-tokens.css` file based on:
-  - `design.tokens.json` (default)
-  - `acme.figma-tokens.json` (when configured in hyva.config.json)
-  - Direct token values in hyva.config.json
-- Supports custom CSS selectors (e.g., `:root` for Tailwind v3)
-
-**Token Configuration**:
-The command supports various token sources configured in `hyva.config.json`:
-
-1. **Default tokens file**:
-   ```json
-   {
-       "tokens": {
-           "src": "design.tokens.json"
-       }
-   }
-   ```
-
-2. **Figma tokens**:
-   ```json
-   {
-       "tokens": {
-           "src": "acme.figma-tokens.json",
-           "format": "figma"
-       }
-   }
-   ```
-
-3. **Inline tokens**:
-   ```json
-   {
-       "tokens": {
-           "values": {
-               "colors": {
-                   "primary": {
-                       "lighter": "oklch(62.3% 0.214 259.815)",
-                       "DEFAULT": "oklch(54.6% 0.245 262.881)",
-                       "darker": "oklch(37.9% 0.146 265.522)"
-                   }
-               }
-           }
-       }
-   }
-   ```
-
-4. **Custom CSS selector**:
-   ```json
-   {
-       "tokens": {
-           "src": "design.tokens.json",
-           "cssSelector": ":root"
-       }
-   }
-   ```
+- If no theme name is provided:
+  - In interactive terminals, displays an interactive prompt to select the theme to clean
+  - In non-interactive environments, prints the list of available themes and exits, requiring an explicit theme name
+- Validates that the specified theme exists
+- Cleans the following directories for the theme:
+  - `var/view_preprocessed/css/frontend/Vendor/theme`
+  - `var/view_preprocessed/source/frontend/Vendor/theme`
+  - `pub/static/frontend/Vendor/theme`
+- Additionally cleans these global directories:
+  - `var/page_cache/*`
+  - `var/tmp/*`
+  - `generated/*`
+- Displays a summary of cleaned directories
+- Returns success status code
 
 ---
 
@@ -171,15 +135,18 @@ The command supports various token sources configured in `hyva.config.json`:
 **File**: `/src/Console/Command/SystemCheckCommand.php`
 
 **Dependencies**:
+
 - `ProductMetadataInterface` - For retrieving Magento version
 - `Escaper` - For HTML escaping output
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:system:check
 ```
 
 **Implementation Details**:
+
 - Retrieves and displays:
   - PHP version
   - Node.js version (with comparison to latest LTS)
@@ -197,35 +164,176 @@ bin/magento mageforge:system:check
 **File**: `/src/Console/Command/VersionCommand.php`
 
 **Dependencies**:
+
 - `File` - Filesystem driver for reading files
 
 **Usage**:
+
 ```bash
 bin/magento mageforge:version
 ```
 
 **Implementation Details**:
+
 - Reads the current module version from `composer.lock`
 - Fetches the latest version from GitHub API
 - Displays both versions for comparison
+
+---
+
+### 6. CompatibilityCheckCommand (`mageforge:hyva:compatibility:check`)
+
+**Purpose**: Scans all Magento modules for Hyvä theme compatibility issues such as RequireJS, Knockout.js, jQuery, and UI Components usage.
+
+**File**: `/src/Console/Command/Hyva/CompatibilityCheckCommand.php`
+
+**Dependencies**:
+
+- `CompatibilityChecker` - Main orchestrator service for scanning modules
+
+**Usage**:
+
+```bash
+bin/magento mageforge:hyva:compatibility:check [options]
+```
+
+**Aliases**:
+
+- `m:h:c:c`
+- `hyva:check`
+
+**Options**:
+
+- `--show-all` / `-a` - Show all modules including compatible ones
+- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento\_\* modules)
+- `--include-vendor` - Include Magento core modules in scan (default: third-party only)
+- `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
+
+**Interactive Mode**:
+When running **without any options**, the command launches an interactive menu (using Laravel Prompts):
+
+```bash
+# Launch interactive menu
+bin/magento m:h:c:c
+```
+
+The menu allows you to select:
+
+- ☐ Show all modules including compatible ones
+- ☐ Show only incompatible modules (default behavior)
+- ☐ Include Magento core modules (default: third-party only)
+- ☐ Show detailed file-level issues with line numbers
+
+Use **Space** to toggle options, **Enter** to confirm and start the scan.
+
+**Default Behavior**:
+Without any flags, the command scans **third-party modules only** (excludes `Magento_*` modules but includes vendor third-party like Hyva, PayPal, Mollie, etc.).
+
+**Examples**:
+
+```bash
+# Basic scan (third-party modules only - DEFAULT)
+bin/magento m:h:c:c
+
+# Include Magento core modules
+bin/magento m:h:c:c --include-vendor
+
+# Show all modules including compatible ones
+bin/magento m:h:c:c -a
+
+# Show detailed file-level issues
+bin/magento m:h:c:c -d
+
+# Using full command name
+bin/magento mageforge:hyva:compatibility:check --detailed
+```
+
+**Implementation Details**:
+
+- Scans module directories for JS, XML, and PHTML files
+- Detects incompatibility patterns:
+  - **Critical Issues**:
+    - RequireJS `define()` and `require()` usage
+    - Knockout.js observables and computed properties
+    - Magento UI Components in XML
+    - `data-mage-init` and `x-magento-init` in templates
+  - **Warnings**:
+    - jQuery AJAX direct usage
+    - jQuery DOM manipulation
+    - Block removal in layout XML (review needed)
+- Displays results in formatted tables with color-coded status:
+  - ✓ Green: Compatible modules
+  - ⚠ Yellow: Warnings (non-critical issues)
+  - ✗ Red: Incompatible (critical issues)
+  - ✓ Hyvä-Aware: Modules with Hyvä compatibility packages
+- Provides summary statistics:
+  - Total modules scanned
+  - Compatible vs. incompatible count
+  - Hyvä-aware modules count
+  - Critical issues and warnings count
+- Shows detailed file paths and line numbers with `--detailed` flag
+- Provides helpful recommendations for resolving issues
+- Returns exit code 1 if any critical issues are found. If only warnings (and no critical issues) are detected, the command returns exit code 0 so CI/CD pipelines do not fail on warnings alone.
+
+**Detected Patterns**:
+
+_JavaScript Files (.js)_:
+
+- `define([` - RequireJS module definition
+- `require([` - RequireJS dependency loading
+- `ko.observable` / `ko.observableArray` / `ko.computed` - Knockout.js
+- `$.ajax` / `jQuery.ajax` - jQuery AJAX
+- `mage/` - Magento RequireJS module references
+
+_XML Files (.xml)_:
+
+- `<uiComponent` - UI Component declarations
+- `component="uiComponent"` - UI Component references
+- `component="Magento_Ui/js/` - Magento UI JS components
+- `<referenceBlock.*remove="true"` - Block removals
+
+_PHTML Files (.phtml)_:
+
+- `data-mage-init=` - Magento JavaScript initialization
+- `x-magento-init` - Magento 2.4+ JavaScript initialization
+- `$(.*).` - jQuery DOM manipulation patterns
+- `require([` - RequireJS in templates
+
+**Recommendations Provided**:
+
+- Check for Hyvä compatibility packages on hyva.io/compatibility
+- Review module vendor documentation for Hyvä support
+- Consider refactoring RequireJS/Knockout to Alpine.js
+- Contact module vendors for Hyvä-compatible versions
+
+---
 
 ## Command Services
 
 The commands rely on several services for their functionality:
 
+### Hyvä Services
+
+- `CompatibilityChecker`: Main orchestrator for Hyvä compatibility scanning
+- `ModuleScanner`: Recursively scans module directories for relevant files
+- `IncompatibilityDetector`: Pattern matching service for detecting incompatibilities
+
 ### Builder Services
+
 - `BuilderPool`: Manages theme builders and selects appropriate builders for themes
 - `BuilderInterface`: Implemented by all theme builders
 - `MagentoStandard\Builder`: Processes standard Magento LESS-based themes
 - Various other builders for different theme types
 
 ### Theme Services
+
 - `ThemeList`: Retrieves all installed themes
 - `ThemePath`: Resolves theme codes to filesystem paths
 - `StaticContentDeployer`: Handles static content deployment
 - `CacheCleaner`: Manages cache cleaning after theme builds
 
 ### Utility Services
+
 - `DependencyChecker`: Verifies required dependencies for theme building
 - `GruntTaskRunner`: Executes Grunt tasks for theme compilation
 

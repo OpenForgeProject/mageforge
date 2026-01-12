@@ -1,52 +1,43 @@
 <?xml version="1.0"?>
 <config
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
 >
-    <type name="Magento\Framework\Console\CommandList">
-        <arguments>
-            <argument
-                name="commands"
-                xsi:type="array"
-            >
-                <item name="mageforge_system_version"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\System\VersionCommand</item>
-                <item name="mageforge_system_check"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\System\CheckCommand</item>
-                <item name="mageforge_theme_list"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\Theme\ListCommand</item>
-                <item name="mageforge_theme_build"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\Theme\BuildCommand</item>
-                <item name="mageforge_theme_watch"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\Theme\WatchCommand</item>
-                <item name="mageforge_theme_tokens"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
-            </argument>
-        </arguments>
-    </type>
+      <!-- Register CLI Commands -->
+      <type name="Magento\Framework\Console\CommandList">
+            <arguments>
+                  <argument name="commands" xsi:type="array">
+                        <item name="mageforge_system_version" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\System\VersionCommand</item>
+                        <item name="mageforge_system_check" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\System\CheckCommand</item>
+                        <item name="mageforge_theme_list" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\ListCommand</item>
+                        <item name="mageforge_theme_build" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\BuildCommand</item>
+                        <item name="mageforge_theme_watch" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\WatchCommand</item>
+                        <item name="mageforge_static_clean" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Static\CleanCommand</item>
+                        <item name="mageforge_hyva_compatibility_check" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand</item>
+                        <item name="mageforge_theme_tokens" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
+                  </argument>
+            </arguments>
+      </type>
 
-    <!-- Configure Theme Builder Pool -->
-    <type name="OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool">
-        <arguments>
-            <argument name="builders"
-                      xsi:type="array"
-                      >
-                <item name="hyva"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder</item>
-                <item name="standard"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
-                <item name="tailwindcss"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS\Builder</item>
-            </argument>
-        </arguments>
-    </type>
+      <!-- Configure Theme Builder Pool -->
+      <type name="OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool">
+            <arguments>
+                  <argument name="builders" xsi:type="array">
+                        <item name="hyva" xsi:type="object">
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder</item>
+                        <item name="standard" xsi:type="object">
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
+                        <item name="tailwindcss" xsi:type="object">
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS\Builder</item>
+                  </argument>
+            </arguments>
+      </type>
 </config>

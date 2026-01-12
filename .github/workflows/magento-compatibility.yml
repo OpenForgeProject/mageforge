@@ -134,6 +134,30 @@ jobs:
           echo "Test MageForge Theme List command:"
           bin/magento mageforge:theme:list
 
+
+          echo "Test MageForge Hyvä Compatibility Check command:"
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento m:h:c:c --help
+
+          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
+          bin/magento mageforge:hyva:compatibility:check --show-all
+
+          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
+          bin/magento m:h:c:c --third-party-only
+
+          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
+          bin/magento m:h:c:c --show-all --detailed
+
+          echo "Test MageForge Static Clean command with dry-run:"
+          bin/magento mageforge:static:clean --all --dry-run
+
+          echo "Test MageForge Static Clean aliases:"
+          bin/magento mageforge:static:clean --all --dry-run
+          echo "Test MageForge Static Clean aliases:"
+          bin/magento m:st:c --help
+          bin/magento frontend:clean --help
+
+
       - name: Test Summary
         run: |
           echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
@@ -254,6 +278,27 @@ jobs:
 
           echo "Test MageForge Theme List command:"
           bin/magento mageforge:theme:list
+
+          echo "Test MageForge Hyvä Compatibility Check command:"
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento m:h:c:c --help
+
+          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
+          bin/magento mageforge:hyva:compatibility:check --show-all
+
+          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
+          bin/magento m:h:c:c --third-party-only
+
+          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
+          bin/magento m:h:c:c --show-all --detailed
+
+          echo "Test MageForge Static Clean command with dry-run:"
+          bin/magento mageforge:static:clean --all --dry-run
+
+          echo "Test MageForge Static Clean alias:"
+          bin/magento m:st:c --help
+          bin/magento frontend:clean --help
+
 
       - name: Test Summary
         run: |
