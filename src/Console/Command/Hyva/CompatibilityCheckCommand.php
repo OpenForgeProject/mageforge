@@ -50,7 +50,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 self::OPTION_INCLUDE_VENDOR,
                 null,
                 InputOption::VALUE_NONE,
-                'Include vendor modules in scan (default: excluded)'
+                'Include vendor modules in scan (default: excluded, but included with --third-party-only)'
             )
             ->addOption(
                 self::OPTION_DETAILED,
