@@ -6,8 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+
 ### Added
 
+- feat: add `mageforge:theme:tokens` command to generate Hyvä design tokens from design.tokens.json or hyva.config.json
 - feat: add `mageforge:hyva:compatibility:check` command to add a Hyvä compatibility checker
   - Scans Magento modules for Hyvä theme compatibility issues
   - Detects RequireJS, Knockout.js, jQuery, and UI Components usage
