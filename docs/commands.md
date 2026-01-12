@@ -205,7 +205,7 @@ bin/magento mageforge:hyva:compatibility:check [options]
 **Options**:
 
 - `--show-all` / `-a` - Show all modules including compatible ones
-- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento_* modules)
+- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento\_\* modules)
 - `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
 
@@ -273,7 +273,7 @@ bin/magento mageforge:hyva:compatibility:check --detailed
   - Critical issues and warnings count
 - Shows detailed file paths and line numbers with `--detailed` flag
 - Provides helpful recommendations for resolving issues
-- Returns exit code 1 if critical issues are found, 0 otherwise (even if warnings exist)
+- Returns exit code 1 if any critical issues are found. If only warnings (and no critical issues) are detected, the command returns exit code 0 so CI/CD pipelines do not fail on warnings alone.
 
 **Detected Patterns**:
 

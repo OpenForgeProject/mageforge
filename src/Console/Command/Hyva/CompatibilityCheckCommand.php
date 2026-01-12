@@ -56,7 +56,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 self::OPTION_INCLUDE_VENDOR,
                 null,
                 InputOption::VALUE_NONE,
-                'Include vendor modules in scan (default: excluded, but included with --third-party-only)'
+                'Include Magento core modules (default: third-party modules only)'
             )
             ->addOption(
                 self::OPTION_DETAILED,
@@ -96,7 +96,8 @@ class CompatibilityCheckCommand extends AbstractCommand
                 label: 'Select scan options',
                 options: [
                     'show-all' => 'Show all modules including compatible ones',
-                    'include-vendor' => 'Include vendor modules (default: excluded)',
+                    'incompatible-only' => 'Show only incompatible modules (default behavior)',
+                    'include-vendor' => 'Include Magento core modules (default: third-party only)',
                     'detailed' => 'Show detailed file-level issues with line numbers',
                 ],
                 default: [],
@@ -110,6 +111,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             // Apply selected options to input
             $showAll = in_array('show-all', $selectedOptions);
+            $incompatibleOnly = in_array('incompatible-only', $selectedOptions);
             $includeVendor = in_array('include-vendor', $selectedOptions);
             $detailed = in_array('detailed', $selectedOptions);
             $thirdPartyOnly = false; // Not needed in interactive mode
@@ -119,11 +121,13 @@ class CompatibilityCheckCommand extends AbstractCommand
             $config = [];
             if ($showAll) {
                 $config[] = 'Show all modules';
+            } elseif ($incompatibleOnly) {
+                $config[] = 'Show incompatible only';
             } else {
                 $config[] = 'Show modules with issues';
             }
             if ($includeVendor) {
-                $config[] = 'Include vendor modules';
+                $config[] = 'Include Magento core';
             } else {
                 $config[] = 'Third-party modules only';
             }
@@ -133,8 +137,8 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->comment('Configuration: ' . implode(', ', $config));
             $this->io->newLine();
 
-            // Run scan with selected options
-            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false, $output);
+            // Run scan with selected options (pass incompatibleOnly flag)
+            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly, $output);
         } catch (\Exception $e) {
             $this->resetPromptEnvironment();
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
@@ -171,12 +175,12 @@ class CompatibilityCheckCommand extends AbstractCommand
         OutputInterface $output
     ): int {
 
-        // Determine filter logic for vendor and third-party modules:
-        // - By default (no flags): scan third-party modules excluding those in vendor/
-        // - With --include-vendor: include vendor modules in the scan
-        // - With --third-party-only: explicitly scan only third-party modules
-        $scanThirdPartyOnly = $thirdPartyOnly || (!$includeVendor && !$thirdPartyOnly);
-        $excludeVendor = !$includeVendor;
+        // Determine filter logic:
+        // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
+        // - includeVendor: Also scan Magento_* core modules
+        // - excludeVendor: Whether to exclude vendor/ directory (always false for now)
+        $scanThirdPartyOnly = !$includeVendor;
+        $excludeVendor = false;
 
         // Run the compatibility check
         $results = $this->compatibilityChecker->check(
@@ -187,17 +191,14 @@ class CompatibilityCheckCommand extends AbstractCommand
             $excludeVendor
         );
 
-        // Determine display mode based on flags
-        // If incompatibleOnly is set, only show modules with issues
-        // If showAll is set, show everything
-        // Otherwise, show default (incompatible only)
-        $displayShowAll = $showAll;
-        if ($incompatibleOnly && !$showAll) {
-            $displayShowAll = false; // Only show incompatible
-        }
+        // Determine display mode:
+        // showAll = show all modules including compatible ones
+        // incompatibleOnly = show only modules with critical issues
+        // default = show modules with any issues (critical or warnings)
+        $displayShowAll = $showAll && !$incompatibleOnly;
 
         // Display results
-        $this->displayResults($results, $displayShowAll || $detailed);
+        $this->displayResults($results, $displayShowAll);
 
         // Display detailed issues if requested
         if ($detailed && $results['hasIncompatibilities']) {
@@ -364,25 +365,9 @@ class CompatibilityCheckCommand extends AbstractCommand
             }
         }
 
-        // Additional check: detect if running in a proper TTY using safer methods
-        if (\function_exists('stream_isatty') && \defined('STDIN')) {
-            try {
-                return \stream_isatty(\STDIN);
-            } catch (\Throwable $e) {
-                // Fall through to next check
-            }
-        }
-
-        if (\function_exists('posix_isatty') && \defined('STDIN')) {
-            try {
-                return \posix_isatty(\STDIN);
-            } catch (\Throwable $e) {
-                // Fall through to default
-            }
-        }
-
-        // Conservative default if no TTY-detection functions are available
-        return false;
+        // Additional check: try to detect if running in a proper TTY
+        $sttyOutput = shell_exec('stty -g 2>/dev/null');
+        return !empty($sttyOutput);
     }
 
     /**
@@ -425,11 +410,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     private function removeSecureEnvironmentValue(string $name): void
     {
-        // Remove the specific variable from our secure storage
         unset($this->secureEnvStorage[$name]);
-
-        // Clear the static cache to force refresh on next access
-        $this->clearEnvironmentCache();
     }
 
     /**
@@ -461,19 +442,8 @@ class CompatibilityCheckCommand extends AbstractCommand
     private function setEnvVar(string $name, string $value): void
     {
         $this->secureEnvStorage[$name] = $value;
-        $_SERVER[$name] = $value;
+        putenv("$name=$value");
     }
 
-    /**
-     * Clear environment cache
-     */
-    private function clearEnvironmentCache(): void
-    {
-        // Force refresh on next access by clearing our storage
-        $this->secureEnvStorage = array_filter(
-            $this->secureEnvStorage,
-            fn($key) => in_array($key, ['COLUMNS', 'LINES', 'TERM']),
-            ARRAY_FILTER_USE_KEY
-        );
-    }
+
 }
