@@ -6,9 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
-
 ### Added
 
+- feat: add verbose output support for watch task with `-v` flag
+  - Shows informative messages during watch mode based on verbosity level
+  - Captures and reports exit codes from npm/grunt watch commands
+  - Displays clear error messages when watch mode exits with errors
+  - Provides hint to use `-v` flag for verbose output in non-verbose mode
 - feat: add `mageforge:theme:tokens` command to generate Hyvä design tokens from design.tokens.json or hyva.config.json
 - feat: add `mageforge:hyva:compatibility:check` command to add a Hyvä compatibility checker
   - Scans Magento modules for Hyvä theme compatibility issues
@@ -26,8 +30,15 @@ All notable changes to this project will be documented in this file.
   - feat: add command alias `frontend:clean` for quick access
   - feat: add CI/CD tests for static:clean command in compatibility workflow
 
+### Fixed
+
+- fix: remove duplicate `--verbose` option from WatchCommand that conflicted with Symfony Console's built-in verbose option
+
 ### Changed
 
+- refactor: improve build commands to show full output in verbose mode
+  - Remove `--quiet` flag from npm/grunt build commands when using verbose mode
+  - Allow better debugging of build issues during theme compilation
 - refactor: split complex executeCommand method into smaller, focused methods to reduce cyclomatic complexity
 - docs: update copilot-instructions.md with CI/CD integration guidelines for new commands
 
