@@ -43,7 +43,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_WARNING,
             ],
             [
-                'pattern' => '/(?:define|require)\s*\(\s*\[[^\]]*(["\'])mage\/[^"\']*\1[^\]]*\]/',
+                'pattern' => '/(?:define|require)\s*\(\s*\[[^\]]*["\']mage\/[^"\']*["\']\s*[^\]]*\]/',
                 'description' => 'Magento RequireJS module reference',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
