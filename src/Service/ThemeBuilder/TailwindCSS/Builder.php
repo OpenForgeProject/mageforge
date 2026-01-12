@@ -79,7 +79,9 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->text('Running npm build...');
             }
-            $this->shell->execute('npm run build --quiet');
+            // Use --quiet only in non-verbose mode to suppress routine output
+            $buildCommand = $isVerbose ? 'npm run build' : 'npm run build --quiet';
+            $this->shell->execute($buildCommand);
             if ($isVerbose) {
                 $io->success('Custom TailwindCSS theme build completed successfully.');
             }
@@ -198,8 +200,21 @@ class Builder implements BuilderInterface
         }
 
         try {
+            if ($isVerbose) {
+                $io->text('Starting watch mode with verbose output...');
+            } else {
+                $io->text('Starting watch mode... (use -v for verbose output)');
+            }
+            
             chdir($tailwindPath);
-            passthru('npm run watch');
+            $exitCode = 0;
+            passthru('npm run watch', $exitCode);
+            
+            // Check if the command failed
+            if ($exitCode !== 0) {
+                $io->error(sprintf('Watch mode exited with error code: %d', $exitCode));
+                return false;
+            }
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

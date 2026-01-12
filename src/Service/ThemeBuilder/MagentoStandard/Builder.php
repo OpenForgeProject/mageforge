@@ -50,12 +50,14 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->text('Running grunt clean...');
             }
-            $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+            // Use --quiet only in non-verbose mode to suppress routine output
+            $quietFlag = $isVerbose ? '' : '--quiet';
+            $this->shell->execute("node_modules/.bin/grunt clean $quietFlag");
 
             if ($isVerbose) {
                 $io->text('Running grunt less...');
             }
-            $this->shell->execute('node_modules/.bin/grunt less --quiet');
+            $this->shell->execute("node_modules/.bin/grunt less $quietFlag");
 
             if ($isVerbose) {
                 $io->success('Grunt tasks completed successfully.');
@@ -193,7 +195,20 @@ class Builder implements BuilderInterface
         }
 
         try {
-            passthru('node_modules/.bin/grunt watch');
+            if ($isVerbose) {
+                $io->text('Starting watch mode with verbose output...');
+            } else {
+                $io->text('Starting watch mode... (use -v for verbose output)');
+            }
+            
+            $exitCode = 0;
+            passthru('node_modules/.bin/grunt watch', $exitCode);
+            
+            // Check if the command failed
+            if ($exitCode !== 0) {
+                $io->error(sprintf('Watch mode exited with error code: %d', $exitCode));
+                return false;
+            }
         } catch (\Exception $e) {
             $io->error('Failed to start watch mode: ' . $e->getMessage());
             return false;

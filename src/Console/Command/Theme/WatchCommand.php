@@ -50,6 +50,12 @@ class WatchCommand extends AbstractCommand
                 InputOption::VALUE_OPTIONAL,
                 'Theme to watch (format: Vendor/theme)'
             )
+            ->addOption(
+                'verbose',
+                'v',
+                InputOption::VALUE_NONE,
+                'Enable verbose output'
+            )
             ->setAliases(['frontend:watch']);
     }
 
@@ -59,6 +65,7 @@ class WatchCommand extends AbstractCommand
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $themeCode = $input->getArgument('themeCode');
+        $isVerbose = $this->isVerbose($output);
 
         if (empty($themeCode)) {
             $themeCode = $input->getOption('theme');
@@ -89,6 +96,6 @@ class WatchCommand extends AbstractCommand
         }
 
         $builder = $this->builderPool->getBuilder($themePath);
-        return $builder->watch($themePath, $this->io, $output, true) ? self::SUCCESS : self::FAILURE;
+        return $builder->watch($themePath, $this->io, $output, $isVerbose) ? self::SUCCESS : self::FAILURE;
     }
 }
