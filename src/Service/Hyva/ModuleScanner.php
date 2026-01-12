@@ -6,6 +6,12 @@ namespace OpenForgeProject\MageForge\Service\Hyva;
 
 use Magento\Framework\Filesystem\Driver\File;
 
+/**
+ * Service that scans module directories for files containing Hyvä compatibility issues
+ *
+ * Recursively scans JavaScript, XML, and PHTML files within module directories
+ * to identify patterns that may be incompatible with Hyvä themes.
+ */
 class ModuleScanner
 {
     private const SCAN_EXTENSIONS = ['js', 'xml', 'phtml'];
@@ -87,14 +93,45 @@ class ModuleScanner
                 }
             }
         } catch (\Exception $e) {
-            // Silently skip directories that can't be read
+            // Skip directories that can't be read, but log details when debugging
+            if (getenv('MAGEFORGE_DEBUG')) {
+                error_log(sprintf(
+                    '[MageForge][ModuleScanner] Failed to read directory "%s": %s',
+                    $directory,
+                    $e->getMessage()
+                ));
+            }
         }
 
         return $relevantFiles;
     }
 
     /**
-     * Check if module has Hyvä compatibility package
+     * Check if module has Hyvä compatibility package based on composer data
+     *
+     * @param array $composerData Parsed composer.json data
+     */
+    private function isHyvaCompatibilityPackage(array $composerData): bool
+    {
+        // Check if this IS a Hyvä compatibility package
+        $packageName = $composerData['name'] ?? '';
+        if (str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
+            return true;
+        }
+
+        // Check dependencies for Hyvä packages
+        $requires = $composerData['require'] ?? [];
+        foreach ($requires as $package => $version) {
+            if (str_starts_with($package, 'hyva-themes/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if module has Hyvä compatibility package (public wrapper)
      */
     public function hasHyvaCompatibilityPackage(string $modulePath): bool
     {
@@ -112,24 +149,18 @@ class ModuleScanner
                 return false;
             }
 
-            // Check if this IS a Hyvä compatibility package
-            $packageName = $composerData['name'] ?? '';
-            if (str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
-                return true;
-            }
-
-            // Check dependencies for Hyvä packages
-            $requires = $composerData['require'] ?? [];
-            foreach ($requires as $package => $version) {
-                if (str_starts_with($package, 'hyva-themes/')) {
-                    return true;
-                }
-            }
+            return $this->isHyvaCompatibilityPackage($composerData);
         } catch (\Exception $e) {
+            // Log error when debugging to help identify JSON or file read issues
+            if (getenv('MAGEFORGE_DEBUG')) {
+                error_log(sprintf(
+                    '[MageForge][ModuleScanner] Failed to read composer.json at "%s": %s',
+                    $composerPath,
+                    $e->getMessage()
+                ));
+            }
             return false;
         }
-
-        return false;
     }
 
     /**
@@ -147,12 +178,24 @@ class ModuleScanner
             $content = $this->fileDriver->fileGetContents($composerPath);
             $composerData = json_decode($content, true);
 
+            if (!is_array($composerData)) {
+                return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
+            }
+
             return [
                 'name' => $composerData['name'] ?? 'Unknown',
                 'version' => $composerData['version'] ?? 'Unknown',
-                'isHyvaAware' => $this->hasHyvaCompatibilityPackage($modulePath),
+                'isHyvaAware' => $this->isHyvaCompatibilityPackage($composerData),
             ];
         } catch (\Exception $e) {
+            // Log error when debugging to help identify JSON parsing or file read issues
+            if (getenv('MAGEFORGE_DEBUG')) {
+                error_log(sprintf(
+                    '[MageForge][ModuleScanner] Failed to read module info at "%s": %s',
+                    $composerPath,
+                    $e->getMessage()
+                ));
+            }
             return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
         }
     }
