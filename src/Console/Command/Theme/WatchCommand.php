@@ -50,12 +50,6 @@ class WatchCommand extends AbstractCommand
                 InputOption::VALUE_OPTIONAL,
                 'Theme to watch (format: Vendor/theme)'
             )
-            ->addOption(
-                'verbose',
-                'v',
-                InputOption::VALUE_NONE,
-                'Enable verbose output'
-            )
             ->setAliases(['frontend:watch']);
     }
 
