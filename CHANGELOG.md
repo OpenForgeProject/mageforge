@@ -8,12 +8,21 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- feat: add `mageforge:hyva:compatibility:check` command to add a Hyvä compatibility checker
+  - Scans Magento modules for Hyvä theme compatibility issues
+  - Detects RequireJS, Knockout.js, jQuery, and UI Components usage
+  - Interactive menu with Laravel Prompts for scan options
+  - Options: `--show-all`, `--third-party-only`, `--include-vendor`, `--detailed`
+  - Color-coded output (✓ Compatible, ⚠ Warnings, ✗ Incompatible)
+  - Detailed file-level issues with line numbers
+  - Exit code 1 for critical issues, 0 for success
+  - Command aliases: `m:h:c:c`, `hyva:check`
 - feat: add `mageforge:static:clean` command for comprehensive cache and generated files cleanup
-- feat: add interactive multi-theme selection for static:clean command using Laravel Prompts
-- feat: add `--all` option to clean all themes at once
-- feat: add `--dry-run` option to preview what would be cleaned without deleting
-- feat: add command alias `frontend:clean` for quick access
-- feat: add CI/CD tests for static:clean command in compatibility workflow
+  - feat: add interactive multi-theme selection for static:clean command using Laravel Prompts
+  - feat: add `--all` option to clean all themes at once
+  - feat: add `--dry-run` option to preview what would be cleaned without deleting
+  - feat: add command alias `frontend:clean` for quick access
+  - feat: add CI/CD tests for static:clean command in compatibility workflow
 
 ### Changed
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <config
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
 >
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
@@ -27,26 +27,32 @@
                 <item name="mageforge_static_clean"
                       xsi:type="object"
                       >OpenForgeProject\MageForge\Console\Command\Static\CleanCommand</item>
+                <item name="mageforge_hyva_compatibility_check"
+                      xsi:type="object"
+                      >OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand</item>
             </argument>
         </arguments>
     </type>
 
-    <!-- Configure Theme Builder Pool -->
-    <type name="OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool">
-        <arguments>
-            <argument name="builders"
-                      xsi:type="array"
-                      >
-                <item name="hyva"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder</item>
-                <item name="standard"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
-                <item name="tailwindcss"
-                      xsi:type="object"
-                      >OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS\Builder</item>
-            </argument>
-        </arguments>
-    </type>
+      <!-- Configure Theme Builder Pool -->
+      <type name="OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool">
+            <arguments>
+                  <argument name="builders"
+                        xsi:type="array"
+                  >
+                        <item name="hyva"
+                              xsi:type="object"
+                        >
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes\Builder</item>
+                        <item name="standard"
+                              xsi:type="object"
+                        >
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder</item>
+                        <item name="tailwindcss"
+                              xsi:type="object"
+                        >
+                              OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS\Builder</item>
+                  </argument>
+            </arguments>
+      </type>
 </config>
