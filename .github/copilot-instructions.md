@@ -10,7 +10,7 @@ MageForge is a powerful CLI front-end development toolkit for Magento 2 that sim
 - **Language**: PHP 8.3+
 - **Package Manager**: Composer
 - **Type**: magento2-module
-- **Dependencies**: 
+- **Dependencies**:
   - Laravel Prompts (for interactive CLI)
   - Magento Framework
 
@@ -29,7 +29,7 @@ MageForge is a powerful CLI front-end development toolkit for Magento 2 that sim
 
 - **Indentation**: Use 4 spaces (not tabs) for indentation
 - **Line Length**: Keep lines under 80 characters wherever possible
-- **Naming Conventions**: 
+- **Naming Conventions**:
   - Classes: PascalCase
   - Methods and properties: camelCase
   - Constants: UPPER_SNAKE_CASE
