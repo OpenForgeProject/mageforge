@@ -31,15 +31,16 @@ Please ensure that your Magento installation meets this requirement before insta
 
 ### Available Commands
 
-| Command                    | Description                                               | Shortcodes                |
-| -------------------------- | --------------------------------------------------------- | ------------------------- |
-| `mageforge:system:version` | Shows current and latest version of the module            | `m:s:v`                   |
-| `mageforge:system:check`   | Get system information (OS, PHP, Database, Node.js, etc.) | `m:s:c`                   |
-| `mageforge:theme:list`     | Lists all available themes                                | `m:t:l`                   |
-| `mageforge:theme:build`    | Builds selected themes (CSS/TailwindCSS)                  | `m:t:b`, `frontend:build` |
-| `mageforge:theme:watch`    | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
-| `mageforge:hyva:tokens`    | Generate Hyvä design tokens (Hyvä themes only)            | `m:h:t`                   |
-| `mageforge:static:clean`   | Clean static files, cache and generated files for a theme | `m:st:c`,`frontend:clean` |
+| Command                             | Description                                               | Shortcodes                |
+| ----------------------------------- | --------------------------------------------------------- | ------------------------- |
+| `mageforge:system:version`          | Shows current and latest version of the module            | `m:s:v`                   |
+| `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `m:s:c`                   |
+| `mageforge:theme:list`              | Lists all available themes                                | `m:t:l`                   |
+| `mageforge:theme:build`             | Builds selected themes (CSS/TailwindCSS)                  | `m:t:b`, `frontend:build` |
+| `mageforge:theme:watch`             | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
+| `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `m:h:t`                   |
+| `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues        | `m:h:c:c`, `hyva:check`   |
+| `mageforge:static:clean`            | Clean static files, cache and generated files for a theme | `m:st:c`,`frontend:clean` |
 
 ---
 
@@ -97,10 +98,10 @@ Please ensure that your Magento installation meets this requirement before insta
 - [Custom Theme Builders Documentation](./docs/custom_theme_builders.md) - Extend MageForge for your custom themes
 - [Commands Documentation](./docs/commands.md) - Detailed command reference
 
-## Community & Support
+## Support
 
 - **Report Bugs/Features**: [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues)
-- **Get Help**: [Discord Community](https://discord.gg/H5CjMXQQHn)
+- **Discussions**: [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions)
 - **Contributing**: See [Contributing Guidelines](./CONTRIBUTING.md)
 
 ## Project Information
