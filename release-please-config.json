@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "php",
+      "package-name": "openforgeproject/mageforge",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false,
+      "draft": false,
+      "prerelease": false,
+      "include-v-in-tag": false,
+      "include-component-in-tag": false,
+      "pull-request-title-pattern": "chore: release ${version}",
+      "pull-request-header": "## Release ${version}",
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Added",
+          "hidden": false
+        },
+        {
+          "type": "fix",
+          "section": "Fixed",
+          "hidden": false
+        },
+        {
+          "type": "refactor",
+          "section": "Changed",
+          "hidden": false
+        },
+        {
+          "type": "perf",
+          "section": "Performance",
+          "hidden": false
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": false
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Chore",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Tests",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Build",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "CI/CD",
+          "hidden": true
+        }
+      ],
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "composer.json",
+          "glob": false
+        }
+      ]
+    }
+  }
+}

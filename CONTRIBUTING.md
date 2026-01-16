@@ -11,6 +11,71 @@ We appreciate your interest in contributing to MageForge! Please follow the guid
 
 ---
 
+## Commit Message Guidelines
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for automated changelog generation and semantic versioning via [Release Please](https://github.com/googleapis/release-please).
+
+### For Contributors (Pull Requests)
+
+**PR Title Format** (Required): Your PR title **must** follow Conventional Commits format:
+
+```
+<type>: <description>
+
+Examples:
+✅ feat: add Hyvä compatibility check command
+✅ fix: resolve npm installation issue
+✅ docs: update README with new examples
+✅ refactor: simplify theme builder logic
+✅ perf: optimize static file cleaning
+
+❌ Add new feature (missing type)
+❌ Fixed bug (missing colon)
+```
+
+**Commit Types**:
+- `feat:` - New feature (minor version bump: 0.3.0 → 0.4.0)
+- `fix:` - Bug fix (patch version bump: 0.3.0 → 0.3.1)
+- `refactor:` - Code refactoring (no version bump by default)
+- `docs:` - Documentation updates (patch version bump)
+- `perf:` - Performance improvements (patch version bump)
+- `style:` - Code style changes (no version bump)
+- `test:` - Test updates (no version bump)
+- `chore:` - Maintenance tasks (no version bump)
+
+**Breaking Changes**: Add `!` after the type for major version bumps:
+```
+feat!: remove legacy theme builder API
+fix!: change command argument order
+```
+
+**Individual Commits**: Your individual commits within the PR can use any format you prefer. We use **squash-merge**, so only the PR title becomes the commit message in the `main` branch.
+
+### For Maintainers (Direct Commits)
+
+When committing directly to `main` (e.g., hotfixes, urgent documentation updates), **all commits must follow Conventional Commits format**:
+
+```bash
+# Hotfix example
+git commit -m "fix: resolve critical security vulnerability in npm dependencies"
+
+# Documentation update
+git commit -m "docs: add troubleshooting section to releases.md"
+
+# Chore example
+git commit -m "chore: update GitHub Actions to latest versions"
+```
+
+### Merge Strategy
+
+All pull requests are merged using **squash-merge** to maintain a clean, linear git history. This means:
+- ✅ Only one commit per PR in `main` branch
+- ✅ PR title becomes the commit message
+- ✅ All PR commits are squashed into a single commit
+- ✅ Easier to follow project history and revert changes if needed
+
+---
+
 ## Coding Standards
 
 - **Magento Coding Standards**: Adhere to the Magento Coding Standards throughout your code.
