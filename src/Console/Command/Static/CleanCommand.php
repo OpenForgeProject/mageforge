@@ -11,6 +11,7 @@ use Magento\Framework\Filesystem;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,11 +30,13 @@ class CleanCommand extends AbstractCommand
      * @param Filesystem $filesystem
      * @param ThemeList $themeList
      * @param ThemePath $themePath
+     * @param ThemeSuggester $themeSuggester
      */
     public function __construct(
         private readonly Filesystem $filesystem,
         private readonly ThemeList $themeList,
-        private readonly ThemePath $themePath
+        private readonly ThemePath $themePath,
+        private readonly ThemeSuggester $themeSuggester
     ) {
         parent::__construct();
     }
@@ -86,7 +89,7 @@ class CleanCommand extends AbstractCommand
             return Cli::RETURN_SUCCESS;
         }
 
-        [$totalCleaned, $failedThemes] = $this->processThemes($themeCodes, $dryRun);
+        [$totalCleaned, $failedThemes] = $this->processThemes($themeCodes, $dryRun, $output);
 
         $this->displaySummary($themeCodes, $totalCleaned, $failedThemes, $dryRun);
 
@@ -223,9 +226,10 @@ class CleanCommand extends AbstractCommand
      *
      * @param array $themeCodes
      * @param bool $dryRun
+     * @param OutputInterface $output
      * @return array [totalCleaned, failedThemes]
      */
-    private function processThemes(array $themeCodes, bool $dryRun): array
+    private function processThemes(array $themeCodes, bool $dryRun, OutputInterface $output): array
     {
         $totalThemes = count($themeCodes);
         $totalCleaned = 0;
@@ -234,15 +238,19 @@ class CleanCommand extends AbstractCommand
         foreach ($themeCodes as $index => $themeName) {
             $currentTheme = $index + 1;
 
-            if (!$this->validateTheme($themeName, $failedThemes)) {
+            // Validate and potentially correct theme name
+            $validatedTheme = $this->validateTheme($themeName, $failedThemes, $output);
+
+            if ($validatedTheme === null) {
                 continue;
             }
 
-            $this->displayThemeHeader($themeName, $currentTheme, $totalThemes);
+            // Use validated/corrected theme name
+            $this->displayThemeHeader($validatedTheme, $currentTheme, $totalThemes);
 
-            $cleaned = $this->cleanThemeDirectories($themeName, $dryRun);
+            $cleaned = $this->cleanThemeDirectories($validatedTheme, $dryRun);
 
-            $this->displayThemeResult($themeName, $cleaned, $dryRun);
+            $this->displayThemeResult($validatedTheme, $cleaned, $dryRun);
 
             $totalCleaned += $cleaned;
         }
@@ -255,19 +263,42 @@ class CleanCommand extends AbstractCommand
      *
      * @param string $themeName
      * @param array &$failedThemes
-     * @return bool
+     * @param OutputInterface $output
+     * @return string|null Theme code if valid or corrected, null if invalid
      */
-    private function validateTheme(string $themeName, array &$failedThemes): bool
+    private function validateTheme(string $themeName, array &$failedThemes, OutputInterface $output): ?string
     {
         $themePath = $this->themePath->getPath($themeName);
 
         if ($themePath === null) {
-            $this->io->error(sprintf("Theme '%s' not found.", $themeName));
-            $failedThemes[] = $themeName;
-            return false;
+            // Try to suggest similar themes
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
+                $themeName,
+                $this->themeSuggester,
+                $output
+            );
+
+            // If no theme was selected, mark as failed
+            if ($correctedTheme === null) {
+                $failedThemes[] = $themeName;
+                return null;
+            }
+
+            // Use the corrected theme code
+            $themePath = $this->themePath->getPath($correctedTheme);
+
+            // Double-check the corrected theme exists
+            if ($themePath === null) {
+                $this->io->error(sprintf("Theme '%s' not found.", $correctedTheme));
+                $failedThemes[] = $themeName;
+                return null;
+            }
+
+            $this->io->info("Using theme: $correctedTheme");
+            return $correctedTheme;
         }
 
-        return true;
+        return $themeName;
     }
 
     /**

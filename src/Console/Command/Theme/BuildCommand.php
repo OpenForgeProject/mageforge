@@ -10,6 +10,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,11 +30,13 @@ class BuildCommand extends AbstractCommand
      * @param ThemePath $themePath
      * @param ThemeList $themeList
      * @param BuilderPool $builderPool
+     * @param ThemeSuggester $themeSuggester
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
-        private readonly BuilderPool $builderPool
+        private readonly BuilderPool $builderPool,
+        private readonly ThemeSuggester $themeSuggester
     ) {
         parent::__construct();
     }
@@ -161,13 +164,22 @@ class BuildCommand extends AbstractCommand
             // Use the existing spinner with a customized message
             foreach ($themeCodes as $index => $themeCode) {
                 $currentTheme = $index + 1;
-                // Show which theme is currently being built
-                $themeNameCyan = sprintf("<fg=cyan>%s</>", $themeCode);
+
+                // Validate theme and handle suggestions BEFORE showing spinner
+                $validatedTheme = $this->validateAndCorrectTheme($themeCode, $io, $output);
+
+                if ($validatedTheme === null) {
+                    // Theme validation failed or user cancelled - skip this theme
+                    continue;
+                }
+
+                // Show which theme is currently being built (with validated/corrected name)
+                $themeNameCyan = sprintf("<fg=cyan>%s</>", $validatedTheme);
                 $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
                 $success = false;
 
-                $spinner->spin(function() use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
-                    $success = $this->processTheme($themeCode, $io, $output, $isVerbose, $successList);
+                $spinner->spin(function() use ($validatedTheme, $io, $output, $isVerbose, &$successList, &$success) {
+                    $success = $this->buildValidatedTheme($validatedTheme, $io, $output, $isVerbose, $successList);
                     return true;
                 });
 
@@ -187,7 +199,49 @@ class BuildCommand extends AbstractCommand
     }
 
     /**
-     * Process a single theme
+     * Validate theme and correct if invalid (with suggestions)
+     *
+     * @param string $themeCode
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @return string|null Validated/corrected theme code or null if invalid/cancelled
+     */
+    private function validateAndCorrectTheme(
+        string $themeCode,
+        SymfonyStyle $io,
+        OutputInterface $output
+    ): ?string {
+        // Get theme path
+        $themePath = $this->themePath->getPath($themeCode);
+        if ($themePath === null) {
+            // Try to suggest similar themes
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
+                $themeCode,
+                $this->themeSuggester,
+                $output
+            );
+
+            // If no theme was selected, return null
+            if ($correctedTheme === null) {
+                return null;
+            }
+
+            // Double-check the corrected theme exists
+            $themePath = $this->themePath->getPath($correctedTheme);
+            if ($themePath === null) {
+                $io->error("Theme $correctedTheme is not installed.");
+                return null;
+            }
+
+            $io->info("Using theme: $correctedTheme");
+            return $correctedTheme;
+        }
+
+        return $themeCode;
+    }
+
+    /**
+     * Build a validated theme (theme existence already confirmed)
      *
      * @param string $themeCode
      * @param SymfonyStyle $io
@@ -196,19 +250,14 @@ class BuildCommand extends AbstractCommand
      * @param array $successList
      * @return bool
      */
-    private function processTheme(
+    private function buildValidatedTheme(
         string $themeCode,
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
         array &$successList
     ): bool {
-        // Get theme path
         $themePath = $this->themePath->getPath($themeCode);
-        if ($themePath === null) {
-            $io->error("Theme $themeCode is not installed.");
-            return false;
-        }
 
         // Find appropriate builder
         $builder = $this->builderPool->getBuilder($themePath);
@@ -229,6 +278,34 @@ class BuildCommand extends AbstractCommand
 
         $successList[] = sprintf("%s: Built successfully using %s builder", $themeCode, $builder->getName());
         return true;
+    }
+
+    /**
+     * Process a single theme
+     *
+     * @param string $themeCode
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @param array $successList
+     * @return bool
+     */
+    private function processTheme(
+        string $themeCode,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose,
+        array &$successList
+    ): bool {
+        // Validate and correct theme
+        $validatedTheme = $this->validateAndCorrectTheme($themeCode, $io, $output);
+
+        if ($validatedTheme === null) {
+            return false;
+        }
+
+        // Build the validated theme
+        return $this->buildValidatedTheme($validatedTheme, $io, $output, $isVerbose, $successList);
     }
 
     /**

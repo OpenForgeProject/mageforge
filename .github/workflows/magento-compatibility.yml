@@ -157,6 +157,19 @@ jobs:
           bin/magento m:st:c --help
           bin/magento frontend:clean --help
 
+          echo "Test Theme Name Suggestions (non-interactive):"
+          echo "Testing BuildCommand with invalid theme name:"
+          bin/magento mageforge:theme:build Magent/lum || echo "Expected failure - BuildCommand"
+
+          echo "Testing WatchCommand with invalid theme name:"
+          bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
+
+          echo "Testing CleanCommand with invalid theme name:"
+          bin/magento mageforge:static:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
+
+          echo "Testing TokensCommand with invalid theme name:"
+          bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
+
 
       - name: Test Summary
         run: |
@@ -298,6 +311,19 @@ jobs:
           echo "Test MageForge Static Clean alias:"
           bin/magento m:st:c --help
           bin/magento frontend:clean --help
+
+          echo "Test Theme Name Suggestions (non-interactive):"
+          echo "Testing BuildCommand with invalid theme name:"
+          bin/magento mageforge:theme:build Magent/lum || echo "Expected failure - BuildCommand"
+
+          echo "Testing WatchCommand with invalid theme name:"
+          bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
+
+          echo "Testing CleanCommand with invalid theme name:"
+          bin/magento mageforge:static:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
+
+          echo "Testing TokensCommand with invalid theme name:"
+          bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
 
 
       - name: Test Summary

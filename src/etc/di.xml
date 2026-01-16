@@ -40,4 +40,11 @@
                   </argument>
             </arguments>
       </type>
+
+      <!-- Register ThemeSuggester Service -->
+      <type name="OpenForgeProject\MageForge\Service\ThemeSuggester">
+            <arguments>
+                  <argument name="themeList" xsi:type="object">OpenForgeProject\MageForge\Model\ThemeList</argument>
+            </arguments>
+      </type>
 </config>

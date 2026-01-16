@@ -9,6 +9,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -23,11 +24,13 @@ class WatchCommand extends AbstractCommand
      * @param BuilderPool $builderPool
      * @param ThemeList $themeList
      * @param ThemePath $themePath
+     * @param ThemeSuggester $themeSuggester
      */
     public function __construct(
         private readonly BuilderPool $builderPool,
         private readonly ThemeList $themeList,
         private readonly ThemePath $themePath,
+        private readonly ThemeSuggester $themeSuggester,
     ) {
         parent::__construct();
     }
@@ -85,8 +88,29 @@ class WatchCommand extends AbstractCommand
 
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
-            $this->io->error("Theme $themeCode is not installed.");
-            return self::FAILURE;
+            // Try to suggest similar themes
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
+                $themeCode,
+                $this->themeSuggester,
+                $output
+            );
+
+            // If no theme was selected, exit
+            if ($correctedTheme === null) {
+                return self::FAILURE;
+            }
+
+            // Use the corrected theme code
+            $themeCode = $correctedTheme;
+            $themePath = $this->themePath->getPath($themeCode);
+
+            // Double-check the corrected theme exists
+            if ($themePath === null) {
+                $this->io->error("Theme $themeCode is not installed.");
+                return self::FAILURE;
+            }
+
+            $this->io->info("Using theme: $themeCode");
         }
 
         $builder = $this->builderPool->getBuilder($themePath);
