@@ -10,6 +10,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeSuggestion;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,11 +30,13 @@ class BuildCommand extends AbstractCommand
      * @param ThemePath $themePath
      * @param ThemeList $themeList
      * @param BuilderPool $builderPool
+     * @param ThemeSuggestion $themeSuggestion
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
-        private readonly BuilderPool $builderPool
+        private readonly BuilderPool $builderPool,
+        private readonly ThemeSuggestion $themeSuggestion
     ) {
         parent::__construct();
     }
@@ -207,6 +210,16 @@ class BuildCommand extends AbstractCommand
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             $io->error("Theme $themeCode is not installed.");
+            
+            // Suggest similar theme names
+            $suggestions = $this->themeSuggestion->getSuggestions($themeCode);
+            if (!empty($suggestions)) {
+                $io->writeln('<comment>Did you mean:</comment>');
+                foreach ($suggestions as $suggestion) {
+                    $io->writeln(sprintf('  - <fg=cyan>%s</>', $suggestion));
+                }
+            }
+            
             return false;
         }
 
