@@ -61,29 +61,59 @@ class TokensCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $themeCode = $input->getArgument('themeCode');
-        $isVerbose = $this->isVerbose($output);
-
-        if (empty($themeCode)) {
-            $themes = $this->themeList->getAllThemes();
-            $options = array_map(fn($theme) => $theme->getCode(), $themes);
-
-            $themeCodePrompt = new SelectPrompt(
-                label: 'Select theme to generate tokens for',
-                options: $options,
-                scroll: 10,
-                hint: 'Arrow keys to navigate, Enter to confirm',
-            );
-
-            try {
-                $themeCode = $themeCodePrompt->prompt();
-                \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            } catch (\Exception $e) {
-                $this->io->error('Interactive mode failed: ' . $e->getMessage());
-                return Cli::RETURN_FAILURE;
-            }
+        $themeCode = $this->selectTheme($input->getArgument('themeCode'));
+        if ($themeCode === null) {
+            return Cli::RETURN_FAILURE;
         }
 
+        $themePath = $this->validateHyvaTheme($themeCode);
+        if ($themePath === null) {
+            return Cli::RETURN_FAILURE;
+        }
+
+        $tailwindPath = $this->validateTailwindDirectory($themePath, $themeCode);
+        if ($tailwindPath === null) {
+            return Cli::RETURN_FAILURE;
+        }
+
+        $isVerbose = $this->isVerbose($output);
+        if (!$this->generateTokens($tailwindPath, $themeCode, $isVerbose)) {
+            return Cli::RETURN_FAILURE;
+        }
+
+        $this->handleOutputFile($tailwindPath, $themePath, $themeCode);
+
+        return Cli::RETURN_SUCCESS;
+    }
+
+    private function selectTheme(?string $themeCode): ?string
+    {
+        if (!empty($themeCode)) {
+            return $themeCode;
+        }
+
+        $themes = $this->themeList->getAllThemes();
+        $options = array_map(fn($theme) => $theme->getCode(), $themes);
+
+        $themeCodePrompt = new SelectPrompt(
+            label: 'Select theme to generate tokens for',
+            options: $options,
+            scroll: 10,
+            hint: 'Arrow keys to navigate, Enter to confirm',
+        );
+
+        try {
+            $themeCode = $themeCodePrompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            return $themeCode;
+        } catch (\Exception $e) {
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function validateHyvaTheme(string $themeCode): ?string
+    {
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             // Try to suggest similar themes
@@ -111,31 +141,39 @@ class TokensCommand extends AbstractCommand
             $this->io->info("Using theme: $themeCode");
         }
 
-        // Check if this is a Hyvä theme
         $builder = $this->builderPool->getBuilder($themePath);
         if ($builder === null || $builder->getName() !== 'HyvaThemes') {
             $this->io->error("Theme $themeCode is not a Hyvä theme. This command only works with Hyvä themes.");
-            return Cli::RETURN_FAILURE;
+            return null;
         }
 
+        return $themePath;
+    }
+
+    private function validateTailwindDirectory(string $themePath, string $themeCode): ?string
+    {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
+
         if (!$this->fileDriver->isDirectory($tailwindPath)) {
             $this->io->error("Tailwind directory not found in: $tailwindPath");
-            return Cli::RETURN_FAILURE;
+            return null;
         }
 
-        // Check if node_modules exists
         if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
             $this->io->warning('Node modules not found. Please run: bin/magento mageforge:theme:build ' . $themeCode);
-            return Cli::RETURN_FAILURE;
+            return null;
         }
 
+        return $tailwindPath;
+    }
+
+    private function generateTokens(string $tailwindPath, string $themeCode, bool $isVerbose): bool
+    {
         if ($isVerbose) {
             $this->io->section("Generating Hyvä design tokens for theme: $themeCode");
             $this->io->text("Working directory: $tailwindPath");
         }
 
-        // Change to tailwind directory and run npx hyva-tokens
         $currentDir = getcwd();
         chdir($tailwindPath);
 
@@ -145,44 +183,49 @@ class TokensCommand extends AbstractCommand
             }
 
             $this->shell->execute('npx hyva-tokens');
-
             chdir($currentDir);
 
-            // Determine output path based on theme location
-            $isVendorTheme = str_contains($themePath, '/vendor/');
-            $sourceFilePath = $tailwindPath . '/generated/hyva-tokens.css';
-
-            if ($isVendorTheme) {
-                // Store in var/generated/hyva-token/{ThemeCode}/ for vendor themes
-                $varGeneratedPath = $currentDir . '/var/generated/hyva-token/' . str_replace('/', '/', $themeCode);
-
-                if (!$this->fileDriver->isDirectory($varGeneratedPath)) {
-                    $this->fileDriver->createDirectory($varGeneratedPath, 0755);
-                }
-
-                $generatedFilePath = $varGeneratedPath . '/hyva-tokens.css';
-
-                // Copy file to var/generated location
-                if ($this->fileDriver->isExists($sourceFilePath)) {
-                    $this->fileDriver->copy($sourceFilePath, $generatedFilePath);
-                }
-
-                $this->io->success('Hyvä design tokens generated successfully.');
-                $this->io->note('This is a vendor theme. Tokens have been saved to var/generated/hyva-token/ instead.');
-                $this->io->text('Generated file: ' . $generatedFilePath);
-            } else {
-                $generatedFilePath = $sourceFilePath;
-                $this->io->success('Hyvä design tokens generated successfully.');
-                $this->io->text('Generated file: ' . $generatedFilePath);
-            }
-
-            $this->io->newLine();
-
-            return Cli::RETURN_SUCCESS;
+            return true;
         } catch (\Exception $e) {
             chdir($currentDir);
             $this->io->error('Failed to generate Hyvä design tokens: ' . $e->getMessage());
-            return Cli::RETURN_FAILURE;
+            return false;
         }
+    }
+
+    private function handleOutputFile(string $tailwindPath, string $themePath, string $themeCode): void
+    {
+        $isVendorTheme = str_contains($themePath, '/vendor/');
+        $sourceFilePath = $tailwindPath . '/generated/hyva-tokens.css';
+
+        if ($isVendorTheme) {
+            $generatedFilePath = $this->copyToVarGenerated($sourceFilePath, $themeCode);
+            $this->io->success('Hyvä design tokens generated successfully.');
+            $this->io->note('This is a vendor theme. Tokens have been saved to var/generated/hyva-token/ instead.');
+            $this->io->text('Generated file: ' . $generatedFilePath);
+        } else {
+            $this->io->success('Hyvä design tokens generated successfully.');
+            $this->io->text('Generated file: ' . $sourceFilePath);
+        }
+
+        $this->io->newLine();
+    }
+
+    private function copyToVarGenerated(string $sourceFilePath, string $themeCode): string
+    {
+        $currentDir = getcwd();
+        $varGeneratedPath = $currentDir . '/var/generated/hyva-token/' . str_replace('/', '/', $themeCode);
+
+        if (!$this->fileDriver->isDirectory($varGeneratedPath)) {
+            $this->fileDriver->createDirectory($varGeneratedPath, 0755);
+        }
+
+        $generatedFilePath = $varGeneratedPath . '/hyva-tokens.css';
+
+        if ($this->fileDriver->isExists($sourceFilePath)) {
+            $this->fileDriver->copy($sourceFilePath, $generatedFilePath);
+        }
+
+        return $generatedFilePath;
     }
 }
