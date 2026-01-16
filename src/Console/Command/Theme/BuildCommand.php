@@ -168,9 +168,10 @@ class BuildCommand extends AbstractCommand
                 $themeNameCyan = sprintf("<fg=cyan>%s</>", $themeCode);
                 $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
                 $success = false;
+                $errorInfo = null;
 
-                $spinner->spin(function() use ($themeCode, $io, $output, $isVerbose, &$successList, &$success) {
-                    $success = $this->processTheme($themeCode, $io, $output, $isVerbose, $successList);
+                $spinner->spin(function() use ($themeCode, $io, $output, $isVerbose, &$successList, &$success, &$errorInfo) {
+                    $success = $this->processTheme($themeCode, $io, $output, $isVerbose, $successList, $errorInfo);
                     return true;
                 });
 
@@ -180,6 +181,17 @@ class BuildCommand extends AbstractCommand
                 } else {
                     // Show that an error occurred while building the theme
                     $io->writeln(sprintf("   Building %s (%d of %d) ... <fg=red>failed</>", $themeNameCyan, $currentTheme, $totalThemes));
+                    
+                    // Display error info if available
+                    if ($errorInfo !== null) {
+                        $io->error($errorInfo['message'] ?? "Unknown error occurred.");
+                        if (!empty($errorInfo['suggestions'])) {
+                            $io->writeln('<comment>Did you mean:</comment>');
+                            foreach ($errorInfo['suggestions'] as $suggestion) {
+                                $io->writeln(sprintf('  - <fg=cyan>%s</>', $suggestion));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -197,6 +209,7 @@ class BuildCommand extends AbstractCommand
      * @param OutputInterface $output
      * @param bool $isVerbose
      * @param array $successList
+     * @param array|null $errorInfo Reference to store error information for display outside spinner
      * @return bool
      */
     private function processTheme(
@@ -204,19 +217,29 @@ class BuildCommand extends AbstractCommand
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
-        array &$successList
+        array &$successList,
+        ?array &$errorInfo = null
     ): bool {
         // Get theme path
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
-            $io->error("Theme $themeCode is not installed.");
+            $errorMessage = "Theme $themeCode is not installed.";
             
             // Suggest similar theme names
             $suggestions = $this->themeSuggestion->getSuggestions($themeCode);
-            if (!empty($suggestions)) {
-                $io->writeln('<comment>Did you mean:</comment>');
-                foreach ($suggestions as $suggestion) {
-                    $io->writeln(sprintf('  - <fg=cyan>%s</>', $suggestion));
+            
+            // If errorInfo is provided (non-verbose mode), store for later display
+            if ($errorInfo !== null) {
+                $errorInfo['message'] = $errorMessage;
+                $errorInfo['suggestions'] = $suggestions;
+            } else {
+                // Verbose mode: display immediately
+                $io->error($errorMessage);
+                if (!empty($suggestions)) {
+                    $io->writeln('<comment>Did you mean:</comment>');
+                    foreach ($suggestions as $suggestion) {
+                        $io->writeln(sprintf('  - <fg=cyan>%s</>', $suggestion));
+                    }
                 }
             }
             
