@@ -24,7 +24,7 @@ We appreciate your interest in contributing to MageForge! Please follow the guid
 ## Licensing
 
 - **License Information**: Review the [LICENSE](./LICENSE) file for detailed licensing information.
-- **Contribution License**: By contributing, you agree that your work will be licensed under the GPL-3.0-or-later license.
+- **Contribution License**: By contributing, you agree that your work will be licensed under the GPL-3.0 license.
 
 ---
 
