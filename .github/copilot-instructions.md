@@ -132,5 +132,5 @@ This project is licensed under GPL-3.0. By contributing, you agree that your wor
 ## Community
 
 - Report bugs and request features via GitHub Issues
-- Join the OpenForgeProject Discord community for support
+- Start discussions on GitHub Discussions
 - Follow the Contributing Guidelines in CONTRIBUTING.md

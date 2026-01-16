@@ -84,4 +84,4 @@ Common issues and solutions:
    - Clear Magento cache after theme builds
    - Verify theme registration in Magento
 
-For more help, join our [Discord community](https://discord.gg/H5CjMXQQHn) or open an issue on GitHub.
+For more help, open an issue on [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues) or start a discussion on [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions).
