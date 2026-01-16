@@ -54,6 +54,27 @@ bin/magento mageforge:theme:list
 bin/magento mageforge:theme:build [<themeCodes>...]
 ```
 
+**Examples**:
+
+```bash
+# Build a specific theme
+bin/magento mageforge:theme:build Magento/luma
+
+# Build multiple themes
+bin/magento mageforge:theme:build Magento/luma Vendor/custom
+
+# Interactive mode - select themes from list
+bin/magento mageforge:theme:build
+
+# Example output when theme not found:
+$ bin/magento mageforge:theme:build vendor/Nema
+[ERROR] Theme vendor/Nema is not installed.
+Did you mean:
+  - Vendor/name
+  - Vendor/theme
+  - Vendor/custom
+```
+
 **Implementation Details**:
 
 - If no theme codes are provided, displays an interactive prompt to select themes
@@ -61,6 +82,11 @@ bin/magento mageforge:theme:build [<themeCodes>...]
   1. Resolves the theme path
   2. Determines the appropriate builder for the theme type
   3. Executes the build process
+- **Theme Suggestion**: If a theme is not found, suggests similar theme names using:
+  - Levenshtein distance algorithm for typo detection
+  - Case-insensitive matching for case errors
+  - Substring matching for partial matches
+  - Shows up to 3 most similar theme names
 - Displays a summary of built themes and execution time
 - Has an alias: `frontend:build`
 
@@ -88,6 +114,7 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 - If no theme code is provided, displays an interactive prompt to select a theme
 - Resolves the theme path
+- **Theme Suggestion**: If a theme is not found, suggests similar theme names using fuzzy matching
 - Determines the appropriate builder for the theme type
 - Starts a watch process that monitors for file changes
 - Has an alias: `frontend:watch`
@@ -353,6 +380,7 @@ bin/magento mageforge:hyva:tokens Hyva/default
 
 - If no theme code is provided, displays an interactive prompt to select a Hyvä theme
 - Validates that the theme is installed and is a Hyvä theme
+- **Theme Suggestion**: If a theme is not found, suggests similar theme names using fuzzy matching
 - Checks if the theme has been built (node_modules exists)
 - Changes to the theme's `web/tailwind` directory
 - Executes `npx hyva-tokens` to generate design tokens
@@ -406,6 +434,7 @@ The commands rely on several services for their functionality:
 
 - `ThemeList`: Retrieves all installed themes
 - `ThemePath`: Resolves theme codes to filesystem paths
+- `ThemeSuggestion`: Suggests similar theme names when a theme is not found using fuzzy matching algorithms
 - `StaticContentDeployer`: Handles static content deployment
 - `CacheCleaner`: Manages cache cleaning after theme builds
 
