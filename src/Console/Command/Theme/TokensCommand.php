@@ -12,6 +12,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,6 +28,7 @@ class TokensCommand extends AbstractCommand
      * @param BuilderPool $builderPool
      * @param File $fileDriver
      * @param Shell $shell
+     * @param ThemeSuggester $themeSuggester
      */
     public function __construct(
         private readonly ThemeList $themeList,
@@ -34,6 +36,7 @@ class TokensCommand extends AbstractCommand
         private readonly BuilderPool $builderPool,
         private readonly File $fileDriver,
         private readonly Shell $shell,
+        private readonly ThemeSuggester $themeSuggester,
     ) {
         parent::__construct();
     }
@@ -83,8 +86,29 @@ class TokensCommand extends AbstractCommand
 
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
-            $this->io->error("Theme $themeCode is not installed.");
-            return Cli::RETURN_FAILURE;
+            // Try to suggest similar themes
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
+                $themeCode,
+                $this->themeSuggester,
+                $output
+            );
+
+            // If no theme was selected, exit
+            if ($correctedTheme === null) {
+                return Cli::RETURN_FAILURE;
+            }
+
+            // Use the corrected theme code
+            $themeCode = $correctedTheme;
+            $themePath = $this->themePath->getPath($themeCode);
+
+            // Double-check the corrected theme exists
+            if ($themePath === null) {
+                $this->io->error("Theme $themeCode is not installed.");
+                return Cli::RETURN_FAILURE;
+            }
+
+            $this->io->info("Using theme: $themeCode");
         }
 
         // Check if this is a Hyvä theme
