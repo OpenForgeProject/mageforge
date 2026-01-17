@@ -19,7 +19,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for automate
 
 **PR Title Format** (Required): Your PR title **must** follow Conventional Commits format:
 
-```
+```text
 <type>: <description>
 
 Examples:
@@ -34,6 +34,7 @@ Examples:
 ```
 
 **Commit Types**:
+
 - `feat:` - New feature (minor version bump: 0.3.0 → 0.4.0)
 - `fix:` - Bug fix (patch version bump: 0.3.0 → 0.3.1)
 - `refactor:` - Code refactoring (no version bump by default)
@@ -44,7 +45,8 @@ Examples:
 - `chore:` - Maintenance tasks (no version bump)
 
 **Breaking Changes**: Add `!` after the type for major version bumps:
-```
+
+```text
 feat!: remove legacy theme builder API
 fix!: change command argument order
 ```
@@ -69,6 +71,7 @@ git commit -m "chore: update GitHub Actions to latest versions"
 ### Merge Strategy
 
 All pull requests are merged using **squash-merge** to maintain a clean, linear git history. This means:
+
 - ✅ Only one commit per PR in `main` branch
 - ✅ PR title becomes the commit message
 - ✅ All PR commits are squashed into a single commit

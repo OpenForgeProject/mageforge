@@ -17,21 +17,26 @@ runtimes:
     - python@3.10.8
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  ignore:
+    - linters: [yamllint, prettier]
+      paths:
+        - .ddev/**
   enabled:
+    - checkov@3.2.497
     - actionlint@1.7.10
     - git-diff-check
     - hadolint@2.14.0
     - markdownlint@0.47.0
     - oxipng@10.0.0
-    - prettier@3.7.4
+    - prettier@3.8.0
     - shellcheck@0.11.0
     - shfmt@3.6.0
     - trufflehog@3.92.4
-    - yamllint@1.37.1
+    - yamllint@1.38.0
 actions:
   disabled:
-    - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
   enabled:
+    - trunk-announce
     - trunk-upgrade-available
