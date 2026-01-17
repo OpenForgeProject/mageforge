@@ -47,4 +47,11 @@
                   <argument name="themeList" xsi:type="object">OpenForgeProject\MageForge\Model\ThemeList</argument>
             </arguments>
       </type>
+
+      <!-- Configure CleanCommand with ThemeCleaner -->
+      <type name="OpenForgeProject\MageForge\Console\Command\Theme\CleanCommand">
+            <arguments>
+                  <argument name="themeCleaner" xsi:type="object">OpenForgeProject\MageForge\Service\ThemeCleaner</argument>
+            </arguments>
+      </type>
 </config>
