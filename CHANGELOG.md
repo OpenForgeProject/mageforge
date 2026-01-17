@@ -55,12 +55,12 @@ All notable changes to this project will be documented in this file.
   - Detailed file-level issues with line numbers
   - Exit code 1 for critical issues, 0 for success
   - Command aliases: `m:h:c:c`, `hyva:check`
-- feat: add `mageforge:static:clean` command for comprehensive cache and generated files cleanup
-  - feat: add interactive multi-theme selection for static:clean command using Laravel Prompts
+- feat: add `mageforge:theme:clean` command for comprehensive cache and generated files cleanup
+  - feat: add interactive multi-theme selection for theme:clean command using Laravel Prompts
   - feat: add `--all` option to clean all themes at once
   - feat: add `--dry-run` option to preview what would be cleaned without deleting
   - feat: add command alias `frontend:clean` for quick access
-  - feat: add CI/CD tests for static:clean command in compatibility workflow
+  - feat: add CI/CD tests for theme:clean command in compatibility workflow
 
 #### Fixed
 

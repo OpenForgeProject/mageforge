@@ -149,12 +149,12 @@ jobs:
           bin/magento m:h:c:c --show-all --detailed
 
           echo "Test MageForge Static Clean command with dry-run:"
-          bin/magento mageforge:static:clean --all --dry-run
+          bin/magento mageforge:theme:clean --all --dry-run
 
           echo "Test MageForge Static Clean aliases:"
-          bin/magento mageforge:static:clean --all --dry-run
+          bin/magento mageforge:theme:clean --all --dry-run
           echo "Test MageForge Static Clean aliases:"
-          bin/magento m:st:c --help
+          bin/magento m:t:c --help
           bin/magento frontend:clean --help
 
           echo "Test Theme Name Suggestions (non-interactive):"
@@ -165,7 +165,7 @@ jobs:
           bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
 
           echo "Testing CleanCommand with invalid theme name:"
-          bin/magento mageforge:static:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
+          bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
 
           echo "Testing TokensCommand with invalid theme name:"
           bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
@@ -306,10 +306,10 @@ jobs:
           bin/magento m:h:c:c --show-all --detailed
 
           echo "Test MageForge Static Clean command with dry-run:"
-          bin/magento mageforge:static:clean --all --dry-run
+          bin/magento mageforge:theme:clean --all --dry-run
 
           echo "Test MageForge Static Clean alias:"
-          bin/magento m:st:c --help
+          bin/magento m:t:c --help
           bin/magento frontend:clean --help
 
           echo "Test Theme Name Suggestions (non-interactive):"
@@ -320,7 +320,7 @@ jobs:
           bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
 
           echo "Testing CleanCommand with invalid theme name:"
-          bin/magento mageforge:static:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
+          bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
 
           echo "Testing TokensCommand with invalid theme name:"
           bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
