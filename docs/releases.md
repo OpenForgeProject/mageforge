@@ -97,7 +97,7 @@ Add `!` after the type for **major version bumps**:
 feat!: remove deprecated theme builder API
 # Version: 0.3.0 → 1.0.0
 
-fix!: change command argument order  
+fix!: change command argument order
 # Version: 0.3.0 → 1.0.0
 ```
 
@@ -236,7 +236,7 @@ gh api repos/OpenForgeProject/mageforge/branches/main/protection \
    ```bash
    # View recent commits
    git log --oneline main -10
-   
+
    # Must have format: feat:, fix:, etc.
    ```
 
@@ -281,7 +281,7 @@ gh api repos/OpenForgeProject/mageforge/branches/main/protection \
 2. **Check format**: Release Please expects specific format
    ```markdown
    # Changelog for MageForge
-   
+
    ## [0.3.1] - 2026-01-12
    ### Fixed
    - fix: something
@@ -291,7 +291,7 @@ gh api repos/OpenForgeProject/mageforge/branches/main/protection \
    ```bash
    # Check current manifest
    cat .release-please-manifest.json
-   
+
    # Should show: {"src": "0.3.1"}
    ```
 
