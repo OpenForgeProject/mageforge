@@ -47,7 +47,7 @@ class CompatibilityCheckCommand extends AbstractCommand
     {
         $this->setName($this->getCommandName('hyva', 'compatibility:check'))
             ->setDescription('Check modules for Hyvä theme compatibility issues')
-            ->setAliases(['m:h:c:c', 'hyva:check'])
+            ->setAliases(['hyva:check'])
             ->addOption(
                 self::OPTION_SHOW_ALL,
                 'a',

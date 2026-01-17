@@ -35,7 +35,8 @@ class VersionCommand extends AbstractCommand
     protected function configure(): void
     {
         $this->setName($this->getCommandName('system', 'version'))
-            ->setDescription('Displays the module version and the latest version');
+            ->setDescription('Displays the module version and the latest version')
+            ->setAliases(['system:version']);
     }
 
     /**

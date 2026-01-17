@@ -37,7 +37,8 @@ class CheckCommand extends AbstractCommand
     protected function configure(): void
     {
         $this->setName($this->getCommandName('system', 'check'))
-            ->setDescription('Displays system information like PHP version and Node.js version');
+            ->setDescription('Displays system information like PHP version and Node.js version')
+            ->setAliases(['system:check']);
     }
 
     /**
