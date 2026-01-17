@@ -40,7 +40,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:theme:watch`             | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
 | `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `m:h:t`                   |
 | `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues        | `m:h:c:c`, `hyva:check`   |
-| `mageforge:static:clean`            | Clean static files, cache and generated files for a theme | `m:st:c`,`frontend:clean` |
+| `mageforge:theme:clean`             | Clean theme static files and cache directories            | `m:t:c`, `frontend:clean` |
 
 ---
 

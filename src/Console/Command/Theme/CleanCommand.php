@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpenForgeProject\MageForge\Console\Command\Static;
+namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Laravel\Prompts\MultiSelectPrompt;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -46,12 +46,8 @@ class CleanCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('static', 'clean'))
-            ->setDescription(
-                'Clean theme-specific static files (var/view_preprocessed, pub/static) '
-                . 'for selected themes and global cache directories '
-                . '(var/page_cache, var/tmp, generated)'
-            )
+        $this->setName($this->getCommandName('theme', 'clean'))
+            ->setDescription('Clean theme static files and cache directories')
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
@@ -69,7 +65,7 @@ class CleanCommand extends AbstractCommand
                 InputOption::VALUE_NONE,
                 'Show what would be cleaned without actually deleting anything'
             )
-            ->setAliases(['m:st:c', 'frontend:clean']);
+            ->setAliases(['m:t:c', 'frontend:clean']);
     }
 
     /**
@@ -178,9 +174,9 @@ class CleanCommand extends AbstractCommand
         }
 
         $this->io->newLine();
-        $this->io->info('Usage: bin/magento mageforge:static:clean <theme-code> [<theme-code>...]');
-        $this->io->info('       bin/magento mageforge:static:clean --all');
-        $this->io->info('Example: bin/magento mageforge:static:clean Magento/luma');
+        $this->io->info('Usage: bin/magento mageforge:theme:clean <theme-code> [<theme-code>...]');
+        $this->io->info('       bin/magento mageforge:theme:clean --all');
+        $this->io->info('Example: bin/magento mageforge:theme:clean Magento/luma');
     }
 
     /**

@@ -94,11 +94,11 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 
 ---
 
-### 4. CleanCommand (`mageforge:static:clean`)
+### 4. CleanCommand (`mageforge:theme:clean`)
 
 **Purpose**: Cleans var/view_preprocessed, pub/static, var/page_cache, var/tmp and generated directories for specific theme.
 
-**File**: `/src/Console/Command/Static/CleanCommand.php`
+**File**: `/src/Console/Command/Theme/CleanCommand.php`
 
 **Dependencies**:
 
@@ -109,7 +109,7 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 **Usage**:
 
 ```bash
-bin/magento mageforge:static:clean [<themename>]
+bin/magento mageforge:theme:clean [<themename>]
 ```
 
 **Implementation Details**:
