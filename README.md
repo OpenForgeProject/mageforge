@@ -21,7 +21,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | Theme Type                      | Support Status                                             |
 | ------------------------------- | ---------------------------------------------------------- |
 | 🎯 Magento Standard             | ✅ Fully Supported                                         |
-| 🚀 Hyvä                         | ✅ Fully Supported                                         |
+| 🚀 Hyvä (TailwindCSS 3.x / 4.x) | ✅ Fully Supported                                         |
 | 🔄 Hyvä Fallback                | ✅ Fully Supported                                         |
 | 🎨 Custom TailwindCSS (no Hyvä) | ✅ Fully Supported                                         |
 | 💼 Avanta B2B                   | ✅ Fully Supported                                         |
@@ -31,16 +31,16 @@ Please ensure that your Magento installation meets this requirement before insta
 
 ### Available Commands
 
-| Command                             | Description                                               | Shortcodes                |
+| Command                             | Description                                               | Aliases                   |
 | ----------------------------------- | --------------------------------------------------------- | ------------------------- |
-| `mageforge:system:version`          | Shows current and latest version of the module            | `m:s:v`                   |
-| `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `m:s:c`                   |
-| `mageforge:theme:list`              | Lists all available themes                                | `m:t:l`                   |
-| `mageforge:theme:build`             | Builds selected themes (CSS/TailwindCSS)                  | `m:t:b`, `frontend:build` |
-| `mageforge:theme:watch`             | Starts watch mode for theme development                   | `m:t:w`, `frontend:watch` |
-| `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `m:h:t`                   |
-| `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues        | `m:h:c:c`, `hyva:check`   |
-| `mageforge:theme:clean`             | Clean theme static files and cache directories            | `m:t:c`, `frontend:clean` |
+| `mageforge:theme:list`              | Lists all available themes                                | `frontend:list`           |
+| `mageforge:theme:build`             | Builds selected themes (CSS/TailwindCSS)                  | `frontend:build`          |
+| `mageforge:theme:watch`             | Starts watch mode for theme development                   | `frontend:watch`          |
+| `mageforge:theme:clean`             | Clean theme static files and cache directories            | `frontend:clean`          |
+| `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues         | `hyva:check`              |
+| `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `hyva:tokens`             |
+| `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |
+| `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
 
 ---
 

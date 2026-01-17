@@ -65,7 +65,7 @@ class CleanCommand extends AbstractCommand
                 InputOption::VALUE_NONE,
                 'Show what would be cleaned without actually deleting anything'
             )
-            ->setAliases(['m:t:c', 'frontend:clean']);
+            ->setAliases(['frontend:clean']);
     }
 
     /**

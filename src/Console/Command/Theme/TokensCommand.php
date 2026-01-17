@@ -47,7 +47,7 @@ class TokensCommand extends AbstractCommand
     protected function configure(): void
     {
         $this->setName($this->getCommandName('hyva', 'tokens'))
-            ->setAliases(['m:h:t'])
+            ->setAliases(['hyva:tokens'])
             ->setDescription('Generate Hyvä design tokens from design.tokens.json or hyva.config.json')
             ->addArgument(
                 'themeCode',
