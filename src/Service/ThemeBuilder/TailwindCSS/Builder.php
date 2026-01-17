@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,6 +21,7 @@ class Builder implements BuilderInterface
         private readonly Shell $shell,
         private readonly File $fileDriver,
         private readonly StaticContentDeployer $staticContentDeployer,
+        private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner
     ) {
     }
@@ -54,9 +56,14 @@ class Builder implements BuilderInterface
         return false;
     }
 
-    public function build(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
+            return false;
+        }
+
+        // Clean static content if in developer mode
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -94,7 +101,6 @@ class Builder implements BuilderInterface
         chdir($currentDir);
 
         // Deploy static content
-        $themeCode = basename($themePath);
         if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
@@ -183,9 +189,14 @@ class Builder implements BuilderInterface
         return self::THEME_NAME;
     }
 
-    public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
+            return false;
+        }
+
+        // Clean static content if in developer mode
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -205,11 +216,11 @@ class Builder implements BuilderInterface
             } else {
                 $io->text('Starting watch mode... (use -v for verbose output)');
             }
-            
+
             chdir($tailwindPath);
             $exitCode = 0;
             passthru('npm run watch', $exitCode);
-            
+
             // Check if the command failed
             if ($exitCode !== 0) {
                 $io->error(sprintf('Watch mode exited with error code: %d', $exitCode));

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Laravel\Prompts\MultiSelectPrompt;
-use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
-use Magento\Framework\Filesystem;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\ThemeCleaner;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,13 +26,13 @@ class CleanCommand extends AbstractCommand
     private array $secureEnvStorage = [];
 
     /**
-     * @param Filesystem $filesystem
+     * @param ThemeCleaner $themeCleaner
      * @param ThemeList $themeList
      * @param ThemePath $themePath
      * @param ThemeSuggester $themeSuggester
      */
     public function __construct(
-        private readonly Filesystem $filesystem,
+        private readonly ThemeCleaner $themeCleaner,
         private readonly ThemeList $themeList,
         private readonly ThemePath $themePath,
         private readonly ThemeSuggester $themeSuggester
@@ -326,13 +325,13 @@ class CleanCommand extends AbstractCommand
         static $globalCleaned = false;
 
         $cleaned = 0;
-        $cleaned += $this->cleanViewPreprocessed($themeName, $dryRun);
-        $cleaned += $this->cleanPubStatic($themeName, $dryRun);
+        $cleaned += $this->themeCleaner->cleanViewPreprocessed($themeName, $this->io, $dryRun, true);
+        $cleaned += $this->themeCleaner->cleanPubStatic($themeName, $this->io, $dryRun, true);
 
         if (!$globalCleaned) {
-            $cleaned += $this->cleanPageCache($dryRun);
-            $cleaned += $this->cleanVarTmp($dryRun);
-            $cleaned += $this->cleanGenerated($dryRun);
+            $cleaned += $this->themeCleaner->cleanPageCache($this->io, $dryRun, true);
+            $cleaned += $this->themeCleaner->cleanVarTmp($this->io, $dryRun, true);
+            $cleaned += $this->themeCleaner->cleanGenerated($this->io, $dryRun, true);
             $globalCleaned = true;
         }
         return $cleaned;
@@ -681,219 +680,5 @@ class CleanCommand extends AbstractCommand
     {
         $this->secureEnvStorage = [];
         self::$cachedEnv = null;
-    }
-
-    /**
-     * Clean var/view_preprocessed directory for the theme
-     *
-     * @param string $themeName
-     * @param bool $dryRun
-     * @return int Number of directories cleaned
-     */
-    private function cleanViewPreprocessed(string $themeName, bool $dryRun = false): int
-    {
-        $cleaned = 0;
-        $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
-
-        // Extract vendor and theme parts
-        $themeParts = $this->parseThemeName($themeName);
-        if ($themeParts === null) {
-            return 0;
-        }
-
-        [$vendor, $theme] = $themeParts;
-
-        // Check if view_preprocessed directory exists
-        if (!$varDirectory->isDirectory('view_preprocessed')) {
-            return 0;
-        }
-
-        // Pattern: view_preprocessed/css/frontend/Vendor/theme
-        // and view_preprocessed/source/frontend/Vendor/theme
-        $pathsToClean = [
-            sprintf('view_preprocessed/css/frontend/%s/%s', $vendor, $theme),
-            sprintf('view_preprocessed/source/frontend/%s/%s', $vendor, $theme),
-        ];
-
-        foreach ($pathsToClean as $path) {
-            if ($varDirectory->isDirectory($path)) {
-                try {
-                    if (!$dryRun) {
-                        $varDirectory->delete($path);
-                    }
-                    $action = $dryRun ? 'Would clean' : 'Cleaned';
-                    $this->io->writeln(sprintf('  <fg=green>✓</> %s: var/%s', $action, $path));
-                    $cleaned++;
-                } catch (\Exception $e) {
-                    $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/%s - %s', $path, $e->getMessage()));
-                }
-            }
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Clean pub/static directory for the theme
-     *
-     * @param string $themeName
-     * @param bool $dryRun
-     * @return int Number of directories cleaned
-     */
-    private function cleanPubStatic(string $themeName, bool $dryRun = false): int
-    {
-        $cleaned = 0;
-        $staticDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::STATIC_VIEW);
-
-        // Extract vendor and theme parts
-        $themeParts = $this->parseThemeName($themeName);
-        if ($themeParts === null) {
-            return 0;
-        }
-
-        [$vendor, $theme] = $themeParts;
-
-        // Check if frontend directory exists in pub/static
-        if (!$staticDirectory->isDirectory('frontend')) {
-            return 0;
-        }
-
-        // Pattern: frontend/Vendor/theme
-        $pathToClean = sprintf('frontend/%s/%s', $vendor, $theme);
-
-        if ($staticDirectory->isDirectory($pathToClean)) {
-            try {
-                if (!$dryRun) {
-                    $staticDirectory->delete($pathToClean);
-                }
-                $action = $dryRun ? 'Would clean' : 'Cleaned';
-                $this->io->writeln(sprintf('  <fg=green>✓</> %s: pub/static/%s', $action, $pathToClean));
-                $cleaned++;
-            } catch (\Exception $e) {
-                $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: pub/static/%s - %s', $pathToClean, $e->getMessage()));
-            }
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Clean var/page_cache directory
-     *
-     * @param bool $dryRun
-     * @return int Number of directories cleaned
-     */
-    private function cleanPageCache(bool $dryRun = false): int
-    {
-        $cleaned = 0;
-        $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
-
-        if ($varDirectory->isDirectory('page_cache')) {
-            try {
-                if (!$dryRun) {
-                    $varDirectory->delete('page_cache');
-                }
-                $action = $dryRun ? 'Would clean' : 'Cleaned';
-                $this->io->writeln(sprintf('  <fg=green>✓</> %s: var/page_cache', $action));
-                $cleaned++;
-            } catch (\Exception $e) {
-                $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/page_cache - %s', $e->getMessage()));
-            }
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Clean var/tmp directory
-     *
-     * @param bool $dryRun
-     * @return int Number of directories cleaned
-     */
-    private function cleanVarTmp(bool $dryRun = false): int
-    {
-        $cleaned = 0;
-        $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
-
-        if ($varDirectory->isDirectory('tmp')) {
-            try {
-                if (!$dryRun) {
-                    $varDirectory->delete('tmp');
-                }
-                $action = $dryRun ? 'Would clean' : 'Cleaned';
-                $this->io->writeln(sprintf('  <fg=green>✓</> %s: var/tmp', $action));
-                $cleaned++;
-            } catch (\Exception $e) {
-                $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/tmp - %s', $e->getMessage()));
-            }
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Clean generated directory
-     *
-     * @param bool $dryRun
-     * @return int Number of directories cleaned
-     */
-    private function cleanGenerated(bool $dryRun = false): int
-    {
-        $cleaned = 0;
-        $generatedDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::GENERATED);
-
-        try {
-            $deletedCount = 0;
-
-            // Manually check for 'code' directory (the main generated content)
-            if ($generatedDirectory->isDirectory('code')) {
-                try {
-                    if (!$dryRun) {
-                        $generatedDirectory->delete('code');
-                    }
-                    $deletedCount++;
-                } catch (\Exception $e) {
-                    $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/code - %s', $e->getMessage()));
-                }
-            }
-
-            // Check for 'metadata' directory
-            if ($generatedDirectory->isDirectory('metadata')) {
-                try {
-                    if (!$dryRun) {
-                        $generatedDirectory->delete('metadata');
-                    }
-                    $deletedCount++;
-                } catch (\Exception $e) {
-                    $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/metadata - %s', $e->getMessage()));
-                }
-            }
-
-            if ($deletedCount > 0) {
-                $action = $dryRun ? 'Would clean' : 'Cleaned';
-                $this->io->writeln(sprintf('  <fg=green>✓</> %s: generated/*', $action));
-                $cleaned++;
-            }
-        } catch (\Exception $e) {
-            $this->io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated - %s', $e->getMessage()));
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Parse theme name into vendor and theme parts
-     *
-     * @param string $themeName
-     * @return array|null Array with [vendor, theme] or null if invalid format
-     */
-    private function parseThemeName(string $themeName): ?array
-    {
-        $themeParts = explode('/', $themeName);
-        if (count($themeParts) !== 2) {
-            return null;
-        }
-
-        return $themeParts;
     }
 }

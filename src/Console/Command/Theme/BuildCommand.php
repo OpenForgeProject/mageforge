@@ -271,7 +271,7 @@ class BuildCommand extends AbstractCommand
         }
 
         // Build the theme
-        if (!$builder->build($themePath, $io, $output, $isVerbose)) {
+        if (!$builder->build($themeCode, $themePath, $io, $output, $isVerbose)) {
             $io->error("Failed to build theme $themeCode.");
             return false;
         }
