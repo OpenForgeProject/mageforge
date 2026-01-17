@@ -48,7 +48,7 @@ ddev magento <command>
 
 ```bash
 ddev magento mageforge:theme:build Hyva/default    # Build theme
-ddev magento mageforge:static:clean Magento/luma   # Clean theme cache
+ddev magento mageforge:theme:clean Magento/luma    # Clean theme cache
 ddev magento setup:upgrade                         # Upgrade Magento
 ddev magento cache:clean                           # Clear cache
 ```
