@@ -8,6 +8,23 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.5.0](https://github.com/OpenForgeProject/mageforge/compare/0.4.0...0.5.0) (2026-01-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* create theme:clean command for cleaning theme static files and cache, remove old mageforge:static:clean command ([#80](https://github.com/OpenForgeProject/mageforge/issues/80))
+
+### Added
+
+* implement StaticContentCleaner and update theme build commands ([#83](https://github.com/OpenForgeProject/mageforge/issues/83)) ([80a6abf](https://github.com/OpenForgeProject/mageforge/commit/80a6abf8b63dfdf25233f884d3fc3c6a2648b05c))
+
+
+### Fixed
+
+* create theme:clean command for cleaning theme static files and cache, remove old mageforge:static:clean command ([#80](https://github.com/OpenForgeProject/mageforge/issues/80)) ([ffd5ec8](https://github.com/OpenForgeProject/mageforge/commit/ffd5ec89e87eb8aa3a1f19eb957bd3f95a5c50b1))
+* update command aliases for consistency and clarity ([#82](https://github.com/OpenForgeProject/mageforge/issues/82)) ([34640fa](https://github.com/OpenForgeProject/mageforge/commit/34640fa88f0b622780b7257f7a74a2b469453391))
+
 ## [0.4.0](https://github.com/OpenForgeProject/mageforge/compare/0.3.1...0.4.0) (2026-01-17)
 
 
