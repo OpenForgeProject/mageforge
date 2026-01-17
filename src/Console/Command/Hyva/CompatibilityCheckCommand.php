@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Hyva;
 
-use Laravel\Prompts\MultiSelectPrompt;
+use Laravel\Prompts\ConfirmPrompt;
+use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
@@ -25,6 +26,13 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const OPTION_THIRD_PARTY_ONLY = 'third-party-only';
     private const OPTION_INCLUDE_VENDOR = 'include-vendor';
     private const OPTION_DETAILED = 'detailed';
+
+    private const DISPLAY_MODE_ISSUES = 'issues';
+    private const DISPLAY_MODE_INCOMPATIBLE_ONLY = 'incompatible-only';
+    private const DISPLAY_MODE_SHOW_ALL = 'show-all';
+
+    private const SCOPE_THIRD_PARTY = 'third-party';
+    private const SCOPE_ALL = 'all';
 
     private array $originalEnv = [];
     private array $secureEnvStorage = [];
@@ -92,28 +100,43 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->setPromptEnvironment();
 
         try {
-            $scanOptionsPrompt = new MultiSelectPrompt(
-                label: 'Select scan options',
+            // Display mode selection
+            $displayModePrompt = new SelectPrompt(
+                label: 'What modules do you want to see?',
                 options: [
-                    'show-all' => 'Show all modules including compatible ones',
-                    'incompatible-only' => 'Show only incompatible modules (default behavior)',
-                    'include-vendor' => 'Include Magento core modules (default: third-party only)',
-                    'detailed' => 'Show detailed file-level issues with line numbers',
+                    self::DISPLAY_MODE_ISSUES => 'Modules with any issues (warnings or critical)',
+                    self::DISPLAY_MODE_INCOMPATIBLE_ONLY => 'Only modules with critical issues',
+                    self::DISPLAY_MODE_SHOW_ALL => 'All modules including compatible ones',
                 ],
-                default: [],
-                hint: 'Space to toggle, Enter to confirm. Default: third-party modules only',
-                required: false,
+                default: self::DISPLAY_MODE_ISSUES,
             );
 
-            $selectedOptions = $scanOptionsPrompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            $this->resetPromptEnvironment();
+            $displayMode = $displayModePrompt->prompt();
 
-            // Apply selected options to input
-            $showAll = in_array('show-all', $selectedOptions);
-            $incompatibleOnly = in_array('incompatible-only', $selectedOptions);
-            $includeVendor = in_array('include-vendor', $selectedOptions);
-            $detailed = in_array('detailed', $selectedOptions);
+            // Module scope selection
+            $scopePrompt = new SelectPrompt(
+                label: 'Which modules to scan?',
+                options: [
+                    self::SCOPE_THIRD_PARTY => 'Third-party modules only (exclude Magento_*)',
+                    self::SCOPE_ALL => 'All modules including Magento core',
+                ],
+                default: self::SCOPE_THIRD_PARTY,
+            );
+
+            $scope = $scopePrompt->prompt();
+
+            // Detailed view confirmation
+            $detailedPrompt = new ConfirmPrompt(
+                label: 'Show detailed file-level issues?',
+                default: false,
+            );
+
+            $detailed = $detailedPrompt->prompt();
+
+            // Map selected options to flags
+            $showAll = $displayMode === self::DISPLAY_MODE_SHOW_ALL;
+            $incompatibleOnly = $displayMode === self::DISPLAY_MODE_INCOMPATIBLE_ONLY;
+            $includeVendor = $scope === self::SCOPE_ALL;
             $thirdPartyOnly = false; // Not needed in interactive mode
 
             // Show selected configuration
@@ -126,25 +149,23 @@ class CompatibilityCheckCommand extends AbstractCommand
             } else {
                 $config[] = 'Show modules with issues';
             }
-            if ($includeVendor) {
-                $config[] = 'Include Magento core';
-            } else {
-                $config[] = 'Third-party modules only';
-            }
+            $config[] = $includeVendor ? 'Include Magento core' : 'Third-party modules only';
             if ($detailed) {
                 $config[] = 'Detailed issues';
             }
             $this->io->comment('Configuration: ' . implode(', ', $config));
             $this->io->newLine();
 
-            // Run scan with selected options (pass incompatibleOnly flag)
+            // Run scan with selected options
             return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly, $output);
-        } catch (\Exception $e) {
-            $this->resetPromptEnvironment();
+        } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             $this->io->info('Falling back to default scan (third-party modules only)...');
             $this->io->newLine();
             return $this->runDirectMode($input, $output);
+        } finally {
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
         }
     }
 
@@ -212,6 +233,9 @@ class CompatibilityCheckCommand extends AbstractCommand
         if ($results['hasIncompatibilities']) {
             $this->displayRecommendations();
         }
+
+        // Add spacing before exit
+        $this->io->newLine();
 
         // Return appropriate exit code
         return $results['summary']['criticalIssues'] > 0
@@ -301,15 +325,21 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         // Final message
         if ($summary['criticalIssues'] > 0) {
-            $this->io->error(sprintf(
-                'Found %d critical compatibility issue(s) that need attention.',
-                $summary['criticalIssues']
+            $this->io->newLine();
+            $this->io->writeln(sprintf(
+                '<fg=red>⚠</> Found <fg=red;options=bold>%d critical compatibility issue(s)</> in %d scanned modules.',
+                $summary['criticalIssues'],
+                $summary['total']
             ));
+            $this->io->writeln('These modules require modifications to work with Hyvä themes.');
         } elseif ($summary['warningIssues'] > 0) {
-            $this->io->warning(sprintf(
-                'Found %d warning(s). Review these for potential issues.',
-                $summary['warningIssues']
+            $this->io->newLine();
+            $this->io->writeln(sprintf(
+                '<fg=yellow>ℹ</> Found <fg=yellow;options=bold>%d warning(s)</> in %d scanned modules.',
+                $summary['warningIssues'],
+                $summary['total']
             ));
+            $this->io->writeln('Review these modules for potential compatibility issues.');
         } else {
             $this->io->success('All scanned modules are Hyvä compatible!');
         }
@@ -320,7 +350,6 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     private function displayRecommendations(): void
     {
-
         $this->io->section('Recommendations');
 
         $recommendations = [
@@ -444,6 +473,4 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->secureEnvStorage[$name] = $value;
         putenv("$name=$value");
     }
-
-
 }
