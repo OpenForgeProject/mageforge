@@ -90,8 +90,8 @@ Understanding the structure is crucial for contributing:
 
 3. **Test your changes**:
    ```bash
-   ddev magento m:t:l             # List themes
-   ddev magento m:t:b <theme>     # Build a theme
+   ddev magento mageforge:theme:list             # List themes
+   ddev magento mageforge:theme:build <theme>     # Build a theme
    ```
 
 ### Useful DDEV Commands
@@ -108,16 +108,16 @@ ddev restart                    # Restart containers
 
 ```bash
 # Test theme detection
-ddev magento m:t:l
+ddev magento mageforge:frontend:list
 
 # Test Hyvä theme build
-ddev magento m:t:b Hyva/default
+ddev magento mageforge:frontend:build Hyva/default
 
 # Test watch mode (Ctrl+C to exit)
-ddev magento m:t:w Hyva/default
+ddev magento mageforge:frontend:watch Hyva/default
 
 # System diagnostics
-ddev magento m:s:c
+ddev magento mageforge:system:check
 ```
 
 ## 📚 Documentation for Developers
