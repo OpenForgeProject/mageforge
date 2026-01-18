@@ -396,143 +396,174 @@ document.addEventListener('alpine:init', () => {
          * Show info badge with element details
          */
         showInfoBadge(element) {
-            // Get element data
-            const template = element.getAttribute('data-mageforge-template') || '';
-            const blockClass = element.getAttribute('data-mageforge-block') || '';
-            const module = element.getAttribute('data-mageforge-module') || '';
-            const viewModel = element.getAttribute('data-mageforge-viewmodel') || '';
-            const parentBlock = element.getAttribute('data-mageforge-parent') || '';
-            const blockAlias = element.getAttribute('data-mageforge-alias') || '';
-            const isOverride = element.getAttribute('data-mageforge-override') === '1';
+            const rect = this.getElementRect(element);
+            const elementId = element.getAttribute('data-mageforge-id');
 
-            // Get target element for dimensions (handle display:contents)
+            // Only rebuild badge content if it's a different element
+            if (this.infoBadge.dataset.currentElement !== elementId) {
+                this.buildBadgeContent(element, rect);
+                this.infoBadge.dataset.currentElement = elementId;
+            }
+
+            this.positionBadge(rect);
+        },
+
+        /**
+         * Get element rectangle (handles display:contents)
+         */
+        getElementRect(element) {
             let targetElement = element;
             const style = window.getComputedStyle(element);
             if (style.display === 'contents' && element.children.length > 0) {
                 targetElement = element.children[0];
             }
-            const rect = targetElement.getBoundingClientRect();
+            return targetElement.getBoundingClientRect();
+        },
 
-            // Store element ID to detect if we're updating the same element
-            const elementId = element.getAttribute('data-mageforge-id');
+        /**
+         * Build badge content with element metadata
+         */
+        buildBadgeContent(element, rect) {
+            const data = {
+                template: element.getAttribute('data-mageforge-template') || '',
+                blockClass: element.getAttribute('data-mageforge-block') || '',
+                module: element.getAttribute('data-mageforge-module') || '',
+                viewModel: element.getAttribute('data-mageforge-viewmodel') || '',
+                parentBlock: element.getAttribute('data-mageforge-parent') || '',
+                blockAlias: element.getAttribute('data-mageforge-alias') || '',
+                isOverride: element.getAttribute('data-mageforge-override') === '1'
+            };
 
-            // Only rebuild badge content if it's a different element
-            if (this.infoBadge.dataset.currentElement !== elementId) {
-                // Clear badge
-                this.infoBadge.innerHTML = '';
+            // Clear badge
+            this.infoBadge.innerHTML = '';
 
-                // Template section with override indicator
-                let templateDisplay = template;
-                if (isOverride) {
-                    templateDisplay = '🔧 ' + template;
-                }
-                const templateDiv = this.createInfoSection('📄 Template', templateDisplay, '#60a5fa');
-                this.infoBadge.appendChild(templateDiv);
+            // Template section with override indicator
+            const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
+            this.infoBadge.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
 
-                // Block section
-                const blockDiv = this.createInfoSection('📦 Block', blockClass, '#a78bfa');
-                this.infoBadge.appendChild(blockDiv);
+            // Block section
+            this.infoBadge.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
 
-                // Block Alias section (if exists)
-                if (blockAlias) {
-                    const aliasDiv = this.createInfoSection('🏷️ Block Name', blockAlias, '#34d399');
-                    this.infoBadge.appendChild(aliasDiv);
-                }
-
-                // Parent Block section (if exists)
-                if (parentBlock) {
-                    const parentDiv = this.createInfoSection('⬆️ Parent Block', parentBlock, '#fb923c');
-                    this.infoBadge.appendChild(parentDiv);
-                }
-
-                // ViewModel section (if exists)
-                if (viewModel) {
-                    const viewModelDiv = this.createInfoSection('⚡ ViewModel', viewModel, '#22d3ee');
-                    this.infoBadge.appendChild(viewModelDiv);
-                }
-
-                // Module section
-                const moduleDiv = this.createInfoSection('📍 Module', module, '#fbbf24');
-                this.infoBadge.appendChild(moduleDiv);
-
-                // Dimensions
-                const dimensionsDiv = this.createInfoSection('📐 Dimensions', `${Math.round(rect.width)} × ${Math.round(rect.height)} px`, '#6b7280');
-                dimensionsDiv.style.borderTop = '1px solid rgba(148, 163, 184, 0.12)';
-                dimensionsDiv.style.paddingTop = '12px';
-                dimensionsDiv.style.marginTop = '12px';
-                this.infoBadge.appendChild(dimensionsDiv);
-
-                // Branding footer
-                const brandingDiv = document.createElement('div');
-                brandingDiv.style.cssText = `
-                    margin-top: 16px;
-                    padding-top: 12px;
-                    border-top: 1px solid rgba(148, 163, 184, 0.12);
-                    text-align: center;
-                    font-size: 10px;
-                    color: #94a3b8;
-                    font-weight: 500;
-                    letter-spacing: 0.025em;
-                `;
-                brandingDiv.innerHTML = 'Created with <span style="color: #ff6b6b; font-size: 12px;">🧡</span> by <span style="color: #60a5fa; font-weight: 600;">MageForge</span>';
-                this.infoBadge.appendChild(brandingDiv);
-
-                // Store current element ID
-                this.infoBadge.dataset.currentElement = elementId;
+            // Optional sections
+            if (data.blockAlias) {
+                this.infoBadge.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
+            }
+            if (data.parentBlock) {
+                this.infoBadge.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
+            }
+            if (data.viewModel) {
+                this.infoBadge.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
             }
 
+            // Module section
+            this.infoBadge.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
+
+            // Dimensions section
+            const dimensionsDiv = this.createInfoSection('📐 Dimensions', `${Math.round(rect.width)} × ${Math.round(rect.height)} px`, '#6b7280');
+            dimensionsDiv.style.borderTop = '1px solid rgba(148, 163, 184, 0.12)';
+            dimensionsDiv.style.paddingTop = '12px';
+            dimensionsDiv.style.marginTop = '12px';
+            this.infoBadge.appendChild(dimensionsDiv);
+
+            // Branding footer
+            this.infoBadge.appendChild(this.createBrandingFooter());
+        },
+
+        /**
+         * Create branding footer
+         */
+        createBrandingFooter() {
+            const brandingDiv = document.createElement('div');
+            brandingDiv.style.cssText = `
+                margin-top: 16px;
+                padding-top: 12px;
+                border-top: 1px solid rgba(148, 163, 184, 0.12);
+                text-align: center;
+                font-size: 10px;
+                color: #94a3b8;
+                font-weight: 500;
+                letter-spacing: 0.025em;
+            `;
+            brandingDiv.innerHTML = 'Created with <span style="color: #ff6b6b; font-size: 12px;">🧡</span> by <span style="color: #60a5fa; font-weight: 600;">MageForge</span>';
+            return brandingDiv;
+        },
+
+        /**
+         * Position badge relative to element
+         */
+        positionBadge(rect) {
             this.infoBadge.style.display = 'block';
 
-            // Get badge dimensions after display:block
             const badgeRect = this.infoBadge.getBoundingClientRect();
-
-            // Position badge directly below element (no gap)
             const badgeOffset = 0;
+
+            // Calculate initial position
             let x = rect.left + window.scrollX;
             let y = rect.bottom + window.scrollY + badgeOffset;
 
-            // Ensure valid coordinates (prevent NaN or negative values)
+            // Validate coordinates
             if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0) {
-                // Fallback to safe position
                 x = 10;
                 y = 10;
             }
 
-            // Keep badge on screen horizontally
-            if (x + badgeRect.width > window.innerWidth + window.scrollX) {
-                x = window.innerWidth + window.scrollX - badgeRect.width - 10;
-            }
-            if (x < window.scrollX + 10) {
-                x = window.scrollX + 10;
-            }
+            // Constrain horizontally
+            x = this.constrainHorizontally(x, badgeRect.width);
 
-            // Keep badge on screen vertically - if no space below, show above element
-            if (y + badgeRect.height > window.innerHeight + window.scrollY) {
-                // Show above element instead
+            // Check vertical space and adjust if needed
+            const showAbove = this.shouldShowAbove(y, badgeRect.height);
+            if (showAbove) {
                 y = rect.top + window.scrollY - badgeRect.height - badgeOffset;
+                if (y < window.scrollY + 10) {
+                    y = window.scrollY + 10;
+                }
+            }
 
-                // Update border radius - no bottom corners when pinned above
+            // Update badge styling based on position
+            this.updateBadgePlacement(showAbove);
+
+            // Apply position
+            this.infoBadge.style.left = `${x}px`;
+            this.infoBadge.style.top = `${y}px`;
+        },
+
+        /**
+         * Constrain x position horizontally within viewport
+         */
+        constrainHorizontally(x, badgeWidth) {
+            const maxX = window.innerWidth + window.scrollX - badgeWidth - 10;
+            const minX = window.scrollX + 10;
+
+            if (x > maxX) return maxX;
+            if (x < minX) return minX;
+            return x;
+        },
+
+        /**
+         * Check if badge should be shown above element
+         */
+        shouldShowAbove(y, badgeHeight) {
+            return y + badgeHeight > window.innerHeight + window.scrollY;
+        },
+
+        /**
+         * Update badge styling based on placement (above/below)
+         */
+        updateBadgePlacement(showAbove) {
+            const arrow = this.infoBadge.querySelector('.mageforge-inspector-arrow');
+
+            if (showAbove) {
+                // Badge above element
                 this.infoBadge.style.borderRadius = '12px 12px 0 0';
-
-                // Update arrow position and direction
-                const arrow = this.infoBadge.querySelector('.mageforge-inspector-arrow');
                 if (arrow) {
                     arrow.style.top = 'auto';
                     arrow.style.bottom = '-8px';
                     arrow.style.borderBottom = 'none';
                     arrow.style.borderTop = '8px solid rgba(15, 23, 42, 0.98)';
                 }
-
-                // If also no space above, keep it within viewport
-                if (y < window.scrollY + 10) {
-                    y = window.scrollY + 10;
-                }
             } else {
-                // Badge is below element - no top corners
+                // Badge below element
                 this.infoBadge.style.borderRadius = '0 0 12px 12px';
-
-                // Reset arrow position and direction for bottom placement
-                const arrow = this.infoBadge.querySelector('.mageforge-inspector-arrow');
                 if (arrow) {
                     arrow.style.top = '-8px';
                     arrow.style.bottom = 'auto';
@@ -540,9 +571,6 @@ document.addEventListener('alpine:init', () => {
                     arrow.style.borderBottom = '8px solid rgba(15, 23, 42, 0.98)';
                 }
             }
-
-            this.infoBadge.style.left = `${x}px`;
-            this.infoBadge.style.top = `${y}px`;
         },
 
         /**
