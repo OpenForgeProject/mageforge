@@ -41,6 +41,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `hyva:tokens`             |
 | `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |
 | `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
+| `mageforge:dev:inspector`           | Enable, disable or check status of Frontend Inspector     | -                         |
 
 ---
 

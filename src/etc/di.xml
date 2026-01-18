@@ -23,6 +23,8 @@
                               OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand</item>
                         <item name="mageforge_theme_tokens" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
+                        <item name="mageforge_dev_inspector" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand</item>
                   </argument>
             </arguments>
       </type>
