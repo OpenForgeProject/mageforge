@@ -444,7 +444,7 @@ document.addEventListener('alpine:init', () => {
 
             // Only rebuild badge content if it's a different element
             if (this.infoBadge.dataset.currentElement !== elementId) {
-                this.buildBadgeContent(element, rect);
+                this.buildBadgeContent(element);
                 this.infoBadge.dataset.currentElement = elementId;
             }
 
@@ -466,7 +466,7 @@ document.addEventListener('alpine:init', () => {
         /**
          * Build badge content with element metadata
          */
-        buildBadgeContent(element, rect) {
+        buildBadgeContent(element) {
             const data = {
                 template: element.getAttribute('data-mageforge-template') || '',
                 blockClass: element.getAttribute('data-mageforge-block') || '',
@@ -577,8 +577,7 @@ document.addEventListener('alpine:init', () => {
             // Find the element to rebuild
             const targetElement = element || this.hoveredElement || this.selectedElement;
             if (targetElement) {
-                const rect = this.getElementRect(targetElement);
-                this.buildBadgeContent(targetElement, rect);
+                this.buildBadgeContent(targetElement);
             }
         },
 
