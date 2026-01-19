@@ -385,6 +385,76 @@ bin/magento mageforge:hyva:tokens Hyva/default
 
 ---
 
+### 8. InspectorCommand (`mageforge:theme:inspector`)
+
+**Purpose**: Enable, disable, or check status of the MageForge Frontend Inspector - an interactive element inspector for debugging templates, blocks, and modules in the frontend.
+
+**File**: `/src/Console/Command/Dev/InspectorCommand.php`
+
+**Dependencies**:
+
+- `WriterInterface` - Service to write configuration values
+- `State` - Service to check Magento application mode
+- `CacheManager` - Service to clean configuration cache
+
+**Usage**:
+
+```bash
+# Enable inspector
+bin/magento mageforge:theme:inspector enable
+
+# Disable inspector
+bin/magento mageforge:theme:inspector disable
+
+# Check status
+bin/magento mageforge:theme:inspector status
+```
+
+**Implementation Details**:
+
+- **Enable Action**:
+  - Validates that Magento is in developer mode
+  - Sets `dev/mageforge_inspector/enabled` configuration to `1`
+  - Cleans config cache
+  - Displays usage instructions with keyboard shortcuts
+- **Disable Action**:
+  - Validates that Magento is in developer mode
+  - Sets `dev/mageforge_inspector/enabled` configuration to `0`
+  - Cleans config cache
+- **Status Action**:
+  - Displays current Magento mode (developer/production/default)
+  - Shows inspector enabled/disabled status
+  - Provides guidance if requirements are not met
+
+**Requirements**:
+
+- **Developer Mode**: Inspector can only be enabled/disabled in developer mode
+- **Allowed IP**: Inspector only renders for IPs configured in Magento's Developer Client Restrictions
+- **Browser**: Modern browser with JavaScript enabled (Alpine.js support)
+
+**Frontend Usage** (after enabling):
+
+- Press `Ctrl+Shift+I` (or `Cmd+Option+I` on macOS) to toggle the inspector
+- Hover over elements to see their template information in real-time
+- Click on an element to pin the inspector panel
+- Press `ESC` to close the inspector
+- Use copy buttons to copy template paths and block class names to clipboard
+
+**Security**:
+
+- Only active in developer mode
+- Respects Magento's Developer Client Restrictions (allowed IPs)
+- Automatically disabled in production mode
+- Data attributes only injected when all security checks pass
+
+**Error Handling**:
+
+- Returns error with instructions if not in developer mode
+- Clears error message explaining current mode and how to switch
+- Validates action argument (must be: enable, disable, or status)
+
+---
+
 ## Command Services
 
 The commands rely on several services for their functionality:

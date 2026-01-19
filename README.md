@@ -37,6 +37,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:theme:build`             | Builds selected themes (CSS/TailwindCSS)                  | `frontend:build`          |
 | `mageforge:theme:watch`             | Starts watch mode for theme development                   | `frontend:watch`          |
 | `mageforge:theme:clean`             | Clean theme static files and cache directories            | `frontend:clean`          |
+| `mageforge:theme:inspector`         | Enable, disable or check status of Frontend Inspector     | -                         |
 | `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues         | `hyva:check`              |
 | `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `hyva:tokens`             |
 | `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |

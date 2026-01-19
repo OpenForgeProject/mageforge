@@ -170,6 +170,11 @@ jobs:
           echo "Testing TokensCommand with invalid theme name:"
           bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
 
+          echo "Test MageForge Inspector commands:"
+          bin/magento mageforge:theme:inspector --help
+
+          echo "Test Inspector status command:"
+          bin/magento mageforge:theme:inspector status
 
       - name: Test Summary
         run: |
@@ -325,6 +330,11 @@ jobs:
           echo "Testing TokensCommand with invalid theme name:"
           bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
 
+          echo "Test MageForge Inspector commands:"
+          bin/magento mageforge:theme:inspector --help
+
+          echo "Test Inspector status command:"
+          bin/magento mageforge:theme:inspector status
 
       - name: Test Summary
         run: |

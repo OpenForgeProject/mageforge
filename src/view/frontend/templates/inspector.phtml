@@ -1,0 +1,16 @@
+<?php
+/**
+ * MageForge Inspector Template
+ *
+ * Initializes the Alpine.js inspector component.
+ * The floating button and info badge are created dynamically via JavaScript.
+ *
+ * @var \OpenForgeProject\MageForge\Block\Inspector $block
+ */
+?>
+<!-- MageForge Inspector Assets -->
+<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getCssUrl()) ?>" />
+<script defer src="<?= $block->escapeUrl($block->getJsUrl()) ?>"></script>
+
+<!-- Inspector Component Wrapper -->
+<div class="mageforge-inspector" x-data="mageforgeInspector"></div>
