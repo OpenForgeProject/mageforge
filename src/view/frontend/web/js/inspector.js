@@ -96,7 +96,7 @@ document.addEventListener('alpine:init', () => {
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 font-size: 11px;
                 line-height: 1.6;
-                pointer-events: none;
+                pointer-events: auto;
                 z-index: 10000000;
                 display: none;
                 box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -290,6 +290,11 @@ document.addEventListener('alpine:init', () => {
 
             // Don't update if mouse is over the floating button
             if (this.floatingButton && this.floatingButton.contains(e.target)) {
+                return;
+            }
+
+            // Don't update if mouse is over the info badge
+            if (this.infoBadge && this.infoBadge.contains(e.target)) {
                 return;
             }
 
