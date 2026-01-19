@@ -52,12 +52,29 @@ class InspectorCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('dev', 'inspector'))
-            ->setDescription('Enable, disable or check status of MageForge Frontend Inspector')
+        $this->setName($this->getCommandName('theme', 'inspector'))
+            ->setDescription('Manage MageForge Frontend Inspector (Actions: enable|disable|status)')
             ->addArgument(
                 self::ARGUMENT_ACTION,
                 InputArgument::REQUIRED,
                 'Action to perform: enable, disable, or status'
+            )
+            ->setHelp(
+                <<<HELP
+The <info>%command.name%</info> command manages the MageForge Frontend Inspector:
+
+  <info>php %command.full_name%</info> <comment>enable</comment>
+  Enable the inspector (requires developer mode)
+
+  <info>php %command.full_name%</info> <comment>disable</comment>
+  Disable the inspector
+
+  <info>php %command.full_name%</info> <comment>status</comment>
+  Show current inspector status
+
+The inspector allows you to hover over frontend elements to see template paths,
+block classes, modules, and other metadata. Activate with Ctrl+Shift+I.
+HELP
             );
 
         parent::configure();
@@ -168,7 +185,7 @@ class InspectorCommand extends AbstractCommand
             ]);
         } elseif (!$isEnabled) {
             $this->io->newLine();
-            $this->io->note('Run "bin/magento mageforge:dev:inspector enable" to activate the inspector.');
+            $this->io->note('Run "bin/magento mageforge:theme:inspector enable" to activate the inspector.');
         } else {
             $this->io->newLine();
             $this->io->writeln('<info>✓</info> Inspector is active and ready to use!');

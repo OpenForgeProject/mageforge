@@ -385,7 +385,7 @@ bin/magento mageforge:hyva:tokens Hyva/default
 
 ---
 
-### 8. InspectorCommand (`mageforge:dev:inspector`)
+### 8. InspectorCommand (`mageforge:theme:inspector`)
 
 **Purpose**: Enable, disable, or check status of the MageForge Frontend Inspector - an interactive element inspector for debugging templates, blocks, and modules in the frontend.
 
@@ -401,13 +401,13 @@ bin/magento mageforge:hyva:tokens Hyva/default
 
 ```bash
 # Enable inspector
-bin/magento mageforge:dev:inspector enable
+bin/magento mageforge:theme:inspector enable
 
 # Disable inspector
-bin/magento mageforge:dev:inspector disable
+bin/magento mageforge:theme:inspector disable
 
 # Check status
-bin/magento mageforge:dev:inspector status
+bin/magento mageforge:theme:inspector status
 ```
 
 **Implementation Details**:
