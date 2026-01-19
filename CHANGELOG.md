@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.6.0](https://github.com/OpenForgeProject/mageforge/compare/0.5.0...0.6.0) (2026-01-19)
+
+
+### Added
+
+* dev Inspector Overlay (Frontend) ([#85](https://github.com/OpenForgeProject/mageforge/issues/85)) ([806d04a](https://github.com/OpenForgeProject/mageforge/commit/806d04a252eb70f6f76131a672296d62a7c5372b))
+
 ## [0.5.0](https://github.com/OpenForgeProject/mageforge/compare/0.4.0...0.5.0) (2026-01-17)
 
 
