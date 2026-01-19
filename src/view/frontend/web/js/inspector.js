@@ -19,6 +19,7 @@ document.addEventListener('alpine:init', () => {
         hoverDelay: 50, // ms delay for accurate position calculation
         lastBadgeUpdate: 0,
         badgeUpdateDelay: 150, // ms delay to prevent flickering
+        activeTab: 'structure', // Current active tab in inspector
         panelData: {
             template: '',
             block: '',
@@ -459,36 +460,154 @@ document.addEventListener('alpine:init', () => {
             // Clear badge
             this.infoBadge.innerHTML = '';
 
-            // Template section with override indicator
-            const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
-            this.infoBadge.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
-
-            // Block section
-            this.infoBadge.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
-
-            // Optional sections
-            if (data.blockAlias) {
-                this.infoBadge.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
-            }
-            if (data.parentBlock) {
-                this.infoBadge.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
-            }
-            if (data.viewModel) {
-                this.infoBadge.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
-            }
-
-            // Module section
-            this.infoBadge.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
-
-            // Dimensions section
-            const dimensionsDiv = this.createInfoSection('📐 Dimensions', `${Math.round(rect.width)} × ${Math.round(rect.height)} px`, '#6b7280');
-            dimensionsDiv.style.borderTop = '1px solid rgba(148, 163, 184, 0.12)';
-            dimensionsDiv.style.paddingTop = '12px';
-            dimensionsDiv.style.marginTop = '12px';
-            this.infoBadge.appendChild(dimensionsDiv);
+            // Create tab system
+            this.createTabSystem(data);
 
             // Branding footer
             this.infoBadge.appendChild(this.createBrandingFooter());
+        },
+
+        /**
+         * Create tab system for inspector
+         */
+        createTabSystem(data) {
+            // Tab container
+            const tabContainer = document.createElement('div');
+            tabContainer.style.cssText = 'margin-bottom: 16px;';
+
+            // Tab header
+            const tabHeader = document.createElement('div');
+            tabHeader.style.cssText = `
+                display: flex;
+                gap: 4px;
+                margin-bottom: 16px;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            `;
+
+            // Define tabs
+            const tabs = [
+                { id: 'structure', label: 'Structure', icon: '🏰' },
+                { id: 'coming-soon', label: 'Coming Soon', icon: '🚀' }
+                // Future tabs can be added here:
+                // { id: 'performance', label: 'Performance', icon: '⚡' },
+                // { id: 'seo', label: 'SEO', icon: '🔍' },
+            ];
+
+            // Tab content container
+            const tabContentContainer = document.createElement('div');
+
+            // Create tab buttons
+            tabs.forEach(tab => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = tab.label;
+                button.style.cssText = `
+                    padding: 8px 12px;
+                    background: ${this.activeTab === tab.id ? 'rgba(59, 130, 246, 0.15)' : 'transparent'};
+                    color: ${this.activeTab === tab.id ? '#60a5fa' : '#94a3b8'};
+                    border: none;
+                    border-bottom: 2px solid ${this.activeTab === tab.id ? '#60a5fa' : 'transparent'};
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 600;
+                    letter-spacing: 0.025em;
+                    transition: all 0.2s ease;
+                    border-radius: 6px 6px 0 0;
+                    font-family: inherit;
+                `;
+
+                button.onmouseenter = () => {
+                    if (this.activeTab !== tab.id) {
+                        button.style.background = 'rgba(255, 255, 255, 0.05)';
+                        button.style.color = '#cbd5e1';
+                    }
+                };
+
+                button.onmouseleave = () => {
+                    if (this.activeTab !== tab.id) {
+                        button.style.background = 'transparent';
+                        button.style.color = '#94a3b8';
+                    }
+                };
+
+                button.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.switchTab(tab.id, data);
+                };
+
+                tabHeader.appendChild(button);
+            });
+
+            tabContainer.appendChild(tabHeader);
+            tabContainer.appendChild(tabContentContainer);
+            this.infoBadge.appendChild(tabContainer);
+
+            // Render initial tab content
+            this.renderTabContent(this.activeTab, data, tabContentContainer);
+        },
+
+        /**
+         * Switch to different tab
+         */
+        switchTab(tabId, data) {
+            this.activeTab = tabId;
+
+            // Find the element to rebuild
+            const element = this.hoveredElement || this.selectedElement;
+            if (element) {
+                const rect = this.getElementRect(element);
+                this.buildBadgeContent(element, rect);
+            }
+        },
+
+        /**
+         * Render content for specific tab
+         */
+        renderTabContent(tabId, data, container) {
+            container.innerHTML = '';
+
+            if (tabId === 'structure') {
+                // Template section with override indicator
+                const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
+                container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
+
+                // Block section
+                container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
+
+                // Optional sections
+                if (data.blockAlias) {
+                    container.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
+                }
+                if (data.parentBlock) {
+                    container.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
+                }
+                if (data.viewModel) {
+                    container.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
+                }
+
+                // Module section
+                container.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
+            } else if (tabId === 'coming-soon') {
+                // Coming Soon content
+                const comingSoonDiv = document.createElement('div');
+                comingSoonDiv.style.cssText = `
+                    text-align: center;
+                    padding: 24px 16px;
+                    color: #94a3b8;
+                    font-size: 12px;
+                    line-height: 1.6;
+                `;
+                comingSoonDiv.innerHTML = `
+                    <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
+                    <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Coming Soon</div>
+                    <div style="color: #94a3b8;">MageForge is currently building something beautiful for you</div>
+                `;
+                container.appendChild(comingSoonDiv);
+            }
+            // Future tabs can be added here:
+            // else if (tabId === 'performance') { ... }
+            // else if (tabId === 'seo') { ... }
         },
 
         /**
