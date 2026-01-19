@@ -501,7 +501,7 @@ document.addEventListener('alpine:init', () => {
                 font-weight: 500;
                 letter-spacing: 0.025em;
             `;
-            brandingDiv.innerHTML = 'Created with <span style="color: #ff6b6b; font-size: 12px;">🧡</span> by <span style="color: #60a5fa; font-weight: 600;">MageForge</span>';
+            brandingDiv.innerHTML = 'Made with <span style="color: #ff6b6b; font-size: 12px;">🧡</span> by <span style="color: #60a5fa; font-weight: 600;">MageForge</span>';
             return brandingDiv;
         },
 
