@@ -15,6 +15,8 @@ document.addEventListener('alpine:init', () => {
         floatingButton: null,
         mouseMoveHandler: null,
         clickHandler: null,
+        hoverTimeout: null,
+        hoverDelay: 50, // ms delay for accurate position calculation
         lastBadgeUpdate: 0,
         badgeUpdateDelay: 150, // ms delay to prevent flickering
         panelData: {
@@ -94,7 +96,7 @@ document.addEventListener('alpine:init', () => {
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 font-size: 11px;
                 line-height: 1.6;
-                pointer-events: auto;
+                pointer-events: none;
                 z-index: 10000000;
                 display: none;
                 box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -265,6 +267,13 @@ document.addEventListener('alpine:init', () => {
          */
         deactivatePicker() {
             this.isPickerActive = false;
+
+            // Clear any pending hover timeout
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+                this.hoverTimeout = null;
+            }
+
             document.removeEventListener('mousemove', this.mouseMoveHandler);
             document.removeEventListener('click', this.clickHandler, false);
             document.body.style.cursor = '';
@@ -279,29 +288,37 @@ document.addEventListener('alpine:init', () => {
         handleMouseMove(e) {
             if (!this.isPickerActive) return;
 
-            // Don't update if mouse is over the info badge or floating button
-            if ((this.infoBadge && this.infoBadge.contains(e.target)) ||
-                (this.floatingButton && this.floatingButton.contains(e.target))) {
+            // Don't update if mouse is over the floating button
+            if (this.floatingButton && this.floatingButton.contains(e.target)) {
                 return;
             }
 
             const element = this.findInspectableElement(e.target);
 
-            if (element && element !== this.hoveredElement) {
-                // Throttle badge updates to prevent flickering
-                const now = Date.now();
-                if (now - this.lastBadgeUpdate < this.badgeUpdateDelay) {
-                    // Only update highlight, keep badge
-                    this.hoveredElement = element;
-                    this.showHighlight(element);
-                    return;
-                }
+            // Clear any existing hover timeout
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+                this.hoverTimeout = null;
+            }
 
-                this.hoveredElement = element;
-                this.lastBadgeUpdate = now;
-                this.showHighlight(element);
-                this.updatePanelData(element);
-                this.showInfoBadge(element);
+            if (element && element !== this.hoveredElement) {
+                // Debounce hover updates for accurate positioning
+                this.hoverTimeout = setTimeout(() => {
+                    // Throttle badge updates to prevent flickering
+                    const now = Date.now();
+                    if (now - this.lastBadgeUpdate < this.badgeUpdateDelay) {
+                        // Only update highlight, keep badge
+                        this.hoveredElement = element;
+                        this.showHighlight(element);
+                        return;
+                    }
+
+                    this.hoveredElement = element;
+                    this.lastBadgeUpdate = now;
+                    this.showHighlight(element);
+                    this.updatePanelData(element);
+                    this.showInfoBadge(element);
+                }, this.hoverDelay);
             } else if (!element && this.hoveredElement) {
                 // Only hide highlight when leaving element, keep badge visible
                 if (this.highlightBox) {
@@ -599,6 +616,7 @@ document.addEventListener('alpine:init', () => {
                 width: 100%;
                 box-sizing: border-box;
                 font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+                pointer-events: auto;
             `;
             textSpan.textContent = text;
             textSpan.title = 'Click to copy';
