@@ -588,243 +588,270 @@ document.addEventListener('alpine:init', () => {
             container.innerHTML = '';
 
             if (tabId === 'structure') {
-                // Check if element has Magento template data
-                const hasTemplateData = data.template || data.blockClass || data.module;
-
-                if (!hasTemplateData) {
-                    // Try to find parent with template data
-                    const parentWithData = this.findParentWithTemplateData(element);
-
-                    if (parentWithData) {
-                        // Show parent's template data with inheritance note
-                        const parentData = {
-                            template: parentWithData.getAttribute('data-mageforge-template') || '',
-                            blockClass: parentWithData.getAttribute('data-mageforge-block') || '',
-                            module: parentWithData.getAttribute('data-mageforge-module') || '',
-                            viewModel: parentWithData.getAttribute('data-mageforge-viewmodel') || '',
-                            parentBlock: parentWithData.getAttribute('data-mageforge-parent') || '',
-                            blockAlias: parentWithData.getAttribute('data-mageforge-alias') || '',
-                            isOverride: parentWithData.getAttribute('data-mageforge-override') === '1'
-                        };
-
-                        // Inheritance note
-                        const inheritanceNote = document.createElement('div');
-                        inheritanceNote.style.cssText = `
-                            background: rgba(251, 191, 36, 0.1);
-                            border: 1px solid rgba(251, 191, 36, 0.3);
-                            border-radius: 8px;
-                            padding: 10px 12px;
-                            margin-bottom: 16px;
-                            font-size: 11px;
-                            color: #fbbf24;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        `;
-                        inheritanceNote.innerHTML = `
-                            <span style="font-size: 14px;">⬆️</span>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 2px;">Inherited from Parent</div>
-                                <div style="color: #fcd34d; font-size: 10px;">This &lt;${element.tagName.toLowerCase()}&gt; element is inside a Magento block</div>
-                            </div>
-                        `;
-                        container.appendChild(inheritanceNote);
-
-                        // Template section
-                        const templateDisplay = parentData.isOverride ? '🔧 ' + parentData.template : parentData.template;
-                        container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
-
-                        // Block section
-                        container.appendChild(this.createInfoSection('📦 Block', parentData.blockClass, '#a78bfa'));
-
-                        // Optional sections
-                        if (parentData.blockAlias) {
-                            container.appendChild(this.createInfoSection('🏷️ Block Name', parentData.blockAlias, '#34d399'));
-                        }
-                        if (parentData.parentBlock) {
-                            container.appendChild(this.createInfoSection('⬆️ Parent Block', parentData.parentBlock, '#fb923c'));
-                        }
-                        if (parentData.viewModel) {
-                            container.appendChild(this.createInfoSection('⚡ ViewModel', parentData.viewModel, '#22d3ee'));
-                        }
-
-                        // Module section
-                        container.appendChild(this.createInfoSection('📍 Module', parentData.module, '#fbbf24'));
-
-                        return;
-                    }
-
-                    // No Magento template data available at all
-                    const noDataDiv = document.createElement('div');
-                    noDataDiv.style.cssText = `
-                        text-align: center;
-                        padding: 24px 16px;
-                        color: #94a3b8;
-                        font-size: 12px;
-                        line-height: 1.6;
-                    `;
-                    noDataDiv.innerHTML = `
-                        <div style="font-size: 24px; margin-bottom: 12px;">📋</div>
-                        <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">No Template Data</div>
-                        <div style="color: #94a3b8;">This element is not inside a Magento template block</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 8px;">Element: <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">&lt;${element.tagName.toLowerCase()}&gt;</code></div>
-                    `;
-                    container.appendChild(noDataDiv);
-                    return;
-                }
-
-                // Template section with override indicator
-                const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
-                container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
-
-                // Block section
-                container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
-
-                // Optional sections
-                if (data.blockAlias) {
-                    container.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
-                }
-                if (data.parentBlock) {
-                    container.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
-                }
-                if (data.viewModel) {
-                    container.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
-                }
-
-                // Module section
-                container.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
+                this.renderStructureTab(data, container, element);
             } else if (tabId === 'accessibility') {
-                // Use the passed element for accessibility analysis
-                if (!element) return;
-
-                // Collect accessibility information
-                const a11yData = this.analyzeAccessibility(element);
-
-                // Semantic Element
-                container.appendChild(this.createInfoSection('🏷️ Element Type', a11yData.tagName, '#60a5fa'));
-
-                // ARIA Role
-                if (a11yData.role) {
-                    container.appendChild(this.createInfoSection('👤 ARIA Role', a11yData.role, '#a78bfa'));
-                }
-
-                // Accessible Name
-                if (a11yData.accessibleName) {
-                    container.appendChild(this.createInfoSection('🗣️ Accessible Name', a11yData.accessibleName, '#34d399'));
-                }
-
-                // ARIA Label
-                if (a11yData.ariaLabel) {
-                    container.appendChild(this.createInfoSection('🏷️ ARIA Label', a11yData.ariaLabel, '#22d3ee'));
-                }
-
-                // ARIA Described By
-                if (a11yData.ariaDescribedBy) {
-                    container.appendChild(this.createInfoSection('📝 ARIA Described By', a11yData.ariaDescribedBy, '#fbbf24'));
-                }
-
-                // Alt Text (for images)
-                if (a11yData.altText !== null) {
-                    const altStatus = a11yData.altText ? a11yData.altText : '⚠️ Missing';
-                    const altColor = a11yData.altText ? '#34d399' : '#ef4444';
-                    container.appendChild(this.createInfoSection('🖼️ Alt Text', altStatus, altColor));
-                }
-
-                // Lazy Loading (for images)
-                if (a11yData.lazyLoading !== null) {
-                    let lazyColor = '#94a3b8';
-                    let lazyIcon = '⚡';
-
-                    if (a11yData.lazyLoading.includes('Native')) {
-                        lazyColor = '#34d399';
-                        lazyIcon = '✅';
-                    } else if (a11yData.lazyLoading.includes('JavaScript')) {
-                        lazyColor = '#22d3ee';
-                        lazyIcon = '🔧';
-                    } else if (a11yData.lazyLoading === 'Not set') {
-                        lazyColor = '#f59e0b';
-                        lazyIcon = '⚠️';
-                    }
-
-                    container.appendChild(this.createInfoSection(`${lazyIcon} Lazy Loading`, a11yData.lazyLoading, lazyColor));
-                }
-
-                // Tabindex
-                if (a11yData.tabindex !== null) {
-                    container.appendChild(this.createInfoSection('⌨️ Tab Index', a11yData.tabindex.toString(), '#fb923c'));
-                }
-
-                // Focusable State
-                const focusableText = a11yData.isFocusable ? '✅ Yes' : '❌ No';
-                const focusableColor = a11yData.isFocusable ? '#34d399' : '#94a3b8';
-                container.appendChild(this.createInfoSection('🎯 Focusable', focusableText, focusableColor));
-
-                // ARIA Hidden
-                if (a11yData.ariaHidden) {
-                    container.appendChild(this.createInfoSection('👻 ARIA Hidden', a11yData.ariaHidden, '#ef4444'));
-                }
-
-                // Interactive Element
-                const interactiveText = a11yData.isInteractive ? '✅ Yes' : '❌ No';
-                const interactiveColor = a11yData.isInteractive ? '#34d399' : '#94a3b8';
-                container.appendChild(this.createInfoSection('🖱️ Interactive', interactiveText, interactiveColor));
+                this.renderAccessibilityTab(container, element);
             } else if (tabId === 'coming-soon') {
-                // Coming Soon content
-                const comingSoonDiv = document.createElement('div');
-                comingSoonDiv.style.cssText = `
-                    text-align: center;
-                    padding: 24px 16px;
-                    color: #94a3b8;
-                    font-size: 12px;
-                    line-height: 1.6;
-                `;
-                comingSoonDiv.innerHTML = `
-                    <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
-                    <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Coming Soon</div>
-                    <div style="color: #94a3b8; margin-bottom: 16px;">MageForge is currently building something wonderful for you.</div>
-                `;
-
-                // Feature Request Button
-                const featureButton = document.createElement('a');
-                featureButton.href = 'https://github.com/OpenForgeProject/mageforge/issues';
-                featureButton.target = '_blank';
-                featureButton.rel = 'noopener noreferrer';
-                featureButton.style.cssText = `
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 10px 16px;
-                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    font-weight: 600;
-                    transition: all 0.2s ease;
-                    cursor: pointer;
-                    border: 1px solid rgba(59, 130, 246, 0.3);
-                `;
-                featureButton.innerHTML = `
-                    <span style="font-size: 14px;">💡</span>
-                    <span>Request a Feature</span>
-                `;
-
-                featureButton.onmouseenter = () => {
-                    featureButton.style.transform = 'translateY(-2px)';
-                    featureButton.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.4)';
-                };
-
-                featureButton.onmouseleave = () => {
-                    featureButton.style.transform = 'translateY(0)';
-                    featureButton.style.boxShadow = 'none';
-                };
-
-                comingSoonDiv.appendChild(featureButton);
-                container.appendChild(comingSoonDiv);
+                this.renderComingSoonTab(container);
             }
-            // Future tabs can be added here:
-            // else if (tabId === 'performance') { ... }
-            // else if (tabId === 'seo') { ... }
+        },
+
+        /**
+         * Render Structure tab content
+         */
+        renderStructureTab(data, container, element) {
+            const hasTemplateData = data.template || data.blockClass || data.module;
+
+            if (!hasTemplateData) {
+                this.renderStructureWithParentData(container, element);
+                return;
+            }
+
+            this.renderStructureSections(data, container);
+        },
+
+        /**
+         * Render structure tab when element has no direct template data
+         */
+        renderStructureWithParentData(container, element) {
+            const parentWithData = this.findParentWithTemplateData(element);
+
+            if (parentWithData) {
+                this.renderInheritedStructure(container, element, parentWithData);
+            } else {
+                this.renderNoTemplateData(container, element);
+            }
+        },
+
+        /**
+         * Render inherited structure from parent element
+         */
+        renderInheritedStructure(container, element, parentWithData) {
+            const parentData = {
+                template: parentWithData.getAttribute('data-mageforge-template') || '',
+                blockClass: parentWithData.getAttribute('data-mageforge-block') || '',
+                module: parentWithData.getAttribute('data-mageforge-module') || '',
+                viewModel: parentWithData.getAttribute('data-mageforge-viewmodel') || '',
+                parentBlock: parentWithData.getAttribute('data-mageforge-parent') || '',
+                blockAlias: parentWithData.getAttribute('data-mageforge-alias') || '',
+                isOverride: parentWithData.getAttribute('data-mageforge-override') === '1'
+            };
+
+            // Inheritance note
+            const inheritanceNote = document.createElement('div');
+            inheritanceNote.style.cssText = `
+                background: rgba(251, 191, 36, 0.1);
+                border: 1px solid rgba(251, 191, 36, 0.3);
+                border-radius: 8px;
+                padding: 10px 12px;
+                margin-bottom: 16px;
+                font-size: 11px;
+                color: #fbbf24;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            `;
+            inheritanceNote.innerHTML = `
+                <span style="font-size: 14px;">⬆️</span>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 2px;">Inherited from Parent</div>
+                    <div style="color: #fcd34d; font-size: 10px;">This &lt;${element.tagName.toLowerCase()}&gt; element is inside a Magento block</div>
+                </div>
+            `;
+            container.appendChild(inheritanceNote);
+
+            this.renderStructureSections(parentData, container);
+        },
+
+        /**
+         * Render "No Template Data" message
+         */
+        renderNoTemplateData(container, element) {
+            const noDataDiv = document.createElement('div');
+            noDataDiv.style.cssText = `
+                text-align: center;
+                padding: 24px 16px;
+                color: #94a3b8;
+                font-size: 12px;
+                line-height: 1.6;
+            `;
+            noDataDiv.innerHTML = `
+                <div style="font-size: 24px; margin-bottom: 12px;">📋</div>
+                <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">No Template Data</div>
+                <div style="color: #94a3b8;">This element is not inside a Magento template block</div>
+                <div style="color: #64748b; font-size: 11px; margin-top: 8px;">Element: <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">&lt;${element.tagName.toLowerCase()}&gt;</code></div>
+            `;
+            container.appendChild(noDataDiv);
+        },
+
+        /**
+         * Render structure sections (template, block, module, etc.)
+         */
+        renderStructureSections(data, container) {
+            // Template section with override indicator
+            const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
+            container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
+
+            // Block section
+            container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
+
+            // Optional sections
+            if (data.blockAlias) {
+                container.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
+            }
+            if (data.parentBlock) {
+                container.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
+            }
+            if (data.viewModel) {
+                container.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
+            }
+
+            // Module section
+            container.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
+        },
+
+        /**
+         * Render Accessibility tab content
+         */
+        renderAccessibilityTab(container, element) {
+            if (!element) return;
+
+            const a11yData = this.analyzeAccessibility(element);
+
+            // Semantic Element
+            container.appendChild(this.createInfoSection('🏷️ Element Type', a11yData.tagName, '#60a5fa'));
+
+            // ARIA Role
+            if (a11yData.role) {
+                container.appendChild(this.createInfoSection('👤 ARIA Role', a11yData.role, '#a78bfa'));
+            }
+
+            // Accessible Name
+            if (a11yData.accessibleName) {
+                container.appendChild(this.createInfoSection('🗣️ Accessible Name', a11yData.accessibleName, '#34d399'));
+            }
+
+            // ARIA Label
+            if (a11yData.ariaLabel) {
+                container.appendChild(this.createInfoSection('🏷️ ARIA Label', a11yData.ariaLabel, '#22d3ee'));
+            }
+
+            // ARIA Described By
+            if (a11yData.ariaDescribedBy) {
+                container.appendChild(this.createInfoSection('📝 ARIA Described By', a11yData.ariaDescribedBy, '#fbbf24'));
+            }
+
+            // Alt Text (for images)
+            if (a11yData.altText !== null) {
+                const altStatus = a11yData.altText ? a11yData.altText : '⚠️ Missing';
+                const altColor = a11yData.altText ? '#34d399' : '#ef4444';
+                container.appendChild(this.createInfoSection('🖼️ Alt Text', altStatus, altColor));
+            }
+
+            // Lazy Loading (for images)
+            if (a11yData.lazyLoading !== null) {
+                const { lazyIcon, lazyColor } = this.getLazyLoadingStyle(a11yData.lazyLoading);
+                container.appendChild(this.createInfoSection(`${lazyIcon} Lazy Loading`, a11yData.lazyLoading, lazyColor));
+            }
+
+            // Tabindex
+            if (a11yData.tabindex !== null) {
+                container.appendChild(this.createInfoSection('⌨️ Tab Index', a11yData.tabindex.toString(), '#fb923c'));
+            }
+
+            // Focusable State
+            const focusableText = a11yData.isFocusable ? '✅ Yes' : '❌ No';
+            const focusableColor = a11yData.isFocusable ? '#34d399' : '#94a3b8';
+            container.appendChild(this.createInfoSection('🎯 Focusable', focusableText, focusableColor));
+
+            // ARIA Hidden
+            if (a11yData.ariaHidden) {
+                container.appendChild(this.createInfoSection('👻 ARIA Hidden', a11yData.ariaHidden, '#ef4444'));
+            }
+
+            // Interactive Element
+            const interactiveText = a11yData.isInteractive ? '✅ Yes' : '❌ No';
+            const interactiveColor = a11yData.isInteractive ? '#34d399' : '#94a3b8';
+            container.appendChild(this.createInfoSection('🖱️ Interactive', interactiveText, interactiveColor));
+        },
+
+        /**
+         * Get styling for lazy loading indicator
+         */
+        getLazyLoadingStyle(lazyLoading) {
+            let lazyColor = '#94a3b8';
+            let lazyIcon = '⚡';
+
+            if (lazyLoading.includes('Native')) {
+                lazyColor = '#34d399';
+                lazyIcon = '✅';
+            } else if (lazyLoading.includes('JavaScript')) {
+                lazyColor = '#22d3ee';
+                lazyIcon = '🔧';
+            } else if (lazyLoading === 'Not set') {
+                lazyColor = '#f59e0b';
+                lazyIcon = '⚠️';
+            }
+
+            return { lazyIcon, lazyColor };
+        },
+
+        /**
+         * Render Coming Soon tab content
+         */
+        renderComingSoonTab(container) {
+            // Coming Soon content
+            const comingSoonDiv = document.createElement('div');
+            comingSoonDiv.style.cssText = `
+                text-align: center;
+                padding: 24px 16px;
+                color: #94a3b8;
+                font-size: 12px;
+                line-height: 1.6;
+            `;
+            comingSoonDiv.innerHTML = `
+                <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
+                <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Coming Soon</div>
+                <div style="color: #94a3b8; margin-bottom: 16px;">MageForge is currently building something wonderful for you.</div>
+            `;
+
+            // Feature Request Button
+            const featureButton = document.createElement('a');
+            featureButton.href = 'https://github.com/OpenForgeProject/mageforge/issues';
+            featureButton.target = '_blank';
+            featureButton.rel = 'noopener noreferrer';
+            featureButton.style.cssText = `
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                border: 1px solid rgba(59, 130, 246, 0.3);
+            `;
+            featureButton.innerHTML = `
+                <span style="font-size: 14px;">💡</span>
+                <span>Request a Feature</span>
+            `;
+
+            featureButton.onmouseenter = () => {
+                featureButton.style.transform = 'translateY(-2px)';
+                featureButton.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.4)';
+            };
+
+            featureButton.onmouseleave = () => {
+                featureButton.style.transform = 'translateY(0)';
+                featureButton.style.boxShadow = 'none';
+            };
+
+            comingSoonDiv.appendChild(featureButton);
+            container.appendChild(comingSoonDiv);
         },
 
         /**
@@ -833,75 +860,87 @@ document.addEventListener('alpine:init', () => {
         analyzeAccessibility(element) {
             const tagName = element.tagName.toLowerCase();
             const role = element.getAttribute('role') || this.getImplicitRole(tagName);
-            const ariaLabel = element.getAttribute('aria-label');
-            const ariaLabelledBy = element.getAttribute('aria-labelledby');
-            const ariaDescribedBy = element.getAttribute('aria-describedby');
-            const ariaHidden = element.getAttribute('aria-hidden');
-            const tabindex = element.getAttribute('tabindex');
-            const altText = tagName === 'img' ? element.getAttribute('alt') : null;
-            const title = element.getAttribute('title');
-
-            // Check lazy loading for images
-            let lazyLoading = null;
-            if (tagName === 'img') {
-                const loadingAttr = element.getAttribute('loading');
-                const hasDataSrc = element.hasAttribute('data-src') || element.hasAttribute('data-lazy');
-
-                if (loadingAttr === 'lazy') {
-                    lazyLoading = 'Native (loading="lazy")';
-                } else if (hasDataSrc) {
-                    lazyLoading = 'JavaScript (data-src)';
-                } else if (loadingAttr === 'eager') {
-                    lazyLoading = 'Disabled (loading="eager")';
-                } else {
-                    lazyLoading = 'Not set';
-                }
-            }
-
-            // Determine accessible name
-            let accessibleName = ariaLabel;
-            if (!accessibleName && ariaLabelledBy) {
-                const labelElement = document.getElementById(ariaLabelledBy);
-                accessibleName = labelElement ? labelElement.textContent.trim() : ariaLabelledBy;
-            }
-            if (!accessibleName && tagName === 'img' && altText) {
-                accessibleName = altText;
-            }
-            if (!accessibleName && title) {
-                accessibleName = title;
-            }
-            if (!accessibleName) {
-                const textContent = element.textContent.trim();
-                if (textContent && textContent.length < 100) {
-                    accessibleName = textContent.substring(0, 50) + (textContent.length > 50 ? '...' : '');
-                }
-            }
-
-            // Check if element is focusable
-            const isFocusable = this.isFocusable(element, tabindex);
-
-            // Check if interactive
-            const interactiveTags = ['a', 'button', 'input', 'select', 'textarea', 'details', 'summary'];
-            const interactiveRoles = ['button', 'link', 'tab', 'menuitem', 'checkbox', 'radio', 'switch'];
-            const isInteractive = interactiveTags.includes(tagName) ||
-                                 interactiveRoles.includes(role) ||
-                                 element.hasAttribute('onclick') ||
-                                 element.style.cursor === 'pointer';
 
             return {
                 tagName: tagName,
                 role: role,
-                ariaLabel: ariaLabel,
-                ariaLabelledBy: ariaLabelledBy,
-                ariaDescribedBy: ariaDescribedBy,
-                ariaHidden: ariaHidden,
-                tabindex: tabindex,
-                altText: altText,
-                lazyLoading: lazyLoading,
-                accessibleName: accessibleName,
-                isFocusable: isFocusable,
-                isInteractive: isInteractive
+                ariaLabel: element.getAttribute('aria-label'),
+                ariaLabelledBy: element.getAttribute('aria-labelledby'),
+                ariaDescribedBy: element.getAttribute('aria-describedby'),
+                ariaHidden: element.getAttribute('aria-hidden'),
+                tabindex: element.getAttribute('tabindex'),
+                altText: this.getAltText(element, tagName),
+                lazyLoading: this.checkLazyLoading(element, tagName),
+                accessibleName: this.determineAccessibleName(element, tagName),
+                isFocusable: this.isFocusable(element, element.getAttribute('tabindex')),
+                isInteractive: this.checkIfInteractive(element, tagName, role)
             };
+        },
+
+        /**
+         * Get alt text for images
+         */
+        getAltText(element, tagName) {
+            return tagName === 'img' ? element.getAttribute('alt') : null;
+        },
+
+        /**
+         * Check lazy loading status for images
+         */
+        checkLazyLoading(element, tagName) {
+            if (tagName !== 'img') return null;
+
+            const loadingAttr = element.getAttribute('loading');
+            const hasDataSrc = element.hasAttribute('data-src') || element.hasAttribute('data-lazy');
+
+            if (loadingAttr === 'lazy') {
+                return 'Native (loading="lazy")';
+            } else if (hasDataSrc) {
+                return 'JavaScript (data-src)';
+            } else if (loadingAttr === 'eager') {
+                return 'Disabled (loading="eager")';
+            }
+            return 'Not set';
+        },
+
+        /**
+         * Determine accessible name from various sources
+         */
+        determineAccessibleName(element, tagName) {
+            const ariaLabel = element.getAttribute('aria-label');
+            if (ariaLabel) return ariaLabel;
+
+            const ariaLabelledBy = element.getAttribute('aria-labelledby');
+            if (ariaLabelledBy) {
+                const labelElement = document.getElementById(ariaLabelledBy);
+                return labelElement ? labelElement.textContent.trim() : ariaLabelledBy;
+            }
+
+            const altText = tagName === 'img' ? element.getAttribute('alt') : null;
+            if (altText) return altText;
+
+            const title = element.getAttribute('title');
+            if (title) return title;
+
+            const textContent = element.textContent.trim();
+            if (textContent && textContent.length < 100) {
+                return textContent.substring(0, 50) + (textContent.length > 50 ? '...' : '');
+            }
+
+            return null;
+        },
+
+        /**
+         * Check if element is interactive
+         */
+        checkIfInteractive(element, tagName, role) {
+            const interactiveTags = ['a', 'button', 'input', 'select', 'textarea', 'details', 'summary'];
+            const interactiveRoles = ['button', 'link', 'tab', 'menuitem', 'checkbox', 'radio', 'switch'];
+
+            return interactiveTags.includes(tagName) ||
+                   interactiveRoles.includes(role) ||
+                   element.hasAttribute('onclick') ||
+                   element.style.cursor === 'pointer';
         },
 
         /**
