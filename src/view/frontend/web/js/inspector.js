@@ -782,7 +782,7 @@ document.addEventListener('alpine:init', () => {
                 comingSoonDiv.innerHTML = `
                     <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
                     <div style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Coming Soon</div>
-                    <div style="color: #94a3b8; margin-bottom: 16px;">MageForge is currently building something beautiful for you</div>
+                    <div style="color: #94a3b8; margin-bottom: 16px;">MageForge is currently building something wonderful for you.</div>
                 `;
 
                 // Feature Request Button
