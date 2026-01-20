@@ -155,10 +155,10 @@ class Builder implements BuilderInterface
     {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
 
-        // Check for node_modules directory
-        if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
+        // Check if node_modules is in sync with package-lock.json
+        if (!$this->nodePackageManager->isNodeModulesInSync($tailwindPath)) {
             if ($isVerbose) {
-                $io->warning('Node modules not found in tailwind directory. Installing...');
+                $io->warning('Node modules out of sync or missing. Installing dependencies...');
             }
             if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
                 return false;
