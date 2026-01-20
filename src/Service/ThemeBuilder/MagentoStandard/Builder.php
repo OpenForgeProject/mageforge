@@ -9,6 +9,7 @@ use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
+use OpenForgeProject\MageForge\Service\SymlinkCleaner;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -22,7 +23,8 @@ class Builder implements BuilderInterface
         private readonly File $fileDriver,
         private readonly StaticContentDeployer $staticContentDeployer,
         private readonly StaticContentCleaner $staticContentCleaner,
-        private readonly CacheCleaner $cacheCleaner
+        private readonly CacheCleaner $cacheCleaner,
+        private readonly SymlinkCleaner $symlinkCleaner
     ) {
     }
 
@@ -49,6 +51,11 @@ class Builder implements BuilderInterface
         }
 
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Clean symlinks in web/css/ directory before build
+        if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
             return false;
         }
 
