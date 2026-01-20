@@ -100,7 +100,7 @@ jobs:
           composer require --no-update openforgeproject/mageforge:@dev
 
           # Install PHPStan and Magento extension
-          composer require --dev --no-update bitexpert/phpstan-magento phpstan/extension-installer
+          composer require --dev --no-update bitexpert/phpstan-magento "phpstan/phpstan:^2.0" phpstan/extension-installer
 
           # Update
           composer update --with-dependencies
