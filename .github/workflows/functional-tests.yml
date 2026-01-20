@@ -108,10 +108,10 @@ jobs:
           echo "=== System Commands ==="
           echo "Version:"
           bin/magento mageforge:system:version
-          
+
           echo "System Check:"
           bin/magento mageforge:system:check
-          
+
           echo "Theme List:"
           bin/magento mageforge:theme:list
 
@@ -121,10 +121,10 @@ jobs:
           echo "=== Hyva Compatibility Check ==="
           echo "Show all modules:"
           bin/magento mageforge:hyva:compatibility:check --show-all
-          
+
           echo "Third party only:"
           bin/magento m:h:c:c --third-party-only
-          
+
           echo "Detailed output:"
           bin/magento m:h:c:c --show-all --detailed
 
@@ -134,7 +134,7 @@ jobs:
           echo "=== Theme Cleaner Tests ==="
           echo "Clean with dry-run:"
           bin/magento mageforge:theme:clean --all --dry-run
-          
+
           echo "Test aliases:"
           bin/magento m:t:c --help
           bin/magento frontend:clean --help
@@ -145,10 +145,10 @@ jobs:
           echo "=== Theme Name Suggestions ==="
           echo "BuildCommand with invalid name (expect suggestions):"
           bin/magento mageforge:theme:build Magent/lum || echo "Expected failure - suggestions shown"
-          
+
           echo "WatchCommand with invalid name:"
           bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - suggestions shown"
-          
+
           echo "CleanCommand with invalid name:"
           bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - suggestions shown"
 
@@ -163,7 +163,7 @@ jobs:
         run: |
           echo "=== npm Sync Validation ==="
           THEME_PATH="app/design/frontend/Magento/blank"
-          
+
           cat > ${THEME_PATH}/package.json << 'EOF'
           {
             "name": "magento-blank-theme",
@@ -173,11 +173,11 @@ jobs:
             }
           }
           EOF
-          
+
           echo "Install packages:"
           cd ${THEME_PATH}
           npm install
-          
+
           echo "Verify sync (should pass):"
           if npm ls --depth=0 > /dev/null 2>&1; then
             echo "✓ Packages in sync"
@@ -185,7 +185,7 @@ jobs:
             echo "✗ Sync check failed unexpectedly"
             exit 1
           fi
-          
+
           echo "Add new dependency without installing:"
           cat > package.json << 'EOF'
           {
@@ -197,9 +197,9 @@ jobs:
             }
           }
           EOF
-          
+
           npm install --package-lock-only
-          
+
           echo "Verify out-of-sync detection (should fail):"
           if npm ls --depth=0 > /dev/null 2>&1; then
             echo "✗ Should detect out-of-sync state"
@@ -207,24 +207,24 @@ jobs:
           else
             echo "✓ Out-of-sync detected correctly"
           fi
-          
+
           echo "Fix with npm ci:"
           npm ci
-          
+
           if npm ls --depth=0 > /dev/null 2>&1; then
             echo "✓ npm ci synchronized packages"
           else
             echo "✗ npm ci failed"
             exit 1
           fi
-          
+
           cd ../../../../../../
 
       - name: Test Theme Builder Detection
         working-directory: magento2
         run: |
           echo "=== Theme Builder Detection ==="
-          
+
           # Test MagentoStandard detection (Magento/blank has theme.xml, no tailwind)
           echo "Testing MagentoStandard detection with Magento/blank:"
           if [ -f "app/design/frontend/Magento/blank/theme.xml" ]; then
@@ -233,19 +233,19 @@ jobs:
             echo "✗ theme.xml missing"
             exit 1
           fi
-          
+
           if [ ! -d "app/design/frontend/Magento/blank/web/tailwind" ]; then
             echo "✓ No tailwind directory (correct for MagentoStandard)"
           else
             echo "✗ Unexpected tailwind directory"
             exit 1
           fi
-          
+
           # Create test TailwindCSS theme structure
           echo "Creating test TailwindCSS theme:"
           TAILWIND_THEME="app/design/frontend/Test/Tailwind"
           mkdir -p ${TAILWIND_THEME}/web/tailwind
-          
+
           cat > ${TAILWIND_THEME}/theme.xml << 'EOF'
           <?xml version="1.0"?>
           <theme xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/theme.xsd">
@@ -253,26 +253,26 @@ jobs:
               <parent>Magento/blank</parent>
           </theme>
           EOF
-          
+
           cat > ${TAILWIND_THEME}/web/tailwind/tailwind.config.js << 'EOF'
           module.exports = {
             content: ['./app/**/*.phtml'],
             theme: { extend: {} }
           }
           EOF
-          
+
           if [ -f "${TAILWIND_THEME}/web/tailwind/tailwind.config.js" ]; then
             echo "✓ TailwindCSS theme structure created"
           else
             echo "✗ Failed to create TailwindCSS theme"
             exit 1
           fi
-          
+
           # Create test Hyva theme structure
           echo "Creating test Hyva theme:"
           HYVA_THEME="app/design/frontend/Test/Hyva"
           mkdir -p ${HYVA_THEME}/etc ${HYVA_THEME}/web/tailwind
-          
+
           cat > ${HYVA_THEME}/theme.xml << 'EOF'
           <?xml version="1.0"?>
           <theme xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/theme.xsd">
@@ -280,13 +280,13 @@ jobs:
               <parent>Magento/blank</parent>
           </theme>
           EOF
-          
+
           cat > ${HYVA_THEME}/etc/hyva-themes.json << 'EOF'
           {
             "extensions": {}
           }
           EOF
-          
+
           if [ -f "${HYVA_THEME}/etc/hyva-themes.json" ]; then
             echo "✓ Hyva theme structure created"
           else
@@ -298,22 +298,22 @@ jobs:
         working-directory: magento2
         run: |
           echo "=== StaticContentCleaner Tests ==="
-          
+
           # Set developer mode
           bin/magento deploy:mode:set developer
-          
+
           echo "Creating test static files:"
           STATIC_DIR="pub/static/frontend/Magento/blank/en_US"
           mkdir -p ${STATIC_DIR}/css
           touch ${STATIC_DIR}/css/test.css
-          
+
           if [ -f "${STATIC_DIR}/css/test.css" ]; then
             echo "✓ Test static file created"
           else
             echo "✗ Failed to create test static file"
             exit 1
           fi
-          
+
           echo "Build should auto-clean static content in developer mode"
           # Note: Actual cleaning happens during build command execution
 
@@ -321,20 +321,20 @@ jobs:
         working-directory: magento2
         run: |
           echo "=== SymlinkCleaner Tests ==="
-          
+
           THEME_CSS="app/design/frontend/Magento/blank/web/css"
           mkdir -p ${THEME_CSS}
-          
+
           echo "Creating test symlink:"
           ln -s /tmp/test-target ${THEME_CSS}/test-symlink.css
-          
+
           if [ -L "${THEME_CSS}/test-symlink.css" ]; then
             echo "✓ Test symlink created"
           else
             echo "✗ Failed to create test symlink"
             exit 1
           fi
-          
+
           echo "Build should auto-remove symlinks in developer mode"
           # Note: Actual cleaning happens during build command execution
 
@@ -342,11 +342,11 @@ jobs:
         working-directory: magento2
         run: |
           echo "=== Actual Theme Build Tests ==="
-          
+
           echo "Building Magento/blank theme:"
           # Note: This may fail if dependencies are missing, but we test the command works
           bin/magento mageforge:theme:build Magento/blank --verbose || echo "Build attempted (may need additional setup)"
-          
+
           echo "Test build aliases:"
           bin/magento m:t:b --help
           bin/magento frontend:build --help
