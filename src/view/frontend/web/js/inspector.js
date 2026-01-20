@@ -817,7 +817,7 @@ document.addEventListener('alpine:init', () => {
 
             // Feature Request Button
             const featureButton = document.createElement('a');
-            featureButton.href = 'https://github.com/OpenForgeProject/mageforge/issues';
+            featureButton.href = 'https://github.com/OpenForgeProject/mageforge/issues/new?template=feature_request.md';
             featureButton.target = '_blank';
             featureButton.rel = 'noopener noreferrer';
             featureButton.style.cssText = `
