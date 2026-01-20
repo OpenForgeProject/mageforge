@@ -176,6 +176,90 @@ jobs:
           echo "Test Inspector status command:"
           bin/magento mageforge:theme:inspector status
 
+      - name: Test npm Sync Validation
+        working-directory: magento2
+        run: |
+          echo "Setting up Node.js for npm testing..."
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+          # Install Node.js if not available
+          if ! command -v node &> /dev/null; then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 20
+            nvm use 20
+          fi
+
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+
+          echo "Test npm sync validation with Magento/blank theme..."
+          THEME_PATH="app/design/frontend/Magento/blank"
+
+          # Create a simple package.json for testing
+          cat > ${THEME_PATH}/package.json << 'EOF'
+          {
+            "name": "magento-blank-theme",
+            "version": "1.0.0",
+            "description": "Test theme for npm sync validation",
+            "dependencies": {
+              "jquery": "^3.7.1"
+            }
+          }
+          EOF
+
+          echo "Initial npm install to create package-lock.json..."
+          cd ${THEME_PATH}
+          npm install --package-lock-only
+
+          echo "Verifying initial sync status (should be in sync)..."
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✓ Initial state: node_modules in sync"
+          else
+            echo "✗ Initial state should be in sync"
+            exit 1
+          fi
+
+          echo "Simulating out-of-sync state by modifying package-lock.json..."
+          # Add a new dependency to package.json that's not in node_modules
+          cat > package.json << 'EOF'
+          {
+            "name": "magento-blank-theme",
+            "version": "1.0.0",
+            "description": "Test theme for npm sync validation",
+            "dependencies": {
+              "jquery": "^3.7.1",
+              "lodash": "^4.17.21"
+            }
+          }
+          EOF
+
+          # Update lock file without installing
+          npm install --package-lock-only
+
+          echo "Verifying out-of-sync state (should fail)..."
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✗ Should detect out-of-sync state"
+            exit 1
+          else
+            echo "✓ Correctly detected out-of-sync state (exit code: $?)"
+          fi
+
+          echo "Testing that npm ci fixes the sync issue..."
+          npm ci
+
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✓ npm ci successfully synchronized node_modules"
+          else
+            echo "✗ npm ci failed to synchronize"
+            exit 1
+          fi
+
+          echo "✓ npm sync validation tests passed"
+          cd ../../../../../../
+
       - name: Test Summary
         run: |
           echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
@@ -335,6 +419,90 @@ jobs:
 
           echo "Test Inspector status command:"
           bin/magento mageforge:theme:inspector status
+
+      - name: Test npm Sync Validation
+        working-directory: magento2
+        run: |
+          echo "Setting up Node.js for npm testing..."
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+          # Install Node.js if not available
+          if ! command -v node &> /dev/null; then
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 20
+            nvm use 20
+          fi
+
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+
+          echo "Test npm sync validation with Magento/blank theme..."
+          THEME_PATH="app/design/frontend/Magento/blank"
+
+          # Create a simple package.json for testing
+          cat > ${THEME_PATH}/package.json << 'EOF'
+          {
+            "name": "magento-blank-theme",
+            "version": "1.0.0",
+            "description": "Test theme for npm sync validation",
+            "dependencies": {
+              "jquery": "^3.7.1"
+            }
+          }
+          EOF
+
+          echo "Initial npm install to create package-lock.json..."
+          cd ${THEME_PATH}
+          npm install --package-lock-only
+
+          echo "Verifying initial sync status (should be in sync)..."
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✓ Initial state: node_modules in sync"
+          else
+            echo "✗ Initial state should be in sync"
+            exit 1
+          fi
+
+          echo "Simulating out-of-sync state by modifying package-lock.json..."
+          # Add a new dependency to package.json that's not in node_modules
+          cat > package.json << 'EOF'
+          {
+            "name": "magento-blank-theme",
+            "version": "1.0.0",
+            "description": "Test theme for npm sync validation",
+            "dependencies": {
+              "jquery": "^3.7.1",
+              "lodash": "^4.17.21"
+            }
+          }
+          EOF
+
+          # Update lock file without installing
+          npm install --package-lock-only
+
+          echo "Verifying out-of-sync state (should fail)..."
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✗ Should detect out-of-sync state"
+            exit 1
+          else
+            echo "✓ Correctly detected out-of-sync state (exit code: $?)"
+          fi
+
+          echo "Testing that npm ci fixes the sync issue..."
+          npm ci
+
+          if npm ls --depth=0 > /dev/null 2>&1; then
+            echo "✓ npm ci successfully synchronized node_modules"
+          else
+            echo "✗ npm ci failed to synchronize"
+            exit 1
+          fi
+
+          echo "✓ npm sync validation tests passed"
+          cd ../../../../../../
 
       - name: Test Summary
         run: |

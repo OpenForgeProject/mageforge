@@ -22,6 +22,11 @@ class NodePackageManager
      * Install node modules in the specified directory
      *
      * Uses npm ci if package-lock.json exists, otherwise falls back to npm install
+     *
+     * @param string $path
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
      */
     public function installNodeModules(string $path, SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -52,10 +57,45 @@ class NodePackageManager
     }
 
     /**
+     * Check if node_modules is in sync with package-lock.json
+     *
+     * Verifies that installed packages match the lock file by checking:
+     * 1. node_modules directory exists
+     * 2. package-lock.json exists
+     * 3. All packages are installed with correct versions (via npm ls)
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function isNodeModulesInSync(string $path): bool
+    {
+        if (!$this->fileDriver->isDirectory($path . '/node_modules')) {
+            return false;
+        }
+
+        if (!$this->fileDriver->isExists($path . '/package-lock.json')) {
+            return true;
+        }
+
+        $currentDir = getcwd();
+        chdir($path);
+
+        try {
+            $this->shell->execute('npm ls --depth=0 --json > /dev/null 2>&1');
+            chdir($currentDir);
+            return true;
+        } catch (\Exception $e) {
+            chdir($currentDir);
+            return false;
+        }
+    }
+
+    /**
      * Check for outdated npm packages and report them
      *
-     * Note: npm outdated returns non-zero exit code when packages are outdated,
-     * so exceptions are caught and ignored
+     * @param string $path
+     * @param SymfonyStyle $io
+     * @return void
      */
     public function checkOutdatedPackages(string $path, SymfonyStyle $io): void
     {
@@ -69,7 +109,7 @@ class NodePackageManager
                 $io->writeln($outdated);
             }
         } catch (\Exception $e) {
-            // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+            // npm outdated returns non-zero exit code when packages are outdated
         }
 
         chdir($currentDir);
