@@ -210,9 +210,9 @@ jobs:
           }
           EOF
 
-          echo "Initial npm install to create package-lock.json..."
+          echo "Initial npm install to create package-lock.json and node_modules..."
           cd ${THEME_PATH}
-          npm install --package-lock-only
+          npm install
 
           echo "Verifying initial sync status (should be in sync)..."
           if npm ls --depth=0 > /dev/null 2>&1; then
@@ -222,7 +222,7 @@ jobs:
             exit 1
           fi
 
-          echo "Simulating out-of-sync state by modifying package-lock.json..."
+          echo "Simulating out-of-sync state by adding new dependency..."
           # Add a new dependency to package.json that's not in node_modules
           cat > package.json << 'EOF'
           {
@@ -236,7 +236,7 @@ jobs:
           }
           EOF
 
-          # Update lock file without installing
+          # Update lock file without installing (simulates a git pull with updated lock file)
           npm install --package-lock-only
 
           echo "Verifying out-of-sync state (should fail)..."
@@ -454,9 +454,9 @@ jobs:
           }
           EOF
 
-          echo "Initial npm install to create package-lock.json..."
+          echo "Initial npm install to create package-lock.json and node_modules..."
           cd ${THEME_PATH}
-          npm install --package-lock-only
+          npm install
 
           echo "Verifying initial sync status (should be in sync)..."
           if npm ls --depth=0 > /dev/null 2>&1; then
@@ -466,7 +466,7 @@ jobs:
             exit 1
           fi
 
-          echo "Simulating out-of-sync state by modifying package-lock.json..."
+          echo "Simulating out-of-sync state by adding new dependency..."
           # Add a new dependency to package.json that's not in node_modules
           cat > package.json << 'EOF'
           {
@@ -480,7 +480,7 @@ jobs:
           }
           EOF
 
-          # Update lock file without installing
+          # Update lock file without installing (simulates a git pull with updated lock file)
           npm install --package-lock-only
 
           echo "Verifying out-of-sync state (should fail)..."
