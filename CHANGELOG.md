@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.7.0](https://github.com/OpenForgeProject/mageforge/compare/0.6.0...0.7.0) (2026-01-20)
+
+
+### Added
+
+* add context7 configuration file with URL and public key ([977bee0](https://github.com/OpenForgeProject/mageforge/commit/977bee0d2b2c4301bd2764b07ef82eefb92e29fb))
+* add NodePackageManager service for npm dependency management ([#91](https://github.com/OpenForgeProject/mageforge/issues/91)) ([1ab623f](https://github.com/OpenForgeProject/mageforge/commit/1ab623f5d858c272b6f692acb98edd35bf15ed3d))
+* implement SymlinkCleaner service and integrate into theme builders [#88](https://github.com/OpenForgeProject/mageforge/issues/88) ([#89](https://github.com/OpenForgeProject/mageforge/issues/89)) ([3f40ef6](https://github.com/OpenForgeProject/mageforge/commit/3f40ef64174686fd3c75944d00773ef83515f0f9))
+
 ## [0.6.0](https://github.com/OpenForgeProject/mageforge/compare/0.5.0...0.6.0) (2026-01-19)
 
 
