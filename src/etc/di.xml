@@ -64,4 +64,12 @@
                   <argument name="state" xsi:type="object">Magento\Framework\App\State</argument>
             </arguments>
       </type>
+
+      <!-- Configure NodePackageManager Service -->
+      <type name="OpenForgeProject\MageForge\Service\NodePackageManager">
+            <arguments>
+                  <argument name="shell" xsi:type="object">Magento\Framework\Shell</argument>
+                  <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            </arguments>
+      </type>
 </config>

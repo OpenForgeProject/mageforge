@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\TailwindCSS;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
@@ -24,7 +25,8 @@ class Builder implements BuilderInterface
         private readonly StaticContentDeployer $staticContentDeployer,
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
-        private readonly SymlinkCleaner $symlinkCleaner
+        private readonly SymlinkCleaner $symlinkCleaner,
+        private readonly NodePackageManager $nodePackageManager
     ) {
     }
 
@@ -126,69 +128,20 @@ class Builder implements BuilderInterface
 
         // Check for node_modules directory
         if (!$this->fileDriver->isDirectory($tailwindPath . '/node_modules')) {
-            if (!$this->installNodeModules($tailwindPath, $io, $isVerbose)) {
+            if ($isVerbose) {
+                $io->warning('Node modules not found in tailwind directory. Installing npm dependencies ...');
+            }
+            if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
                 return false;
             }
         }
 
         // Check for outdated packages
         if ($isVerbose) {
-            $this->checkOutdatedPackages($tailwindPath, $io);
+            $this->nodePackageManager->checkOutdatedPackages($tailwindPath, $io);
         }
 
         return true;
-    }
-
-    /**
-     * Install Node modules in the specified path
-     */
-    private function installNodeModules(string $tailwindPath, SymfonyStyle $io, bool $isVerbose): bool
-    {
-        if ($isVerbose) {
-            $io->warning('Node modules not found in tailwind directory. Installing npm dependencies ...');
-        }
-
-        $currentDir = getcwd();
-        chdir($tailwindPath);
-
-        try {
-            if ($this->fileDriver->isExists($tailwindPath . '/package-lock.json')) {
-                $this->shell->execute('npm ci --quiet');
-            } else {
-                if ($isVerbose) {
-                    $io->warning('No package-lock.json found, running npm install...');
-                }
-                $this->shell->execute('npm install --quiet');
-            }
-            if ($isVerbose) {
-                $io->success('Node modules installed successfully.');
-            }
-            chdir($currentDir);
-            return true;
-        } catch (\Exception $e) {
-            $io->error('Failed to install node modules: ' . $e->getMessage());
-            chdir($currentDir);
-            return false;
-        }
-    }
-
-    /**
-     * Check for outdated packages and report them
-     */
-    private function checkOutdatedPackages(string $tailwindPath, SymfonyStyle $io): void
-    {
-        $currentDir = getcwd();
-        chdir($tailwindPath);
-        try {
-            $outdated = $this->shell->execute('npm outdated --json');
-            if ($outdated) {
-                $io->warning('Outdated packages found:');
-                $io->writeln($outdated);
-            }
-        } catch (\Exception $e) {
-            // Ignore errors from npm outdated as it returns non-zero when packages are outdated
-        }
-        chdir($currentDir);
     }
 
     public function getName(): string
