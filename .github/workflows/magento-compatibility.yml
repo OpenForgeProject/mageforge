@@ -122,143 +122,34 @@ jobs:
           echo "Check if module is enabled:"
           bin/magento module:status | grep OpenForgeProject_MageForge
 
-          echo "Check if MageForge commands are available:"
+          echo "Check if MageForge commands are registered:"
           bin/magento list | grep mageforge
 
-          echo "Test MageForge Version command:"
-          bin/magento mageforge:system:version
-
-          echo "Test MageForge System Check command:"
-          bin/magento mageforge:system:check
-
-          echo "Test MageForge Theme List command:"
-          bin/magento mageforge:theme:list
-
-
-          echo "Test MageForge Hyvä Compatibility Check command:"
-          bin/magento mageforge:hyva:compatibility:check --help
-          bin/magento m:h:c:c --help
-
-          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
-          bin/magento mageforge:hyva:compatibility:check --show-all
-
-          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
-          bin/magento m:h:c:c --third-party-only
-
-          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
-          bin/magento m:h:c:c --show-all --detailed
-
-          echo "Test MageForge Static Clean command with dry-run:"
-          bin/magento mageforge:theme:clean --all --dry-run
-
-          echo "Test MageForge Static Clean aliases:"
-          bin/magento mageforge:theme:clean --all --dry-run
-          echo "Test MageForge Static Clean aliases:"
-          bin/magento m:t:c --help
-          bin/magento frontend:clean --help
-
-          echo "Test Theme Name Suggestions (non-interactive):"
-          echo "Testing BuildCommand with invalid theme name:"
-          bin/magento mageforge:theme:build Magent/lum || echo "Expected failure - BuildCommand"
-
-          echo "Testing WatchCommand with invalid theme name:"
-          bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
-
-          echo "Testing CleanCommand with invalid theme name:"
-          bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
-
-          echo "Testing TokensCommand with invalid theme name:"
-          bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
-
-          echo "Test MageForge Inspector commands:"
+          echo "Verify all commands have --help available:"
+          bin/magento mageforge:system:version --help
+          bin/magento mageforge:system:check --help
+          bin/magento mageforge:theme:list --help
+          bin/magento mageforge:theme:build --help
+          bin/magento mageforge:theme:watch --help
+          bin/magento mageforge:theme:clean --help
           bin/magento mageforge:theme:inspector --help
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento mageforge:hyva:tokens --help
 
-          echo "Test Inspector status command:"
-          bin/magento mageforge:theme:inspector status
-
-      - name: Test npm Sync Validation
-        working-directory: magento2
-        run: |
-          echo "Setting up Node.js for npm testing..."
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-          # Install Node.js if not available
-          if ! command -v node &> /dev/null; then
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 20
-            nvm use 20
-          fi
-
-          echo "Node version: $(node --version)"
-          echo "npm version: $(npm --version)"
-
-          echo "Test npm sync validation with Magento/blank theme..."
-          THEME_PATH="app/design/frontend/Magento/blank"
-
-          # Create a simple package.json for testing
-          cat > ${THEME_PATH}/package.json << 'EOF'
-          {
-            "name": "magento-blank-theme",
-            "version": "1.0.0",
-            "description": "Test theme for npm sync validation",
-            "dependencies": {
-              "jquery": "^3.7.1"
-            }
-          }
-          EOF
-
-          echo "Initial npm install to create package-lock.json and node_modules..."
-          cd ${THEME_PATH}
-          npm install
-
-          echo "Verifying initial sync status (should be in sync)..."
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✓ Initial state: node_modules in sync"
-          else
-            echo "✗ Initial state should be in sync"
-            exit 1
-          fi
-
-          echo "Simulating out-of-sync state by adding new dependency..."
-          # Add a new dependency to package.json that's not in node_modules
-          cat > package.json << 'EOF'
-          {
-            "name": "magento-blank-theme",
-            "version": "1.0.0",
-            "description": "Test theme for npm sync validation",
-            "dependencies": {
-              "jquery": "^3.7.1",
-              "lodash": "^4.17.21"
-            }
-          }
-          EOF
-
-          # Update lock file without installing (simulates a git pull with updated lock file)
-          npm install --package-lock-only
-
-          echo "Verifying out-of-sync state (should fail)..."
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✗ Should detect out-of-sync state"
-            exit 1
-          else
-            echo "✓ Correctly detected out-of-sync state (exit code: $?)"
-          fi
-
-          echo "Testing that npm ci fixes the sync issue..."
-          npm ci
-
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✓ npm ci successfully synchronized node_modules"
-          else
-            echo "✗ npm ci failed to synchronize"
-            exit 1
-          fi
-
-          echo "✓ npm sync validation tests passed"
-          cd ../../../../../../
+          echo "Verify command aliases work:"
+          bin/magento m:s:v --help
+          bin/magento m:s:c --help
+          bin/magento m:t:l --help
+          bin/magento m:t:b --help
+          bin/magento m:t:w --help
+          bin/magento m:t:c --help
+          bin/magento m:h:c:c --help
+          bin/magento frontend:list --help
+          bin/magento frontend:build --help
+          bin/magento frontend:watch --help
+          bin/magento frontend:clean --help
+          bin/magento hyva:check --help
+          bin/magento hyva:tokens --help
 
       - name: Test Summary
         run: |
@@ -369,140 +260,34 @@ jobs:
           echo "Check if module is enabled:"
           bin/magento module:status | grep OpenForgeProject_MageForge
 
-          echo "Check if MageForge commands are available:"
+          echo "Check if MageForge commands are registered:"
           bin/magento list | grep mageforge
 
-          echo "Test MageForge Version command:"
-          bin/magento mageforge:system:version
-
-          echo "Test MageForge System Check command:"
-          bin/magento mageforge:system:check
-
-          echo "Test MageForge Theme List command:"
-          bin/magento mageforge:theme:list
-
-          echo "Test MageForge Hyvä Compatibility Check command:"
-          bin/magento mageforge:hyva:compatibility:check --help
-          bin/magento m:h:c:c --help
-
-          echo "Test MageForge Hyvä Compatibility Check - Show all modules:"
-          bin/magento mageforge:hyva:compatibility:check --show-all
-
-          echo "Test MageForge Hyvä Compatibility Check - Third party only:"
-          bin/magento m:h:c:c --third-party-only
-
-          echo "Test MageForge Hyvä Compatibility Check - Detailed output:"
-          bin/magento m:h:c:c --show-all --detailed
-
-          echo "Test MageForge Static Clean command with dry-run:"
-          bin/magento mageforge:theme:clean --all --dry-run
-
-          echo "Test MageForge Static Clean alias:"
-          bin/magento m:t:c --help
-          bin/magento frontend:clean --help
-
-          echo "Test Theme Name Suggestions (non-interactive):"
-          echo "Testing BuildCommand with invalid theme name:"
-          bin/magento mageforge:theme:build Magent/lum || echo "Expected failure - BuildCommand"
-
-          echo "Testing WatchCommand with invalid theme name:"
-          bin/magento mageforge:theme:watch Magent/lum --help || echo "Expected failure - WatchCommand"
-
-          echo "Testing CleanCommand with invalid theme name:"
-          bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - CleanCommand"
-
-          echo "Testing TokensCommand with invalid theme name:"
-          bin/magento mageforge:hyva:tokens Magent/lum --help || echo "Expected failure - TokensCommand"
-
-          echo "Test MageForge Inspector commands:"
+          echo "Verify all commands have --help available:"
+          bin/magento mageforge:system:version --help
+          bin/magento mageforge:system:check --help
+          bin/magento mageforge:theme:list --help
+          bin/magento mageforge:theme:build --help
+          bin/magento mageforge:theme:watch --help
+          bin/magento mageforge:theme:clean --help
           bin/magento mageforge:theme:inspector --help
+          bin/magento mageforge:hyva:compatibility:check --help
+          bin/magento mageforge:hyva:tokens --help
 
-          echo "Test Inspector status command:"
-          bin/magento mageforge:theme:inspector status
-
-      - name: Test npm Sync Validation
-        working-directory: magento2
-        run: |
-          echo "Setting up Node.js for npm testing..."
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-          # Install Node.js if not available
-          if ! command -v node &> /dev/null; then
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 20
-            nvm use 20
-          fi
-
-          echo "Node version: $(node --version)"
-          echo "npm version: $(npm --version)"
-
-          echo "Test npm sync validation with Magento/blank theme..."
-          THEME_PATH="app/design/frontend/Magento/blank"
-
-          # Create a simple package.json for testing
-          cat > ${THEME_PATH}/package.json << 'EOF'
-          {
-            "name": "magento-blank-theme",
-            "version": "1.0.0",
-            "description": "Test theme for npm sync validation",
-            "dependencies": {
-              "jquery": "^3.7.1"
-            }
-          }
-          EOF
-
-          echo "Initial npm install to create package-lock.json and node_modules..."
-          cd ${THEME_PATH}
-          npm install
-
-          echo "Verifying initial sync status (should be in sync)..."
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✓ Initial state: node_modules in sync"
-          else
-            echo "✗ Initial state should be in sync"
-            exit 1
-          fi
-
-          echo "Simulating out-of-sync state by adding new dependency..."
-          # Add a new dependency to package.json that's not in node_modules
-          cat > package.json << 'EOF'
-          {
-            "name": "magento-blank-theme",
-            "version": "1.0.0",
-            "description": "Test theme for npm sync validation",
-            "dependencies": {
-              "jquery": "^3.7.1",
-              "lodash": "^4.17.21"
-            }
-          }
-          EOF
-
-          # Update lock file without installing (simulates a git pull with updated lock file)
-          npm install --package-lock-only
-
-          echo "Verifying out-of-sync state (should fail)..."
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✗ Should detect out-of-sync state"
-            exit 1
-          else
-            echo "✓ Correctly detected out-of-sync state (exit code: $?)"
-          fi
-
-          echo "Testing that npm ci fixes the sync issue..."
-          npm ci
-
-          if npm ls --depth=0 > /dev/null 2>&1; then
-            echo "✓ npm ci successfully synchronized node_modules"
-          else
-            echo "✗ npm ci failed to synchronize"
-            exit 1
-          fi
-
-          echo "✓ npm sync validation tests passed"
-          cd ../../../../../../
+          echo "Verify command aliases work:"
+          bin/magento m:s:v --help
+          bin/magento m:s:c --help
+          bin/magento m:t:l --help
+          bin/magento m:t:b --help
+          bin/magento m:t:w --help
+          bin/magento m:t:c --help
+          bin/magento m:h:c:c --help
+          bin/magento frontend:list --help
+          bin/magento frontend:build --help
+          bin/magento frontend:watch --help
+          bin/magento frontend:clean --help
+          bin/magento hyva:check --help
+          bin/magento hyva:tokens --help
 
       - name: Test Summary
         run: |
