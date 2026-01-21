@@ -15,5 +15,4 @@ if [[ ! -d ${TEMP_DIR} ]]; then
 fi
 
 # Run PHPCS
-cd magento/vendor/mageforge/base || exit 1
 "${PHPCS_BIN}" -p -s --standard=Magento2 src/
