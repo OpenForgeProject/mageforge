@@ -763,20 +763,6 @@ class CheckCommand extends AbstractCommand
             }
         }
 
-        // Use Environment class if available (Magento 2.3+)
-        try {
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            $env = $objectManager->get(\Magento\Framework\App\Environment::class);
-            if (method_exists($env, 'getEnv')) {
-                $value = $env->getEnv($name);
-                if ($value !== false && $value !== null) {
-                    return $value;
-                }
-            }
-        } catch (\Exception $e) {
-            // Continue with other methods
-        }
-
         return null;
     }
 }
