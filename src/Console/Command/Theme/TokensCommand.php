@@ -66,7 +66,7 @@ class TokensCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
 
-        $themePath = $this->validateHyvaTheme($themeCode);
+        $themePath = $this->validateHyvaTheme($themeCode, $output);
         if ($themePath === null) {
             return Cli::RETURN_FAILURE;
         }
@@ -112,7 +112,7 @@ class TokensCommand extends AbstractCommand
         }
     }
 
-    private function validateHyvaTheme(string $themeCode): ?string
+    private function validateHyvaTheme(string $themeCode, OutputInterface $output): ?string
     {
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
