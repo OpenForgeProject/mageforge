@@ -62,6 +62,10 @@ class InspectorHints implements TemplateEngineInterface
     {
         $result = $this->subject->render($block, $templateFile, $dictionary);
 
+        if (!$this->showBlockHints) {
+            return $result;
+        }
+
         // Only inject attributes if there's actual HTML content
         if (empty(trim($result))) {
             return $result;

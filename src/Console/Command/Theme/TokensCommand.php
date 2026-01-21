@@ -125,7 +125,7 @@ class TokensCommand extends AbstractCommand
 
             // If no theme was selected, exit
             if ($correctedTheme === null) {
-                return Cli::RETURN_FAILURE;
+                return null;
             }
 
             // Use the corrected theme code
@@ -135,7 +135,7 @@ class TokensCommand extends AbstractCommand
             // Double-check the corrected theme exists
             if ($themePath === null) {
                 $this->io->error("Theme $themeCode is not installed.");
-                return Cli::RETURN_FAILURE;
+                return null;
             }
 
             $this->io->info("Using theme: $themeCode");
