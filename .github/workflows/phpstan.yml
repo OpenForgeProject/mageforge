@@ -1,0 +1,119 @@
+name: PHPStan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phpstan:
+    name: PHPStan Analysis
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MYSQL_ROOT_PASSWORD: magento
+          MYSQL_DATABASE: magento
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      opensearch:
+        image: opensearchproject/opensearch:3
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: mageforge
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-2.4.8
+
+      - name: Clone Magento
+        run: |
+          git clone --depth=1 --branch=2.4.8 https://github.com/magento/magento2.git magento2
+
+      - name: Install Magento
+        working-directory: magento2
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer config minimum-stability stable
+          composer config prefer-stable true
+          composer install --no-interaction --no-progress
+          bin/magento setup:install \
+            --base-url=http://localhost \
+            --db-host=127.0.0.1 \
+            --db-name=magento \
+            --db-user=root \
+            --db-password=magento \
+            --admin-firstname=Admin \
+            --admin-lastname=User \
+            --admin-email=admin@example.com \
+            --admin-user=admin \
+            --admin-password=admin12345 \
+            --language=en_US \
+            --currency=USD \
+            --timezone=Europe/Berlin \
+            --use-rewrites=1 \
+            --backend-frontname=admin \
+            --search-engine=opensearch \
+            --opensearch-host=localhost \
+            --opensearch-port=9200 \
+            --opensearch-index-prefix=magento \
+            --cleanup-database
+
+      - name: Install MageForge Module and PHPStan
+        working-directory: magento2
+        run: |
+          # Add local repository
+          composer config repositories.mageforge-local path ../mageforge
+
+          # Install module
+          composer require --no-update openforgeproject/mageforge:@dev
+
+          # Allow PHPStan extension installer
+          composer config --no-plugins allow-plugins.phpstan/extension-installer true
+
+          # Install PHPStan and Magento extension
+          composer require --dev --no-update bitexpert/phpstan-magento "phpstan/phpstan:^2.0" phpstan/extension-installer
+
+          # Update
+          composer update --with-dependencies
+
+          # Enable module
+          bin/magento module:enable OpenForgeProject_MageForge
+          bin/magento setup:upgrade
+
+      - name: Run PHPStan
+        working-directory: magento2
+        continue-on-error: true
+        run: |
+          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src

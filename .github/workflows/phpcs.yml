@@ -1,4 +1,4 @@
-name: Check phpcs
+name: PHPCS
 
 on: [pull_request]
 
@@ -6,20 +6,18 @@ permissions:
   contents: read
 
 env:
-  PHP_VERSION: "8.3"
+  PHP_VERSION: "8.4"
 
 jobs:
   check-phpcs:
     runs-on: ubuntu-latest
 
-    if: false
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@cbb722410c2e876e24abbe8de2cc27693e501dcb
+        uses: actions/checkout@v4
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@19ba822314c230a9039afce40e65d6c2b352ebfb
+        uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
 
@@ -27,4 +25,5 @@ jobs:
         run: composer create-project magento/magento-coding-standard --stability=dev /tmp/magento-coding-standard
 
       - name: Run PHPCS
+        continue-on-error: true
         run: /tmp/magento-coding-standard/vendor/bin/phpcs -p -s --standard=Magento2 src/
