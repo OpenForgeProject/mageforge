@@ -11,6 +11,9 @@ use Magento\Framework\ObjectManagerInterface;
  */
 class InspectorHintsFactory
 {
+    /**
+     * @param ObjectManagerInterface $objectManager
+     */
     public function __construct(
         private readonly ObjectManagerInterface $objectManager
     ) {
@@ -19,11 +22,13 @@ class InspectorHintsFactory
     /**
      * Create InspectorHints instance
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return InspectorHints
      */
     public function create(array $data = []): InspectorHints
     {
-        return $this->objectManager->create(InspectorHints::class, $data);
+        /** @var InspectorHints $instance */
+        $instance = $this->objectManager->create(InspectorHints::class, $data);
+        return $instance;
     }
 }
