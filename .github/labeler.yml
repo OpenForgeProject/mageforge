@@ -8,3 +8,6 @@ feature:
 
 fix:
  - head-branch: ['^fix','fix','fix:']
+
+ Next-Release:
+ - head-branch: ['^chore: release']
