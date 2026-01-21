@@ -3,11 +3,11 @@ Documentation:
 - changed-files:
   - any-glob-to-any-file: '**/*.md'
 
-feature:
- - head-branch: ['^add','feature','add:']
+Feature:
+ - head-branch: ['^add:']
 
-fix:
- - head-branch: ['^fix','fix','fix:']
+Fix:
+ - head-branch: ['^fix']
 
 Next-Release:
  - head-branch: ['^chore: release']
