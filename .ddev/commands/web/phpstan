@@ -1,0 +1,29 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Run PHPStan analysis with Magento extension (same as CI pipeline)
+## Usage: phpstan
+## Example: ddev phpstan
+
+# Navigate to Magento root
+cd /var/www/html/magento || exit 1
+
+# Check if PHPStan is installed
+if [[ ! -f vendor/bin/phpstan ]]; then
+    echo "PHPStan not found. Installing PHPStan with Magento extension..."
+
+    # Allow PHPStan extension installer
+    composer config --no-plugins allow-plugins.phpstan/extension-installer true
+
+    # Install PHPStan and Magento extension
+    composer require --dev --no-update bitexpert/phpstan-magento "phpstan/phpstan:^2.0" phpstan/extension-installer
+
+    # Update dependencies
+    composer update --with-dependencies
+
+    echo "PHPStan installation complete."
+fi
+
+# Run PHPStan with the same configuration as CI pipeline
+echo "Running PHPStan analysis..."
+vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
