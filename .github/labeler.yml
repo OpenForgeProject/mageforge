@@ -3,22 +3,22 @@ Documentation:
   - any-glob-to-any-file: '**/*.md'
 
 Feature:
- - head-branch: ['^add:']
+ - head-branch: ['add:*']
 
 Fix:
- - head-branch: ['^fix:']
+ - head-branch: ['fix:*']
 
 Next-Release:
- - head-branch: ['^chore: Next Release']
+ - head-branch: ['chore: release*', 'release-please*']
 
 Command:
 - changed-files:
-  - any-glob-to-any-file: 'src/Console/Command/*'
+  - any-glob-to-any-file: 'src/Console/Command/**'
 
 Frontend:
 - changed-files:
-  - any-glob-to-any-file: 'src/view/frontend/*'
+  - any-glob-to-any-file: 'src/view/frontend/**'
 
-ThemeBuilder:
+Theme-Builder:
 - changed-files:
-  - any-glob-to-any-file: 'src/src/Service/ThemeBuilder/*'
+  - any-glob-to-any-file: 'src/Service/ThemeBuilder/**'
