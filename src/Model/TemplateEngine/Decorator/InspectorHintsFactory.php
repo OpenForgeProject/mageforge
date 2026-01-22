@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
 use Magento\Framework\ObjectManagerInterface;
+use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
 
 /**
  * Factory for InspectorHints decorator
