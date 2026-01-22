@@ -9,7 +9,7 @@ Fix:
  - head-branch: ['^fix:']
 
 Next-Release:
- - head-branch: ['^chore: release']
+ - head-branch: ['^chore: Next Release']
 
 Command:
 - changed-files:

@@ -11,7 +11,7 @@
       "prerelease": false,
       "include-v-in-tag": false,
       "include-component-in-tag": false,
-      "pull-request-title-pattern": "chore: release ${version}",
+      "pull-request-title-pattern": "chore: Next Release ${version}",
       "pull-request-header": "## Release ${version}",
       "changelog-sections": [
         {
@@ -42,7 +42,7 @@
         {
           "type": "style",
           "section": "Styling",
-          "hidden": true
+          "hidden": false
         },
         {
           "type": "chore",
