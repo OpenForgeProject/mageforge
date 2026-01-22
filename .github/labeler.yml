@@ -3,13 +3,16 @@ Documentation:
   - any-glob-to-any-file: '**/*.md'
 
 Feature:
- - head-branch: ['add:*']
+ - branch: ['add-*', 'featuere-*', 'feature/**', 'feat-*', 'feature*']
+ - title: ['feat:', 'feature:', 'Feature:']
 
 Fix:
- - head-branch: ['fix:*']
+ - branch: ['fix-*', 'bugfix-*', 'fix/**', 'bugfix/**', 'fix*', 'bugfix*']
+ - title: ['fix:', 'bugfix:', 'Fix:']
 
 Next-Release:
- - head-branch: ['chore: release*', 'release-please*']
+ - branch: ['chore: release*', 'release-please*']
+ - title: ['chore: release', 'Release']
 
 Command:
 - changed-files:
