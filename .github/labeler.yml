@@ -1,10 +1,24 @@
-# Add 'Documentation' label to any change to .md files within the entire repository 
 Documentation:
 - changed-files:
   - any-glob-to-any-file: '**/*.md'
 
-feature:
- - head-branch: ['^add','feature','add:']
+Feature:
+ - head-branch: ['^add:']
 
-fix:
- - head-branch: ['^fix','fix','fix:']
+Fix:
+ - head-branch: ['^fix:']
+
+Next-Release:
+ - head-branch: ['^chore: Next Release']
+
+Command:
+- changed-files:
+  - any-glob-to-any-file: 'src/Console/Command/*'
+
+Frontend:
+- changed-files:
+  - any-glob-to-any-file: 'src/view/frontend/*'
+
+ThemeBuilder:
+- changed-files:
+  - any-glob-to-any-file: 'src/src/Service/ThemeBuilder/*'
