@@ -93,7 +93,7 @@ document.addEventListener('alpine:init', () => {
             const stack = [];
             let comment;
 
-            while (comment = walker.nextNode()) {
+            while ((comment = walker.nextNode())) {
                 const parsed = this.parseCommentMarker(comment);
 
                 if (!parsed) continue;
