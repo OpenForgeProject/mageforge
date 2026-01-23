@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('mageforgeInspector', () => ({
         isOpen: false,
         isPickerActive: false,
+        isPinned: false, // Badge is locked after clicking an element
         hoveredElement: null,
         selectedElement: null,
         highlightBox: null,
@@ -248,7 +249,9 @@ document.addEventListener('alpine:init', () => {
          */
         closeInspector() {
             this.isOpen = false;
+            this.isPinned = false;
             this.deactivatePicker();
+            this.hideHighlight();
             this.$dispatch('mageforge:inspector:closed');
             this.updateFloatingButton();
         },
@@ -276,9 +279,19 @@ document.addEventListener('alpine:init', () => {
             }
 
             document.removeEventListener('mousemove', this.mouseMoveHandler);
-            document.removeEventListener('click', this.clickHandler, false);
+            
+            // Keep click handler active if pinned (for click-outside detection)
+            if (!this.isPinned) {
+                document.removeEventListener('click', this.clickHandler, false);
+            }
+            
             document.body.style.cursor = '';
-            this.hideHighlight();
+            
+            // Only hide if not pinned
+            if (!this.isPinned) {
+                this.hideHighlight();
+            }
+            
             this.hoveredElement = null;
             this.lastBadgeUpdate = 0;
         },
@@ -288,6 +301,9 @@ document.addEventListener('alpine:init', () => {
          */
         handleMouseMove(e) {
             if (!this.isPickerActive) return;
+
+            // Don't update if badge is pinned
+            if (this.isPinned) return;
 
             // Don't update if mouse is over the floating button
             if (this.floatingButton && this.floatingButton.contains(e.target)) {
@@ -338,9 +354,20 @@ document.addEventListener('alpine:init', () => {
          * Handle click on element
          */
         handleClick(e) {
+            // Handle click outside badge when pinned
+            if (this.isPinned && this.infoBadge) {
+                // Check if click is outside badge
+                if (!this.infoBadge.contains(e.target) && !this.floatingButton.contains(e.target)) {
+                    this.unpinBadge();
+                    return;
+                }
+                // Click inside badge - do nothing, let it stay open
+                return;
+            }
+
             if (!this.isPickerActive) return;
 
-            // Don't handle clicks on the info badge
+            // Don't handle clicks on the info badge during picking
             if (this.infoBadge && (this.infoBadge.contains(e.target) || this.infoBadge === e.target)) {
                 return;
             }
@@ -353,9 +380,32 @@ document.addEventListener('alpine:init', () => {
             if (element) {
                 this.selectedElement = element;
                 this.updatePanelData(element);
-                // Keep panel open but stop picking
-                this.deactivatePicker();
+                this.pinBadge();
             }
+        },
+
+        /**
+         * Pin the badge after element selection
+         */
+        pinBadge() {
+            this.isPinned = true;
+            this.deactivatePicker();
+            // Keep highlight and badge visible
+            // Update badge to show close button
+            if (this.selectedElement) {
+                this.buildBadgeContent(this.selectedElement);
+            }
+        },
+
+        /**
+         * Unpin and close the badge
+            // Remove click handler now that we're unpinned
+            document.removeEventListener('click', this.clickHandler, false);
+         */
+        unpinBadge() {
+            this.isPinned = false;
+            this.hideHighlight();
+            this.selectedElement = null;
         },
 
         /**
@@ -480,11 +530,71 @@ document.addEventListener('alpine:init', () => {
             // Clear badge
             this.infoBadge.innerHTML = '';
 
+            // Add close button if pinned
+            if (this.isPinned) {
+                this.infoBadge.appendChild(this.createCloseButton());
+            }
+
             // Create tab system
             this.createTabSystem(data, element);
 
             // Branding footer
             this.infoBadge.appendChild(this.createBrandingFooter());
+        },
+
+        /**
+         * Create close button for pinned badge
+         */
+        createCloseButton() {
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'mageforge-inspector-close';
+            closeBtn.innerHTML = '✕';
+            closeBtn.title = 'Close (or click outside)';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 28px;
+                height: 28px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                color: #94a3b8;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                z-index: 10;
+                font-family: inherit;
+                line-height: 1;
+                padding: 0;
+            `;
+
+            closeBtn.onmouseenter = () => {
+                closeBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+                closeBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                closeBtn.style.color = '#ef4444';
+                closeBtn.style.transform = 'scale(1.05)';
+            };
+
+            closeBtn.onmouseleave = () => {
+                closeBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+                closeBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                closeBtn.style.color = '#94a3b8';
+                closeBtn.style.transform = 'scale(1)';
+            };
+
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.unpinBadge();
+            };
+
+            return closeBtn;
         },
 
         /**
@@ -688,9 +798,8 @@ document.addEventListener('alpine:init', () => {
          * Render structure sections (template, block, module, etc.)
          */
         renderStructureSections(data, container) {
-            // Template section with override indicator
-            const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
-            container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
+            // Template section
+            container.appendChild(this.createInfoSection('📄 Template', data.template, '#60a5fa'));
 
             // Block section
             container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
