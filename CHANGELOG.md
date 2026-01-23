@@ -8,6 +8,31 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.8.0](https://github.com/OpenForgeProject/mageforge/compare/0.7.0...0.8.0) (2026-01-23)
+
+
+### Added
+
+* add functional-tests badge to readme.md ([#95](https://github.com/OpenForgeProject/mageforge/issues/95)) ([7108ef0](https://github.com/OpenForgeProject/mageforge/commit/7108ef0d4408b82f3010acaa00cf6f257880809d))
+* add npm sync validation to NodePackageManager and theme builders ([#93](https://github.com/OpenForgeProject/mageforge/issues/93)) ([5fcbdaf](https://github.com/OpenForgeProject/mageforge/commit/5fcbdaf7ceb19136f4b86fbffd33b44cee1469d6))
+* add phpstan & phpcs ([#96](https://github.com/OpenForgeProject/mageforge/issues/96)) ([06bcfdc](https://github.com/OpenForgeProject/mageforge/commit/06bcfdc82b1a8e0a58ad8712f7a120dc215e850f))
+* add pinning functionality for inspector badge ([#104](https://github.com/OpenForgeProject/mageforge/issues/104)) ([69f7328](https://github.com/OpenForgeProject/mageforge/commit/69f73287754b572ea27349fcbb248f351dd7bc0d))
+* enhance inspector with JSON metadata and comment parsing ([#105](https://github.com/OpenForgeProject/mageforge/issues/105)) ([a2f9ebf](https://github.com/OpenForgeProject/mageforge/commit/a2f9ebf4a188e01576d980866c92b7d9e7bf55f1))
+* separate functional tests from compatibility tests ([effac26](https://github.com/OpenForgeProject/mageforge/commit/effac2637837efa4814b93bc1b09eb8cef306544))
+* update feature request link to direct to new issue template ([7e0b57e](https://github.com/OpenForgeProject/mageforge/commit/7e0b57eb33f927ba307b008af504de42c4a2a5af))
+
+
+### Fixed
+
+* correct head-branch regex and add new changed-files sections ([53777ea](https://github.com/OpenForgeProject/mageforge/commit/53777eac19920e4de175b2a52704ff8b0c9982de))
+* labeler.yml to simplify Documentation labels ([2d96502](https://github.com/OpenForgeProject/mageforge/commit/2d96502e697fb6bc0c262867163d93086c75c9aa))
+* labeler.yml to update label rules ([79c3fc0](https://github.com/OpenForgeProject/mageforge/commit/79c3fc05b8a468c76b3e69ee9b555e0460bc3928))
+* remove deprecated environment retrieval method ([#98](https://github.com/OpenForgeProject/mageforge/issues/98)) ([3e11ae7](https://github.com/OpenForgeProject/mageforge/commit/3e11ae7a572dff28875167043d5f9e64e7cc67b5))
+* remove unnecessary blank lines in functional tests workflow ([f1e9bb7](https://github.com/OpenForgeProject/mageforge/commit/f1e9bb7ce8ea96f20f5c23b1b4ae78138388ab53))
+* update head-branch patterns and file globbing in labeler.yml ([#103](https://github.com/OpenForgeProject/mageforge/issues/103)) ([bd48b7c](https://github.com/OpenForgeProject/mageforge/commit/bd48b7ced59e405002897e595972bebf97a34bc4))
+* update validateHyvaTheme to include output parameter ([#99](https://github.com/OpenForgeProject/mageforge/issues/99)) ([9b53f8d](https://github.com/OpenForgeProject/mageforge/commit/9b53f8d270df9c56ab13488c2d7c60b367e3fa47))
+* Workflow permissions ([#101](https://github.com/OpenForgeProject/mageforge/issues/101)) ([c0c4c3d](https://github.com/OpenForgeProject/mageforge/commit/c0c4c3dbccda41befc7107b38279dbb11dc77db2))
+
 ## [0.7.0](https://github.com/OpenForgeProject/mageforge/compare/0.6.0...0.7.0) (2026-01-20)
 
 
