@@ -116,7 +116,6 @@ HELP
             'enable' => $this->enableInspector(),
             'disable' => $this->disableInspector(),
             'status' => $this->showStatus(),
-            default => Cli::RETURN_FAILURE,
         };
     }
 

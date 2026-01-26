@@ -6,14 +6,11 @@ namespace OpenForgeProject\MageForge\Model;
 
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
-use Magento\Theme\Model\ResourceModel\Theme\Collection as ThemeCollection;
 
 class ThemePath
 {
     public function __construct(
-        private readonly ThemeList $themeList,
-        private readonly ComponentRegistrarInterface $componentRegistrar,
-        private readonly ThemeCollection $themeCollection
+        private readonly ComponentRegistrarInterface $componentRegistrar
     ) {
     }
 

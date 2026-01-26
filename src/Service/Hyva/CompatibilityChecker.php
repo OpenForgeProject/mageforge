@@ -19,8 +19,7 @@ class CompatibilityChecker
 {
     public function __construct(
         private readonly ComponentRegistrarInterface $componentRegistrar,
-        private readonly ModuleScanner $moduleScanner,
-        private readonly IncompatibilityDetector $incompatibilityDetector
+        private readonly ModuleScanner $moduleScanner
     ) {
     }
 

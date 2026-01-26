@@ -62,6 +62,10 @@ class InspectorHints implements TemplateEngineInterface
     {
         $result = $this->subject->render($block, $templateFile, $dictionary);
 
+        if (!$this->showBlockHints) {
+            return $result;
+        }
+
         // Only inject attributes if there's actual HTML content
         if (empty(trim($result))) {
             return $result;
@@ -189,7 +193,7 @@ class InspectorHints implements TemplateEngineInterface
     {
         if ($block instanceof AbstractBlock) {
             $parent = $block->getParentBlock();
-            if ($parent && method_exists($parent, 'getNameInLayout')) {
+            if ($parent instanceof AbstractBlock) {
                 return $parent->getNameInLayout() ?: '';
             }
         }
@@ -205,7 +209,7 @@ class InspectorHints implements TemplateEngineInterface
      */
     private function getBlockAlias(BlockInterface $block): string
     {
-        if ($block instanceof AbstractBlock && method_exists($block, 'getNameInLayout')) {
+        if ($block instanceof AbstractBlock) {
             return $block->getNameInLayout() ?: '';
         }
 

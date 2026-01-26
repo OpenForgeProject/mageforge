@@ -638,7 +638,7 @@ class CleanCommand extends AbstractCommand
      */
     private function setEnvVar(string $name, string $value): void
     {
-        if (empty($name) || !is_string($name)) {
+        if (empty($name) ) {
             return;
         }
 

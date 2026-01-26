@@ -238,7 +238,7 @@ class CheckCommand extends AbstractCommand
     /**
      * Get database configuration from environment variables
      *
-     * @return array
+     * @return array<string, string>
      */
     private function getDatabaseConfig(): array
     {
@@ -500,7 +500,7 @@ class CheckCommand extends AbstractCommand
     /**
      * Get potential search engine hosts
      *
-     * @return array
+     * @return string[]
      */
     private function getSearchEngineHosts(): array
     {
@@ -531,7 +531,7 @@ class CheckCommand extends AbstractCommand
     /**
      * Format search engine version output
      *
-     * @param array $info
+     * @param array<string, mixed> $info
      * @return string
      */
     private function formatSearchEngineVersion(array $info): string
@@ -549,7 +549,7 @@ class CheckCommand extends AbstractCommand
      * Test Elasticsearch connection and return version info
      *
      * @param string $url
-     * @return array|bool
+     * @return array<string, mixed>|false
      */
     private function testElasticsearchConnection(string $url)
     {
@@ -573,7 +573,7 @@ class CheckCommand extends AbstractCommand
      * Try to connect using Magento's HTTP client
      *
      * @param string $url
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     private function tryMagentoHttpClient(string $url): ?array
     {
@@ -603,7 +603,7 @@ class CheckCommand extends AbstractCommand
     /**
      * Get important PHP extensions
      *
-     * @return array
+     * @return array<int, array<int, string>>
      */
     private function getImportantPhpExtensions(): array
     {
@@ -757,8 +757,8 @@ class CheckCommand extends AbstractCommand
     {
         // Use ini_get for certain system variables as a safer alternative
         if (in_array($name, ['memory_limit', 'max_execution_time'])) {
-            $value = ini_get($name);
-            if ($value !== false) {
+            $value = (string)ini_get($name);
+            if ($value !== '') {
                 return $value;
             }
         }

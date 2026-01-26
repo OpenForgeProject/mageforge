@@ -61,7 +61,7 @@ class StaticContentCleaner
             $cleanedStatic = $this->themeCleaner->cleanPubStatic($themeCode, $io, false, $isVerbose);
             $cleanedPreprocessed = $this->themeCleaner->cleanViewPreprocessed($themeCode, $io, false, $isVerbose);
 
-            return ($cleanedStatic > 0 || $cleanedPreprocessed > 0) || !$this->themeCleaner->hasStaticFiles($themeCode);
+            return ($cleanedStatic > 0 || $cleanedPreprocessed > 0);
         } catch (\Exception $e) {
             $io->error('Failed to check/clean static content: ' . $e->getMessage());
             return false;

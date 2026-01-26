@@ -59,7 +59,7 @@ class InspectorHints
      * @param TemplateEngineFactory $subject
      * @param TemplateEngineInterface $invocationResult
      * @return TemplateEngineInterface
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @SuppressWarnings("PHPMD.UnusedFormalParameter")
      */
     public function afterCreate(
         TemplateEngineFactory $subject,

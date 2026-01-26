@@ -492,7 +492,7 @@ class BuildCommand extends AbstractCommand
     private function setEnvVar(string $name, string $value): void
     {
         // Validate input parameters
-        if (empty($name) || !is_string($name)) {
+        if (empty($name) ) {
             return;
         }
 
