@@ -73,9 +73,14 @@ class InspectorHints implements TemplateEngineInterface
             return $result;
         }
 
-        // Do not wrap if content is a script tag
-        if (stripos($trimmedResult, '<script') === 0 && stripos($trimmedResult, '</script>') === (strlen($trimmedResult) - 9)) {
+        // Do not wrap if content is a script tag (start allows attributes or multiple tags)
+        if (stripos($trimmedResult, '<script') === 0) {
             return $result;
+        }
+
+        // Do not wrap if template path suggests partial/JS/JSON
+        if (strpos($templateFile, '/js/') !== false || strpos($templateFile, '/json/') !== false) {
+             return $result;
         }
 
         // Do not wrap if content seems to be a Magewire component (to prevent DOM diffing issues)
