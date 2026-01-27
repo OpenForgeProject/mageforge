@@ -69,7 +69,7 @@ class InspectorHints implements TemplateEngineInterface
         }
 
         // Do not wrap if content looks like JSON (also check for common JSON patterns)
-        if (str_starts_with($trimmedResult, '{') || 
+        if (str_starts_with($trimmedResult, '{') ||
             str_starts_with($trimmedResult, '[') ||
             (str_starts_with($trimmedResult, '"') && str_contains($trimmedResult, '":{"'))) {
             return $result;
@@ -80,15 +80,13 @@ class InspectorHints implements TemplateEngineInterface
             return $result;
         }
 
-        // Do not wrap if template path suggests partial/JS/JSON or Magewire/Hyva Checkout components
-        // Only block Hyva Checkout specifically, not all checkout templates
+        // Do not wrap if template path suggests partial/JS/JSON or direct Magewire component files
+        // Only block very specific risky paths, rely on content checks for Magewire detection
         $lowerTemplatePath = strtolower($templateFile);
-        if (strpos($lowerTemplatePath, '/js/') !== false || 
+        if (strpos($lowerTemplatePath, '/js/') !== false ||
             strpos($lowerTemplatePath, '/json/') !== false ||
             strpos($lowerTemplatePath, '/magewire/') !== false ||
-            strpos($lowerTemplatePath, '/livewire/') !== false ||
-            (strpos($lowerTemplatePath, 'hyva') !== false && strpos($lowerTemplatePath, 'checkout') !== false) ||
-            strpos($lowerTemplatePath, 'component.phtml') !== false) {
+            strpos($lowerTemplatePath, '/livewire/') !== false) {
              return $result;
         }
 
