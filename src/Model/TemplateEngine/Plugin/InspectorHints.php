@@ -81,18 +81,9 @@ class InspectorHints
             return $invocationResult;
         }
 
-        // Disable for Hyva Checkout (Magewire-based) - check both URI and PathInfo
+        // Block any magewire/livewire AJAX endpoints only
         $requestUri = $this->request->getRequestUri();
-        $pathInfo = $this->request->getPathInfo();
-        
-        // Block entire /checkout/ route (Hyva Checkout uses Magewire)
-        if (($requestUri && stripos($requestUri, '/checkout') !== false) ||
-            ($pathInfo && stripos($pathInfo, '/checkout') !== false)) {
-            return $invocationResult;
-        }
-        
-        // Block any magewire/livewire endpoints
-        if (preg_match('/\/(magewire|livewire)\//i', (string)$requestUri)) {
+        if ($requestUri && preg_match('/\/(magewire|livewire)\//i', $requestUri)) {
              return $invocationResult;
         }
 
