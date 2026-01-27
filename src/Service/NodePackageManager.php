@@ -35,7 +35,14 @@ class NodePackageManager
 
         try {
             if ($this->fileDriver->isExists($path . '/package-lock.json')) {
-                $this->shell->execute('npm ci --quiet');
+                try {
+                    $this->shell->execute('npm ci --quiet');
+                } catch (\Exception $e) {
+                    if ($isVerbose) {
+                        $io->warning('npm ci failed, falling back to npm install...');
+                    }
+                    $this->shell->execute('npm install --quiet');
+                }
             } else {
                 if ($isVerbose) {
                     $io->warning('No package-lock.json found, running npm install...');
@@ -74,7 +81,7 @@ class NodePackageManager
         }
 
         if (!$this->fileDriver->isExists($path . '/package-lock.json')) {
-            return true;
+            return false;
         }
 
         $currentDir = getcwd();

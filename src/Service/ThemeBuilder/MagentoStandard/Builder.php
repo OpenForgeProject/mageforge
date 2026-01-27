@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
@@ -24,7 +25,8 @@ class Builder implements BuilderInterface
         private readonly StaticContentDeployer $staticContentDeployer,
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
-        private readonly SymlinkCleaner $symlinkCleaner
+        private readonly SymlinkCleaner $symlinkCleaner,
+        private readonly NodePackageManager $nodePackageManager
     ) {
     }
 
@@ -98,9 +100,16 @@ class Builder implements BuilderInterface
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
-        // Check for node_modules in root
-        if (!$this->installNodeModulesIfMissing($io, $isVerbose)) {
-            return false;
+        $rootPath = '.';
+
+        // Check if node_modules is in sync with package-lock.json
+        if (!$this->nodePackageManager->isNodeModulesInSync($rootPath)) {
+            if ($isVerbose) {
+                $io->warning('Node modules out of sync, missing, or no lock file found. Installing...');
+            }
+            if (!$this->nodePackageManager->installNodeModules($rootPath, $io, $isVerbose)) {
+                return false;
+            }
         }
 
         // Check for grunt
@@ -116,39 +125,7 @@ class Builder implements BuilderInterface
         return true;
     }
 
-    /**
-     * Install Node modules if they're missing
-     */
-    private function installNodeModulesIfMissing(SymfonyStyle $io, bool $isVerbose): bool
-    {
-        if (!$this->fileDriver->isDirectory('node_modules')) {
-            if ($isVerbose) {
-                $io->warning('Node modules not found in root directory. Running npm ci...');
-            }
 
-            try {
-                if ($this->fileDriver->isExists('package-lock.json')) {
-                    $this->shell->execute('npm ci --quiet');
-                } else {
-                    if ($isVerbose) {
-                        $io->warning('No package-lock.json found, running npm install...');
-                    }
-                    $this->shell->execute('npm install --quiet');
-                }
-
-                if ($isVerbose) {
-                    $io->success('Node modules installed successfully.');
-                }
-
-                return true;
-            } catch (\Exception $e) {
-                $io->error('Failed to install node modules: ' . $e->getMessage());
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Install Grunt if it's missing
@@ -206,11 +183,6 @@ class Builder implements BuilderInterface
         }
 
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
-            return false;
-        }
-
-        // Check for node_modules in root
-        if (!$this->installNodeModulesIfMissing($io, $isVerbose)) {
             return false;
         }
 
