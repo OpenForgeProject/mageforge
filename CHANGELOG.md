@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.8.1](https://github.com/OpenForgeProject/mageforge/compare/0.8.0...0.8.1) (2026-01-27)
+
+
+### Fixed
+
+* improve node module installation fallback logic ([#107](https://github.com/OpenForgeProject/mageforge/issues/107)) ([c400732](https://github.com/OpenForgeProject/mageforge/commit/c400732d5dfec183adc7fde9e42ad6b99f573f0e))
+
 ## [0.8.0](https://github.com/OpenForgeProject/mageforge/compare/0.7.0...0.8.0) (2026-01-23)
 
 
