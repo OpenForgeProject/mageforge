@@ -81,18 +81,18 @@ class InspectorHints
             return $invocationResult;
         }
 
-        // Additional check for Magewire if not sent as XHR or checkout page
-        // Check diverse Request URI and Path Info variations to catch all Magewire output
+        // Disable for Hyva Checkout (Magewire-based) - check both URI and PathInfo
         $requestUri = $this->request->getRequestUri();
         $pathInfo = $this->request->getPathInfo();
         
-        if (($requestUri && stripos($requestUri, 'magewire') !== false) ||
-            ($pathInfo && stripos($pathInfo, 'magewire') !== false)) {
+        // Block entire /checkout/ route (Hyva Checkout uses Magewire)
+        if (($requestUri && stripos($requestUri, '/checkout') !== false) ||
+            ($pathInfo && stripos($pathInfo, '/checkout') !== false)) {
             return $invocationResult;
         }
         
-        // Also check regex for partial matches if simple strings fail
-        if (preg_match('/magewire|livewire/i', (string)$requestUri)) {
+        // Block any magewire/livewire endpoints
+        if (preg_match('/\/(magewire|livewire)\//i', (string)$requestUri)) {
              return $invocationResult;
         }
 

@@ -83,11 +83,13 @@ class InspectorHints implements TemplateEngineInterface
              return $result;
         }
 
-        // Do not wrap if content seems to be a Magewire component (to prevent DOM diffing issues)
-        // Check for common Magewire/Livewire data attributes
-        if (stripos($result, 'wire:id') !== false ||
-            stripos($result, 'wire:initial-data') !== false ||
-            stripos($result, 'x-data="initMagewire') !== false) {
+        // Do not wrap if content seems to be a Magewire/Livewire component (to prevent DOM diffing issues)
+        // Check for any wire: attributes or Magewire initialization
+        if (stripos($result, 'wire:') !== false ||
+            stripos($result, 'livewire') !== false ||
+            stripos($result, 'magewire') !== false ||
+            stripos($result, 'x-data="initMagewire') !== false ||
+            stripos($result, '@entangle') !== false) {
             return $result;
         }
 
