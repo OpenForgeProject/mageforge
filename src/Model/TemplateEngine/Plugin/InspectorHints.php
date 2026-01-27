@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Model\TemplateEngine\Plugin;
 
 use Magento\Developer\Helper\Data as DevHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\State;
 use Magento\Framework\View\TemplateEngineFactory;
 use Magento\Framework\View\TemplateEngineInterface;
@@ -32,25 +33,30 @@ class InspectorHints
 
     private State $state;
 
+    private Http $request;
+
     /**
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
      * @param DevHelper $devHelper
      * @param InspectorHintsFactory $inspectorHintsFactory
      * @param State $state
+     * @param Http $request
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         StoreManagerInterface $storeManager,
         DevHelper $devHelper,
         InspectorHintsFactory $inspectorHintsFactory,
-        State $state
+        State $state,
+        Http $request
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
         $this->devHelper = $devHelper;
         $this->inspectorHintsFactory = $inspectorHintsFactory;
         $this->state = $state;
+        $this->request = $request;
     }
 
     /**
@@ -68,6 +74,19 @@ class InspectorHints
         // Only activate in developer mode
         if ($this->state->getMode() !== State::MODE_DEVELOPER) {
             return $invocationResult;
+        }
+
+        // Disable for AJAX/API requests (including Magewire)
+        if ($this->request->isXmlHttpRequest()) {
+            return $invocationResult;
+        }
+
+        // Additional check for Magewire if not sent as XHR or checkout page
+        $requestUri = $this->request->getRequestUri();
+        if ($requestUri) {
+             if (strpos($requestUri, 'magewire') !== false) {
+                 return $invocationResult;
+             }
         }
 
         // Check if inspector is enabled in configuration

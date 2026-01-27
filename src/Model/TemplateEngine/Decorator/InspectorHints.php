@@ -61,10 +61,31 @@ class InspectorHints implements TemplateEngineInterface
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string
     {
         $result = $this->subject->render($block, $templateFile, $dictionary);
+        $trimmedResult = trim($result);
 
         // Only inject attributes if there's actual HTML content
-        if (empty(trim($result))) {
+        if (empty($trimmedResult)) {
             return $result;
+        }
+
+        // Do not wrap if content looks like JSON
+        if (str_starts_with($trimmedResult, '{') || str_starts_with($trimmedResult, '[')) {
+            return $result;
+        }
+
+        // Do not wrap if content is a script tag
+        if (stripos($trimmedResult, '<script') === 0 && stripos($trimmedResult, '</script>') === (strlen($trimmedResult) - 9)) {
+            return $result;
+        }
+
+        // Do not wrap if content seems to be a Magewire component (to prevent DOM diffing issues)
+        if (str_contains($result, 'wire:id="')) {
+            return $result;
+        }
+
+        // Do not wrap if content seems to be a template for JS templating engines (e.g. Mustache/Hogan)
+        if (str_contains($result, '{{') && str_contains($result, '}}')) {
+             return $result;
         }
 
         return $this->injectInspectorAttributes($result, $block, $templateFile);
@@ -115,9 +136,10 @@ class InspectorHints implements TemplateEngineInterface
         // Escape any comment terminators in JSON to prevent breaking out of comment
         $jsonMetadata = str_replace('-->', '--&gt;', $jsonMetadata);
 
-        // Wrap content with comment markers
+        // Wrap content with comment markers without creating new lines
+        // New lines can break JavaScript strings if this block is rendered inside a JS variable
         $wrappedHtml = sprintf(
-            "<!-- MAGEFORGE_START %s -->\n%s\n<!-- MAGEFORGE_END %s -->",
+            "<!-- MAGEFORGE_START %s -->%s<!-- MAGEFORGE_END %s -->",
             $jsonMetadata,
             $html,
             $wrapperId
