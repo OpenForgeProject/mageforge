@@ -399,7 +399,7 @@ document.addEventListener('alpine:init', () => {
             this.isPickerActive = true;
             document.addEventListener('mousemove', this.mouseMoveHandler);
             document.addEventListener('click', this.clickHandler, false); // Don't use capture
-            document.body.style.cursor = 'crosshair';
+            // Cursor is set dynamically in handleMouseMove based on inspectability
         },
 
         /**
@@ -443,15 +443,25 @@ document.addEventListener('alpine:init', () => {
 
             // Don't update if mouse is over the floating button
             if (this.floatingButton && this.floatingButton.contains(e.target)) {
+                document.body.style.cursor = 'crosshair';
                 return;
             }
 
             // Don't update if mouse is over the info badge
             if (this.infoBadge && this.infoBadge.contains(e.target)) {
+                document.body.style.cursor = 'crosshair';
                 return;
             }
 
             const element = this.findInspectableElement(e.target);
+
+            // Update cursor based on inspectability
+            if (element) {
+                document.body.style.cursor = 'crosshair';
+            } else if (e.target && !e.target.classList.contains('mageforge-inspector') && !e.target.closest('.mageforge-inspector')) {
+                // Show"not-allowed" cursor for non-inspectable elements (protected Magewire components)
+                document.body.style.cursor = 'not-allowed';
+            }
 
             // Clear any existing hover timeout
             if (this.hoverTimeout) {
