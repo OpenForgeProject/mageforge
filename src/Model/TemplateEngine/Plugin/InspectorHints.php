@@ -82,11 +82,18 @@ class InspectorHints
         }
 
         // Additional check for Magewire if not sent as XHR or checkout page
+        // Check diverse Request URI and Path Info variations to catch all Magewire output
         $requestUri = $this->request->getRequestUri();
-        if ($requestUri) {
-             if (strpos($requestUri, 'magewire') !== false) {
-                 return $invocationResult;
-             }
+        $pathInfo = $this->request->getPathInfo();
+        
+        if (($requestUri && stripos($requestUri, 'magewire') !== false) ||
+            ($pathInfo && stripos($pathInfo, 'magewire') !== false)) {
+            return $invocationResult;
+        }
+        
+        // Also check regex for partial matches if simple strings fail
+        if (preg_match('/magewire|livewire/i', (string)$requestUri)) {
+             return $invocationResult;
         }
 
         // Check if inspector is enabled in configuration
