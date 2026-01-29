@@ -96,9 +96,6 @@ jobs:
       - name: Install MageForge Module and PHPStan
         working-directory: magento2
         run: |
-          # Disable packagist
-          composer config repo.packagist.org false
-
           # Add local repository
           composer config repositories.mageforge-local path ../mageforge
 
