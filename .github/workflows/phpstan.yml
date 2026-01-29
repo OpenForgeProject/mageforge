@@ -128,5 +128,8 @@ jobs:
           vendor/bin/phpstan --version
           echo "Clearing PHPStan cache..."
           vendor/bin/phpstan clear-result-cache -c vendor/openforgeproject/mageforge/phpstan.neon
+          echo "=== Checking actual file content in vendor ==="
+          cat vendor/openforgeproject/mageforge/src/Model/TemplateEngine/Decorator/InspectorHintsFactory.php | grep -A 20 "public function create"
+          echo "=== End of file content check ==="
           echo "Running PHPStan Analysis with verbose output..."
           vendor/bin/phpstan analyse -vvv --no-progress -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
