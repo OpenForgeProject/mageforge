@@ -46,7 +46,7 @@ Understanding the structure is crucial for contributing:
 1. **Clone the repository**:
 
    ```bash
-   git clone git@github.com:OpenForgeProject/mageforge.git
+   git clone git@github.com:OpenForgeProject/mageforge.git -b develop
    cd mageforge
    ```
 
@@ -63,9 +63,9 @@ Understanding the structure is crucial for contributing:
    ```
 
    This script:
-   - Installs a fresh Magento 2.4.7 instance in `/magento`
+   - Installs a fresh Magento 2.4.8 instance in `/magento`
    - Creates sample data and test themes
-   - Symlinks `/src` → `/magento/app/code/OpenForgeProject/MageForge`
+   - Symlinks `/src` → `/magento/vendor/openforgeproject/mageforge`
    - Enables the MageForge module
 
 4. **Verify installation**:
