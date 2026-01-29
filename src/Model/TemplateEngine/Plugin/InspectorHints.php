@@ -22,35 +22,13 @@ class InspectorHints
 {
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
 
-    private ScopeConfigInterface $scopeConfig;
-
-    private StoreManagerInterface $storeManager;
-
-    private DevHelper $devHelper;
-
-    private InspectorHintsFactory $inspectorHintsFactory;
-
-    private State $state;
-
-    /**
-     * @param ScopeConfigInterface $scopeConfig
-     * @param StoreManagerInterface $storeManager
-     * @param DevHelper $devHelper
-     * @param InspectorHintsFactory $inspectorHintsFactory
-     * @param State $state
-     */
     public function __construct(
-        ScopeConfigInterface $scopeConfig,
-        StoreManagerInterface $storeManager,
-        DevHelper $devHelper,
-        InspectorHintsFactory $inspectorHintsFactory,
-        State $state
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly StoreManagerInterface $storeManager,
+        private readonly DevHelper $devHelper,
+        private readonly InspectorHintsFactory $inspectorHintsFactory,
+        private readonly State $state
     ) {
-        $this->scopeConfig = $scopeConfig;
-        $this->storeManager = $storeManager;
-        $this->devHelper = $devHelper;
-        $this->inspectorHintsFactory = $inspectorHintsFactory;
-        $this->state = $state;
     }
 
     /**

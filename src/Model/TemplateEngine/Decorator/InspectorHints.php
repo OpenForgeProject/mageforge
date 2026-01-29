@@ -16,12 +16,6 @@ use Magento\Framework\View\TemplateEngineInterface;
  */
 class InspectorHints implements TemplateEngineInterface
 {
-    private TemplateEngineInterface $subject;
-
-    private bool $showBlockHints;
-
-    private Random $random;
-
     private string $magentoRoot;
 
     /**
@@ -30,14 +24,10 @@ class InspectorHints implements TemplateEngineInterface
      * @param Random $random
      */
     public function __construct(
-        TemplateEngineInterface $subject,
-        bool $showBlockHints,
-        Random $random
+        private readonly TemplateEngineInterface $subject,
+        private readonly bool $showBlockHints,
+        private readonly Random $random
     ) {
-        $this->subject = $subject;
-        $this->showBlockHints = $showBlockHints;
-        $this->random = $random;
-
         // Get Magento root directory - try multiple strategies
         // 1. Try from BP constant (most reliable)
         if (defined('BP')) {
