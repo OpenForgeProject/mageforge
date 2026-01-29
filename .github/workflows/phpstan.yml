@@ -56,9 +56,12 @@ jobs:
           key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-2.4.8
 
-      - name: Clone Magento
+      - name: Download Magento
         run: |
-          git clone --depth=1 --branch=2.4.8 https://github.com/magento/magento2.git magento2
+          composer create-project \
+            --repository-url=https://mirror.mage-os.org/ \
+            magento/project-community-edition \
+            magento2
 
       - name: Install Magento
         working-directory: magento2
@@ -93,6 +96,9 @@ jobs:
       - name: Install MageForge Module and PHPStan
         working-directory: magento2
         run: |
+          # Disable packagist
+          composer config repo.packagist.org false
+
           # Add local repository
           composer config repositories.mageforge-local path ../mageforge
 
@@ -109,7 +115,6 @@ jobs:
           composer update --with-dependencies
 
           # Enable module
-          bin/magento module:enable OpenForgeProject_MageForge
           bin/magento setup:upgrade
 
       - name: Run PHPStan
