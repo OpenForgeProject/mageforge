@@ -13,10 +13,6 @@ use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
  */
 class InspectorHintsFactory
 {
-    /**
-     * @param Random $random
-     * @phpstan-ignore property.onlyWritten
-     */
     public function __construct(
         private readonly Random $random
     ) {

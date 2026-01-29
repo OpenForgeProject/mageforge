@@ -117,4 +117,7 @@ jobs:
       - name: Run PHPStan
         working-directory: magento2
         run: |
-          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
+          echo "PHPStan Version:"
+          vendor/bin/phpstan --version
+          echo "Running PHPStan Analysis with verbose output..."
+          vendor/bin/phpstan analyse -vvv -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
