@@ -38,10 +38,13 @@ class InspectorHintsFactory
             );
         }
 
+        // Extract random generator to satisfy PHPStan (readonly property usage detection)
+        $randomGenerator = $this->random;
+
         return new InspectorHints(
             $subject,
             (bool)$showBlockHints,
-            $this->random
+            $randomGenerator
         );
     }
 }
