@@ -35,10 +35,13 @@ class InspectorHintsFactory
             );
         }
 
+        // Create instance - property access extracted to help PHPStan recognize the read
+        $randomGenerator = $this->random;
+        
         return new InspectorHints(
             $subject,
             (bool)$showBlockHints,
-            $this->random
+            $randomGenerator
         );
     }
 }
