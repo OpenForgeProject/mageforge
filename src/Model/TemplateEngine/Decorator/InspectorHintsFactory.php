@@ -15,6 +15,7 @@ class InspectorHintsFactory
 {
     /**
      * @param Random $random
+     * @phpstan-ignore property.onlyWritten
      */
     public function __construct(
         private readonly Random $random
@@ -38,13 +39,10 @@ class InspectorHintsFactory
             );
         }
 
-        // Extract random generator to satisfy PHPStan (readonly property usage detection)
-        $randomGenerator = $this->random;
-
         return new InspectorHints(
             $subject,
             (bool)$showBlockHints,
-            $randomGenerator
+            $this->random
         );
     }
 }
