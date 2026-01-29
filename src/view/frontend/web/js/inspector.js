@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('mageforgeInspector', () => ({
         isOpen: false,
         isPickerActive: false,
+        isPinned: false, // Badge is locked after clicking an element
         hoveredElement: null,
         selectedElement: null,
         highlightBox: null,
@@ -31,6 +32,10 @@ document.addEventListener('alpine:init', () => {
             this.mouseMoveHandler = (e) => this.handleMouseMove(e);
             this.clickHandler = (e) => this.handleClick(e);
 
+            // Cache for block detection
+            this.cachedBlocks = null;
+            this.lastBlocksCacheTime = 0;
+
             this.setupKeyboardShortcuts();
             this.createHighlightBox();
             this.createInfoBadge();
@@ -38,6 +43,138 @@ document.addEventListener('alpine:init', () => {
 
             // Dispatch init event for Hyvä integration
             this.$dispatch('mageforge:inspector:init');
+        },
+
+        /**
+         * Parse MageForge comment markers in DOM
+         */
+        parseCommentMarker(comment) {
+            const text = comment.textContent.trim();
+
+            // Check if it's a start marker
+            if (text.startsWith('MAGEFORGE_START ')) {
+                const jsonStr = text.substring('MAGEFORGE_START '.length);
+                try {
+                    // Unescape any escaped comment terminators
+                    const unescapedJson = jsonStr.replace(/--&gt;/g, '-->');
+                    return {
+                        type: 'start',
+                        data: JSON.parse(unescapedJson)
+                    };
+                } catch (e) {
+                    console.error('Failed to parse MageForge start marker:', e);
+                    return null;
+                }
+            }
+
+            // Check if it's an end marker
+            if (text.startsWith('MAGEFORGE_END ')) {
+                const id = text.substring('MAGEFORGE_END '.length).trim();
+                return {
+                    type: 'end',
+                    id: id
+                };
+            }
+
+            return null;
+        },
+
+        /**
+         * Find all MageForge block regions in DOM
+         */
+        findAllMageForgeBlocks() {
+            const blocks = [];
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_COMMENT,
+                null
+            );
+
+            const stack = [];
+            let comment;
+
+            while ((comment = walker.nextNode())) {
+                const parsed = this.parseCommentMarker(comment);
+
+                if (!parsed) continue;
+
+                if (parsed.type === 'start') {
+                    stack.push({
+                        startComment: comment,
+                        data: parsed.data,
+                        elements: []
+                    });
+                } else if (parsed.type === 'end' && stack.length > 0) {
+                    const currentBlock = stack[stack.length - 1];
+                    if (currentBlock.data.id === parsed.id) {
+                        currentBlock.endComment = comment;
+
+                        // Collect all elements between start and end comments
+                        currentBlock.elements = this.getElementsBetweenComments(
+                            currentBlock.startComment,
+                            currentBlock.endComment
+                        );
+
+                        blocks.push(currentBlock);
+                        stack.pop();
+                    }
+                }
+            }
+
+            return blocks;
+        },
+
+        /**
+         * Get all elements between two comment nodes
+         */
+        getElementsBetweenComments(startComment, endComment) {
+            const elements = [];
+            let node = startComment.nextSibling;
+
+            while (node && node !== endComment) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    elements.push(node);
+                    // Also add all descendants
+                    elements.push(...node.querySelectorAll('*'));
+                }
+                node = node.nextSibling;
+            }
+
+            return elements;
+        },
+
+        /**
+         * Find MageForge block data for a given element
+         */
+        findBlockForElement(element) {
+            // Cache blocks for performance
+            if (!this.cachedBlocks || Date.now() - this.lastBlocksCacheTime > 1000) {
+                this.cachedBlocks = this.findAllMageForgeBlocks();
+                this.lastBlocksCacheTime = Date.now();
+            }
+
+            let closestBlock = null;
+            let closestDepth = -1;
+
+            // Find the deepest (most specific) block containing this element
+            for (const block of this.cachedBlocks) {
+                if (block.elements.includes(element)) {
+                    // Calculate depth (how many ancestors between element and body)
+                    let depth = 0;
+                    let node = element;
+                    while (node && node !== document.body) {
+                        depth++;
+                        node = node.parentElement;
+                    }
+
+                    if (depth > closestDepth) {
+                        closestBlock = block;
+                        closestDepth = depth;
+                    }
+                }
+            }
+
+            return closestBlock;
         },
 
         /**
@@ -248,7 +385,9 @@ document.addEventListener('alpine:init', () => {
          */
         closeInspector() {
             this.isOpen = false;
+            this.isPinned = false;
             this.deactivatePicker();
+            this.hideHighlight();
             this.$dispatch('mageforge:inspector:closed');
             this.updateFloatingButton();
         },
@@ -276,9 +415,19 @@ document.addEventListener('alpine:init', () => {
             }
 
             document.removeEventListener('mousemove', this.mouseMoveHandler);
-            document.removeEventListener('click', this.clickHandler, false);
+
+            // Keep click handler active if pinned (for click-outside detection)
+            if (!this.isPinned) {
+                document.removeEventListener('click', this.clickHandler, false);
+            }
+
             document.body.style.cursor = '';
-            this.hideHighlight();
+
+            // Only hide if not pinned
+            if (!this.isPinned) {
+                this.hideHighlight();
+            }
+
             this.hoveredElement = null;
             this.lastBadgeUpdate = 0;
         },
@@ -288,6 +437,9 @@ document.addEventListener('alpine:init', () => {
          */
         handleMouseMove(e) {
             if (!this.isPickerActive) return;
+
+            // Don't update if badge is pinned
+            if (this.isPinned) return;
 
             // Don't update if mouse is over the floating button
             if (this.floatingButton && this.floatingButton.contains(e.target)) {
@@ -338,9 +490,20 @@ document.addEventListener('alpine:init', () => {
          * Handle click on element
          */
         handleClick(e) {
+            // Handle click outside badge when pinned
+            if (this.isPinned && this.infoBadge) {
+                // Check if click is outside badge
+                if (!this.infoBadge.contains(e.target) && !this.floatingButton.contains(e.target)) {
+                    this.unpinBadge();
+                    return;
+                }
+                // Click inside badge - do nothing, let it stay open
+                return;
+            }
+
             if (!this.isPickerActive) return;
 
-            // Don't handle clicks on the info badge
+            // Don't handle clicks on the info badge during picking
             if (this.infoBadge && (this.infoBadge.contains(e.target) || this.infoBadge === e.target)) {
                 return;
             }
@@ -353,8 +516,37 @@ document.addEventListener('alpine:init', () => {
             if (element) {
                 this.selectedElement = element;
                 this.updatePanelData(element);
-                // Keep panel open but stop picking
-                this.deactivatePicker();
+                this.pinBadge();
+            }
+        },
+
+        /**
+         * Pin the badge after element selection
+         */
+        pinBadge() {
+            this.isPinned = true;
+            this.deactivatePicker();
+            // Keep highlight and badge visible
+            // Update badge to show close button
+            if (this.selectedElement) {
+                this.buildBadgeContent(this.selectedElement);
+            }
+        },
+
+        /**
+         * Unpin and close the badge
+         */
+        unpinBadge() {
+            this.isPinned = false;
+            this.hideHighlight();
+            this.selectedElement = null;
+
+            // Remove click handler
+            document.removeEventListener('click', this.clickHandler, false);
+
+            // Reactivate picker if inspector is still open
+            if (this.isOpen) {
+                this.activatePicker();
             }
         },
 
@@ -362,7 +554,6 @@ document.addEventListener('alpine:init', () => {
          * Find nearest inspectable element
          */
         findInspectableElement(target) {
-            // Return the target element itself, or filter out inspector elements
             if (!target) return null;
 
             // Skip inspector's own elements
@@ -375,26 +566,18 @@ document.addEventListener('alpine:init', () => {
                 return null;
             }
 
-            return target;
-        },
-
-        /**
-         * Find parent element with Magento template data
-         */
-        findParentWithTemplateData(element) {
-            let parent = element.parentElement;
-            let maxDepth = 10;
-
-            while (parent && maxDepth > 0) {
-                if (parent.hasAttribute && parent.hasAttribute('data-mageforge-template')) {
-                    return parent;
-                }
-                parent = parent.parentElement;
-                maxDepth--;
+            // Check if this element is part of a MageForge block
+            const block = this.findBlockForElement(target);
+            if (block) {
+                // Attach block data to element for easy access
+                target._mageforgeBlockData = block.data;
+                return target;
             }
 
             return null;
         },
+
+
 
         /**
          * Show highlight overlay on element
@@ -467,24 +650,90 @@ document.addEventListener('alpine:init', () => {
          * Build badge content with element metadata
          */
         buildBadgeContent(element) {
-            const data = {
-                template: element.getAttribute('data-mageforge-template') || '',
-                blockClass: element.getAttribute('data-mageforge-block') || '',
-                module: element.getAttribute('data-mageforge-module') || '',
-                viewModel: element.getAttribute('data-mageforge-viewmodel') || '',
-                parentBlock: element.getAttribute('data-mageforge-parent') || '',
-                blockAlias: element.getAttribute('data-mageforge-alias') || '',
-                isOverride: element.getAttribute('data-mageforge-override') === '1'
+            const data = element._mageforgeBlockData || {
+                template: '',
+                block: '',
+                module: '',
+                viewModel: '',
+                parent: '',
+                alias: '',
+                override: '0'
             };
+
+            // Convert override string to boolean and add aliases for compatibility
+            data.isOverride = data.override === '1';
+            data.blockClass = data.block;
+            data.parentBlock = data.parent;
+            data.blockAlias = data.alias;
 
             // Clear badge
             this.infoBadge.innerHTML = '';
+
+            // Add close button if pinned
+            if (this.isPinned) {
+                this.infoBadge.appendChild(this.createCloseButton());
+            }
 
             // Create tab system
             this.createTabSystem(data, element);
 
             // Branding footer
             this.infoBadge.appendChild(this.createBrandingFooter());
+        },
+
+        /**
+         * Create close button for pinned badge
+         */
+        createCloseButton() {
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'mageforge-inspector-close';
+            closeBtn.innerHTML = '✕';
+            closeBtn.title = 'Close (or click outside)';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                width: 28px;
+                height: 28px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                color: #94a3b8;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                z-index: 10;
+                font-family: inherit;
+                line-height: 1;
+                padding: 0;
+            `;
+
+            closeBtn.onmouseenter = () => {
+                closeBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+                closeBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                closeBtn.style.color = '#ef4444';
+                closeBtn.style.transform = 'scale(1.05)';
+            };
+
+            closeBtn.onmouseleave = () => {
+                closeBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+                closeBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                closeBtn.style.color = '#94a3b8';
+                closeBtn.style.transform = 'scale(1)';
+            };
+
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.unpinBadge();
+            };
+
+            return closeBtn;
         },
 
         /**
@@ -614,28 +863,43 @@ document.addEventListener('alpine:init', () => {
          * Render structure tab when element has no direct template data
          */
         renderStructureWithParentData(container, element) {
-            const parentWithData = this.findParentWithTemplateData(element);
+            // Try to find parent element with block data
+            let parent = element.parentElement;
+            let parentBlock = null;
+            let maxDepth = 10;
 
-            if (parentWithData) {
-                this.renderInheritedStructure(container, element, parentWithData);
-            } else {
-                this.renderNoTemplateData(container, element);
+            while (parent && maxDepth > 0) {
+                parentBlock = this.findBlockForElement(parent);
+                if (parentBlock) {
+                    this.renderInheritedStructure(container, element, parentBlock);
+                    return;
+                }
+                parent = parent.parentElement;
+                maxDepth--;
             }
+
+            this.renderNoTemplateData(container, element);
         },
 
         /**
          * Render inherited structure from parent element
          */
-        renderInheritedStructure(container, element, parentWithData) {
-            const parentData = {
-                template: parentWithData.getAttribute('data-mageforge-template') || '',
-                blockClass: parentWithData.getAttribute('data-mageforge-block') || '',
-                module: parentWithData.getAttribute('data-mageforge-module') || '',
-                viewModel: parentWithData.getAttribute('data-mageforge-viewmodel') || '',
-                parentBlock: parentWithData.getAttribute('data-mageforge-parent') || '',
-                blockAlias: parentWithData.getAttribute('data-mageforge-alias') || '',
-                isOverride: parentWithData.getAttribute('data-mageforge-override') === '1'
+        renderInheritedStructure(container, element, parentBlock) {
+            const parentData = parentBlock.data || {
+                template: '',
+                block: '',
+                module: '',
+                viewModel: '',
+                parent: '',
+                alias: '',
+                override: '0'
             };
+
+            // Convert to expected format
+            parentData.blockClass = parentData.block;
+            parentData.parentBlock = parentData.parent;
+            parentData.blockAlias = parentData.alias;
+            parentData.isOverride = parentData.override === '1';
 
             // Inheritance note
             const inheritanceNote = document.createElement('div');
@@ -688,9 +952,8 @@ document.addEventListener('alpine:init', () => {
          * Render structure sections (template, block, module, etc.)
          */
         renderStructureSections(data, container) {
-            // Template section with override indicator
-            const templateDisplay = data.isOverride ? '🔧 ' + data.template : data.template;
-            container.appendChild(this.createInfoSection('📄 Template', templateDisplay, '#60a5fa'));
+            // Template section
+            container.appendChild(this.createInfoSection('📄 Template', data.template, '#60a5fa'));
 
             // Block section
             container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
@@ -1238,9 +1501,18 @@ document.addEventListener('alpine:init', () => {
          * Update panel with element data
          */
         updatePanelData(element) {
-            this.panelData.template = element.getAttribute('data-mageforge-template') || 'N/A';
-            this.panelData.block = element.getAttribute('data-mageforge-block') || 'N/A';
-            this.panelData.module = element.getAttribute('data-mageforge-module') || 'N/A';
+            const data = element._mageforgeBlockData;
+
+            if (!data) {
+                this.panelData.template = 'N/A';
+                this.panelData.block = 'N/A';
+                this.panelData.module = 'N/A';
+                return;
+            }
+
+            this.panelData.template = data.template || 'N/A';
+            this.panelData.block = data.block || 'N/A';
+            this.panelData.module = data.module || 'N/A';
         },
     }));
 });

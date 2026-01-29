@@ -64,7 +64,7 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
-     * Inject data-mageforge-* attributes into HTML for inspector
+     * Inject MageForge inspector comment markers into HTML
      *
      * @param string $html
      * @param BlockInterface $block
@@ -90,25 +90,30 @@ class InspectorHints implements TemplateEngineInterface
         $blockAlias = $this->getBlockAlias($block);
         $isOverride = $this->isTemplateOverride($templateFile, $moduleName) ? '1' : '0';
 
-        // Build data attributes
-        $dataAttributes = sprintf(
-            'data-mageforge-template="%s" data-mageforge-block="%s" data-mageforge-module="%s" data-mageforge-id="%s" data-mageforge-viewmodel="%s" data-mageforge-parent="%s" data-mageforge-alias="%s" data-mageforge-override="%s"',
-            htmlspecialchars($relativeTemplatePath, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($blockClass, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($moduleName, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($wrapperId, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($viewModel, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($parentBlock, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($blockAlias, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($isOverride, ENT_QUOTES, 'UTF-8')
-        );
+        // Build metadata as JSON
+        $metadata = [
+            'id' => $wrapperId,
+            'template' => $relativeTemplatePath,
+            'block' => $blockClass,
+            'module' => $moduleName,
+            'viewModel' => $viewModel,
+            'parent' => $parentBlock,
+            'alias' => $blockAlias,
+            'override' => $isOverride,
+        ];
 
-        // Wrap content with data attributes using display:contents to avoid layout issues
+        // JSON encode with proper escaping for HTML comments
+        $jsonMetadata = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        // Escape any comment terminators in JSON to prevent breaking out of comment
+        $jsonMetadata = str_replace('-->', '--&gt;', $jsonMetadata);
+
+        // Wrap content with comment markers
         $wrappedHtml = sprintf(
-            '<div id="%s" class="mageforge-inspectable" %s style="display:contents !important;">%s</div>',
-            htmlspecialchars($wrapperId, ENT_QUOTES, 'UTF-8'),
-            $dataAttributes,
-            $html
+            "<!-- MAGEFORGE_START %s -->\n%s\n<!-- MAGEFORGE_END %s -->",
+            $jsonMetadata,
+            $html,
+            $wrapperId
         );
 
         return $wrappedHtml;
