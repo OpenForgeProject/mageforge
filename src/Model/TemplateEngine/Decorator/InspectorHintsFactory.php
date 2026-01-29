@@ -13,9 +13,11 @@ use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
  */
 class InspectorHintsFactory
 {
-    public function __construct(
-        private readonly Random $random
-    ) {
+    private Random $random;
+
+    public function __construct(Random $random)
+    {
+        $this->random = $random;
     }
 
     /**
@@ -35,13 +37,10 @@ class InspectorHintsFactory
             );
         }
 
-        // Create instance - property access extracted to help PHPStan recognize the read
-        $randomGenerator = $this->random;
-
         return new InspectorHints(
             $subject,
             (bool)$showBlockHints,
-            $randomGenerator
+            $this->random
         );
     }
 }

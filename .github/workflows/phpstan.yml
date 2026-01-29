@@ -47,13 +47,6 @@ jobs:
           php-version: "8.4"
           extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
           tools: composer:v2
-          ini-values: short_open_tag=Off, display_errors=On
-
-      - name: Check PHP Configuration
-        run: |
-          php -v
-          php -i | grep "short_open_tag"
-          php --ri tokenizer | head -20
 
       - name: Cache Composer packages
         id: composer-cache
@@ -124,12 +117,4 @@ jobs:
       - name: Run PHPStan
         working-directory: magento2
         run: |
-          echo "PHPStan Version:"
-          vendor/bin/phpstan --version
-          echo "Clearing PHPStan cache..."
-          vendor/bin/phpstan clear-result-cache -c vendor/openforgeproject/mageforge/phpstan.neon
-          echo "=== Checking actual file content in vendor ==="
-          cat vendor/openforgeproject/mageforge/src/Model/TemplateEngine/Decorator/InspectorHintsFactory.php | grep -A 20 "public function create"
-          echo "=== End of file content check ==="
-          echo "Running PHPStan Analysis with verbose output..."
-          vendor/bin/phpstan analyse -vvv --no-progress -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
+          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
