@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Element\BlockInterface;
@@ -21,23 +20,23 @@ class InspectorHints implements TemplateEngineInterface
 
     private bool $showBlockHints;
 
-    private ?Random $random = null;
+    private Random $random;
 
     private string $magentoRoot;
 
     /**
      * @param TemplateEngineInterface $subject
      * @param bool $showBlockHints
-     * @param Random|null $random
+     * @param Random $random
      */
     public function __construct(
         TemplateEngineInterface $subject,
         bool $showBlockHints,
-        ?Random $random = null
+        Random $random
     ) {
         $this->subject = $subject;
         $this->showBlockHints = $showBlockHints;
-        $this->random = $random ?? ObjectManager::getInstance()->get(Random::class);
+        $this->random = $random;
 
         // Get Magento root directory - try multiple strategies
         // 1. Try from BP constant (most reliable)

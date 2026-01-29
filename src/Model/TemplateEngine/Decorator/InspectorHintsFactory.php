@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
-use Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\Math\Random;
+use Magento\Framework\View\TemplateEngineInterface;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
 
 /**
@@ -13,10 +14,10 @@ use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
 class InspectorHintsFactory
 {
     /**
-     * @param ObjectManagerInterface $objectManager
+     * @param Random $random
      */
     public function __construct(
-        private readonly ObjectManagerInterface $objectManager
+        private readonly Random $random
     ) {
     }
 
@@ -28,8 +29,19 @@ class InspectorHintsFactory
      */
     public function create(array $data = []): InspectorHints
     {
-        /** @var InspectorHints $instance */
-        $instance = $this->objectManager->create(InspectorHints::class, $data);
-        return $instance;
+        $subject = $data['subject'] ?? null;
+        $showBlockHints = $data['showBlockHints'] ?? false;
+
+        if (!$subject instanceof TemplateEngineInterface) {
+            throw new \InvalidArgumentException(
+                'Instance of "' . TemplateEngineInterface::class . '" is expected.'
+            );
+        }
+
+        return new InspectorHints(
+            $subject,
+            (bool)$showBlockHints,
+            $this->random
+        );
     }
 }
