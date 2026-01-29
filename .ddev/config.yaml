@@ -1,7 +1,7 @@
 name: mageforge
 type: magento2
 docroot: magento/pub
-php_version: "8.3"
+php_version: "8.4"
 webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames: []
