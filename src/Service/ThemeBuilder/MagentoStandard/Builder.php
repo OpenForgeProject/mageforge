@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\GruntTaskRunner;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
@@ -26,7 +27,8 @@ class Builder implements BuilderInterface
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
-        private readonly NodePackageManager $nodePackageManager
+        private readonly NodePackageManager $nodePackageManager,
+        private readonly GruntTaskRunner $gruntTaskRunner
     ) {
     }
 
@@ -56,37 +58,7 @@ class Builder implements BuilderInterface
         if ($this->isVendorTheme($themePath)) {
             $io->warning('Vendor theme detected. Skipping Grunt steps.');
         } elseif ($this->hasNodeSetup()) {
-            // Check if Node/Grunt setup exists
-            if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
-                return false;
-            }
-
-            // Clean symlinks in web/css/ directory before build
-            if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
-                return false;
-            }
-
-            // Run grunt tasks
-            try {
-                if ($isVerbose) {
-                    $io->text('Running grunt clean...');
-                    $this->shell->execute('node_modules/.bin/grunt clean');
-                } else {
-                    $this->shell->execute('node_modules/.bin/grunt clean --quiet');
-                }
-
-                if ($isVerbose) {
-                    $io->text('Running grunt less...');
-                    $this->shell->execute('node_modules/.bin/grunt less');
-                } else {
-                    $this->shell->execute('node_modules/.bin/grunt less --quiet');
-                }
-
-                if ($isVerbose) {
-                    $io->success('Grunt tasks completed successfully.');
-                }
-            } catch (\Exception $e) {
-                $io->error('Failed to run grunt tasks: ' . $e->getMessage());
+            if (!$this->processNodeSetup($themePath, $io, $output, $isVerbose)) {
                 return false;
             }
         } else {
@@ -106,6 +78,29 @@ class Builder implements BuilderInterface
         }
 
         return true;
+    }
+
+    /**
+     * Process Node.js and Grunt setup
+     */
+    private function processNodeSetup(
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
+        // Check if Node/Grunt setup exists
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Clean symlinks in web/css/ directory before build
+        if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
+            return false;
+        }
+
+        // Run grunt tasks
+        return $this->gruntTaskRunner->runTasks($io, $output, $isVerbose);
     }
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
