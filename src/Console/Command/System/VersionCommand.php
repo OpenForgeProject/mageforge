@@ -17,7 +17,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class VersionCommand extends AbstractCommand
 {
     private const API_URL = 'https://api.github.com/repos/openforgeproject/mageforge/releases/latest';
-    private const PACKAGE_NAME = 'openforgeproject/mageforge';
     private const UNKNOWN_VERSION = 'Unknown';
 
     /**

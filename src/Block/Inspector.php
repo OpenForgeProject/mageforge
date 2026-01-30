@@ -19,29 +19,13 @@ class Inspector extends Template
 {
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
 
-    private State $state;
-
-    private ScopeConfigInterface $scopeConfig;
-
-    private DevHelper $devHelper;
-
-    /**
-     * @param Context $context
-     * @param State $state
-     * @param ScopeConfigInterface $scopeConfig
-     * @param DevHelper $devHelper
-     * @param array $data
-     */
     public function __construct(
         Context $context,
-        State $state,
-        ScopeConfigInterface $scopeConfig,
-        DevHelper $devHelper,
+        private readonly State $state,
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly DevHelper $devHelper,
         array $data = []
     ) {
-        $this->state = $state;
-        $this->scopeConfig = $scopeConfig;
-        $this->devHelper = $devHelper;
         parent::__construct($context, $data);
     }
 

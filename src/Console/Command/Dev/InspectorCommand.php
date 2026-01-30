@@ -21,27 +21,12 @@ class InspectorCommand extends AbstractCommand
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
     private const ARGUMENT_ACTION = 'action';
 
-    private WriterInterface $configWriter;
-
-    private State $state;
-
-    private CacheManager $cacheManager;
-
-    /**
-     * @param WriterInterface $configWriter
-     * @param State $state
-     * @param CacheManager $cacheManager
-     * @param string|null $name
-     */
     public function __construct(
-        WriterInterface $configWriter,
-        State $state,
-        CacheManager $cacheManager,
+        private readonly WriterInterface $configWriter,
+        private readonly State $state,
+        private readonly CacheManager $cacheManager,
         ?string $name = null
     ) {
-        $this->configWriter = $configWriter;
-        $this->state = $state;
-        $this->cacheManager = $cacheManager;
         parent::__construct($name);
     }
 
@@ -116,7 +101,6 @@ HELP
             'enable' => $this->enableInspector(),
             'disable' => $this->disableInspector(),
             'status' => $this->showStatus(),
-            default => Cli::RETURN_FAILURE,
         };
     }
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Element\BlockInterface;
@@ -17,28 +16,18 @@ use Magento\Framework\View\TemplateEngineInterface;
  */
 class InspectorHints implements TemplateEngineInterface
 {
-    private TemplateEngineInterface $subject;
-
-    private bool $showBlockHints;
-
-    private ?Random $random = null;
-
     private string $magentoRoot;
 
     /**
      * @param TemplateEngineInterface $subject
      * @param bool $showBlockHints
-     * @param Random|null $random
+     * @param Random $random
      */
     public function __construct(
-        TemplateEngineInterface $subject,
-        bool $showBlockHints,
-        ?Random $random = null
+        private readonly TemplateEngineInterface $subject,
+        private readonly bool $showBlockHints,
+        private readonly Random $random
     ) {
-        $this->subject = $subject;
-        $this->showBlockHints = $showBlockHints;
-        $this->random = $random ?? ObjectManager::getInstance()->get(Random::class);
-
         // Get Magento root directory - try multiple strategies
         // 1. Try from BP constant (most reliable)
         if (defined('BP')) {
@@ -61,6 +50,10 @@ class InspectorHints implements TemplateEngineInterface
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string
     {
         $result = $this->subject->render($block, $templateFile, $dictionary);
+
+        if (!$this->showBlockHints) {
+            return $result;
+        }
 
         // Only inject attributes if there's actual HTML content
         if (empty(trim($result))) {
@@ -189,7 +182,7 @@ class InspectorHints implements TemplateEngineInterface
     {
         if ($block instanceof AbstractBlock) {
             $parent = $block->getParentBlock();
-            if ($parent && method_exists($parent, 'getNameInLayout')) {
+            if ($parent instanceof AbstractBlock) {
                 return $parent->getNameInLayout() ?: '';
             }
         }
@@ -205,7 +198,7 @@ class InspectorHints implements TemplateEngineInterface
      */
     private function getBlockAlias(BlockInterface $block): string
     {
-        if ($block instanceof AbstractBlock && method_exists($block, 'getNameInLayout')) {
+        if ($block instanceof AbstractBlock) {
             return $block->getNameInLayout() ?: '';
         }
 
