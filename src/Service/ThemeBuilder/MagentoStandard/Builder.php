@@ -57,6 +57,7 @@ class Builder implements BuilderInterface
         // Check if this is a vendor theme (read-only, pre-built assets)
         if ($this->isVendorTheme($themePath)) {
             $io->warning('Vendor theme detected. Skipping Grunt steps.');
+            $io->newLine(2);
         } elseif ($this->hasNodeSetup()) {
             if (!$this->processNodeSetup($themePath, $io, $output, $isVerbose)) {
                 return false;
