@@ -114,6 +114,11 @@ class WatchCommand extends AbstractCommand
         }
 
         $builder = $this->builderPool->getBuilder($themePath);
+        if ($builder === null) {
+            $this->io->error("No suitable builder found for theme $themeCode.");
+            return self::FAILURE;
+        }
+
         return $builder->watch($themeCode, $themePath, $this->io, $output, $isVerbose) ? self::SUCCESS : self::FAILURE;
     }
 }

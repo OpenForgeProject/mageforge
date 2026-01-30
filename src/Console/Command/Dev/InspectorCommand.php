@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Console\Command\Dev;
 
 use Magento\Framework\App\Cache\Manager as CacheManager;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
@@ -25,6 +26,7 @@ class InspectorCommand extends AbstractCommand
         private readonly WriterInterface $configWriter,
         private readonly State $state,
         private readonly CacheManager $cacheManager,
+        private readonly ScopeConfigInterface $scopeConfig,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -200,9 +202,7 @@ HELP
     private function isInspectorEnabled(): bool
     {
         try {
-            $scopeConfig = \Magento\Framework\App\ObjectManager::getInstance()
-                ->get(\Magento\Framework\App\Config\ScopeConfigInterface::class);
-            return $scopeConfig->isSetFlag(self::XML_PATH_INSPECTOR_ENABLED);
+            return $this->scopeConfig->isSetFlag(self::XML_PATH_INSPECTOR_ENABLED);
         } catch (\Exception $e) {
             return false;
         }

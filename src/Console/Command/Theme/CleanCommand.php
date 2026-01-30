@@ -599,6 +599,9 @@ class CleanCommand extends AbstractCommand
     private function sanitizeTermValue(string $value): ?string
     {
         $sanitized = preg_replace('/[^a-zA-Z0-9\-]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
         return (strlen($sanitized) > 0 && strlen($sanitized) <= 50) ? $sanitized : null;
     }
 
@@ -617,6 +620,9 @@ class CleanCommand extends AbstractCommand
     private function sanitizeAlphanumericValue(string $value): ?string
     {
         $sanitized = preg_replace('/[^\w\-.]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
         return (strlen($sanitized) > 0 && strlen($sanitized) <= 255) ? $sanitized : null;
     }
 
