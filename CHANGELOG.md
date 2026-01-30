@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ## UNRELEASED
 
+### Changed
+
+* **Inspector CSS Migration**: Migrated Inspector component from Tailwind CSS to pure Vanilla CSS for universal compatibility
+  - All CSS classes now use `mageforge-*` prefix for namespace isolation
+  - Removed Tailwind build dependency (`tailwind/` directory deprecated)
+  - No npm build step required - direct CSS editing
+  - Compatible with all Magento 2 projects regardless of frontend stack
+  - Inspector CSS location: `src/view/frontend/web/css/inspector.css`
+
 ## Latest Release
 
 ## [0.8.1](https://github.com/OpenForgeProject/mageforge/compare/0.8.0...0.8.1) (2026-01-27)

@@ -5,12 +5,45 @@
  * Initializes the Alpine.js inspector component.
  * The floating button and info badge are created dynamically via JavaScript.
  *
+ * Note: Loads Alpine.js from CDN if not already available (for non-Hyvä themes like Luma)
+ *
  * @var \OpenForgeProject\MageForge\Block\Inspector $block
  */
 ?>
 <!-- MageForge Inspector Assets -->
 <link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getCssUrl()) ?>" />
+
+<!-- Alpine.js Bootstrap (load only if not already present) -->
+<script>
+(function() {
+    'use strict';
+
+    // Check if Alpine.js is already loaded (Hyvä themes)
+    if (typeof Alpine !== 'undefined') {
+        console.log('[MageForge Inspector] Alpine.js already loaded');
+        return;
+    }
+
+    // Load Alpine.js dynamically for non-Hyvä themes
+    console.log('[MageForge Inspector] Loading Alpine.js from CDN');
+
+    var alpineScript = document.createElement('script');
+    alpineScript.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js';
+    alpineScript.defer = true;
+    alpineScript.onload = function() {
+        console.log('[MageForge Inspector] Alpine.js loaded successfully');
+    };
+    alpineScript.onerror = function() {
+        console.error('[MageForge Inspector] Failed to load Alpine.js');
+    };
+
+    document.head.appendChild(alpineScript);
+})();
+</script>
+
 <script defer src="<?= $block->escapeUrl($block->getJsUrl()) ?>"></script>
 
 <!-- Inspector Component Wrapper -->
 <div class="mageforge-inspector" x-data="mageforgeInspector"></div>
+
+

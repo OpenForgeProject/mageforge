@@ -200,7 +200,7 @@ document.addEventListener('alpine:init', () => {
          */
         createHighlightBox() {
             this.highlightBox = document.createElement('div');
-            this.highlightBox.className = 'mageforge-inspector mf-inspector-highlight';
+            this.highlightBox.className = 'mageforge-inspector mageforge-inspector-highlight';
 
             // Add inline styles to ensure it's visible
             this.highlightBox.style.cssText = `
@@ -221,7 +221,7 @@ document.addEventListener('alpine:init', () => {
          */
         createInfoBadge() {
             this.infoBadge = document.createElement('div');
-            this.infoBadge.className = 'mageforge-inspector mf-inspector-info-badge';
+            this.infoBadge.className = 'mageforge-inspector mageforge-inspector-info-badge';
 
             // Modern Tailwind-style design
             this.infoBadge.style.cssText = `
@@ -269,12 +269,12 @@ document.addEventListener('alpine:init', () => {
          */
         createFloatingButton() {
             this.floatingButton = document.createElement('button');
-            this.floatingButton.className = 'mageforge-inspector mf-inspector-float-button';
+            this.floatingButton.className = 'mageforge-inspector mageforge-inspector-float-button';
             this.floatingButton.type = 'button';
             this.floatingButton.title = 'Activate Inspector (Ctrl+Shift+I)';
 
             // Generate unique ID for SVG gradient to avoid collisions
-            const gradientId = 'mf-gradient-' + Math.random().toString(36).substr(2, 9);
+            const gradientId = 'mageforge-gradient-' + Math.random().toString(36).substr(2, 9);
 
             // Modern floating button design
             this.floatingButton.style.cssText = `
@@ -352,11 +352,13 @@ document.addEventListener('alpine:init', () => {
 
             if (this.isOpen) {
                 // Active state
+                this.floatingButton.classList.add('mageforge-active');
                 this.floatingButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
                 this.floatingButton.style.transform = 'translateY(-2px)';
                 this.floatingButton.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2), 0 8px 20px rgba(16, 185, 129, 0.5)';
             } else {
                 // Inactive state
+                this.floatingButton.classList.remove('mageforge-active');
                 this.floatingButton.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
                 this.floatingButton.style.transform = 'translateY(0)';
                 this.floatingButton.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2)';
