@@ -166,7 +166,12 @@ jobs:
         run: |
           echo "=== Inspector Functionality Tests ==="
 
-          # Enable Inspector
+          # Set developer mode (required for Inspector)
+          echo "Setting developer mode:"
+          bin/magento deploy:mode:set developer
+          bin/magento cache:clean
+
+          # Enable Inspector (now possible in developer mode)
           echo "Enabling Inspector:"
           bin/magento mageforge:theme:inspector enable
           bin/magento cache:clean
