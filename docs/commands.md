@@ -470,6 +470,9 @@ The commands rely on several services for their functionality:
 - `BuilderPool`: Manages theme builders and selects appropriate builders for themes
 - `BuilderInterface`: Implemented by all theme builders
 - `MagentoStandard\Builder`: Processes standard Magento LESS-based themes
+  - Automatically detects if Node.js/Grunt setup is present
+  - Skips Node/Grunt steps if intentionally omitted (no package.json, package-lock.json, gruntfile.js or grunt-config.json)
+  - Only performs static content deployment and cache cleaning for themes without build tools
 - Various other builders for different theme types
 
 ### Theme Services

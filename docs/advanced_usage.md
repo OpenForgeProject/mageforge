@@ -37,9 +37,29 @@ This document provides detailed information and advanced tips for using MageForg
 ### Standard Magento Themes (LESS)
 
 For traditional LESS-based Magento themes, MageForge handles:
-- LESS compilation
+- LESS compilation via Grunt
 - Source map generation
 - Minification for production
+
+#### Themes Without Node.js/Grunt Setup
+
+MageForge automatically detects if a Magento Standard theme intentionally omits Node.js/Grunt setup. If none of the following files exist:
+- `package.json`
+- `package-lock.json`
+- `gruntfile.js`
+- `grunt-config.json`
+
+The builder will skip all Node/Grunt-related steps and only:
+- Clean static content (if in developer mode)
+- Deploy static content
+- Clean cache
+
+This is useful for:
+- Themes that use pre-compiled CSS
+- Minimal themes without custom LESS
+- Simple theme inheritance without asset compilation
+
+**Note**: Watch mode requires Node.js/Grunt setup and will return an error if these files are missing.
 
 ### Hyvä Themes (Tailwind CSS)
 

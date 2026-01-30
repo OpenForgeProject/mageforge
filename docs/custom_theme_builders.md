@@ -308,6 +308,50 @@ public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface 
 }
 ```
 
+### Best Practice: Optional Build Tool Setup
+
+If your builder uses optional build tools (like Node.js, Grunt, Webpack), consider checking if the setup exists before requiring it. This allows themes to intentionally skip certain build steps:
+
+```php
+private function hasNodeSetup(): bool
+{
+    $rootPath = '.';
+
+    return $this->fileDriver->isExists($rootPath . '/package.json')
+        || $this->fileDriver->isExists($rootPath . '/package-lock.json')
+        || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
+        || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
+}
+
+public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+{
+    if (!$this->detect($themePath)) {
+        return false;
+    }
+
+    // Check if Node/Grunt setup is intentionally absent
+    $hasNodeSetup = $this->hasNodeSetup();
+
+    if ($hasNodeSetup) {
+        // Run Node/Grunt build steps
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Execute build commands...
+    } else {
+        if ($isVerbose) {
+            $io->note('No Node.js setup detected. Skipping Node/Grunt steps.');
+        }
+    }
+
+    // Continue with other build steps (deploy, cache, etc.)
+    return true;
+}
+```
+
+This approach allows themes to work without specific build tools while still supporting full builds when they are present.
+
 ### The watch() Method
 
 This method starts a process that monitors changes to theme files and automatically rebuilds when necessary:

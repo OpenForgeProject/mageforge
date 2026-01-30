@@ -52,37 +52,46 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
-            return false;
-        }
+        // Check if Node/Grunt setup is intentionally absent
+        $hasNodeSetup = $this->hasNodeSetup();
 
-        // Clean symlinks in web/css/ directory before build
-        if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
-            return false;
-        }
-
-        // Run grunt tasks
-        try {
-            if ($isVerbose) {
-                $io->text('Running grunt clean...');
-                $this->shell->execute('node_modules/.bin/grunt clean');
-            } else {
-                $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+        if ($hasNodeSetup) {
+            if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+                return false;
             }
 
-            if ($isVerbose) {
-                $io->text('Running grunt less...');
-                $this->shell->execute('node_modules/.bin/grunt less');
-            } else {
-                $this->shell->execute('node_modules/.bin/grunt less --quiet');
+            // Clean symlinks in web/css/ directory before build
+            if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
+                return false;
             }
 
-            if ($isVerbose) {
-                $io->success('Grunt tasks completed successfully.');
+            // Run grunt tasks
+            try {
+                if ($isVerbose) {
+                    $io->text('Running grunt clean...');
+                    $this->shell->execute('node_modules/.bin/grunt clean');
+                } else {
+                    $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+                }
+
+                if ($isVerbose) {
+                    $io->text('Running grunt less...');
+                    $this->shell->execute('node_modules/.bin/grunt less');
+                } else {
+                    $this->shell->execute('node_modules/.bin/grunt less --quiet');
+                }
+
+                if ($isVerbose) {
+                    $io->success('Grunt tasks completed successfully.');
+                }
+            } catch (\Exception $e) {
+                $io->error('Failed to run grunt tasks: ' . $e->getMessage());
+                return false;
             }
-        } catch (\Exception $e) {
-            $io->error('Failed to run grunt tasks: ' . $e->getMessage());
-            return false;
+        } else {
+            if (!$isVerbose) {
+                $io->success('No Grunt-Setup detected. Skipping Magento Grunt steps.');
+            }
         }
 
         // Deploy static content
@@ -177,6 +186,12 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        // Check if Node/Grunt setup is intentionally absent
+        if (!$this->hasNodeSetup()) {
+            $io->error('Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, node_modules, or grunt-config.json found.');
+            return false;
+        }
+
         // Clean static content if in developer mode
         if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
@@ -212,5 +227,22 @@ class Builder implements BuilderInterface
     public function getName(): string
     {
         return self::THEME_NAME;
+    }
+
+    /**
+     * Check if Node.js/Grunt setup exists
+     *
+     * Returns true if at least one of the required files exists
+     *
+     * @return bool
+     */
+    private function hasNodeSetup(): bool
+    {
+        $rootPath = '.';
+
+        return $this->fileDriver->isExists($rootPath . '/package.json')
+            || $this->fileDriver->isExists($rootPath . '/package-lock.json')
+            || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
+            || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
     }
 }
