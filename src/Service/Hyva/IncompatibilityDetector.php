@@ -102,7 +102,7 @@ class IncompatibilityDetector
     /**
      * Detect incompatibilities in a file
      *
-     * @return array Array of issues with keys: pattern, description, severity, line
+     * @return array<int, array<string, mixed>> Array of issues with keys: pattern, description, severity, line
      */
     public function detectInFile(string $filePath): array
     {
@@ -142,6 +142,10 @@ class IncompatibilityDetector
 
     /**
      * Scan content lines for pattern matches
+     *
+     * @param array<int, string> $lines
+     * @param array<int, array<string, mixed>> $patterns
+     * @return array<int, array<string, mixed>>
      */
     private function scanContentForPatterns(array $lines, array $patterns): array
     {

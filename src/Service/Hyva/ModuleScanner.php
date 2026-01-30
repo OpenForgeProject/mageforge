@@ -26,7 +26,7 @@ class ModuleScanner
     /**
      * Scan a module directory for compatibility issues
      *
-     * @return array Array with structure: ['files' => [], 'totalIssues' => int, 'criticalIssues' => int]
+     * @return array<string, mixed> Array with structure: ['files' => [], 'totalIssues' => int, 'criticalIssues' => int]
      */
     public function scanModule(string $modulePath): array
     {
@@ -65,6 +65,8 @@ class ModuleScanner
 
     /**
      * Recursively find all relevant files in a directory
+     *
+     * @return array<int, string>
      */
     private function findRelevantFiles(string $directory): array
     {
@@ -109,7 +111,7 @@ class ModuleScanner
     /**
      * Check if module has Hyvä compatibility package based on composer data
      *
-     * @param array $composerData Parsed composer.json data
+     * @param array<string, mixed> $composerData Parsed composer.json data
      */
     private function isHyvaCompatibilityPackage(array $composerData): bool
     {
@@ -165,6 +167,8 @@ class ModuleScanner
 
     /**
      * Get module info from composer.json
+     *
+     * @return array<string, mixed>
      */
     public function getModuleInfo(string $modulePath): array
     {

@@ -21,8 +21,11 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class CleanCommand extends AbstractCommand
 {
+    /** @var array<string, string|null>|null */
     private static ?array $cachedEnv = null;
+    /** @var array<string, string|null> */
     private array $originalEnv = [];
+    /** @var array<string, string|null> */
     private array $secureEnvStorage = [];
 
     /**
@@ -96,7 +99,7 @@ class CleanCommand extends AbstractCommand
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return array|null Array of theme codes or null to exit
+     * @return array<string>|null Array of theme codes or null to exit
      */
     private function resolveThemeCodes(InputInterface $input, OutputInterface $output): ?array
     {
@@ -117,7 +120,7 @@ class CleanCommand extends AbstractCommand
     /**
      * Get all theme codes
      *
-     * @return array|null
+     * @return array<string>|null
      */
     private function getAllThemeCodes(): ?array
     {
@@ -138,7 +141,7 @@ class CleanCommand extends AbstractCommand
      * Select themes interactively
      *
      * @param OutputInterface $output
-     * @return array|null
+     * @return array<string>|null
      */
     private function selectThemesInteractively(OutputInterface $output): ?array
     {
@@ -156,7 +159,7 @@ class CleanCommand extends AbstractCommand
     /**
      * Display available themes for non-interactive environments
      *
-     * @param array $themes
+     * @param array<mixed> $themes
      * @return void
      */
     private function displayAvailableThemes(array $themes): void
@@ -181,9 +184,9 @@ class CleanCommand extends AbstractCommand
     /**
      * Prompt user to select themes
      *
-     * @param array $options
-     * @param array $themes
-     * @return array|null
+     * @param array<string> $options
+     * @param array<mixed> $themes
+     * @return array<string>|null
      */
     private function promptForThemes(array $options, array $themes): ?array
     {
@@ -219,10 +222,10 @@ class CleanCommand extends AbstractCommand
     /**
      * Process cleaning for all selected themes
      *
-     * @param array $themeCodes
+     * @param array<string> $themeCodes
      * @param bool $dryRun
      * @param OutputInterface $output
-     * @return array [totalCleaned, failedThemes]
+     * @return array<int, mixed> [totalCleaned, failedThemes]
      */
     private function processThemes(array $themeCodes, bool $dryRun, OutputInterface $output): array
     {
@@ -257,7 +260,7 @@ class CleanCommand extends AbstractCommand
      * Validate theme exists
      *
      * @param string $themeName
-     * @param array &$failedThemes
+     * @param array<string> $failedThemes
      * @param OutputInterface $output
      * @return string|null Theme code if valid or corrected, null if invalid
      */
@@ -364,9 +367,9 @@ class CleanCommand extends AbstractCommand
     /**
      * Display summary of cleaning operation
      *
-     * @param array $themeCodes
+     * @param array<string> $themeCodes
      * @param int $totalCleaned
-     * @param array $failedThemes
+     * @param array<string> $failedThemes
      * @param bool $dryRun
      * @return void
      */
@@ -411,7 +414,7 @@ class CleanCommand extends AbstractCommand
      *
      * @param int $totalThemes
      * @param int $totalCleaned
-     * @param array $failedThemes
+     * @param array<string> $failedThemes
      * @param bool $dryRun
      * @return void
      */
@@ -543,6 +546,8 @@ class CleanCommand extends AbstractCommand
 
     /**
      * Cache and filter environment variables safely
+     *
+     * @return array<string, string|null>
      */
     private function getCachedEnvironmentVariables(): array
     {

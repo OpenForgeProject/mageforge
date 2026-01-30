@@ -34,7 +34,10 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const SCOPE_THIRD_PARTY = 'third-party';
     private const SCOPE_ALL = 'all';
 
+    /** @var array<string, string|null> */
     private array $originalEnv = [];
+
+    /** @var array<string, string|null> */
     private array $secureEnvStorage = [];
 
     public function __construct(
@@ -245,6 +248,9 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Display compatibility check results
+     *
+     * @param array<string, mixed> $results
+     * @param bool $showAll
      */
     private function displayResults(array $results, bool $showAll): void
     {
@@ -265,6 +271,8 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Display detailed file-level issues
+     *
+     * @param array<string, mixed> $results
      */
     private function displayDetailedIssues(array $results): void
     {
@@ -303,6 +311,8 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Display summary statistics
+     *
+     * @param array<string, mixed> $results
      */
     private function displaySummary(array $results): void
     {

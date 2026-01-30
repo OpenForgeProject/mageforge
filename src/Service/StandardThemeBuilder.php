@@ -16,6 +16,14 @@ class StandardThemeBuilder
     ) {
     }
 
+    /**
+     * @param string $themeCode
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @param array<string> $successList
+     * @return bool
+     */
     public function build(
         string $themeCode,
         SymfonyStyle $io,

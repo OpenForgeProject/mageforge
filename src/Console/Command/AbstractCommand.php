@@ -30,12 +30,12 @@ abstract class AbstractCommand extends Command
     protected SymfonyStyle $io;
 
     /**
-     * @var array
+     * @var array<string, string|null>
      */
     private array $originalEnv = [];
 
     /**
-     * @var array
+     * @var array<string, string|null>
      */
     private array $secureEnvStorage = [];
 

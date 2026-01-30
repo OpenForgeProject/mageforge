@@ -31,7 +31,7 @@ class CompatibilityChecker
      * @param bool $showAll Whether to show all modules (including compatible ones)
      * @param bool $thirdPartyOnly Whether to scan only third-party modules (excludes Magento_* modules)
      * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory (true = exclude, false = include)
-     * @return array Results with structure: ['modules' => [], 'summary' => [], 'hasIncompatibilities' => bool]
+     * @return array<string, mixed> Results with structure: ['modules' => [], 'summary' => [], 'hasIncompatibilities' => bool]
      */
     public function check(
         SymfonyStyle $io,
@@ -126,6 +126,10 @@ class CompatibilityChecker
 
     /**
      * Format results for display
+     *
+     * @param array<string, mixed> $results
+     * @param bool $showAll
+     * @return array<int, array<int, string>>
      */
     public function formatResultsForDisplay(array $results, bool $showAll = false): array
     {
@@ -149,6 +153,8 @@ class CompatibilityChecker
 
     /**
      * Get status display string with colors
+     *
+     * @param array<string, mixed> $moduleData
      */
     private function getStatusDisplay(array $moduleData): string
     {
@@ -169,6 +175,8 @@ class CompatibilityChecker
 
     /**
      * Get issues display string
+     *
+     * @param array<string, mixed> $moduleData
      */
     private function getIssuesDisplay(array $moduleData): string
     {
@@ -195,6 +203,10 @@ class CompatibilityChecker
 
     /**
      * Get detailed file issues for a module
+     *
+     * @param string $moduleName
+     * @param array<string, mixed> $moduleData
+     * @return array<int, array<string, mixed>>
      */
     public function getDetailedIssues(string $moduleName, array $moduleData): array
     {
