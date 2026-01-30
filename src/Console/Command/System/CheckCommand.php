@@ -6,8 +6,10 @@ namespace OpenForgeProject\MageForge\Console\Command\System;
 
 use Composer\Semver\Comparator;
 use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Escaper;
+use Magento\Framework\HTTP\ClientFactory;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,6 +29,8 @@ class CheckCommand extends AbstractCommand
     public function __construct(
         private readonly ProductMetadataInterface $productMetadata,
         private readonly Escaper $escaper,
+        private readonly ResourceConnection $resourceConnection,
+        private readonly ClientFactory $httpClientFactory
     ) {
         parent::__construct();
     }
@@ -181,9 +185,7 @@ class CheckCommand extends AbstractCommand
     private function getMysqlVersionViaMagento(): ?string
     {
         try {
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            $resource = $objectManager->get(\Magento\Framework\App\ResourceConnection::class);
-            $connection = $resource->getConnection();
+            $connection = $this->resourceConnection->getConnection();
             $version = $connection->fetchOne('SELECT VERSION()');
 
             return !empty($version) ? $version : null;
@@ -584,9 +586,7 @@ class CheckCommand extends AbstractCommand
     private function tryMagentoHttpClient(string $url): ?array
     {
         try {
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            $httpClientFactory = $objectManager->get(\Magento\Framework\HTTP\ClientFactory::class);
-            $httpClient = $httpClientFactory->create();
+            $httpClient = $this->httpClientFactory->create();
             $httpClient->setTimeout(2);
             $httpClient->get($url);
 

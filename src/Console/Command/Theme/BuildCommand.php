@@ -262,6 +262,11 @@ class BuildCommand extends AbstractCommand
     ): bool {
         $themePath = $this->themePath->getPath($themeCode);
 
+        if ($themePath === null) {
+            $io->error("Could not find path for theme $themeCode.");
+            return false;
+        }
+
         // Find appropriate builder
         $builder = $this->builderPool->getBuilder($themePath);
         if ($builder === null) {
@@ -447,6 +452,9 @@ class BuildCommand extends AbstractCommand
     private function sanitizeTermValue(string $value): ?string
     {
         $sanitized = preg_replace('/[^a-zA-Z0-9\-]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
         return (strlen($sanitized) > 0 && strlen($sanitized) <= 50) ? $sanitized : null;
     }
 
@@ -465,6 +473,9 @@ class BuildCommand extends AbstractCommand
     private function sanitizeAlphanumericValue(string $value): ?string
     {
         $sanitized = preg_replace('/[^\w\-.]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
         return (strlen($sanitized) > 0 && strlen($sanitized) <= 255) ? $sanitized : null;
     }
 
