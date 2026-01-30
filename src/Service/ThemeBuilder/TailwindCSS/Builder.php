@@ -89,6 +89,10 @@ class Builder implements BuilderInterface
 
         // Change to tailwind directory and run build
         $currentDir = getcwd();
+        if ($currentDir === false) {
+            $io->error('Cannot determine current directory');
+            return false;
+        }
         chdir($tailwindPath);
 
         try {

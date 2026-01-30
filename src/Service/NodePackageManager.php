@@ -31,6 +31,11 @@ class NodePackageManager
     public function installNodeModules(string $path, SymfonyStyle $io, bool $isVerbose): bool
     {
         $currentDir = getcwd();
+        if ($currentDir === false) {
+            $io->error('Cannot determine current directory');
+            return false;
+        }
+
         chdir($path);
 
         try {
@@ -85,6 +90,10 @@ class NodePackageManager
         }
 
         $currentDir = getcwd();
+        if ($currentDir === false) {
+            return false;
+        }
+
         chdir($path);
 
         try {
@@ -107,6 +116,10 @@ class NodePackageManager
     public function checkOutdatedPackages(string $path, SymfonyStyle $io): void
     {
         $currentDir = getcwd();
+        if ($currentDir === false) {
+            return;
+        }
+
         chdir($path);
 
         try {
