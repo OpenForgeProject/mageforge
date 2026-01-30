@@ -323,17 +323,24 @@ private function hasNodeSetup(): bool
         || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
 }
 
+private function isVendorTheme(string $themePath): bool
+{
+    return str_contains($themePath, '/vendor/');
+}
+
 public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
 {
     if (!$this->detect($themePath)) {
         return false;
     }
 
-    // Check if Node/Grunt setup is intentionally absent
-    $hasNodeSetup = $this->hasNodeSetup();
-
-    if ($hasNodeSetup) {
-        // Run Node/Grunt build steps
+    // Check if this is a vendor theme (read-only, pre-built assets)
+    if ($this->isVendorTheme($themePath)) {
+        if ($isVerbose) {
+            $io->note('Vendor theme detected. Skipping build steps (pre-built assets expected).');
+        }
+    } elseif ($this->hasNodeSetup()) {
+        // Check if Node/Grunt setup exists
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
             return false;
         }
@@ -350,7 +357,11 @@ public function build(string $themeCode, string $themePath, SymfonyStyle $io, Ou
 }
 ```
 
-This approach allows themes to work without specific build tools while still supporting full builds when they are present.
+This approach:
+- Prevents modification attempts on read-only vendor themes
+- Allows themes to work without specific build tools
+- Still supports full builds when tools are present
+- Provides clear feedback about what's being skipped
 
 ### The watch() Method
 

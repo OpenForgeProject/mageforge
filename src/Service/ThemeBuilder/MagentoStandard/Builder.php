@@ -52,10 +52,11 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Check if Node/Grunt setup is intentionally absent
-        $hasNodeSetup = $this->hasNodeSetup();
-
-        if ($hasNodeSetup) {
+        // Check if this is a vendor theme (read-only, pre-built assets)
+        if ($this->isVendorTheme($themePath)) {
+            $io->warning('Vendor theme detected. Skipping Grunt steps.');
+        } elseif ($this->hasNodeSetup()) {
+            // Check if Node/Grunt setup exists
             if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
                 return false;
             }
@@ -89,8 +90,8 @@ class Builder implements BuilderInterface
                 return false;
             }
         } else {
-            if (!$isVerbose) {
-                $io->success('No Grunt-Setup detected. Skipping Magento Grunt steps.');
+            if ($isVerbose) {
+                $io->note('No Node.js/Grunt setup detected. Skipping Grunt steps.');
             }
         }
 
@@ -186,6 +187,12 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        // Vendor themes cannot be watched (read-only)
+        if ($this->isVendorTheme($themePath)) {
+            $io->error('Watch mode is not supported for vendor themes. Vendor themes are read-only and should have pre-built assets.');
+            return false;
+        }
+
         // Check if Node/Grunt setup is intentionally absent
         if (!$this->hasNodeSetup()) {
             $io->error('Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, node_modules, or grunt-config.json found.');
@@ -244,5 +251,19 @@ class Builder implements BuilderInterface
             || $this->fileDriver->isExists($rootPath . '/package-lock.json')
             || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
             || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
+    }
+
+    /**
+     * Check if theme is from vendor directory
+     *
+     * Vendor themes are installed via Composer and should not be modified.
+     * They typically have pre-built assets and don't require compilation.
+     *
+     * @param string $themePath
+     * @return bool
+     */
+    private function isVendorTheme(string $themePath): bool
+    {
+        return str_contains($themePath, '/vendor/');
     }
 }

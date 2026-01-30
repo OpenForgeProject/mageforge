@@ -41,6 +41,14 @@ For traditional LESS-based Magento themes, MageForge handles:
 - Source map generation
 - Minification for production
 
+#### Vendor Themes
+
+MageForge automatically detects themes installed via Composer (located in `vendor/` directory):
+- **Build mode**: Skips all Grunt/Node.js steps as vendors themes have pre-built assets
+- **Watch mode**: Returns an error as vendor themes are read-only and cannot be modified
+
+This prevents accidental modification attempts and ensures build process stability.
+
 #### Themes Without Node.js/Grunt Setup
 
 MageForge automatically detects if a Magento Standard theme intentionally omits Node.js/Grunt setup. If none of the following files exist:
