@@ -17,6 +17,18 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.10.0](https://github.com/OpenForgeProject/mageforge/compare/0.9.0...0.10.0) (2026-01-30)
+
+
+### Added
+
+* update phpstan level and add type hints ([#116](https://github.com/OpenForgeProject/mageforge/issues/116)) ([0a4a5fa](https://github.com/OpenForgeProject/mageforge/commit/0a4a5fa45ca77396a87569eca3491b569e3d3539))
+
+
+### Fixed
+
+* update phpstan level to 7 and improve error handling ([#118](https://github.com/OpenForgeProject/mageforge/issues/118)) ([7c84ae7](https://github.com/OpenForgeProject/mageforge/commit/7c84ae75580037b6764c4e570cdca06fc5a3a970))
+
 ## [0.9.0](https://github.com/OpenForgeProject/mageforge/compare/0.8.1...0.9.0) (2026-01-30)
 
 
