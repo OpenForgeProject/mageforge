@@ -16,7 +16,8 @@ class NodePackageManager
     public function __construct(
         private readonly Shell $shell,
         private readonly FileDriver $fileDriver
-    ) {}
+    ) {
+    }
 
     /**
      * Install node modules in the specified directory

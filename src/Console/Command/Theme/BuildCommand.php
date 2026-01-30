@@ -181,7 +181,7 @@ class BuildCommand extends AbstractCommand
                 $spinner = new Spinner(sprintf("Building %s (%d of %d) ...", $themeNameCyan, $currentTheme, $totalThemes));
                 $success = false;
 
-                $spinner->spin(function() use ($validatedTheme, $io, $output, $isVerbose, &$successList, &$success) {
+                $spinner->spin(function () use ($validatedTheme, $io, $output, $isVerbose, &$successList, &$success) {
                     $success = $this->buildValidatedTheme($validatedTheme, $io, $output, $isVerbose, $successList);
                     return true;
                 });
@@ -423,7 +423,7 @@ class BuildCommand extends AbstractCommand
      */
     private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
-        return match($name) {
+        return match ($name) {
             'COLUMNS', 'LINES' => $this->sanitizeNumericValue($value),
             'TERM' => $this->sanitizeTermValue($value),
             'CI', 'GITHUB_ACTIONS', 'GITLAB_CI' => $this->sanitizeBooleanValue($value),
@@ -497,7 +497,7 @@ class BuildCommand extends AbstractCommand
     private function setEnvVar(string $name, string $value): void
     {
         // Validate input parameters
-        if (empty($name) ) {
+        if (empty($name)) {
             return;
         }
 
@@ -535,7 +535,9 @@ class BuildCommand extends AbstractCommand
     {
         // Reset our secure storage
         $this->secureEnvStorage = [];
-    }    /**
+    }
+
+    /**
      * Check if the current environment supports interactive terminal input
      *
      * @param OutputInterface $output

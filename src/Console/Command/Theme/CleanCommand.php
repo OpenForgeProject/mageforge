@@ -575,7 +575,7 @@ class CleanCommand extends AbstractCommand
      */
     private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
-        return match($name) {
+        return match ($name) {
             'COLUMNS', 'LINES' => $this->sanitizeNumericValue($value),
             'TERM' => $this->sanitizeTermValue($value),
             'CI', 'GITHUB_ACTIONS', 'GITLAB_CI' => $this->sanitizeBooleanValue($value),
@@ -643,7 +643,7 @@ class CleanCommand extends AbstractCommand
      */
     private function setEnvVar(string $name, string $value): void
     {
-        if (empty($name) ) {
+        if (empty($name)) {
             return;
         }
 

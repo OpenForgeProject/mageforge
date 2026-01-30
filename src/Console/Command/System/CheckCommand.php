@@ -551,7 +551,9 @@ class CheckCommand extends AbstractCommand
         }
 
         return 'Search Engine Available';
-    }    /**
+    }
+    
+    /**
      * Test Elasticsearch connection and return version info
      *
      * @param string $url
@@ -653,7 +655,9 @@ class CheckCommand extends AbstractCommand
         $usedPercent = round(($usedGB / $totalGB) * 100, 2);
 
         return "$usedGB GB / $totalGB GB ($usedPercent%)";
-    }    /**
+    }
+
+    /**
      * Safely get environment variable value
      *
      * @param string $name Environment variable name
