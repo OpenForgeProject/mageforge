@@ -308,6 +308,61 @@ public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface 
 }
 ```
 
+### Best Practice: Optional Build Tool Setup
+
+If your builder uses optional build tools (like Node.js, Grunt, Webpack), consider checking if the setup exists before requiring it. This allows themes to intentionally skip certain build steps:
+
+```php
+private function hasNodeSetup(): bool
+{
+    $rootPath = '.';
+
+    return $this->fileDriver->isExists($rootPath . '/package.json')
+        || $this->fileDriver->isExists($rootPath . '/package-lock.json')
+        || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
+        || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
+}
+
+private function isVendorTheme(string $themePath): bool
+{
+    return str_contains($themePath, '/vendor/');
+}
+
+public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+{
+    if (!$this->detect($themePath)) {
+        return false;
+    }
+
+    // Check if this is a vendor theme (read-only, pre-built assets)
+    if ($this->isVendorTheme($themePath)) {
+        if ($isVerbose) {
+            $io->note('Vendor theme detected. Skipping build steps (pre-built assets expected).');
+        }
+    } elseif ($this->hasNodeSetup()) {
+        // Check if Node/Grunt setup exists
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Execute build commands...
+    } else {
+        if ($isVerbose) {
+            $io->note('No Node.js setup detected. Skipping Node/Grunt steps.');
+        }
+    }
+
+    // Continue with other build steps (deploy, cache, etc.)
+    return true;
+}
+```
+
+This approach:
+- Prevents modification attempts on read-only vendor themes
+- Allows themes to work without specific build tools
+- Still supports full builds when tools are present
+- Provides clear feedback about what's being skipped
+
 ### The watch() Method
 
 This method starts a process that monitors changes to theme files and automatically rebuilds when necessary:

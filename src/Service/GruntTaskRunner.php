@@ -23,16 +23,26 @@ class GruntTaskRunner
         bool $isVerbose
     ): bool {
         try {
-            foreach (['clean', 'less'] as $task) {
-                $shellOutput = $this->shell->execute(self::GRUNT_PATH . ' ' . $task . ' --quiet');
-                if ($isVerbose) {
-                    $output->writeln($shellOutput);
-                    $io->success("'grunt $task' has been successfully executed.");
-                }
+            if ($isVerbose) {
+                $io->text('Running grunt clean...');
+                $output->writeln($this->shell->execute(self::GRUNT_PATH . ' clean'));
+            } else {
+                $this->shell->execute(self::GRUNT_PATH . ' clean --quiet');
+            }
+
+            if ($isVerbose) {
+                $io->text('Running grunt less...');
+                $output->writeln($this->shell->execute(self::GRUNT_PATH . ' less'));
+            } else {
+                $this->shell->execute(self::GRUNT_PATH . ' less --quiet');
+            }
+
+            if ($isVerbose) {
+                $io->success('Grunt tasks completed successfully.');
             }
             return true;
         } catch (\Exception $e) {
-            $io->error($e->getMessage());
+            $io->error('Failed to run grunt tasks: ' . $e->getMessage());
             return false;
         }
     }

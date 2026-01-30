@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\GruntTaskRunner;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
@@ -26,7 +27,8 @@ class Builder implements BuilderInterface
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
-        private readonly NodePackageManager $nodePackageManager
+        private readonly NodePackageManager $nodePackageManager,
+        private readonly GruntTaskRunner $gruntTaskRunner
     ) {
     }
 
@@ -52,37 +54,18 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
-            return false;
-        }
-
-        // Clean symlinks in web/css/ directory before build
-        if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
-            return false;
-        }
-
-        // Run grunt tasks
-        try {
-            if ($isVerbose) {
-                $io->text('Running grunt clean...');
-                $this->shell->execute('node_modules/.bin/grunt clean');
-            } else {
-                $this->shell->execute('node_modules/.bin/grunt clean --quiet');
+        // Check if this is a vendor theme (read-only, pre-built assets)
+        if ($this->isVendorTheme($themePath)) {
+            $io->warning('Vendor theme detected. Skipping Grunt steps.');
+            $io->newLine(2);
+        } elseif ($this->hasNodeSetup()) {
+            if (!$this->processNodeSetup($themePath, $io, $output, $isVerbose)) {
+                return false;
             }
-
+        } else {
             if ($isVerbose) {
-                $io->text('Running grunt less...');
-                $this->shell->execute('node_modules/.bin/grunt less');
-            } else {
-                $this->shell->execute('node_modules/.bin/grunt less --quiet');
+                $io->note('No Node.js/Grunt setup detected. Skipping Grunt steps.');
             }
-
-            if ($isVerbose) {
-                $io->success('Grunt tasks completed successfully.');
-            }
-        } catch (\Exception $e) {
-            $io->error('Failed to run grunt tasks: ' . $e->getMessage());
-            return false;
         }
 
         // Deploy static content
@@ -96,6 +79,29 @@ class Builder implements BuilderInterface
         }
 
         return true;
+    }
+
+    /**
+     * Process Node.js and Grunt setup
+     */
+    private function processNodeSetup(
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
+        // Check if Node/Grunt setup exists
+        if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
+            return false;
+        }
+
+        // Clean symlinks in web/css/ directory before build
+        if (!$this->symlinkCleaner->cleanSymlinks($themePath, $io, $isVerbose)) {
+            return false;
+        }
+
+        // Run grunt tasks
+        return $this->gruntTaskRunner->runTasks($io, $output, $isVerbose);
     }
 
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
@@ -177,6 +183,18 @@ class Builder implements BuilderInterface
             return false;
         }
 
+        // Vendor themes cannot be watched (read-only)
+        if ($this->isVendorTheme($themePath)) {
+            $io->error('Watch mode is not supported for vendor themes. Vendor themes are read-only and should have pre-built assets.');
+            return false;
+        }
+
+        // Check if Node/Grunt setup is intentionally absent
+        if (!$this->hasNodeSetup()) {
+            $io->error('Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, node_modules, or grunt-config.json found.');
+            return false;
+        }
+
         // Clean static content if in developer mode
         if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
@@ -212,5 +230,36 @@ class Builder implements BuilderInterface
     public function getName(): string
     {
         return self::THEME_NAME;
+    }
+
+    /**
+     * Check if Node.js/Grunt setup exists
+     *
+     * Returns true if at least one of the required files exists
+     *
+     * @return bool
+     */
+    private function hasNodeSetup(): bool
+    {
+        $rootPath = '.';
+
+        return $this->fileDriver->isExists($rootPath . '/package.json')
+            || $this->fileDriver->isExists($rootPath . '/package-lock.json')
+            || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
+            || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
+    }
+
+    /**
+     * Check if theme is from vendor directory
+     *
+     * Vendor themes are installed via Composer and should not be modified.
+     * They typically have pre-built assets and don't require compilation.
+     *
+     * @param string $themePath
+     * @return bool
+     */
+    private function isVendorTheme(string $themePath): bool
+    {
+        return str_contains($themePath, '/vendor/');
     }
 }
