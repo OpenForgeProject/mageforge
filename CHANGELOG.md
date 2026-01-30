@@ -17,6 +17,18 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.9.0](https://github.com/OpenForgeProject/mageforge/compare/0.8.1...0.9.0) (2026-01-30)
+
+
+### Added
+
+* Node.js/Grunt setup detection for improved build process ([#114](https://github.com/OpenForgeProject/mageforge/issues/114)) ([5330e17](https://github.com/OpenForgeProject/mageforge/commit/5330e1702acc470276bd8c6ea508b0c35ac18a2f))
+
+
+### Fixed
+
+* phpstan level 5 errors [#84](https://github.com/OpenForgeProject/mageforge/issues/84) ([#100](https://github.com/OpenForgeProject/mageforge/issues/100)) ([154d15e](https://github.com/OpenForgeProject/mageforge/commit/154d15eba0db013b99cb4141dc0b2cd059147fb0))
+
 ## [0.8.1](https://github.com/OpenForgeProject/mageforge/compare/0.8.0...0.8.1) (2026-01-27)
 
 
