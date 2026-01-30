@@ -21,7 +21,7 @@ class ThemeList
     /**
      * Get all themes
      *
-     * @return array
+     * @return array<mixed>
      */
     public function getAllThemes(): array
     {

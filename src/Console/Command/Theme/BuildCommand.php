@@ -23,7 +23,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class BuildCommand extends AbstractCommand
 {
+    /** @var array<string, string|null> */
     private array $originalEnv = [];
+
+    /** @var array<string, string|null> */
     private array $secureEnvStorage = [];
 
     /**
@@ -136,7 +139,7 @@ class BuildCommand extends AbstractCommand
     /**
      * Process theme building
      *
-     * @param array $themeCodes
+     * @param array<string> $themeCodes
      * @param SymfonyStyle $io
      * @param OutputInterface $output
      * @param bool $isVerbose
@@ -247,7 +250,7 @@ class BuildCommand extends AbstractCommand
      * @param SymfonyStyle $io
      * @param OutputInterface $output
      * @param bool $isVerbose
-     * @param array $successList
+     * @param array<string> $successList
      * @return bool
      */
     private function buildValidatedTheme(
@@ -287,7 +290,7 @@ class BuildCommand extends AbstractCommand
      * @param SymfonyStyle $io
      * @param OutputInterface $output
      * @param bool $isVerbose
-     * @param array $successList
+     * @param array<string> $successList
      * @return bool
      */
     private function processTheme(
@@ -312,7 +315,7 @@ class BuildCommand extends AbstractCommand
      * Display build summary
      *
      * @param SymfonyStyle $io
-     * @param array $successList
+     * @param array<string> $successList
      * @param float $duration
      */
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
@@ -386,6 +389,8 @@ class BuildCommand extends AbstractCommand
 
     /**
      * Cache and filter environment variables safely
+     *
+     * @return array<string, string|null>
      */
     private function getCachedEnvironmentVariables(): array
     {

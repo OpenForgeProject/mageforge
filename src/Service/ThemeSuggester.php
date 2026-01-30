@@ -37,7 +37,7 @@ class ThemeSuggester
      * - Returns top matches sorted by distance
      *
      * @param string $invalidTheme The invalid theme code entered by user
-     * @return array Array of suggested theme codes (max 3)
+     * @return array<int, string> Array of suggested theme codes (max 3)
      */
     public function findSimilarThemes(string $invalidTheme): array
     {

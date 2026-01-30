@@ -44,7 +44,7 @@ class InspectorHints implements TemplateEngineInterface
      *
      * @param BlockInterface $block
      * @param string $templateFile
-     * @param array $dictionary
+     * @param array<string, mixed> $dictionary
      * @return string
      */
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string

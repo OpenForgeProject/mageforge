@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder;
 
 class BuilderFactory
 {
+    /** @var array<string, BuilderInterface> */
     private array $builders = [];
 
     public function addBuilder(BuilderInterface $builder): void
@@ -22,6 +23,9 @@ class BuilderFactory
         return $this->builders[$type];
     }
 
+    /**
+     * @return array<string>
+     */
     public function getAvailableBuilders(): array
     {
         return array_keys($this->builders);
