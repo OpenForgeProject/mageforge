@@ -11,7 +11,7 @@
  */
 ?>
 <!-- MageForge Inspector Assets -->
-<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getCssUrl()) ?>" />
+<link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($block->getCssUrl()) ?>" />
 
 <!-- Alpine.js Bootstrap (load only if not already present) -->
 <script>
@@ -41,7 +41,7 @@
 })();
 </script>
 
-<script defer src="<?= $block->escapeUrl($block->getJsUrl()) ?>"></script>
+<script defer src="<?= $escaper->escapeUrl($block->getJsUrl()) ?>"></script>
 
 <!-- Inspector Component Wrapper -->
 <div class="mageforge-inspector" x-data="mageforgeInspector"></div>
