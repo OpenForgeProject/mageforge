@@ -25,14 +25,14 @@ class GruntTaskRunner
         try {
             if ($isVerbose) {
                 $io->text('Running grunt clean...');
-                $this->shell->execute(self::GRUNT_PATH . ' clean');
+                $output->writeln($this->shell->execute(self::GRUNT_PATH . ' clean'));
             } else {
                 $this->shell->execute(self::GRUNT_PATH . ' clean --quiet');
             }
 
             if ($isVerbose) {
                 $io->text('Running grunt less...');
-                $this->shell->execute(self::GRUNT_PATH . ' less');
+                $output->writeln($this->shell->execute(self::GRUNT_PATH . ' less'));
             } else {
                 $this->shell->execute(self::GRUNT_PATH . ' less --quiet');
             }
