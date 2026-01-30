@@ -175,6 +175,10 @@ class TokensCommand extends AbstractCommand
         }
 
         $currentDir = getcwd();
+        if ($currentDir === false) {
+            $this->io->error("Cannot determine current directory");
+            return false;
+        }
         chdir($tailwindPath);
 
         try {

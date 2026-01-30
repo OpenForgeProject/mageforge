@@ -52,6 +52,7 @@ class CheckCommand extends AbstractCommand
         $dbType = $this->getDatabaseType();
         $osInfo = $this->getShortOsInfo();
         $magentoVersion = $this->productMetadata->getVersion();
+        /** @var string $latestLtsNodeVersion */
         $latestLtsNodeVersion = $this->escaper->escapeHtml($this->getLatestLtsNodeVersion());
         $composerVersion = $this->getComposerVersion();
         $npmVersion = $this->getNpmVersion();
@@ -227,9 +228,14 @@ class CheckCommand extends AbstractCommand
 
             $dsn = "mysql:host=$host;port=$port";
             $pdo = new \PDO($dsn, $user, $pass, [\PDO::ATTR_TIMEOUT => 1]);
-            $version = $pdo->query('SELECT VERSION()')->fetchColumn();
+            $stmt = $pdo->query('SELECT VERSION()');
+            if ($stmt === false) {
+                return null;
+            }
 
-            return !empty($version) ? $version : null;
+            $version = $stmt->fetchColumn();
+
+            return !empty($version) ? (string)$version : null;
         } catch (\Exception $e) {
             return null;
         }

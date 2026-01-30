@@ -105,6 +105,10 @@ class InspectorHints implements TemplateEngineInterface
         // JSON encode with proper escaping for HTML comments
         $jsonMetadata = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
+        if ($jsonMetadata === false) {
+            return $html;
+        }
+
         // Escape any comment terminators in JSON to prevent breaking out of comment
         $jsonMetadata = str_replace('-->', '--&gt;', $jsonMetadata);
 
@@ -164,7 +168,7 @@ class InspectorHints implements TemplateEngineInterface
     {
         if (method_exists($block, 'getViewModel')) {
             $viewModel = $block->getViewModel();
-            if ($viewModel) {
+            if (is_object($viewModel)) {
                 return get_class($viewModel);
             }
         }
