@@ -17,6 +17,14 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.10.1](https://github.com/OpenForgeProject/mageforge/compare/0.10.0...0.10.1) (2026-01-30)
+
+
+### Fixed
+
+* correct spacing and formatting in multiple files ([#120](https://github.com/OpenForgeProject/mageforge/issues/120)) ([3f9048a](https://github.com/OpenForgeProject/mageforge/commit/3f9048abc0b0f2785aa5be3858704037ad14ce5a))
+* update phpstan level to 8 and improve commands ([#119](https://github.com/OpenForgeProject/mageforge/issues/119)) ([e24e138](https://github.com/OpenForgeProject/mageforge/commit/e24e138ae2e5fcdb0013639cdb573da782fcb3fd))
+
 ## [0.10.0](https://github.com/OpenForgeProject/mageforge/compare/0.9.0...0.10.0) (2026-01-30)
 
 
