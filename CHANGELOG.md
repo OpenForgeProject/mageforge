@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.10.2](https://github.com/OpenForgeProject/mageforge/compare/0.10.1...0.10.2) (2026-02-02)
+
+
+### Fixed
+
+* return theme parts as array in parseThemeName ([#122](https://github.com/OpenForgeProject/mageforge/issues/122)) ([94aef44](https://github.com/OpenForgeProject/mageforge/commit/94aef44bbc92ef6506ef6cd306ce010f1d6b6ef8))
+
 ## [0.10.1](https://github.com/OpenForgeProject/mageforge/compare/0.10.0...0.10.1) (2026-01-30)
 
 
