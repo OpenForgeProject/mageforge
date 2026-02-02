@@ -317,6 +317,6 @@ class ThemeCleaner
             return null;
         }
 
-        return $themeParts;
+        return [$themeParts[0], $themeParts[1]];
     }
 }
