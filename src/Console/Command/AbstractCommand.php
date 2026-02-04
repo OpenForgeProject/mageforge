@@ -219,6 +219,7 @@ abstract class AbstractCommand extends Command
         }
 
         // Check if TTY is available
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- shell_exec required for TTY detection
         $sttyOutput = shell_exec('stty -g 2>/dev/null');
         return !empty($sttyOutput);
     }

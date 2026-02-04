@@ -212,6 +212,7 @@ class Builder implements BuilderInterface
             }
 
             $exitCode = 0;
+            // phpcs:ignore Magento2.Security.InsecureFunction.Found -- passthru required for interactive watch mode
             passthru('node_modules/.bin/grunt watch', $exitCode);
 
             // Check if the command failed
