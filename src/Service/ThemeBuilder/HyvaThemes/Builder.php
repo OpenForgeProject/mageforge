@@ -207,6 +207,7 @@ class Builder implements BuilderInterface
 
             chdir($tailwindPath);
             $exitCode = 0;
+            // phpcs:ignore Magento2.Security.InsecureFunction.Found -- passthru required for interactive watch mode
             passthru('npm run watch', $exitCode);
 
             // Check if the command failed

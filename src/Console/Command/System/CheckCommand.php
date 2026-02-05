@@ -118,6 +118,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getNodeVersion(): string
     {
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
         exec('node -v 2>/dev/null', $output, $returnCode);
         return $returnCode === 0 && !empty($output) ? trim($output[0], 'v') : 'Not installed';
     }
@@ -201,6 +202,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getMysqlVersionViaClient(): ?string
     {
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
         exec('mysql --version 2>/dev/null', $output, $returnCode);
         if ($returnCode === 0 && !empty($output)) {
             $versionString = $output[0];
@@ -299,6 +301,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getComposerVersion(): string
     {
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
         exec('composer --version 2>/dev/null', $output, $returnCode);
         if ($returnCode !== 0 || empty($output)) {
             return 'Not installed';
@@ -315,6 +318,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getNpmVersion(): string
     {
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
         exec('npm --version 2>/dev/null', $output, $returnCode);
         return $returnCode === 0 && !empty($output) ? trim($output[0]) : 'Not installed';
     }
@@ -326,6 +330,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getGitVersion(): string
     {
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
         exec('git --version 2>/dev/null', $output, $returnCode);
         if ($returnCode !== 0 || empty($output)) {
             return 'Not installed';
@@ -554,7 +559,7 @@ class CheckCommand extends AbstractCommand
 
         return 'Search Engine Available';
     }
-    
+
     /**
      * Test Elasticsearch connection and return version info
      *

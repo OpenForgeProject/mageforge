@@ -480,6 +480,7 @@ class CleanCommand extends AbstractCommand
         }
 
         // Additional check: try to detect if running in a proper TTY
+        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- shell_exec required for TTY detection
         $sttyOutput = shell_exec('stty -g 2>/dev/null');
         return !empty($sttyOutput);
     }
