@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.10.3](https://github.com/OpenForgeProject/mageforge/compare/0.10.2...0.10.3) (2026-02-05)
+
+
+### Fixed
+
+* update phpcs errors ([#124](https://github.com/OpenForgeProject/mageforge/issues/124)) ([a19e23d](https://github.com/OpenForgeProject/mageforge/commit/a19e23d6bfc61bb255057ed739b3904855971e2f))
+
 ## [0.10.2](https://github.com/OpenForgeProject/mageforge/compare/0.10.1...0.10.2) (2026-02-02)
 
 
