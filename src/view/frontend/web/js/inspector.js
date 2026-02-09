@@ -1277,42 +1277,48 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        /**
+         * Get stats about active resource types
+         */
+        getResourceTypeStats(resourceData) {
+            const definitions = [
+                { key: 'img', label: 'Image', plural: 'Images' },
+                { key: 'script', label: 'Script', plural: 'Scripts' },
+                { key: 'css', label: 'Stylesheet', plural: 'Stylesheets' },
+                { key: 'font', label: 'Font', plural: 'Fonts' },
+                { key: 'other', label: 'Resource', plural: 'Resources' }
+            ];
+
+            const activeTypes = definitions
+                .map(def => ({ ...def, count: resourceData.byType[def.key] }))
+                .filter(item => item.count > 0);
+
+            return {
+                activeTypes,
+                typeCount: activeTypes.length
+            };
+        },
+
         determineResourceLabel(resourceData) {
-            const hasImages = resourceData.byType.img > 0;
-            const hasScripts = resourceData.byType.script > 0;
-            const hasCss = resourceData.byType.css > 0;
-            const hasFonts = resourceData.byType.font > 0;
-            const hasOther = resourceData.byType.other > 0;
-            const typeCount = (hasImages ? 1 : 0) + (hasScripts ? 1 : 0) + (hasCss ? 1 : 0) + (hasFonts ? 1 : 0) + (hasOther ? 1 : 0);
+            const { activeTypes, typeCount } = this.getResourceTypeStats(resourceData);
 
             if (typeCount === 1) {
-                if (hasImages) return resourceData.byType.img === 1 ? 'Image' : 'Images';
-                if (hasScripts) return resourceData.byType.script === 1 ? 'Script' : 'Scripts';
-                if (hasCss) return resourceData.byType.css === 1 ? 'Stylesheet' : 'Stylesheets';
-                if (hasFonts) return resourceData.byType.font === 1 ? 'Font' : 'Fonts';
-                if (hasOther) return resourceData.byType.other === 1 ? 'Resource' : 'Resources';
+                const type = activeTypes[0];
+                return type.count === 1 ? type.label : type.plural;
             }
             return resourceData.count === 1 ? 'Resource' : 'Resources';
         },
 
         renderResourceBreakdown(container, resourceData) {
-            const hasImages = resourceData.byType.img > 0;
-            const hasScripts = resourceData.byType.script > 0;
-            const hasCss = resourceData.byType.css > 0;
-            const hasFonts = resourceData.byType.font > 0;
-            const hasOther = resourceData.byType.other > 0;
-            const typeCount = (hasImages ? 1 : 0) + (hasScripts ? 1 : 0) + (hasCss ? 1 : 0) + (hasFonts ? 1 : 0) + (hasOther ? 1 : 0);
+            const { activeTypes, typeCount } = this.getResourceTypeStats(resourceData);
 
             if (typeCount > 1) {
-                const types = [];
-                if (resourceData.byType.img > 0) types.push(`Images: ${resourceData.byType.img}`);
-                if (resourceData.byType.script > 0) types.push(`JS: ${resourceData.byType.script}`);
-                if (resourceData.byType.css > 0) types.push(`CSS: ${resourceData.byType.css}`);
-                if (resourceData.byType.font > 0) types.push(`Fonts: ${resourceData.byType.font}`);
-                if (resourceData.byType.other > 0) types.push(`Other: ${resourceData.byType.other}`);
+                const typesText = activeTypes
+                    .map(t => `${t.plural}: ${t.count}`)
+                    .join(', ');
 
                 container.appendChild(
-                    this.createInfoSection('📑 Resource Types', types.join(', '), '#a78bfa')
+                    this.createInfoSection('📑 Resource Types', typesText, '#a78bfa')
                 );
             }
         },
