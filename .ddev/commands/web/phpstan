@@ -2,8 +2,10 @@
 
 ## #ddev-generated
 ## Description: Run PHPStan analysis with Magento extension (same as CI pipeline)
-## Usage: phpstan
+## Usage: phpstan [path]
 ## Example: ddev phpstan
+## Example: ddev phpstan src/src/Block/Inspector.php
+## Example: ddev phpstan vendor/openforgeproject/mageforge/src/Service
 
 # Navigate to Magento root
 cd /var/www/html/magento || exit 1
@@ -24,6 +26,18 @@ if [[ ! -f vendor/bin/phpstan ]]; then
     echo "PHPStan installation complete."
 fi
 
+# Set target path - default to vendor/openforgeproject/mageforge/src if not provided or if it's a flag
+TARGET_PATH="vendor/openforgeproject/mageforge/src"
+if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
+	TARGET_PATH="$1"
+	shift # Remove the first argument
+
+	# If path doesn't exist from magento dir, try from workspace root
+	if [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
+		TARGET_PATH="../${TARGET_PATH}"
+	fi
+fi
+
 # Run PHPStan with the same configuration as CI pipeline
 echo "Running PHPStan analysis..."
-vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
+vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon "$@" "${TARGET_PATH}"
