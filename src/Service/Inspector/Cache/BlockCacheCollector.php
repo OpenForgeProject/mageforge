@@ -34,63 +34,123 @@ class BlockCacheCollector
      */
     public function getCacheInfo(BlockInterface $block): array
     {
-        $lifetime = null;
-        $cacheKey = '';
-        $cacheTags = [];
-        $cacheable = false;
+        $lifetime = $this->resolveCacheLifetime($block);
+        $cacheable = $lifetime !== false;
 
-        // Type guard: Check if method exists before calling
-        if (method_exists($block, 'getCacheLifetime')) {
-            $lifetimeRaw = $block->getCacheLifetime();
-
-            // In Magento:
-            // - false = not cacheable
-            // - null = unlimited cache (cacheable!)
-            // - int = specific cache lifetime in seconds (cacheable!)
-            if ($lifetimeRaw !== false) {
-                $cacheable = true;
-                // Convert to int or null for type safety
-                if (is_int($lifetimeRaw)) {
-                    $lifetime = $lifetimeRaw;
-                } elseif ($lifetimeRaw === null) {
-                    // null = unlimited cache
-                    $lifetime = null;
-                } elseif (is_numeric($lifetimeRaw) && (int)$lifetimeRaw === 0) {
-                    // 0 = unlimited cache
-                    $lifetime = null;
-                }
-            }
+        if ($cacheable && $this->isBlockScopePrivate($block)) {
+            $cacheable = false;
+            $lifetime = null;
         }
 
-        // Check if block is private/customer-specific (not cacheable)
+        $cacheKey = $this->resolveCacheKey($block);
+        $cacheTags = $this->resolveCacheTags($block);
+
+        // Check if page itself is cacheable
+        $pageCacheable = $this->isPageCacheable();
+
+        return [
+            'cacheable' => $cacheable,
+            'lifetime' => $lifetime === false ? null : $lifetime,
+            'cacheKey' => $cacheKey,
+            'cacheTags' => $cacheTags,
+            'pageCacheable' => $pageCacheable,
+        ];
+    }
+
+    /**
+     * Resolve cache lifetime from block
+     *
+     * @param BlockInterface $block
+     * @return int|null|false False if not cacheable, null for unlimited, int for specific lifetime
+     */
+    private function resolveCacheLifetime(BlockInterface $block): int|null|false
+    {
+        if (!method_exists($block, 'getCacheLifetime')) {
+            return false;
+        }
+
+        $lifetimeRaw = $block->getCacheLifetime();
+
+        // In Magento:
+        // - false = not cacheable
+        // - null = unlimited cache (cacheable!)
+        // - int = specific cache lifetime in seconds (cacheable!)
+
+        if ($lifetimeRaw === false) {
+            return false;
+        }
+
+        if (is_int($lifetimeRaw)) {
+            return $lifetimeRaw;
+        }
+
+        if ($lifetimeRaw === null) {
+            return null; // Unlimited
+        }
+
+        if (is_numeric($lifetimeRaw) && (int)$lifetimeRaw === 0) {
+            return null; // Unlimited
+        }
+
+        return false; // Default fallback
+    }
+
+    /**
+     * Check if block is private (customer specific)
+     *
+     * @param BlockInterface $block
+     * @return bool
+     */
+    private function isBlockScopePrivate(BlockInterface $block): bool
+    {
         // Private blocks (like checkout, customer account) should not be cached
-        if ($cacheable && method_exists($block, 'isScopePrivate')) {
+        if (method_exists($block, 'isScopePrivate')) {
             if ($block->isScopePrivate()) {
-                $cacheable = false;
-                $lifetime = null;
+                return true;
             }
         }
 
         // Additional fallback: Check protected property via reflection if available
-        if ($cacheable && property_exists($block, '_isScopePrivate')) {
+        if (property_exists($block, '_isScopePrivate')) {
             try {
                 $reflection = new \ReflectionProperty($block, '_isScopePrivate');
                 $reflection->setAccessible(true);
                 $isScopePrivate = $reflection->getValue($block);
                 if ($isScopePrivate === true) {
-                    $cacheable = false;
-                    $lifetime = null;
+                    return true;
                 }
             } catch (\ReflectionException $e) {
-                // If reflection fails, keep current cacheable value
+                // If reflection fails, assume not private
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Resolve cache key from block
+     *
+     * @param BlockInterface $block
+     * @return string
+     */
+    private function resolveCacheKey(BlockInterface $block): string
+    {
         if (method_exists($block, 'getCacheKey')) {
             $keyRaw = $block->getCacheKey();
-            $cacheKey = is_string($keyRaw) && $keyRaw !== '' ? $keyRaw : '';
+            return is_string($keyRaw) && $keyRaw !== '' ? $keyRaw : '';
         }
+        return '';
+    }
 
+    /**
+     * Resolve cache tags from block
+     *
+     * @param BlockInterface $block
+     * @return array<int, string>
+     */
+    private function resolveCacheTags(BlockInterface $block): array
+    {
+        $cacheTags = [];
         if (method_exists($block, 'getCacheTags')) {
             $tagsRaw = $block->getCacheTags();
             // Ensure string array (PHPStan strict)
@@ -102,17 +162,7 @@ class BlockCacheCollector
                 }
             }
         }
-
-        // Check if page itself is cacheable
-        $pageCacheable = $this->isPageCacheable();
-
-        return [
-            'cacheable' => $cacheable,
-            'lifetime' => $lifetime,
-            'cacheKey' => $cacheKey,
-            'cacheTags' => $cacheTags,
-            'pageCacheable' => $pageCacheable,
-        ];
+        return $cacheTags;
     }
 
     /**

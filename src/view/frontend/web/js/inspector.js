@@ -989,17 +989,32 @@ document.addEventListener('alpine:init', () => {
 
             let hasMetrics = false;
 
-            // Render Time (from block metadata)
+            if (this.renderRenderTimeMetric(container, element)) hasMetrics = true;
+            if (this.renderLCPMetric(container, element)) hasMetrics = true;
+            if (this.renderCLSMetric(container, element)) hasMetrics = true;
+            if (this.renderINPMetric(container, element)) hasMetrics = true;
+            if (this.renderElementTimingMetric(container, element)) hasMetrics = true;
+            if (this.renderImageOptimizationMetric(container, element)) hasMetrics = true;
+            if (this.renderResourceMetric(container, element)) hasMetrics = true;
+
+            if (!hasMetrics) {
+                this.renderNoBrowserMetrics(container);
+            }
+        },
+
+        renderRenderTimeMetric(container, element) {
             const blockData = this.getBlockMetaData(element);
             if (blockData && blockData.performance) {
                 const renderTime = parseFloat(blockData.performance.renderTime);
                 const color = this.getRenderTimeColor(renderTime);
                 const formattedTime = `${blockData.performance.renderTime} ms`;
                 container.appendChild(this.createInfoSection('⏱️ Render Time', formattedTime, color));
-                hasMetrics = true;
+                return true;
             }
+            return false;
+        },
 
-            // LCP - only if this element IS or CONTAINS the LCP element
+        renderLCPMetric(container, element) {
             if (this.webVitals.lcp && this.webVitals.lcp.element) {
                 const isLCP = this.webVitals.lcp.element === element || element.contains(this.webVitals.lcp.element);
                 if (isLCP) {
@@ -1011,27 +1026,30 @@ document.addEventListener('alpine:init', () => {
                     container.appendChild(
                         this.createInfoSection('⚡ LCP Element', '✅ This element is critical for LCP!', '#ef4444')
                     );
-                    hasMetrics = true;
+                    return true;
                 }
             }
+            return false;
+        },
 
-            // CLS - only shifts affecting this element
+        renderCLSMetric(container, element) {
             const elementCLS = this.getElementCLS(element);
             if (elementCLS > 0) {
                 const clsColor = elementCLS < 0.1 ? '#34d399' : (elementCLS < 0.25 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
                     this.createInfoSection('📐 CLS (Layout Shift)', elementCLS.toFixed(3), clsColor)
                 );
-                // Add Layout Stability Score (inverse of CLS)
-                const stabilityScore = Math.max(0, (1 - elementCLS * 4)).toFixed(2); // 0.25 CLS = 0 stability
+                const stabilityScore = Math.max(0, (1 - elementCLS * 4)).toFixed(2);
                 const stabilityColor = stabilityScore > 0.75 ? '#34d399' : (stabilityScore > 0.5 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
                     this.createInfoSection('⚖️ Layout Stability Score', stabilityScore, stabilityColor)
                 );
-                hasMetrics = true;
+                return true;
             }
+            return false;
+        },
 
-            // INP - only for interactive elements
+        renderINPMetric(container, element) {
             const isInteractive = this.checkIfInteractive(element, element.tagName.toLowerCase(), element.getAttribute('role'));
             if (isInteractive && this.webVitals.inp) {
                 const inpValue = this.webVitals.inp.duration.toFixed(0);
@@ -1039,10 +1057,12 @@ document.addEventListener('alpine:init', () => {
                 container.appendChild(
                     this.createInfoSection('⌨️ INP (Interaction)', `${inpValue} ms`, inpColor)
                 );
-                hasMetrics = true;
+                return true;
             }
+            return false;
+        },
 
-            // Element Timing - for elements with elementtiming attribute
+        renderElementTimingMetric(container, element) {
             const elementTiming = this.getElementTiming(element);
             if (elementTiming) {
                 const timingValue = (elementTiming.renderTime || elementTiming.loadTime).toFixed(0);
@@ -1050,13 +1070,14 @@ document.addEventListener('alpine:init', () => {
                 container.appendChild(
                     this.createInfoSection('⏰ Element Timing', `${timingValue} ms (${elementTiming.identifier})`, timingColor)
                 );
-                hasMetrics = true;
+                return true;
             }
+            return false;
+        },
 
-            // Image Optimization Analysis
+        renderImageOptimizationMetric(container, element) {
             const imageAnalysis = this.analyzeImageOptimization(element);
             if (imageAnalysis) {
-                // Modern formats score
                 const modernScore = imageAnalysis.totalImages > 0
                     ? (imageAnalysis.modernFormats / imageAnalysis.totalImages * 100).toFixed(0)
                     : 0;
@@ -1065,7 +1086,6 @@ document.addEventListener('alpine:init', () => {
                     this.createInfoSection('🖼️ Modern Image Formats', `${modernScore}% (${imageAnalysis.modernFormats}/${imageAnalysis.totalImages})`, modernColor)
                 );
 
-                // Responsive images
                 const responsiveScore = imageAnalysis.totalImages > 0
                     ? (imageAnalysis.hasResponsive / imageAnalysis.totalImages * 100).toFixed(0)
                     : 0;
@@ -1075,14 +1095,12 @@ document.addEventListener('alpine:init', () => {
                     this.createInfoSection('📱 Adaptive Images (srcset)', responsiveText, responsiveColor)
                 );
 
-                // Oversized images warning
                 if (imageAnalysis.oversized > 0) {
                     container.appendChild(
                         this.createInfoSection('⚠️ Oversized Images', `${imageAnalysis.oversized} oversized`, '#ef4444')
                     );
                 }
 
-                // Show first 3 issues
                 if (imageAnalysis.issues.length > 0) {
                     const issuesText = imageAnalysis.issues.slice(0, 3).join(' • ');
                     const moreText = imageAnalysis.issues.length > 3 ? ` (+${imageAnalysis.issues.length - 3} more)` : '';
@@ -1090,21 +1108,18 @@ document.addEventListener('alpine:init', () => {
                         this.createInfoSection('💡 Optimization Tips', issuesText + moreText, '#f59e0b')
                     );
                 }
-
-                hasMetrics = true;
+                return true;
             }
+            return false;
+        },
 
-            // Resources loaded by this element
+        renderResourceMetric(container, element) {
             const elementResources = this.getElementResources(element);
             if (elementResources.count > 0) {
                 this.renderElementResourceMetrics(container, elementResources);
-                hasMetrics = true;
+                return true;
             }
-
-            // If no element-specific metrics
-            if (!hasMetrics) {
-                this.renderNoBrowserMetrics(container);
-            }
+            return false;
         },
 
         /**
@@ -1242,18 +1257,27 @@ document.addEventListener('alpine:init', () => {
          * @param {object} resourceData
          */
         renderElementResourceMetrics(container, resourceData) {
-            // Format size
-            let sizeText = '';
-            if (resourceData.size < 1024) {
-                sizeText = `${resourceData.size} B`;
-            } else if (resourceData.size < 1024 * 1024) {
-                sizeText = `${(resourceData.size / 1024).toFixed(1)} KB`;
-            } else {
-                sizeText = `${(resourceData.size / (1024 * 1024)).toFixed(2)} MB`;
-            }
+            const sizeText = this.formatResourceSize(resourceData.size);
+            const resourceLabel = this.determineResourceLabel(resourceData);
 
-            // Determine resource type label (smart singular/plural)
-            let resourceLabel = '';
+            container.appendChild(
+                this.createInfoSection('📦 Element Resources', `${resourceData.count} ${resourceLabel} (${sizeText})`, '#60a5fa')
+            );
+
+            this.renderResourceBreakdown(container, resourceData);
+        },
+
+        formatResourceSize(size) {
+            if (size < 1024) {
+                return `${size} B`;
+            } else if (size < 1024 * 1024) {
+                return `${(size / 1024).toFixed(1)} KB`;
+            } else {
+                return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+            }
+        },
+
+        determineResourceLabel(resourceData) {
             const hasImages = resourceData.byType.img > 0;
             const hasScripts = resourceData.byType.script > 0;
             const hasCss = resourceData.byType.css > 0;
@@ -1262,28 +1286,23 @@ document.addEventListener('alpine:init', () => {
             const typeCount = (hasImages ? 1 : 0) + (hasScripts ? 1 : 0) + (hasCss ? 1 : 0) + (hasFonts ? 1 : 0) + (hasOther ? 1 : 0);
 
             if (typeCount === 1) {
-                // Only one type of resource - use specific label
-                if (hasImages) {
-                    resourceLabel = resourceData.byType.img === 1 ? 'Image' : 'Images';
-                } else if (hasScripts) {
-                    resourceLabel = resourceData.byType.script === 1 ? 'Script' : 'Scripts';
-                } else if (hasCss) {
-                    resourceLabel = resourceData.byType.css === 1 ? 'Stylesheet' : 'Stylesheets';
-                } else if (hasFonts) {
-                    resourceLabel = resourceData.byType.font === 1 ? 'Font' : 'Fonts';
-                } else if (hasOther) {
-                    resourceLabel = resourceData.byType.other === 1 ? 'Resource' : 'Resources';
-                }
-            } else {
-                // Multiple types - use generic label
-                resourceLabel = resourceData.count === 1 ? 'Resource' : 'Resources';
+                if (hasImages) return resourceData.byType.img === 1 ? 'Image' : 'Images';
+                if (hasScripts) return resourceData.byType.script === 1 ? 'Script' : 'Scripts';
+                if (hasCss) return resourceData.byType.css === 1 ? 'Stylesheet' : 'Stylesheets';
+                if (hasFonts) return resourceData.byType.font === 1 ? 'Font' : 'Fonts';
+                if (hasOther) return resourceData.byType.other === 1 ? 'Resource' : 'Resources';
             }
+            return resourceData.count === 1 ? 'Resource' : 'Resources';
+        },
 
-            container.appendChild(
-                this.createInfoSection('📦 Element Resources', `${resourceData.count} ${resourceLabel} (${sizeText})`, '#60a5fa')
-            );
+        renderResourceBreakdown(container, resourceData) {
+            const hasImages = resourceData.byType.img > 0;
+            const hasScripts = resourceData.byType.script > 0;
+            const hasCss = resourceData.byType.css > 0;
+            const hasFonts = resourceData.byType.font > 0;
+            const hasOther = resourceData.byType.other > 0;
+            const typeCount = (hasImages ? 1 : 0) + (hasScripts ? 1 : 0) + (hasCss ? 1 : 0) + (hasFonts ? 1 : 0) + (hasOther ? 1 : 0);
 
-            // Show breakdown only if multiple different types
             if (typeCount > 1) {
                 const types = [];
                 if (resourceData.byType.img > 0) types.push(`Images: ${resourceData.byType.img}`);
