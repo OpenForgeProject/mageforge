@@ -12,9 +12,32 @@
    Base Styles
    ========================================================================== */
 
+:root {
+    --mageforge-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mageforge-color-blue: #3b82f6;
+    --mageforge-color-blue-dark: #2563eb;
+    --mageforge-color-green: #10b981;
+    --mageforge-color-green-dark: #059669;
+    --mageforge-color-red: #ef4444;
+    --mageforge-color-red-light: #fca5a5;
+    --mageforge-color-yellow: #fbbf24;
+    --mageforge-color-slate-100: #f1f5f9;
+    --mageforge-color-slate-200: #e2e8f0;
+    --mageforge-color-slate-300: #cbd5e1;
+    --mageforge-color-slate-400: #94a3b8;
+    --mageforge-color-slate-500: #64748b;
+    --mageforge-color-amber: #f59e0b;
+    --mageforge-color-cyan: #22d3ee;
+    --mageforge-color-purple: #a78bfa;
+    --mageforge-color-orange: #fb923c;
+    --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
+    --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
+    --mageforge-border-color: rgba(148, 163, 184, 0.15);
+}
+
 .mageforge-inspector {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-size: 14px;
+    font-family: var(--mageforge-font-family);
+    font-size: 15px;
     line-height: 1.5;
 }
 
@@ -39,11 +62,11 @@
 .mageforge-inspector-highlight {
     position: absolute;
     pointer-events: none;
-    outline: 3px solid #3b82f6;
+    outline: 3px solid var(--mageforge-color-blue);
     outline-offset: -3px;
     z-index: 9998;
     transition: all 0.1s ease-in-out;
-    background-color: rgba(59, 130, 246, 0.05);
+    background-color: rgba(59, 130, 246, 0.05); /* keep opacity variant local or use calc/color-mix in future */
 }
 
 /* ============================================================================
@@ -56,7 +79,7 @@
     left: 20px;
     height: 36px;
     padding: 0 14px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--mageforge-color-blue) 0%, var(--mageforge-color-blue-dark) 100%);
     color: white;
     border: none;
     border-radius: 10px;
@@ -86,7 +109,7 @@
 
 /* Active state (inspector open) */
 .mageforge-inspector-float-button.mageforge-active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--mageforge-color-green) 0%, var(--mageforge-color-green-dark) 100%);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 8px 20px rgba(16, 185, 129, 0.5);
 }
 
@@ -96,7 +119,7 @@
 
 .mageforge-inspector-info-badge {
     position: absolute;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
+    background: linear-gradient(135deg, var(--mageforge-bg-dark) 0%, var(--mageforge-bg-dark-alt) 100%);
     backdrop-filter: blur(12px);
     color: white;
     padding: 16px;
@@ -106,10 +129,9 @@
     line-height: 1.6;
     pointer-events: auto;
     z-index: 10000000;
-    min-width: 320px;
-    max-width: 520px;
+    width: 500px;
     word-wrap: break-word;
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    border: 1px solid var(--mageforge-border-color);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
                 0 10px 10px -5px rgba(0, 0, 0, 0.2),
                 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -123,7 +145,7 @@
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-bottom: 8px solid rgba(15, 23, 42, 0.98);
+    border-bottom: 8px solid var(--mageforge-bg-dark);
     pointer-events: none;
     filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.2));
 }
@@ -138,7 +160,7 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
-    color: #94a3b8;
+    color: var(--mageforge-color-slate-400);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -155,7 +177,7 @@
 .mageforge-inspector-close:hover {
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--mageforge-color-red);
     transform: scale(1.05);
 }
 
@@ -194,12 +216,12 @@
 
 /* Background colors */
 .mageforge-bg-green-500 {
-    background-color: rgb(34, 197, 94);
+    background-color: var(--mageforge-color-green);
 }
 
 /* Text colors */
 .mageforge-text-white {
-    color: rgb(255, 255, 255);
+    color: white;
 }
 
 /* Shadows */
@@ -280,6 +302,91 @@
 }
 
 /* ============================================================================
+   Performance Tab Styles
+   ========================================================================== */
+
+/* Performance metric color indicators */
+.mageforge-perf-good {
+    color: var(--mageforge-color-green) !important;
+}
+
+.mageforge-perf-warning {
+    color: var(--mageforge-color-amber) !important;
+}
+
+.mageforge-perf-poor {
+    color: var(--mageforge-color-red) !important;
+}
+
+/* Code inline display for cache keys */
+.mageforge-code-inline {
+    background: rgba(100, 116, 139, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    font-size: 11px;
+    color: var(--mageforge-color-slate-200);
+    word-break: break-all;
+}
+
+/* Tag list container */
+.mageforge-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+/* Individual tag styling */
+.mageforge-tag {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--mageforge-color-blue);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 500;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    transition: all 0.2s ease;
+}
+
+.mageforge-tag:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Performance complexity bars */
+.mageforge-complexity-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.mageforge-complexity-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.mageforge-complexity-bar-fill.low {
+    background: linear-gradient(90deg, var(--mageforge-color-green), #34d399);
+    width: 33%;
+}
+
+.mageforge-complexity-bar-fill.medium {
+    background: linear-gradient(90deg, var(--mageforge-color-amber), var(--mageforge-color-yellow));
+    width: 66%;
+}
+
+.mageforge-complexity-bar-fill.high {
+    background: linear-gradient(90deg, var(--mageforge-color-red), var(--mageforge-color-red-light));
+    width: 100%;
+}
+
+/* ============================================================================
    Print Styles
    ========================================================================== */
 
@@ -290,4 +397,277 @@
     .mageforge-inspector-info-badge {
         display: none !important;
     }
+}
+
+/* ============================================================================
+   Tabs System
+   ========================================================================== */
+.mageforge-tabs-container {
+    margin-bottom: 16px;
+    padding-top: 8px;
+}
+
+.mageforge-tabs-header {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--mageforge-border-color);
+    padding-right: 48px;
+    /* Hide scrollbar for cleaner look */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.mageforge-tabs-header::-webkit-scrollbar {
+    display: none;
+}
+
+.mageforge-tab-button {
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--mageforge-color-slate-400);
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+    font-family: inherit;
+    white-space: nowrap;
+    position: relative; /* For badge positioning */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mageforge-tab-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--mageforge-color-slate-300);
+}
+
+.mageforge-tab-button.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--mageforge-color-blue);
+    border-bottom-color: var(--mageforge-color-blue);
+}
+
+.mageforge-badge-new {
+    background: linear-gradient(135deg, var(--mageforge-color-amber) 0%, var(--mageforge-color-amber) 100%);
+    color: white;
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    animation: mageforge-pulse 2s infinite;
+}
+
+/* ============================================================================
+   Info Sections & Data Display
+   ========================================================================== */
+.mageforge-info-section {
+    margin-bottom: 12px;
+}
+
+.mageforge-info-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+/* Color utilities */
+.mageforge-text-blue { color: var(--mageforge-color-blue); }
+.mageforge-text-purple { color: var(--mageforge-color-purple); }
+.mageforge-text-green { color: var(--mageforge-color-green); }
+.mageforge-text-orange { color: var(--mageforge-color-orange); }
+.mageforge-text-cyan { color: var(--mageforge-color-cyan); }
+.mageforge-text-yellow { color: var(--mageforge-color-yellow); }
+.mageforge-text-red { color: var(--mageforge-color-red); }
+.mageforge-text-amber { color: var(--mageforge-color-amber); }
+.mageforge-text-gray { color: var(--mageforge-color-slate-400); }
+
+.mageforge-info-value {
+    color: var(--mageforge-color-slate-100);
+    font-size: 12px;
+    word-break: break-all;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.2s ease;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    pointer-events: auto;
+}
+
+.mageforge-info-value:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.mageforge-info-value.copied {
+    color: var(--mageforge-color-green) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    font-weight: 600;
+}
+
+.mageforge-info-value.copy-failed {
+    color: var(--mageforge-color-red) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* ============================================================================
+   Alerts & Notifications
+   ========================================================================== */
+.mageforge-inheritance-note {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    color: var(--mageforge-color-yellow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mageforge-warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    color: var(--mageforge-color-red-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mageforge-no-data {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--mageforge-color-slate-400);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.mageforge-no-data-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.mageforge-no-data-title {
+    color: var(--mageforge-color-slate-300);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.mageforge-no-data-desc {
+    color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-no-data-meta {
+    color: var(--mageforge-color-slate-500);
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+.mageforge-code-tag {
+    background: rgba(255,255,255,0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* ============================================================================
+   Footer & Branding
+   ========================================================================== */
+.mageforge-branding-footer {
+    cursor: move;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.12); /* Almost slate-400, keeping specific opacity */
+    text-align: center;
+    font-size: 10px;
+    color: var(--mageforge-color-slate-400);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+.mageforge-feature-link {
+    display: inline-block;
+    color: var(--mageforge-color-slate-400);
+    text-decoration: none;
+    font-size: 10px;
+    transition: color 0.2s;
+}
+
+.mageforge-feature-link:hover {
+    color: var(--mageforge-color-blue);
+    text-decoration: underline;
+}
+
+.mageforge-feature-link-container {
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   Draggable & Connector
+   ========================================================================== */
+.mageforge-inspector-info-badge.draggable {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Ensure header area is the primary drag handle */
+.mageforge-inspector-info-badge.draggable .mageforge-tabs-header,
+.mageforge-inspector-info-badge.draggable .mageforge-branding-footer {
+    cursor: move;
+}
+
+.mageforge-connector-svg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999999;
+    overflow: visible;
+}
+
+.mageforge-connector-line {
+    stroke: var(--mageforge-color-blue);
+    stroke-width: 2;
+    stroke-dasharray: 4;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    animation: mageforge-dash-flow 30s linear infinite;
+}
+
+.mageforge-connector-dot {
+    fill: var(--mageforge-color-blue);
+    stroke: white;
+    stroke-width: 2;
+}
+
+@keyframes mageforge-dash-flow {
+    from { stroke-dashoffset: 500; }
+    to { stroke-dashoffset: 0; }
 }
