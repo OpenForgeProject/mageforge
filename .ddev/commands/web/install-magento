@@ -62,6 +62,12 @@ bin/magento setup:install \
 	--base-url=https://mageforge.ddev.site/ \
 	--language=en_US
 
+# set developer mode
+bin/magento deploy:mode:set developer
+
+# disable 2FA
+bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
+
 # install sample data
 bin/magento sampledata:deploy
 

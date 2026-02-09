@@ -1,15 +1,15 @@
 #!/bin/bash
 
 ## #ddev-generated
-## Description: Run phpcs
-## Usage: phpcs [path]
-## Example: ddev phpcs
-## Example: ddev phpcs src/src/Service/StaticContentCleaner.php
-## Example: ddev phpcs vendor/openforgeproject/mageforge/src/Block
+## Description: Run phpcbf (auto-fix coding standard issues)
+## Usage: phpcbf [path]
+## Example: ddev phpcbf
+## Example: ddev phpcbf src/src/Service/StaticContentCleaner.php
+## Example: ddev phpcbf vendor/openforgeproject/mageforge/src/Block
 
 cd /var/www/html/magento || exit 1
 
-PHPCS_BIN="vendor/bin/phpcs"
+PHPCBF_BIN="vendor/bin/phpcbf"
 
 # Set target path - default to vendor/openforgeproject/mageforge/src if not provided
 TARGET_PATH="vendor/openforgeproject/mageforge/src"
@@ -23,5 +23,5 @@ if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
 	fi
 fi
 
-# Run PHPCS with optional additional flags
-"${PHPCS_BIN}" -p -s --standard=Magento2 "$@" "${TARGET_PATH}"
+# Run PHPCBF with optional additional flags
+"${PHPCBF_BIN}" -p -s --standard=Magento2 "$@" "${TARGET_PATH}"
