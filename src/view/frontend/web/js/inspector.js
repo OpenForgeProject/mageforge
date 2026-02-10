@@ -1008,7 +1008,16 @@ document.addEventListener('alpine:init', () => {
                 const renderTime = parseFloat(blockData.performance.renderTime);
                 const color = this.getRenderTimeColor(renderTime);
                 const formattedTime = `${blockData.performance.renderTime} ms`;
-                container.appendChild(this.createInfoSection('Render Time', formattedTime, color));
+                container.appendChild(this.createInfoSection('PHP Render Time', formattedTime, color));
+
+                const desc = document.createElement('div');
+                desc.style.fontSize = '10px';
+                desc.style.color = '#94a3b8';
+                desc.style.marginTop = '-8px';
+                desc.style.marginBottom = '12px';
+                desc.textContent = 'Server-side processing time for this block';
+                container.appendChild(desc);
+
                 return true;
             }
             return false;
@@ -1372,7 +1381,7 @@ document.addEventListener('alpine:init', () => {
             const color = this.getRenderTimeColor(renderTime);
             const formattedTime = `${performanceData.renderTime} ms`;
 
-            container.appendChild(this.createInfoSection('Render Time', formattedTime, color));
+            container.appendChild(this.createInfoSection('PHP Render Time', formattedTime, color));
         },
 
         /**
