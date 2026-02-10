@@ -17,6 +17,19 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.11.0](https://github.com/OpenForgeProject/mageforge/compare/0.10.3...0.11.0) (2026-02-10)
+
+
+### Added
+
+* add cache and webvitals tabs to inspector and improve ux with dragable overlay ([#127](https://github.com/OpenForgeProject/mageforge/issues/127)) ([eea755d](https://github.com/OpenForgeProject/mageforge/commit/eea755d1b38fe9e736a49157192babc5b98fbb10))
+* implement dark/light mode theme selection and admin configuration section ([#131](https://github.com/OpenForgeProject/mageforge/issues/131)) ([0a95280](https://github.com/OpenForgeProject/mageforge/commit/0a952808b6a5f7102aa5ad4b874e576d67f77bd1))
+
+
+### Fixed
+
+* remove metric icons and rename metric titles for better ux ([#129](https://github.com/OpenForgeProject/mageforge/issues/129)) ([11d3c45](https://github.com/OpenForgeProject/mageforge/commit/11d3c45991684e5936862386e5a6e731ce7962ff))
+
 ## [0.10.3](https://github.com/OpenForgeProject/mageforge/compare/0.10.2...0.10.3) (2026-02-05)
 
 
