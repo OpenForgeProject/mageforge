@@ -7,5 +7,10 @@
                         <enabled>0</enabled>
                   </mageforge_inspector>
             </dev>
+            <mageforge>
+                <inspector>
+                    <theme>dark</theme>
+                </inspector>
+            </mageforge>
       </default>
 </config>

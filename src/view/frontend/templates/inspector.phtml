@@ -44,6 +44,8 @@
 <script defer src="<?= $escaper->escapeUrl($block->getJsUrl()) ?>"></script>
 
 <!-- Inspector Component Wrapper -->
-<div class="mageforge-inspector" x-data="mageforgeInspector"></div>
+<div class="mageforge-inspector"
+     x-data="mageforgeInspector"
+     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"></div>
 
 
