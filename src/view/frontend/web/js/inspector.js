@@ -269,6 +269,12 @@ document.addEventListener('alpine:init', () => {
         createHighlightBox() {
             this.highlightBox = document.createElement('div');
             this.highlightBox.className = 'mageforge-inspector mageforge-inspector-highlight';
+
+            // Propagate theme from root element to injected body element
+            if (this.$el && this.$el.hasAttribute('data-theme')) {
+                this.highlightBox.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
+            }
+
             this.highlightBox.style.display = 'none';
 
             document.body.appendChild(this.highlightBox);
@@ -280,6 +286,12 @@ document.addEventListener('alpine:init', () => {
         createInfoBadge() {
             this.infoBadge = document.createElement('div');
             this.infoBadge.className = 'mageforge-inspector mageforge-inspector-info-badge';
+
+            // Propagate theme from root element to injected body element
+            if (this.$el && this.$el.hasAttribute('data-theme')) {
+                this.infoBadge.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
+            }
+
             this.infoBadge.style.display = 'none';
 
             // Create arrow element
@@ -296,6 +308,12 @@ document.addEventListener('alpine:init', () => {
         createFloatingButton() {
             this.floatingButton = document.createElement('button');
             this.floatingButton.className = 'mageforge-inspector mageforge-inspector-float-button';
+
+            // Propagate theme from root element to injected body element
+            if (this.$el && this.$el.hasAttribute('data-theme')) {
+                this.floatingButton.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
+            }
+
             this.floatingButton.type = 'button';
             this.floatingButton.title = 'Activate Inspector (Ctrl+Shift+I)';
 
@@ -304,19 +322,12 @@ document.addEventListener('alpine:init', () => {
 
             // Icon + Text with unique gradient ID
             this.floatingButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" viewBox="0 0 64 64" width="16" height="16" style="flex-shrink: 0;">
-                    <defs>
-                        <linearGradient id="${gradientId}" x1="32" x2="32" y1="36" y2="4" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stop-color="#ffc837"/>
-                            <stop offset="50%" stop-color="#ff3d00"/>
-                            <stop offset="100%" stop-color="#7b1fa2"/>
-                        </linearGradient>
-                    </defs>
-                    <path fill="white" d="M56 36H44v-4c0-1.1046-.8954-2-2-2H16c-2.6569 0-5.1046.8954-7 2.4472V36H8c-1.10457 0-2 .8954-2 2v2c0 1.1046.89543 2 2 2h10.6484c1.6969 3.2887 3.5871 6.4797 5.6503 9.5605L22 56H12c-1.1046 0-2 .8954-2 2v2h44v-2c0-1.1046-.8954-2-2-2H42l-2.2987-4.4395c2.0632-3.0808 3.9534-6.2718 5.6503-9.5605H56c1.1046 0 2-.8954 2-2v-2c0-1.1046-.8954-2-2-2" opacity="0.9"/>
-                    <path fill="url(#${gradientId})" d="M32 4S22 18 22 27c0 4.9706 4.4772 9 10 9s10-4.0294 10-9c0-9-10-23-10-23m0 10s-4 6-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4c0-4-4-10-4-10"/>
-                    <circle cx="20" cy="18" r="1.5" fill="#ffc837" opacity="0.8"/>
-                    <circle cx="44" cy="18" r="1.5" fill="#e0b3ff" opacity="0.8"/>
-                    <circle cx="32" cy="10" r="1" fill="#ff3d00" opacity="0.9"/>
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
+                    <g stroke-width="0"></g>
+                    <g stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
+                    </g>
                 </svg>
                 <span>MageForge Inspector</span>
             `;
