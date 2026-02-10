@@ -868,24 +868,24 @@ document.addEventListener('alpine:init', () => {
          */
         renderStructureSections(data, container) {
             // Template section
-            container.appendChild(this.createInfoSection('📄 Template', data.template, '#60a5fa'));
+            container.appendChild(this.createInfoSection('Template', data.template, '#60a5fa'));
 
             // Block section
-            container.appendChild(this.createInfoSection('📦 Block', data.blockClass, '#a78bfa'));
+            container.appendChild(this.createInfoSection('Block', data.blockClass, '#a78bfa'));
 
             // Optional sections
             if (data.blockAlias) {
-                container.appendChild(this.createInfoSection('🏷️ Block Name', data.blockAlias, '#34d399'));
+                container.appendChild(this.createInfoSection('Block Name', data.blockAlias, '#34d399'));
             }
             if (data.parentBlock) {
-                container.appendChild(this.createInfoSection('⬆️ Parent Block', data.parentBlock, '#fb923c'));
+                container.appendChild(this.createInfoSection('Parent Block', data.parentBlock, '#fb923c'));
             }
             if (data.viewModel) {
-                container.appendChild(this.createInfoSection('⚡ ViewModel', data.viewModel, '#22d3ee'));
+                container.appendChild(this.createInfoSection('ViewModel', data.viewModel, '#22d3ee'));
             }
 
             // Module section
-            container.appendChild(this.createInfoSection('📍 Module', data.module, '#fbbf24'));
+            container.appendChild(this.createInfoSection('Module', data.module, '#fbbf24'));
         },
 
         /**
@@ -897,60 +897,60 @@ document.addEventListener('alpine:init', () => {
             const a11yData = this.analyzeAccessibility(element);
 
             // Semantic Element
-            container.appendChild(this.createInfoSection('🏷️ Element Type', a11yData.tagName, '#60a5fa'));
+            container.appendChild(this.createInfoSection('Element Type', a11yData.tagName, '#60a5fa'));
 
             // ARIA Role
             if (a11yData.role) {
-                container.appendChild(this.createInfoSection('👤 ARIA Role', a11yData.role, '#a78bfa'));
+                container.appendChild(this.createInfoSection('ARIA Role', a11yData.role, '#a78bfa'));
             }
 
             // Accessible Name
             if (a11yData.accessibleName) {
-                container.appendChild(this.createInfoSection('🗣️ Accessible Name', a11yData.accessibleName, '#34d399'));
+                container.appendChild(this.createInfoSection('Accessible Name', a11yData.accessibleName, '#34d399'));
             }
 
             // ARIA Label
             if (a11yData.ariaLabel) {
-                container.appendChild(this.createInfoSection('🏷️ ARIA Label', a11yData.ariaLabel, '#22d3ee'));
+                container.appendChild(this.createInfoSection('ARIA Label', a11yData.ariaLabel, '#22d3ee'));
             }
 
             // ARIA Described By
             if (a11yData.ariaDescribedBy) {
-                container.appendChild(this.createInfoSection('📝 ARIA Described By', a11yData.ariaDescribedBy, '#fbbf24'));
+                container.appendChild(this.createInfoSection('ARIA Described By', a11yData.ariaDescribedBy, '#fbbf24'));
             }
 
             // Alt Text (for images)
             if (a11yData.altText !== null) {
                 const altStatus = a11yData.altText ? a11yData.altText : '⚠️ Missing';
                 const altColor = a11yData.altText ? '#34d399' : '#ef4444';
-                container.appendChild(this.createInfoSection('🖼️ Alt Text', altStatus, altColor));
+                container.appendChild(this.createInfoSection('Alt Text', altStatus, altColor));
             }
 
             // Lazy Loading (for images)
             if (a11yData.lazyLoading !== null) {
                 const { lazyIcon, lazyColor } = this.getLazyLoadingStyle(a11yData.lazyLoading);
-                container.appendChild(this.createInfoSection(`${lazyIcon} Lazy Loading`, a11yData.lazyLoading, lazyColor));
+                container.appendChild(this.createInfoSection('Lazy Loading', a11yData.lazyLoading, lazyColor));
             }
 
             // Tabindex
             if (a11yData.tabindex !== null) {
-                container.appendChild(this.createInfoSection('⌨️ Tab Index', a11yData.tabindex.toString(), '#fb923c'));
+                container.appendChild(this.createInfoSection('Tab Index', a11yData.tabindex.toString(), '#fb923c'));
             }
 
             // Focusable State
             const focusableText = a11yData.isFocusable ? '✅ Yes' : '❌ No';
             const focusableColor = a11yData.isFocusable ? '#34d399' : '#94a3b8';
-            container.appendChild(this.createInfoSection('🎯 Focusable', focusableText, focusableColor));
+            container.appendChild(this.createInfoSection('Focusable', focusableText, focusableColor));
 
             // ARIA Hidden
             if (a11yData.ariaHidden) {
-                container.appendChild(this.createInfoSection('👻 ARIA Hidden', a11yData.ariaHidden, '#ef4444'));
+                container.appendChild(this.createInfoSection('ARIA Hidden', a11yData.ariaHidden, '#ef4444'));
             }
 
             // Interactive Element
             const interactiveText = a11yData.isInteractive ? '✅ Yes' : '❌ No';
             const interactiveColor = a11yData.isInteractive ? '#34d399' : '#94a3b8';
-            container.appendChild(this.createInfoSection('🖱️ Interactive', interactiveText, interactiveColor));
+            container.appendChild(this.createInfoSection('Interactive', interactiveText, interactiveColor));
         },
 
         /**
@@ -1008,7 +1008,16 @@ document.addEventListener('alpine:init', () => {
                 const renderTime = parseFloat(blockData.performance.renderTime);
                 const color = this.getRenderTimeColor(renderTime);
                 const formattedTime = `${blockData.performance.renderTime} ms`;
-                container.appendChild(this.createInfoSection('⏱️ Render Time', formattedTime, color));
+                container.appendChild(this.createInfoSection('PHP Render Time', formattedTime, color));
+
+                const desc = document.createElement('div');
+                desc.style.fontSize = '10px';
+                desc.style.color = '#94a3b8';
+                desc.style.marginTop = '-8px';
+                desc.style.marginBottom = '12px';
+                desc.textContent = 'Server-side processing time for this block';
+                container.appendChild(desc);
+
                 return true;
             }
             return false;
@@ -1021,10 +1030,10 @@ document.addEventListener('alpine:init', () => {
                     const lcpValue = this.webVitals.lcp.value.toFixed(0);
                     const lcpColor = lcpValue < 2500 ? '#34d399' : (lcpValue < 4000 ? '#f59e0b' : '#ef4444');
                     container.appendChild(
-                        this.createInfoSection('🎯 LCP (Largest Contentful Paint)', `${lcpValue} ms`, lcpColor)
+                        this.createInfoSection('LCP (Largest Contentful Paint)', `${lcpValue} ms`, lcpColor)
                     );
                     container.appendChild(
-                        this.createInfoSection('⚡ LCP Element', '✅ This element is critical for LCP!', '#ef4444')
+                        this.createInfoSection('LCP Element', '✅ This element is critical for LCP!', '#ef4444')
                     );
                     return true;
                 }
@@ -1037,12 +1046,12 @@ document.addEventListener('alpine:init', () => {
             if (elementCLS > 0) {
                 const clsColor = elementCLS < 0.1 ? '#34d399' : (elementCLS < 0.25 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
-                    this.createInfoSection('📐 CLS (Layout Shift)', elementCLS.toFixed(3), clsColor)
+                    this.createInfoSection('CLS (Layout Shift)', elementCLS.toFixed(3), clsColor)
                 );
                 const stabilityScore = Math.max(0, (1 - elementCLS * 4)).toFixed(2);
                 const stabilityColor = stabilityScore > 0.75 ? '#34d399' : (stabilityScore > 0.5 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
-                    this.createInfoSection('⚖️ Layout Stability Score', stabilityScore, stabilityColor)
+                    this.createInfoSection('Layout Stability Score', stabilityScore, stabilityColor)
                 );
                 return true;
             }
@@ -1055,7 +1064,7 @@ document.addEventListener('alpine:init', () => {
                 const inpValue = this.webVitals.inp.duration.toFixed(0);
                 const inpColor = inpValue < 200 ? '#34d399' : (inpValue < 500 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
-                    this.createInfoSection('⌨️ INP (Interaction)', `${inpValue} ms`, inpColor)
+                    this.createInfoSection('INP (Interaction)', `${inpValue} ms`, inpColor)
                 );
                 return true;
             }
@@ -1068,7 +1077,7 @@ document.addEventListener('alpine:init', () => {
                 const timingValue = (elementTiming.renderTime || elementTiming.loadTime).toFixed(0);
                 const timingColor = timingValue < 2500 ? '#34d399' : (timingValue < 4000 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
-                    this.createInfoSection('⏰ Element Timing', `${timingValue} ms (${elementTiming.identifier})`, timingColor)
+                    this.createInfoSection('Element Timing', `${timingValue} ms (${elementTiming.identifier})`, timingColor)
                 );
                 return true;
             }
@@ -1083,7 +1092,7 @@ document.addEventListener('alpine:init', () => {
                     : 0;
                 const modernColor = modernScore > 75 ? '#34d399' : (modernScore > 25 ? '#f59e0b' : '#ef4444');
                 container.appendChild(
-                    this.createInfoSection('🖼️ Modern Image Formats', `${modernScore}% (${imageAnalysis.modernFormats}/${imageAnalysis.totalImages})`, modernColor)
+                    this.createInfoSection('Modern Image Formats', `${modernScore}% (${imageAnalysis.modernFormats}/${imageAnalysis.totalImages})`, modernColor)
                 );
 
                 const responsiveScore = imageAnalysis.totalImages > 0
@@ -1092,12 +1101,12 @@ document.addEventListener('alpine:init', () => {
                 const responsiveColor = responsiveScore > 75 ? '#34d399' : (responsiveScore > 25 ? '#f59e0b' : '#ef4444');
                 const responsiveText = `${imageAnalysis.hasResponsive} of ${imageAnalysis.totalImages} ${imageAnalysis.totalImages === 1 ? 'image uses' : 'images use'} srcset`;
                 container.appendChild(
-                    this.createInfoSection('📱 Adaptive Images (srcset)', responsiveText, responsiveColor)
+                    this.createInfoSection('Adaptive Images (srcset)', responsiveText, responsiveColor)
                 );
 
                 if (imageAnalysis.oversized > 0) {
                     container.appendChild(
-                        this.createInfoSection('⚠️ Oversized Images', `${imageAnalysis.oversized} oversized`, '#ef4444')
+                        this.createInfoSection('Oversized Images', `${imageAnalysis.oversized} oversized`, '#ef4444')
                     );
                 }
 
@@ -1105,7 +1114,7 @@ document.addEventListener('alpine:init', () => {
                     const issuesText = imageAnalysis.issues.slice(0, 3).join(' • ');
                     const moreText = imageAnalysis.issues.length > 3 ? ` (+${imageAnalysis.issues.length - 3} more)` : '';
                     container.appendChild(
-                        this.createInfoSection('💡 Optimization Tips', issuesText + moreText, '#f59e0b')
+                        this.createInfoSection('Optimization Tips', issuesText + moreText, '#f59e0b')
                     );
                 }
                 return true;
@@ -1261,7 +1270,7 @@ document.addEventListener('alpine:init', () => {
             const resourceLabel = this.determineResourceLabel(resourceData);
 
             container.appendChild(
-                this.createInfoSection('📦 Element Resources', `${resourceData.count} ${resourceLabel} (${sizeText})`, '#60a5fa')
+                this.createInfoSection('Element Resources', `${resourceData.count} ${resourceLabel} (${sizeText})`, '#60a5fa')
             );
 
             this.renderResourceBreakdown(container, resourceData);
@@ -1318,7 +1327,7 @@ document.addEventListener('alpine:init', () => {
                     .join(', ');
 
                 container.appendChild(
-                    this.createInfoSection('📑 Resource Types', typesText, '#a78bfa')
+                    this.createInfoSection('Resource Types', typesText, '#a78bfa')
                 );
             }
         },
@@ -1372,7 +1381,7 @@ document.addEventListener('alpine:init', () => {
             const color = this.getRenderTimeColor(renderTime);
             const formattedTime = `${performanceData.renderTime} ms`;
 
-            container.appendChild(this.createInfoSection('⏱️ Render Time', formattedTime, color));
+            container.appendChild(this.createInfoSection('PHP Render Time', formattedTime, color));
         },
 
         /**
@@ -1397,7 +1406,7 @@ document.addEventListener('alpine:init', () => {
             // Block-level cacheable status
             const cacheableText = cacheData.cacheable ? '✅ Yes' : '❌ No';
             const cacheableColor = cacheData.cacheable ? '#34d399' : '#94a3b8';
-            const cacheableLabel = cacheData.pageCacheable === false ? '💾 Block Cacheable (ignored)' : '💾 Block Cacheable';
+            const cacheableLabel = cacheData.pageCacheable === false ? 'Block Cacheable (ignored)' : 'Block Cacheable';
             container.appendChild(this.createInfoSection(cacheableLabel, cacheableText, cacheableColor));
 
             // Cache lifetime (show for all cacheable blocks)
@@ -1405,18 +1414,18 @@ document.addEventListener('alpine:init', () => {
                 const lifetimeText = (cacheData.lifetime === null || cacheData.lifetime === 0)
                     ? 'Unlimited'
                     : `${cacheData.lifetime}s`;
-                container.appendChild(this.createInfoSection('⏳ Cache Lifetime', lifetimeText, '#60a5fa'));
+                container.appendChild(this.createInfoSection('Cache Lifetime', lifetimeText, '#60a5fa'));
             }
 
             // Cache key
             if (cacheData.key && cacheData.key !== '') {
-                container.appendChild(this.createInfoSection('🔑 Cache Key', cacheData.key, '#a78bfa'));
+                container.appendChild(this.createInfoSection('Cache Key', cacheData.key, '#a78bfa'));
             }
 
             // Cache tags
             if (cacheData.tags && cacheData.tags.length > 0) {
                 const tagsText = cacheData.tags.join(', ');
-                container.appendChild(this.createInfoSection('🏷️ Cache Tags', tagsText, '#22d3ee'));
+                container.appendChild(this.createInfoSection('Cache Tags', tagsText, '#22d3ee'));
             }
         },
 
@@ -1429,26 +1438,26 @@ document.addEventListener('alpine:init', () => {
 
             // Child count
             container.appendChild(
-                this.createInfoSection('📊 Child Nodes', complexity.childCount.toString(), '#60a5fa')
+                this.createInfoSection('Child Nodes', complexity.childCount.toString(), '#60a5fa')
             );
 
             // Tree depth
             const depthColor = complexity.depth > this.PERF_DOM_DEPTH_WARNING ? '#f59e0b' : '#34d399';
             container.appendChild(
-                this.createInfoSection('🌳 Tree Depth', complexity.depth.toString(), depthColor)
+                this.createInfoSection('Tree Depth', complexity.depth.toString(), depthColor)
             );
 
             // Total nodes
             const totalColor = rating === 'high' ? '#ef4444' : (rating === 'medium' ? '#f59e0b' : '#34d399');
             container.appendChild(
-                this.createInfoSection('🔢 Total Nodes', complexity.totalNodes.toString(), totalColor)
+                this.createInfoSection('Total Nodes', complexity.totalNodes.toString(), totalColor)
             );
 
             // Complexity rating
             const ratingEmoji = rating === 'low' ? '✅' : (rating === 'medium' ? '⚠️' : '❌');
             const ratingText = `${ratingEmoji} ${rating.toUpperCase()}`;
             container.appendChild(
-                this.createInfoSection('📈 Complexity', ratingText, totalColor)
+                this.createInfoSection('Complexity', ratingText, totalColor)
             );
         },
 
@@ -1460,19 +1469,19 @@ document.addEventListener('alpine:init', () => {
 
             if (vitalsInfo.isLCP) {
                 container.appendChild(
-                    this.createInfoSection('🎯 LCP Element', '✅ Yes - Performance Critical!', '#ef4444')
+                    this.createInfoSection('LCP Element', '✅ Yes - Performance Critical!', '#ef4444')
                 );
             }
 
             if (vitalsInfo.contributesCLS && vitalsInfo.contributesCLS > 0) {
                 container.appendChild(
-                    this.createInfoSection('📐 CLS Impact', `${vitalsInfo.contributesCLS.toFixed(3)}`, '#f59e0b')
+                    this.createInfoSection('CLS Impact', `${vitalsInfo.contributesCLS.toFixed(3)}`, '#f59e0b')
                 );
             }
 
             if (!vitalsInfo.isLCP && !vitalsInfo.contributesCLS) {
                 container.appendChild(
-                    this.createInfoSection('✨ Web Vitals', 'Not Critical', '#94a3b8')
+                    this.createInfoSection('Web Vitals', 'Not Critical', '#94a3b8')
                 );
             }
         },
@@ -1486,11 +1495,11 @@ document.addEventListener('alpine:init', () => {
             }
 
             container.appendChild(
-                this.createInfoSection('📄 DOMContentLoaded', `${this.pageTimings.domContentLoaded} ms`, '#60a5fa')
+                this.createInfoSection('DOMContentLoaded', `${this.pageTimings.domContentLoaded} ms`, '#60a5fa')
             );
 
             container.appendChild(
-                this.createInfoSection('🌐 Page Load', `${this.pageTimings.loadComplete} ms`, '#a78bfa')
+                this.createInfoSection('Page Load', `${this.pageTimings.loadComplete} ms`, '#a78bfa')
             );
         },
 
