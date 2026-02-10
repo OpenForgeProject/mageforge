@@ -3,6 +3,18 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
 >
+      <!-- Performance Collector Service -->
+      <type name="OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector">
+            <!-- No dependencies needed -->
+      </type>
+
+      <!-- Inspector Hints Decorator with Performance Collector -->
+      <type name="OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints">
+            <arguments>
+                  <argument name="cacheCollector" xsi:type="object">OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector</argument>
+            </arguments>
+      </type>
+
       <!-- Register Inspector Hints Plugin for Frontend Template Engine -->
       <type name="Magento\Framework\View\TemplateEngineFactory">
             <plugin name="mageforge_inspector_hints"

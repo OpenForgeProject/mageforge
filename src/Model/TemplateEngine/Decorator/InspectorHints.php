@@ -8,6 +8,7 @@ use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\TemplateEngineInterface;
+use OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector;
 
 /**
  * Decorates block with inspector data attributes for frontend debugging
@@ -22,11 +23,13 @@ class InspectorHints implements TemplateEngineInterface
      * @param TemplateEngineInterface $subject
      * @param bool $showBlockHints
      * @param Random $random
+     * @param BlockCacheCollector $cacheCollector
      */
     public function __construct(
         private readonly TemplateEngineInterface $subject,
         private readonly bool $showBlockHints,
-        private readonly Random $random
+        private readonly Random $random,
+        private readonly BlockCacheCollector $cacheCollector
     ) {
         // Get Magento root directory - try multiple strategies
         // 1. Try from BP constant (most reliable)
@@ -49,7 +52,10 @@ class InspectorHints implements TemplateEngineInterface
      */
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string
     {
+        // Measure render time
+        $startTime = hrtime(true);
         $result = $this->subject->render($block, $templateFile, $dictionary);
+        $endTime = hrtime(true);
 
         if (!$this->showBlockHints) {
             return $result;
@@ -60,7 +66,17 @@ class InspectorHints implements TemplateEngineInterface
             return $result;
         }
 
-        return $this->injectInspectorAttributes($result, $block, $templateFile);
+        // Calculate render time in milliseconds
+        $renderTimeNs = $endTime - $startTime;
+        $renderTimeMs = $renderTimeNs / 1_000_000;
+
+        $renderMetrics = [
+            'renderTimeMs' => round($renderTimeMs, 2),
+            'startTime' => $startTime,
+            'endTime' => $endTime,
+        ];
+
+        return $this->injectInspectorAttributes($result, $block, $templateFile, $renderMetrics);
     }
 
     /**
@@ -69,10 +85,15 @@ class InspectorHints implements TemplateEngineInterface
      * @param string $html
      * @param BlockInterface $block
      * @param string $templateFile
+     * @param array{renderTimeMs: float, startTime: int, endTime: int} $renderMetrics
      * @return string
      */
-    private function injectInspectorAttributes(string $html, BlockInterface $block, string $templateFile): string
-    {
+    private function injectInspectorAttributes(
+        string $html,
+        BlockInterface $block,
+        string $templateFile,
+        array $renderMetrics
+    ): string {
         $wrapperId = 'mageforge-' . $this->random->getRandomString(16);
 
         // Get block class name
@@ -90,6 +111,10 @@ class InspectorHints implements TemplateEngineInterface
         $blockAlias = $this->getBlockAlias($block);
         $isOverride = $this->isTemplateOverride($templateFile, $moduleName) ? '1' : '0';
 
+        // Collect performance and cache metrics
+        $cacheMetrics = $this->cacheCollector->getCacheInfo($block);
+        $formattedMetrics = $this->cacheCollector->formatMetricsForJson($renderMetrics, $cacheMetrics);
+
         // Build metadata as JSON
         $metadata = [
             'id' => $wrapperId,
@@ -100,6 +125,8 @@ class InspectorHints implements TemplateEngineInterface
             'parent' => $parentBlock,
             'alias' => $blockAlias,
             'override' => $isOverride,
+            'performance' => $formattedMetrics['performance'],
+            'cache' => $formattedMetrics['cache'],
         ];
 
         // JSON encode with proper escaping for HTML comments
