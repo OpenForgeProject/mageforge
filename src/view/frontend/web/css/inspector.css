@@ -425,7 +425,7 @@
 
 .mageforge-tab-button {
     padding: 8px 12px;
-    background: transparent;
+    background: color-mix(in srgb, var(--mageforge-color-slate-400) 10%, transparent);
     color: var(--mageforge-color-slate-400);
     border: none;
     border-bottom: 2px solid transparent;
@@ -441,10 +441,11 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .mageforge-tab-button:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--mageforge-color-slate-400) 20%, transparent);
     color: var(--mageforge-color-slate-300);
 }
 
