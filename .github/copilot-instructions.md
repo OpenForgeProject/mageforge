@@ -280,6 +280,39 @@ bin/magento new-alias --help
 - **Hyvä**: Themes with `hyva-themes.json`
 - **Custom**: Themes with `tailwind.config.js` (without Hyvä)
 
+## Frontend Inspector
+
+### Overview
+
+The **MageForge Inspector** is a developer tool allowing frontend inspection of Magento blocks, templates, and performance metrics directly in the browser.
+
+- **Frontend**: Alpine.js component (`src/view/frontend/web/js/inspector.js`)
+- **Backend**: `InspectorHints` decorator wraps blocks with JSON metadata in `<!-- MAGEFORGE_START ... -->` comments
+
+### Usage
+
+1. **Enable/Disable**:
+   ```bash
+   ddev magento mageforge:theme:inspector enable   # Enable (requires Developer Mode)
+   ddev magento mageforge:theme:inspector disable  # Disable
+   ddev magento mageforge:theme:inspector status   # Check status
+   ```
+
+2. **Browser Interaction**:
+   - **Toggle**: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
+   - **Features**:
+     - Inspect Element (Hover/Click)
+     - **Structure Tab**: Template path, Block class, Module name
+     - **Performance Tab**: PHP Render time, Cache status (Life time, Tags)
+     - **Web Vitals Tab**: LCP, CLS, INP metrics per element
+     - **Accessibility Tab**: ARIA roles, Contrast, Alt text
+
+### Implementation Details
+
+- **Decorator**: `OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints`
+- **Metadata Injection**: Wraps block HTML with `MAGEFORGE_START` and `MAGEFORGE_END` comments containing JSON data
+- **Performance**: Collects render time using `hrtime()` and cache stats via `BlockCacheCollector`
+
 ## Common Pitfalls
 
 - **Shell commands in builders**: Use `Shell` service (DI), not `exec()` directly
