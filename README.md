@@ -25,7 +25,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | 🔄 Hyvä Fallback                | ✅ Fully Supported                                         |
 | 🎨 Custom TailwindCSS (no Hyvä) | ✅ Fully Supported                                         |
 | 💼 Avanta B2B                   | ✅ Fully Supported                                         |
-| 🥰 Your Custom Theme            | [Create your own Builder](./docs/custom_theme_builders.md) |
+| 🥰 Your Custom Theme (`css`, `sass`, `less`, ... )           | [Create your own Builder](./docs/custom_theme_builders.md) |
 
 ---
 
@@ -42,8 +42,6 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `hyva:tokens`             |
 | `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |
 | `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
-
----
 
 ## Getting Started
 
@@ -92,6 +90,43 @@ Please ensure that your Magento installation meets this requirement before insta
    This creates a `generated/hyva-tokens.css` file from your design tokens configuration.
 
 5. Enjoy automatic CSS rebuilding as you work on your theme files!
+
+---
+
+### Frontend Inspector 🕵️
+
+The **MageForge Inspector** is a powerful developer tool that allows you to inspect Magento blocks, templates, and performance metrics directly in your browser.
+
+**Key Features:**
+- **Structure Analysis**: View template paths, block classes, and module names for any element.
+- **Performance Metrics**: See PHP render times and cache status (lifetime, tags).
+- **Web Vitals**: Monitor LCP, CLS, and INP metrics per element.
+- **Accessibility Checks**: Inspect ARIA roles, contrast ratios, and alt text.
+
+**How to use:**
+
+1. **Enable the Inspector in the CLI**:
+   ```bash
+   bin/magento mageforge:theme:inspector enable
+   ```
+   *(Note: Requires Magento Developer Mode)*
+
+
+2. **Enable the Inspector in Magento Admin Settings**
+You can activate the Inspector in Magento Admin under `Stores > Configuration > MageForge > Frontend Inspector`.
+
+3. **Usage in Browser**:
+   - **Toggle**: Press `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS).
+   - **Inspect**: Hover over elements to see details. Click to lock the inspector on a specific block.
+
+To disable the inspector:
+```bash
+bin/magento mageforge:theme:inspector disable
+```
+
+
+
+---
 
 ## Additional Documentation
 
