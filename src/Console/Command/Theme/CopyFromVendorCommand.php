@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use Laravel\Prompts\SearchPrompt;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem;
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
@@ -25,7 +24,6 @@ class CopyFromVendorCommand extends AbstractCommand
     public function __construct(
         private readonly ThemeList $themeList,
         private readonly VendorFileMapper $vendorFileMapper,
-        private readonly Filesystem $filesystem,
         private readonly DirectoryList $directoryList,
         private readonly ComponentRegistrarInterface $componentRegistrar
     ) {
@@ -108,7 +106,7 @@ class CopyFromVendorCommand extends AbstractCommand
 
         $this->fixPromptEnvironment();
 
-        return search(
+        return (string) search(
             label: 'Select target theme',
             options: fn (string $value) => array_filter(
                 $options,
