@@ -1,0 +1,116 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests (PHP 8.4)
+    runs-on: ubuntu-latest
+
+    services:
+      # No DB/Elasticsearch needed for Unit Tests usually, but keeping minimal env helps if tests expand
+      # Using just PHP is often enough for pure unit tests mocking everything.
+      # But since we install full Magento to ensure dependencies, we might need DB for setup:install
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MYSQL_ROOT_PASSWORD: magento
+          MYSQL_DATABASE: magento
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      opensearch:
+        image: opensearchproject/opensearch:3
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: mageforge
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-2.4.8
+
+      - name: Download Magento
+        run: |
+          composer create-project \
+            --repository-url=https://mirror.mage-os.org/ \
+            magento/project-community-edition \
+            magento2
+
+      - name: Install Magento
+        working-directory: magento2
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer config minimum-stability stable
+          composer config prefer-stable true
+          composer install --no-interaction --no-progress
+          bin/magento setup:install \
+            --base-url=http://localhost \
+            --db-host=127.0.0.1 \
+            --db-name=magento \
+            --db-user=root \
+            --db-password=magento \
+            --admin-firstname=Admin \
+            --admin-lastname=User \
+            --admin-email=admin@example.com \
+            --admin-user=admin \
+            --admin-password=admin12345 \
+            --language=en_US \
+            --currency=USD \
+            --timezone=Europe/Berlin \
+            --use-rewrites=1 \
+            --backend-frontname=admin \
+            --search-engine=opensearch \
+            --opensearch-host=localhost \
+            --opensearch-port=9200 \
+            --opensearch-index-prefix=magento \
+            --cleanup-database
+
+      - name: Install MageForge Module
+        working-directory: magento2
+        run: |
+          # Add local repository
+          composer config repositories.mageforge-local path ../mageforge
+
+          # Install module
+          composer require --no-update openforgeproject/mageforge:@dev
+
+          # Update
+          composer update --with-dependencies
+
+      - name: Run PHPUnit
+        working-directory: magento2
+        run: |
+          # Run tests located in the installed module vendor folder
+          # Mapping: ../mageforge/src/src/Test -> vendor/openforgeproject/mageforge/src/Test
+          vendor/bin/phpunit vendor/openforgeproject/mageforge/src/Test/Unit
