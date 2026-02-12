@@ -49,7 +49,7 @@ class VendorFileMapper
                  $pathInsideModule = substr($sourcePath, strlen($path) + 1);
 
                  // Remove view/frontend/ or view/base/ from the path
-                 $cleanPath = preg_replace('#^view/(frontend|base)/#', '', $pathInsideModule);
+                 $cleanPath = (string) preg_replace('#^view/(frontend|base)/#', '', $pathInsideModule);
 
                  return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
             }
