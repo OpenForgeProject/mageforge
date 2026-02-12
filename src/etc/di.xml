@@ -25,6 +25,8 @@
                               OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
                         <item name="mageforge_dev_inspector" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand</item>
+                        <item name="mageforge_theme_copy_from_vendor" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\CopyFromVendorCommand</item>
                   </argument>
             </arguments>
       </type>
