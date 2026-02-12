@@ -9,6 +9,8 @@ use Laravel\Prompts\SearchPrompt;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Component\ComponentRegistrarInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\VendorFileMapper;
@@ -24,7 +26,8 @@ class CopyFromVendorCommand extends AbstractCommand
         private readonly ThemeList $themeList,
         private readonly VendorFileMapper $vendorFileMapper,
         private readonly Filesystem $filesystem,
-        private readonly DirectoryList $directoryList
+        private readonly DirectoryList $directoryList,
+        private readonly ComponentRegistrarInterface $componentRegistrar
     ) {
         parent::__construct();
     }
@@ -93,39 +96,43 @@ class CopyFromVendorCommand extends AbstractCommand
              $this->io->error("Theme not found: $themeCode");
              return Cli::RETURN_FAILURE;
         }
-        
-        // Use View\Design\ThemeInterface::getFullPath() if available, 
-        // fallback to calculating path assuming app/design/frontend structure if needed,
-        // but Theme model normally has getFullPath().
-        // Let's verify what interface we have. We likely have Magento\Theme\Model\Theme which has getFullPath().
-        if (!method_exists($theme, 'getFullPath')) {
-             // Fallback logic
-             $themePath = 'app/design/frontend/' . $theme->getThemePath();
-        } else {
-             $themeAbsolutePath = $theme->getFullPath(); // This is absolute path
-             // Make relative
-             if (str_starts_with($themeAbsolutePath, $rootPath . '/')) {
-                 $themePath = substr($themeAbsolutePath, strlen($rootPath) + 1);
-             } else {
-                 $themePath = $themeAbsolutePath;
-             }
+
+        // Use ComponentRegistrar to get absolute path
+        $regName = $theme->getArea() . '/' . $theme->getCode();
+        $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $regName);
+
+        if (!$themePath) {
+             // Fallback to model path if registrar fails
+             $this->io->warning("Theme path not found via ComponentRegistrar for $regName, falling back to getFullPath()");
+             $themePath = $theme->getFullPath();
         }
 
         // 4. Calculate Destination
         try {
-            $destinationRelative = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
+            $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
         } catch (\Exception $e) {
             $this->io->error($e->getMessage());
             return Cli::RETURN_FAILURE;
         }
 
-        $absoluteDestPath = $rootPath . '/' . $destinationRelative;
+        if (str_starts_with($destinationPath, '/')) {
+            $absoluteDestPath = $destinationPath;
+        } else {
+             $absoluteDestPath = $rootPath . '/' . $destinationPath;
+        }
+
+        // Make destination relative for display if it's inside root
+        $destinationDisplay = $absoluteDestPath;
+        if (str_starts_with($absoluteDestPath, $rootPath . '/')) {
+            $destinationDisplay = substr($absoluteDestPath, strlen($rootPath) + 1);
+        }
 
         // 5. Preview & Confirm
         $this->io->section('Copy Preview');
         $this->io->text([
             "Source: <info>$sourceFile</info>",
-            "Target: <info>$destinationRelative</info>",
+            "Target: <info>$destinationDisplay</info>",
+            "Absolute Target: <comment>$absoluteDestPath</comment>"
         ]);
         $this->io->newLine();
 
@@ -156,6 +163,8 @@ class CopyFromVendorCommand extends AbstractCommand
         }
 
         return Cli::RETURN_SUCCESS;
+    }
+
     private function fixPromptEnvironment(): void
     {
         if (getenv('DDEV_PROJECT')) {
