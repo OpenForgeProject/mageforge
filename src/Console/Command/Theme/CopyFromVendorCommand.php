@@ -43,91 +43,113 @@ class CopyFromVendorCommand extends AbstractCommand
 
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $sourceFile = $input->getArgument('file');
-        $themeCode = $input->getArgument('theme');
-
-        // 1. Verify Source File
-        $rootPath = $this->directoryList->getRoot();
-        // If absolute path provided
-        if (str_starts_with($sourceFile, '/')) {
-            $absoluteSourcePath = $sourceFile;
-            // Make relative for display/proecessing
-            if (str_starts_with($sourceFile, $rootPath . '/')) {
-                $sourceFile = substr($sourceFile, strlen($rootPath) + 1);
-            }
-        } else {
-             $absoluteSourcePath = $rootPath . '/' . $sourceFile;
-        }
-
-        if (!file_exists($absoluteSourcePath)) {
-            $this->io->error("Source file not found: $absoluteSourcePath");
-            return Cli::RETURN_FAILURE;
-        }
-
-        // 2. Select Theme if missing
-        if (!$themeCode) {
-            $themes = $this->themeList->getAllThemes();
-            $options = [];
-            foreach ($themes as $theme) {
-                $options[$theme->getCode()] = $theme->getCode();
-            }
-
-            if (empty($options)) {
-                $this->io->error('No themes found to copy to.');
-                return Cli::RETURN_FAILURE;
-            }
-
-            // Fix Environment for DDEV (Required for Laravel Prompts)
-            $this->fixPromptEnvironment();
-
-            $themeCode = search(
-                label: 'Select target theme',
-                options: fn (string $value) => array_filter(
-                    $options,
-                    fn ($option) => str_contains(strtolower($option), strtolower($value))
-                ),
-                placeholder: 'Search for a theme...'
-            );
-        }
-
-        // 3. Resolve Theme Path
-        $theme = $this->themeList->getThemeByCode($themeCode);
-        if (!$theme) {
-             $this->io->error("Theme not found: $themeCode");
-             return Cli::RETURN_FAILURE;
-        }
-
-        // Use ComponentRegistrar to get absolute path
-        $regName = $theme->getArea() . '/' . $theme->getCode();
-        $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $regName);
-
-        if (!$themePath) {
-             // Fallback to model path if registrar fails
-             $this->io->warning("Theme path not found via ComponentRegistrar for $regName, falling back to getFullPath()");
-             $themePath = $theme->getFullPath();
-        }
-
-        // 4. Calculate Destination
         try {
+            $sourceFileArg = $input->getArgument('file');
+            $absoluteSourcePath = $this->getAbsoluteSourcePath($sourceFileArg);
+
+            // Update sourceFileArg if it was normalized to relative path
+            $rootPath = $this->directoryList->getRoot();
+            $sourceFile = str_starts_with($absoluteSourcePath, $rootPath . '/')
+                ? substr($absoluteSourcePath, strlen($rootPath) + 1)
+                : $sourceFileArg;
+
+            $themeCode = $this->getThemeCode($input);
+            $themePath = $this->getThemePath($themeCode);
+
             $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
+            $absoluteDestPath = $this->getAbsoluteDestPath($destinationPath, $rootPath);
+
+            if (!$this->confirmCopy($sourceFile, $absoluteDestPath, $rootPath)) {
+                return Cli::RETURN_SUCCESS;
+            }
+
+            $this->performCopy($absoluteSourcePath, $absoluteDestPath);
+            $this->io->success("File copied successfully.");
+
+            return Cli::RETURN_SUCCESS;
         } catch (\Exception $e) {
             $this->io->error($e->getMessage());
             return Cli::RETURN_FAILURE;
         }
+    }
 
-        if (str_starts_with($destinationPath, '/')) {
-            $absoluteDestPath = $destinationPath;
+    private function getAbsoluteSourcePath(string $sourceFile): string
+    {
+        $rootPath = $this->directoryList->getRoot();
+        if (str_starts_with($sourceFile, '/')) {
+            $absoluteSourcePath = $sourceFile;
         } else {
-             $absoluteDestPath = $rootPath . '/' . $destinationPath;
+            $absoluteSourcePath = $rootPath . '/' . $sourceFile;
         }
 
-        // Make destination relative for display if it's inside root
-        $destinationDisplay = $absoluteDestPath;
-        if (str_starts_with($absoluteDestPath, $rootPath . '/')) {
-            $destinationDisplay = substr($absoluteDestPath, strlen($rootPath) + 1);
+        if (!file_exists($absoluteSourcePath)) {
+            throw new \RuntimeException("Source file not found: $absoluteSourcePath");
         }
 
-        // 5. Preview & Confirm
+        return $absoluteSourcePath;
+    }
+
+    private function getThemeCode(InputInterface $input): string
+    {
+        $themeCode = $input->getArgument('theme');
+        if ($themeCode) {
+            return $themeCode;
+        }
+
+        $themes = $this->themeList->getAllThemes();
+        $options = [];
+        foreach ($themes as $theme) {
+            $options[$theme->getCode()] = $theme->getCode();
+        }
+
+        if (empty($options)) {
+            throw new \RuntimeException('No themes found to copy to.');
+        }
+
+        $this->fixPromptEnvironment();
+
+        return search(
+            label: 'Select target theme',
+            options: fn (string $value) => array_filter(
+                $options,
+                fn ($option) => str_contains(strtolower($option), strtolower($value))
+            ),
+            placeholder: 'Search for a theme...'
+        );
+    }
+
+    private function getThemePath(string $themeCode): string
+    {
+        $theme = $this->themeList->getThemeByCode($themeCode);
+        if (!$theme) {
+            throw new \RuntimeException("Theme not found: $themeCode");
+        }
+
+        $regName = $theme->getArea() . '/' . $theme->getCode();
+        $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $regName);
+
+        if (!$themePath) {
+            $this->io->warning("Theme path not found via ComponentRegistrar for $regName, falling back to getFullPath()");
+            $themePath = $theme->getFullPath();
+        }
+
+        return $themePath;
+    }
+
+    private function getAbsoluteDestPath(string $destinationPath, string $rootPath): string
+    {
+        if (str_starts_with($destinationPath, '/')) {
+            return $destinationPath;
+        }
+        return $rootPath . '/' . $destinationPath;
+    }
+
+    private function confirmCopy(string $sourceFile, string $absoluteDestPath, string $rootPath): bool
+    {
+        $destinationDisplay = str_starts_with($absoluteDestPath, $rootPath . '/')
+            ? substr($absoluteDestPath, strlen($rootPath) + 1)
+            : $absoluteDestPath;
+
         $this->io->section('Copy Preview');
         $this->io->text([
             "Source: <info>$sourceFile</info>",
@@ -138,31 +160,21 @@ class CopyFromVendorCommand extends AbstractCommand
 
         if (file_exists($absoluteDestPath)) {
             $this->io->warning("File already exists at destination!");
-            if (!$this->io->confirm('Overwrite existing file?', false)) {
-                return Cli::RETURN_SUCCESS;
-            }
-        } else {
-            if (!$this->io->confirm('Proceed with copy?', true)) {
-                return Cli::RETURN_SUCCESS;
-            }
+            return $this->io->confirm('Overwrite existing file?', false);
         }
 
-        // 6. Perform Copy
-        try {
-             $directory = dirname($absoluteDestPath);
-             if (!is_dir($directory)) {
-                 if (!mkdir($directory, 0777, true) && !is_dir($directory)) {
-                     throw new \RuntimeException(sprintf('Directory "%s" was not created', $directory));
-                 }
-             }
-             copy($absoluteSourcePath, $absoluteDestPath);
-             $this->io->success("File copied successfully.");
-        } catch (\Exception $e) {
-            $this->io->error("Failed to copy file: " . $e->getMessage());
-            return Cli::RETURN_FAILURE;
-        }
+        return $this->io->confirm('Proceed with copy?', true);
+    }
 
-        return Cli::RETURN_SUCCESS;
+    private function performCopy(string $absoluteSourcePath, string $absoluteDestPath): void
+    {
+        $directory = dirname($absoluteDestPath);
+        if (!is_dir($directory)) {
+            if (!mkdir($directory, 0777, true) && !is_dir($directory)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $directory));
+            }
+        }
+        copy($absoluteSourcePath, $absoluteDestPath);
     }
 
     private function fixPromptEnvironment(): void
