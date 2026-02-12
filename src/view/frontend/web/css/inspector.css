@@ -290,7 +290,7 @@
     .mageforge-inspector-info-badge {
         min-width: 280px;
         max-width: calc(100vw - 40px);
-        font-size: 10pxrem;
+        font-size: 10px;
     }
 
     .mageforge-inspector-float-button {
@@ -329,8 +329,8 @@
 .mageforge-code-inline {
     background: rgba(100, 116, 139, 0.1);
     padding: 2px 6px;
-    border-radiusvar(--mageforge-font-mono)
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    border-radius: 4px;
+    font-family: var(--mageforge-font-mono);
     font-size: 11px;
     color: var(--mageforge-color-slate-200);
     word-break: break-all;
