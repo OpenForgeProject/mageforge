@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use InvalidArgumentException;
 use Laravel\Prompts\SearchPrompt;
+use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
@@ -57,7 +58,7 @@ class CopyFromVendorCommand extends AbstractCommand
 
         if (!file_exists($absoluteSourcePath)) {
             $this->io->error("Source file not found: $absoluteSourcePath");
-            return self::RETURN_FAILURE;
+            return Cli::RETURN_FAILURE;
         }
 
         // 2. Select Theme if missing
@@ -70,7 +71,7 @@ class CopyFromVendorCommand extends AbstractCommand
 
             if (empty($options)) {
                 $this->io->error('No themes found to copy to.');
-                return self::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
             }
 
             // Fix Environment for DDEV (Required for Laravel Prompts)
@@ -90,10 +91,10 @@ class CopyFromVendorCommand extends AbstractCommand
         $theme = $this->themeList->getThemeByCode($themeCode);
         if (!$theme) {
              $this->io->error("Theme not found: $themeCode");
-             return self::RETURN_FAILURE;
+             return Cli::RETURN_FAILURE;
         }
-
-        // Use View\Design\ThemeInterface::getFullPath() if available,
+        
+        // Use View\Design\ThemeInterface::getFullPath() if available, 
         // fallback to calculating path assuming app/design/frontend structure if needed,
         // but Theme model normally has getFullPath().
         // Let's verify what interface we have. We likely have Magento\Theme\Model\Theme which has getFullPath().
@@ -115,7 +116,7 @@ class CopyFromVendorCommand extends AbstractCommand
             $destinationRelative = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
         } catch (\Exception $e) {
             $this->io->error($e->getMessage());
-            return self::RETURN_FAILURE;
+            return Cli::RETURN_FAILURE;
         }
 
         $absoluteDestPath = $rootPath . '/' . $destinationRelative;
@@ -131,11 +132,11 @@ class CopyFromVendorCommand extends AbstractCommand
         if (file_exists($absoluteDestPath)) {
             $this->io->warning("File already exists at destination!");
             if (!$this->io->confirm('Overwrite existing file?', false)) {
-                return self::RETURN_SUCCESS;
+                return Cli::RETURN_SUCCESS;
             }
         } else {
             if (!$this->io->confirm('Proceed with copy?', true)) {
-                return self::RETURN_SUCCESS;
+                return Cli::RETURN_SUCCESS;
             }
         }
 
@@ -151,12 +152,10 @@ class CopyFromVendorCommand extends AbstractCommand
              $this->io->success("File copied successfully.");
         } catch (\Exception $e) {
             $this->io->error("Failed to copy file: " . $e->getMessage());
-            return self::RETURN_FAILURE;
+            return Cli::RETURN_FAILURE;
         }
 
-        return self::RETURN_SUCCESS;
-    }
-
+        return Cli::RETURN_SUCCESS;
     private function fixPromptEnvironment(): void
     {
         if (getenv('DDEV_PROJECT')) {
