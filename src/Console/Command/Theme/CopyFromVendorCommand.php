@@ -15,6 +15,7 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\VendorFileMapper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function Laravel\Prompts\search;
@@ -34,15 +35,17 @@ class CopyFromVendorCommand extends AbstractCommand
     {
         $this->setName('mageforge:theme:copy-from-vendor')
              ->setDescription('Copy a file from vendor/ to a specific theme with correct path resolution')
-             ->setAliases(['m:t:cfv'])
+             ->setAliases(['theme:copy'])
              ->addArgument('file', InputArgument::REQUIRED, 'Path to the source file (vendor/...)')
-             ->addArgument('theme', InputArgument::OPTIONAL, 'Target theme code (e.g. Magento/luma)');
+             ->addArgument('theme', InputArgument::OPTIONAL, 'Target theme code (e.g. Magento/luma)')
+             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Preview the copy operation without performing it');
     }
 
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         try {
             $sourceFileArg = $input->getArgument('file');
+            $isDryRun = $input->getOption('dry-run');
             $absoluteSourcePath = $this->getAbsoluteSourcePath($sourceFileArg);
 
             // Update sourceFileArg if it was normalized to relative path
@@ -56,6 +59,11 @@ class CopyFromVendorCommand extends AbstractCommand
 
             $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
             $absoluteDestPath = $this->getAbsoluteDestPath($destinationPath, $rootPath);
+
+            if ($isDryRun) {
+                $this->showDryRunPreview($sourceFile, $absoluteDestPath, $rootPath);
+                return Cli::RETURN_SUCCESS;
+            }
 
             if (!$this->confirmCopy($sourceFile, $absoluteDestPath, $rootPath)) {
                 return Cli::RETURN_SUCCESS;
@@ -173,6 +181,29 @@ class CopyFromVendorCommand extends AbstractCommand
             }
         }
         copy($absoluteSourcePath, $absoluteDestPath);
+    }
+
+    private function showDryRunPreview(string $sourceFile, string $absoluteDestPath, string $rootPath): void
+    {
+        $destinationDisplay = str_starts_with($absoluteDestPath, $rootPath . '/')
+            ? substr($absoluteDestPath, strlen($rootPath) + 1)
+            : $absoluteDestPath;
+
+        $this->io->section('Dry Run - Copy Preview');
+        $this->io->text([
+            "Source: <info>$sourceFile</info>",
+            "Target: <info>$destinationDisplay</info>",
+            "Absolute Target: <comment>$absoluteDestPath</comment>"
+        ]);
+        $this->io->newLine();
+
+        if (file_exists($absoluteDestPath)) {
+            $this->io->warning("File already exists at destination and would be overwritten!");
+        } else {
+            $this->io->info("File would be created at destination.");
+        }
+
+        $this->io->note("No files were modified (dry-run mode).");
     }
 
     private function fixPromptEnvironment(): void
