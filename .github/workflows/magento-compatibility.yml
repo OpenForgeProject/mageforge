@@ -32,15 +32,12 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      opensearch:
-        image: opensearchproject/opensearch:2.11.0
-        ports:
-          - 9200:9200
+      elasticsearch:
+        image: elasticsearch:7.17.0
         env:
           discovery.type: single-node
-          ES_JAVA_OPTS: -Xms512m -Xmx512m
-          ES_SKIP_CGROUPS_CHECK: "true"
-        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+          JAVA_OPTS: "-Djdk.disableLastCgroup=true"
+        options: --health-cmd="curl -s http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout code
