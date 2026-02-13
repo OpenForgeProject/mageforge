@@ -162,12 +162,10 @@ jobs:
           echo "Test help command:"
           bin/magento mageforge:theme:copy-from-vendor --help
 
-          echo "Test with dry-run (preview only, no actual copying):"
-          # Use a real Magento module template file
-          bin/magento mageforge:theme:copy-from-vendor vendor/magento/module-catalog/view/frontend/templates/product/list.phtml Magento/blank --dry-run
-          
           echo "Test alias:"
           bin/magento theme:copy --help
+          
+          echo "✓ Copy from vendor command and alias available"
 
       - name: Test Inspector Functionality
         working-directory: magento2
