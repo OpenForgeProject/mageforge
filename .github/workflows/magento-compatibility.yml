@@ -138,17 +138,11 @@ jobs:
           bin/magento mageforge:hyva:tokens --help
 
           echo "Verify command aliases work:"
-          bin/magento m:s:v --help
-          bin/magento m:s:c --help
-          bin/magento m:t:l --help
-          bin/magento m:t:b --help
-          bin/magento m:t:w --help
-          bin/magento m:t:c --help
-          bin/magento m:h:c:c --help
           bin/magento frontend:list --help
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
           bin/magento frontend:clean --help
+          bin/magento theme:copy --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
 
@@ -274,15 +268,9 @@ jobs:
           bin/magento mageforge:theme:inspector --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
+          bin/magento mageforge:theme:copy-from-vendor --help
 
           echo "Verify command aliases work:"
-          bin/magento m:s:v --help
-          bin/magento m:s:c --help
-          bin/magento m:t:l --help
-          bin/magento m:t:b --help
-          bin/magento m:t:w --help
-          bin/magento m:t:c --help
-          bin/magento m:h:c:c --help
           bin/magento frontend:list --help
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
