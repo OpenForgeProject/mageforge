@@ -126,10 +126,10 @@ jobs:
           bin/magento mageforge:hyva:compatibility:check --show-all
 
           echo "Third party only:"
-          bin/magento m:h:c:c --third-party-only
+          bin/magento mageforge:hyva:compatibility:check --third-party-only
 
           echo "Detailed output:"
-          bin/magento m:h:c:c --show-all --detailed
+          bin/magento mageforge:hyva:compatibility:check --show-all --detailed
 
       - name: Test Theme Cleaner
         working-directory: magento2
@@ -139,7 +139,6 @@ jobs:
           bin/magento mageforge:theme:clean --all --dry-run
 
           echo "Test aliases:"
-          bin/magento m:t:c --help
           bin/magento frontend:clean --help
 
       - name: Test Theme Name Suggestions
@@ -154,6 +153,20 @@ jobs:
 
           echo "CleanCommand with invalid name:"
           bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - suggestions shown"
+
+      - name: Test Copy From Vendor
+        working-directory: magento2
+        run: |
+          echo "=== Copy From Vendor Tests ==="
+
+          echo "Test help command:"
+          bin/magento mageforge:theme:copy-from-vendor --help
+
+          echo "Test with dry-run (no actual copying):"
+          bin/magento mageforge:theme:copy-from-vendor Magento/blank hyva-themes/magento2-default-theme::src/etc/view.xml --dry-run || echo "Expected: may fail if file doesn't exist"
+
+          echo "Test aliases:"
+          bin/magento theme:copy --help
 
       - name: Test Inspector Status
         working-directory: magento2
@@ -496,7 +509,6 @@ jobs:
           bin/magento mageforge:theme:build Magento/blank --verbose || echo "Build attempted (may need additional setup)"
 
           echo "Test build aliases:"
-          bin/magento m:t:b --help
           bin/magento frontend:build --help
 
       - name: Test Summary
