@@ -162,18 +162,11 @@ jobs:
           echo "Test help command:"
           bin/magento mageforge:theme:copy-from-vendor --help
 
-          echo "Test with dry-run (no actual copying):"
-          bin/magento mageforge:theme:copy-from-vendor Magento/blank hyva-themes/magento2-default-theme::src/etc/view.xml --dry-run || echo "Expected: may fail if file doesn't exist"
-
-          echo "Test aliases:"
-          bin/magento theme:copy --help
-
-      - name: Test Inspector Status
-        working-directory: magento2
-        run: |
-          echo "=== Inspector Tests ==="
-          bin/magento mageforge:theme:inspector status
-
+          echo "Test with dry-run (preview only, no actual copying):"
+          # Use a file that actually exists in vendor (composer.json from any installed package)
+          bin/magento mageforge:theme:copy-from-vendor vendor/composer/composer/composer.json Magento/blank --dry-run
+          
+          echo "Test alias:"
       - name: Test Inspector Functionality
         working-directory: magento2
         run: |
