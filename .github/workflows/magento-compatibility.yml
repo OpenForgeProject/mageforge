@@ -33,10 +33,12 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
       elasticsearch:
-        image: elasticsearch:7.17.0
+        image: elasticsearch:7.17.25
         env:
           discovery.type: single-node
-          JAVA_OPTS: "-Djdk.disableLastCgroup=true"
+          xpack.security.enabled: false
+        ports:
+          - 9200:9200
         options: --health-cmd="curl -s http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
@@ -133,6 +135,7 @@ jobs:
           bin/magento mageforge:theme:inspector --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
+          bin/magento mageforge:theme:copy-from-vendor --help
 
           echo "Verify command aliases work:"
           bin/magento frontend:list --help
@@ -272,6 +275,7 @@ jobs:
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
           bin/magento frontend:clean --help
+          bin/magento theme:copy --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
 
