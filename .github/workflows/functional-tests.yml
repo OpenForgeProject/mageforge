@@ -163,10 +163,12 @@ jobs:
           bin/magento mageforge:theme:copy-from-vendor --help
 
           echo "Test with dry-run (preview only, no actual copying):"
-          # Use a file that actually exists in vendor (composer.json from any installed package)
-          bin/magento mageforge:theme:copy-from-vendor vendor/composer/composer/composer.json Magento/blank --dry-run
+          # Use a real Magento module template file
+          bin/magento mageforge:theme:copy-from-vendor vendor/magento/module-catalog/view/frontend/templates/product/list.phtml Magento/blank --dry-run
           
           echo "Test alias:"
+          bin/magento theme:copy --help
+
       - name: Test Inspector Functionality
         working-directory: magento2
         run: |
