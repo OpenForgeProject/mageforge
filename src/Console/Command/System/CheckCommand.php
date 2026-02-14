@@ -10,6 +10,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Escaper;
 use Magento\Framework\HTTP\ClientFactory;
+use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,12 +26,16 @@ class CheckCommand extends AbstractCommand
     /**
      * @param ProductMetadataInterface $productMetadata
      * @param Escaper $escaper
+     * @param ResourceConnection $resourceConnection
+     * @param ClientFactory $httpClientFactory
+     * @param Shell $shell
      */
     public function __construct(
         private readonly ProductMetadataInterface $productMetadata,
         private readonly Escaper $escaper,
         private readonly ResourceConnection $resourceConnection,
-        private readonly ClientFactory $httpClientFactory
+        private readonly ClientFactory $httpClientFactory,
+        private readonly Shell $shell
     ) {
         parent::__construct();
     }
@@ -118,9 +123,13 @@ class CheckCommand extends AbstractCommand
      */
     private function getNodeVersion(): string
     {
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
-        exec('node -v 2>/dev/null', $output, $returnCode);
-        return $returnCode === 0 && !empty($output) ? trim($output[0], 'v') : 'Not installed';
+        try {
+            $output = trim($this->shell->execute('node -v 2>/dev/null'));
+        } catch (\Exception $e) {
+            return 'Not installed';
+        }
+
+        return $output !== '' ? ltrim($output, 'v') : 'Not installed';
     }
 
     /**
@@ -202,12 +211,14 @@ class CheckCommand extends AbstractCommand
      */
     private function getMysqlVersionViaClient(): ?string
     {
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
-        exec('mysql --version 2>/dev/null', $output, $returnCode);
-        if ($returnCode === 0 && !empty($output)) {
-            $versionString = $output[0];
-            preg_match('/Distrib ([0-9.]+)/', $versionString, $matches);
+        try {
+            $output = trim($this->shell->execute('mysql --version 2>/dev/null'));
+        } catch (\Exception $e) {
+            return null;
+        }
 
+        if ($output !== '') {
+            preg_match('/Distrib ([0-9.]+)/', $output, $matches);
             return isset($matches[1]) ? $matches[1] : null;
         }
 
@@ -301,13 +312,17 @@ class CheckCommand extends AbstractCommand
      */
     private function getComposerVersion(): string
     {
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
-        exec('composer --version 2>/dev/null', $output, $returnCode);
-        if ($returnCode !== 0 || empty($output)) {
+        try {
+            $output = trim($this->shell->execute('composer --version 2>/dev/null'));
+        } catch (\Exception $e) {
             return 'Not installed';
         }
 
-        preg_match('/Composer version ([^ ]+)/', $output[0], $matches);
+        if ($output === '') {
+            return 'Not installed';
+        }
+
+        preg_match('/Composer version ([^ ]+)/', $output, $matches);
         return isset($matches[1]) ? $matches[1] : 'Unknown';
     }
 
@@ -318,9 +333,13 @@ class CheckCommand extends AbstractCommand
      */
     private function getNpmVersion(): string
     {
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
-        exec('npm --version 2>/dev/null', $output, $returnCode);
-        return $returnCode === 0 && !empty($output) ? trim($output[0]) : 'Not installed';
+        try {
+            $output = trim($this->shell->execute('npm --version 2>/dev/null'));
+        } catch (\Exception $e) {
+            return 'Not installed';
+        }
+
+        return $output !== '' ? $output : 'Not installed';
     }
 
     /**
@@ -330,13 +349,17 @@ class CheckCommand extends AbstractCommand
      */
     private function getGitVersion(): string
     {
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- exec required to check external tool version
-        exec('git --version 2>/dev/null', $output, $returnCode);
-        if ($returnCode !== 0 || empty($output)) {
+        try {
+            $output = trim($this->shell->execute('git --version 2>/dev/null'));
+        } catch (\Exception $e) {
             return 'Not installed';
         }
 
-        preg_match('/git version (.+)/', $output[0], $matches);
+        if ($output === '') {
+            return 'Not installed';
+        }
+
+        preg_match('/git version (.+)/', $output, $matches);
         return isset($matches[1]) ? $matches[1] : 'Unknown';
     }
 
