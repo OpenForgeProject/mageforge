@@ -17,6 +17,26 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.12.0](https://github.com/OpenForgeProject/mageforge/compare/0.11.0...0.12.0) (2026-02-14)
+
+
+### Added
+
+* **actions:** replace elasticsearch with opensearch ([#137](https://github.com/OpenForgeProject/mageforge/issues/137)) ([cc8c534](https://github.com/OpenForgeProject/mageforge/commit/cc8c53428288a45b8ad645baf87623bf4a8b9a1f))
+
+
+### Fixed
+
+* correct font size and border radius in inspector CSS ([7bb3348](https://github.com/OpenForgeProject/mageforge/commit/7bb334806a134687bd06cf55e5f27682947f3c84))
+* phpcs errors ([#138](https://github.com/OpenForgeProject/mageforge/issues/138)) ([625c6da](https://github.com/OpenForgeProject/mageforge/commit/625c6da89882d19605713e4c295af713700890aa))
+* **phpcs:** refactor environment variable handling in commands ([#135](https://github.com/OpenForgeProject/mageforge/issues/135)) ([9c01ce5](https://github.com/OpenForgeProject/mageforge/commit/9c01ce5fe269c0b917c95b5804542c7ee7840af3))
+* update font settings and sizes in inspector CSS ([986ded6](https://github.com/OpenForgeProject/mageforge/commit/986ded6aeafe628c0549dc6d72f6ae119421d9df))
+
+
+### Documentation
+
+* update README with custom theme details and add inspector section ([084b528](https://github.com/OpenForgeProject/mageforge/commit/084b52815adb78b4292d748fc100a8be3994844c))
+
 ## [0.11.0](https://github.com/OpenForgeProject/mageforge/compare/0.10.3...0.11.0) (2026-02-10)
 
 
