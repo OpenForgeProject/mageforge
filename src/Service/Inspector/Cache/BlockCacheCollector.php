@@ -12,7 +12,6 @@ use Magento\Framework\View\LayoutInterface;
  *
  * Measures render time and extracts cache configuration with strict type safety (PHPStan Level 8).
  *
- * @package OpenForgeProject\MageForge
  */
 class BlockCacheCollector
 {
