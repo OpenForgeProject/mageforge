@@ -2,7 +2,7 @@
 
 ## Project Architecture
 
-**MageForge** is a CLI-based frontend toolkit for Magento 2, structured as a Magento module (`magento2-module`). The project uses a Builder Pattern architecture to support different theme types (Magento Standard, Hyvä, TailwindCSS, etc.).
+**MageForge** is a Magento 2 module (CLI-first) using a Builder Pattern for theme types.
 
 ### Core Structure
 
@@ -15,7 +15,7 @@
   /src/etc/di.xml      # DI configuration for commands & builders
 ```
 
-**Important**: Module code lives in `/src`, Magento installation in `/magento`. DDEV manages local dev environment.
+**Important**: Module code lives in `/src`, Magento installation in `/magento`. DDEV manages the local environment.
 
 ## Development Environment
 
@@ -40,7 +40,7 @@ ddev ssh                      # SSH into container
 **CRITICAL**: All Magento CLI commands MUST be executed from `/magento` directory using DDEV:
 
 ```bash
-cd /Users/melle/sites/private/mageforge/magento
+cd /path/to/repo/magento
 ddev magento <command>
 ```
 
@@ -184,7 +184,16 @@ class BuildCommand extends AbstractCommand
 
 ## Code Quality & Linting
 
-### Trunk Integration
+### PHP Quality
+
+Run these for PHP changes:
+
+```bash
+ddev phpcs
+ddev phpstan
+```
+
+### Trunk Integration (non-PHP)
 
 ```bash
 trunk check              # Run all enabled linters
@@ -194,31 +203,7 @@ trunk fmt                # Auto-format
 **Active Linters** (`.trunk/trunk.yaml`):
 
 - `actionlint`, `hadolint` (Docker), `markdownlint`, `prettier`, `shellcheck`, `yamllint`
-- **No PHPCS**: Use Magento Coding Standard manually instead (see below)
 - **No checkov**: Disabled due to tmpfile handling issues with Trunk
-
-### Magento Coding Standard
-
-```bash
-# In DDEV:
-ddev phpcs src/
-
-# Or locally:
-composer create-project magento/magento-coding-standard --stability=dev /tmp/mcs
-/tmp/mcs/vendor/bin/phpcs -p -s --standard=Magento2 src/
-```
-
-**User Settings**: JSON shorthand `{"php":"s=1,PER-CS-2.0,8.3>mag,typed,ro,ctor,enum>const,named,!FQN"}` means:
-
-- `s=1`: strict_types=1
-- `PER-CS-2.0`: PHP Extended Coding Style 2.0
-- `8.3>mag`: PHP 8.3+ over Magento conventions
-- `typed`: Type hints mandatory
-- `ro`: Prefer readonly properties
-- `ctor`: Constructor property promotion
-- `enum>const`: Enums before constants
-- `named`: Use named arguments
-- `!FQN`: No FQN in docblocks
 
 ## Git Workflow
 
@@ -229,17 +214,11 @@ fix/<issue-description>
 feature/<issue-description>
 ```
 
-**Current branch**: `fix/codequality` (per attachment)
-
 ### Commit Format
 
 ```bash
 #<issue-nr> - <message>
 ```
-
-Example: `#42 - Fix Hyvä builder detection logic`
-
-**VSCode**: Git Commit Message Helper extension auto-extracts issue number from branch name.
 
 ## Testing Strategy
 
@@ -282,36 +261,15 @@ bin/magento new-alias --help
 
 ## Frontend Inspector
 
-### Overview
-
-The **MageForge Inspector** is a developer tool allowing frontend inspection of Magento blocks, templates, and performance metrics directly in the browser.
-
-- **Frontend**: Alpine.js component (`src/view/frontend/web/js/inspector.js`)
-- **Backend**: `InspectorHints` decorator wraps blocks with JSON metadata in `<!-- MAGEFORGE_START ... -->` comments
-
-### Usage
-
-1. **Enable/Disable**:
-   ```bash
-   ddev magento mageforge:theme:inspector enable   # Enable (requires Developer Mode)
-   ddev magento mageforge:theme:inspector disable  # Disable
-   ddev magento mageforge:theme:inspector status   # Check status
-   ```
-
-2. **Browser Interaction**:
-   - **Toggle**: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
-   - **Features**:
-     - Inspect Element (Hover/Click)
-     - **Structure Tab**: Template path, Block class, Module name
-     - **Performance Tab**: PHP Render time, Cache status (Life time, Tags)
-     - **Web Vitals Tab**: LCP, CLS, INP metrics per element
-     - **Accessibility Tab**: ARIA roles, Contrast, Alt text
-
-### Implementation Details
-
-- **Decorator**: `OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints`
-- **Metadata Injection**: Wraps block HTML with `MAGEFORGE_START` and `MAGEFORGE_END` comments containing JSON data
-- **Performance**: Collects render time using `hrtime()` and cache stats via `BlockCacheCollector`
+- **Frontend**: `src/view/frontend/web/js/inspector.js`
+- **Backend**: `OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints`
+- **Enable/Disable**:
+    ```bash
+    ddev magento mageforge:theme:inspector enable
+    ddev magento mageforge:theme:inspector disable
+    ddev magento mageforge:theme:inspector status
+    ```
+- **Toggle**: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
 
 ## Common Pitfalls
 
