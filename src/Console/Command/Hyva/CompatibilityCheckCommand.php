@@ -367,8 +367,4 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->text($recommendation);
         }
     }
-
-    /**
-     * Check if running in an interactive terminal
-     */
 }
