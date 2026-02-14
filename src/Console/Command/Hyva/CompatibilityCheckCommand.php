@@ -34,12 +34,6 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const SCOPE_THIRD_PARTY = 'third-party';
     private const SCOPE_ALL = 'all';
 
-    /** @var array<string, string|null> */
-    private array $originalEnv = [];
-
-    /** @var array<string, string|null> */
-    private array $secureEnvStorage = [];
-
     public function __construct(
         private readonly CompatibilityChecker $compatibilityChecker
     ) {
@@ -372,116 +366,5 @@ class CompatibilityCheckCommand extends AbstractCommand
         foreach ($recommendations as $recommendation) {
             $this->io->text($recommendation);
         }
-    }
-
-    /**
-     * Check if running in an interactive terminal
-     */
-    private function isInteractiveTerminal(OutputInterface $output): bool
-    {
-        // Check if output is decorated (supports ANSI codes)
-        if (!$output->isDecorated()) {
-            return false;
-        }
-
-        // Check if STDIN is available and readable
-        if (!defined('STDIN') || !is_resource(STDIN)) {
-            return false;
-        }
-
-        // Check for common non-interactive environments
-        $nonInteractiveEnvs = [
-            'CI',
-            'GITHUB_ACTIONS',
-            'GITLAB_CI',
-            'JENKINS_URL',
-            'TEAMCITY_VERSION',
-        ];
-
-        foreach ($nonInteractiveEnvs as $env) {
-            if ($this->getEnvVar($env) || $this->getServerVar($env)) {
-                return false;
-            }
-        }
-
-        // Additional check: try to detect if running in a proper TTY
-        // phpcs:ignore Magento2.Security.InsecureFunction.Found -- shell_exec required for TTY detection
-        $sttyOutput = shell_exec('stty -g 2>/dev/null');
-        return !empty($sttyOutput);
-    }
-
-    /**
-     * Set environment for Laravel Prompts to work properly in Docker/DDEV
-     */
-    private function setPromptEnvironment(): void
-    {
-        // Store original values for reset
-        $this->originalEnv = [
-            'COLUMNS' => $this->getEnvVar('COLUMNS'),
-            'LINES' => $this->getEnvVar('LINES'),
-            'TERM' => $this->getEnvVar('TERM'),
-        ];
-
-        // Set terminal environment variables using safe method
-        $this->setEnvVar('COLUMNS', '100');
-        $this->setEnvVar('LINES', '40');
-        $this->setEnvVar('TERM', 'xterm-256color');
-    }
-
-    /**
-     * Reset terminal environment after prompts
-     */
-    private function resetPromptEnvironment(): void
-    {
-        // Reset environment variables to original state using secure methods
-        foreach ($this->originalEnv as $key => $value) {
-            if ($value === null) {
-                // Remove from our secure cache
-                $this->removeSecureEnvironmentValue($key);
-            } else {
-                // Restore original value using secure method
-                $this->setEnvVar($key, $value);
-            }
-        }
-    }
-
-    /**
-     * Securely remove environment variable from cache
-     */
-    private function removeSecureEnvironmentValue(string $name): void
-    {
-        unset($this->secureEnvStorage[$name]);
-    }
-
-    /**
-     * Simplified environment variable getter
-     */
-    private function getEnvVar(string $name): ?string
-    {
-        // Check secure storage first
-        if (isset($this->secureEnvStorage[$name])) {
-            return $this->secureEnvStorage[$name];
-        }
-
-        // Fall back to system environment
-        $value = getenv($name);
-        return $value !== false ? $value : null;
-    }
-
-    /**
-     * Simplified server variable getter
-     */
-    private function getServerVar(string $name): ?string
-    {
-        return $_SERVER[$name] ?? null;
-    }
-
-    /**
-     * Simplified environment variable setter
-     */
-    private function setEnvVar(string $name, string $value): void
-    {
-        $this->secureEnvStorage[$name] = $value;
-        putenv("$name=$value");
     }
 }
