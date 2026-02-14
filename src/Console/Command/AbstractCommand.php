@@ -40,6 +40,11 @@ abstract class AbstractCommand extends Command
     private array $secureEnvStorage = [];
 
     /**
+     * @var array<string, string|null>|null
+     */
+    private ?array $cachedEnv = null;
+
+    /**
      * Get the command name with proper group structure
      *
      * @param string $group The command group (e.g. 'theme', 'system')
@@ -294,10 +299,8 @@ abstract class AbstractCommand extends Command
      */
     private function getCachedEnvironmentVariables(): array
     {
-        static $cachedEnv = null;
-
-        if ($cachedEnv === null) {
-            $cachedEnv = [];
+        if ($this->cachedEnv === null) {
+            $this->cachedEnv = [];
             $allowedVars = [
                 'COLUMNS',
                 'LINES',
@@ -311,17 +314,17 @@ abstract class AbstractCommand extends Command
 
             foreach ($allowedVars as $var) {
                 if (isset($this->secureEnvStorage[$var])) {
-                    $cachedEnv[$var] = $this->secureEnvStorage[$var];
+                    $this->cachedEnv[$var] = $this->secureEnvStorage[$var];
                 } else {
                     $globalEnv = filter_input_array(INPUT_ENV) ?: [];
                     if (array_key_exists($var, $globalEnv)) {
-                        $cachedEnv[$var] = (string) $globalEnv[$var];
+                        $this->cachedEnv[$var] = (string) $globalEnv[$var];
                     }
                 }
             }
         }
 
-        return $cachedEnv;
+        return $this->cachedEnv;
     }
 
     /**
@@ -428,6 +431,7 @@ abstract class AbstractCommand extends Command
     private function clearEnvironmentCache(): void
     {
         $this->secureEnvStorage = [];
+        $this->cachedEnv = null;
     }
 
     /**
