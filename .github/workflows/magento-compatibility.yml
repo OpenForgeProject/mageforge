@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-elasticsearch:
-    name: Magento ${{ matrix.magento-version }} with PHP ${{ matrix.php-version }} Test
+  test-opensearch-247:
+    name: Magento ${{ matrix.magento-version }} with PHP ${{ matrix.php-version }} (OpenSearch) Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -17,10 +17,10 @@ jobs:
         include:
           - magento-version: "2.4.7"
             php-version: "8.3"
-            search-engine-name: "elasticsearch7"
+            search-engine-name: "opensearch"
           - magento-version: "2.4.7-p8"
             php-version: "8.3"
-            search-engine-name: "elasticsearch7"
+            search-engine-name: "opensearch"
 
     services:
       mysql:
@@ -32,14 +32,14 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      elasticsearch:
-        image: elasticsearch:7.17.0
+      opensearch:
+        image: opensearchproject/opensearch:2.11.0
         ports:
           - 9200:9200
         env:
           discovery.type: single-node
-          ES_JAVA_OPTS: -Xms512m -Xmx512m -Djava.io.tmpdir=/tmp
-          JVM_OPTS: -XX:-UseContainerSupport
+          plugins.security.disabled: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
         options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
@@ -96,9 +96,9 @@ jobs:
             --use-rewrites=1 \
             --backend-frontname=admin \
             --search-engine=${{ matrix.search-engine-name }} \
-            --elasticsearch-host=localhost \
-            --elasticsearch-port=9200 \
-            --elasticsearch-index-prefix=magento \
+            --opensearch-host=localhost \
+            --opensearch-port=9200 \
+            --opensearch-index-prefix=magento \
             --cleanup-database
 
       - name: Install MageForge Module from current commit
