@@ -403,10 +403,6 @@ abstract class AbstractCommand extends Command
      */
     private function setEnvVar(string $name, string $value): void
     {
-        if ($name === '') {
-            return;
-        }
-
         if (!preg_match('/^[A-Z_][A-Z0-9_]*$/', $name)) {
             return;
         }
