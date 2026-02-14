@@ -40,6 +40,11 @@ abstract class AbstractCommand extends Command
     private array $secureEnvStorage = [];
 
     /**
+     * @var array<string, string|null>|null
+     */
+    private ?array $cachedEnv = null;
+
+    /**
      * Get the command name with proper group structure
      *
      * @param string $group The command group (e.g. 'theme', 'system')
@@ -191,7 +196,7 @@ abstract class AbstractCommand extends Command
      * @param OutputInterface $output
      * @return bool
      */
-    private function isInteractiveTerminal(OutputInterface $output): bool
+    protected function isInteractiveTerminal(OutputInterface $output): bool
     {
         // Check if output supports ANSI
         if (!$output->isDecorated()) {
@@ -229,7 +234,7 @@ abstract class AbstractCommand extends Command
      *
      * @return void
      */
-    private function setPromptEnvironment(): void
+    protected function setPromptEnvironment(): void
     {
         // Store original values for restoration
         $this->originalEnv = [
@@ -249,7 +254,7 @@ abstract class AbstractCommand extends Command
      *
      * @return void
      */
-    private function resetPromptEnvironment(): void
+    protected function resetPromptEnvironment(): void
     {
         foreach ($this->originalEnv as $key => $value) {
             if ($value === null) {
@@ -261,49 +266,180 @@ abstract class AbstractCommand extends Command
     }
 
     /**
-     * Get environment variable value
-     *
-     * @param string $key
-     * @return string|null
+     * Safely get environment variable with sanitization
      */
-    private function getEnvVar(string $key): ?string
+    private function getEnvVar(string $name): ?string
     {
-        return getenv($key) ?: null;
+        $value = $this->getSecureEnvironmentValue($name);
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return $this->sanitizeEnvironmentValue($name, $value);
     }
 
     /**
-     * Get server variable value
-     *
-     * @param string $key
-     * @return string|null
+     * Securely retrieve environment variable without direct superglobal access
      */
-    private function getServerVar(string $key): ?string
+    private function getSecureEnvironmentValue(string $name): ?string
     {
-        return $_SERVER[$key] ?? null;
+        if (!preg_match('/^[A-Z_][A-Z0-9_]*$/', $name)) {
+            return null;
+        }
+
+        $envVars = $this->getCachedEnvironmentVariables();
+        return $envVars[$name] ?? null;
     }
 
     /**
-     * Set environment variable securely
+     * Cache and filter environment variables safely
      *
-     * @param string $key
-     * @param string $value
-     * @return void
+     * @return array<string, string|null>
      */
-    private function setEnvVar(string $key, string $value): void
+    private function getCachedEnvironmentVariables(): array
     {
-        $this->secureEnvStorage[$key] = $value;
-        putenv("$key=$value");
+        if ($this->cachedEnv === null) {
+            $this->cachedEnv = [];
+            $allowedVars = [
+                'COLUMNS',
+                'LINES',
+                'TERM',
+                'CI',
+                'GITHUB_ACTIONS',
+                'GITLAB_CI',
+                'JENKINS_URL',
+                'TEAMCITY_VERSION',
+            ];
+
+            foreach ($allowedVars as $var) {
+                if (isset($this->secureEnvStorage[$var])) {
+                    $this->cachedEnv[$var] = $this->secureEnvStorage[$var];
+                } else {
+                    $globalEnv = filter_input_array(INPUT_ENV) ?: [];
+                    if (array_key_exists($var, $globalEnv)) {
+                        $this->cachedEnv[$var] = (string) $globalEnv[$var];
+                    }
+                }
+            }
+        }
+
+        return $this->cachedEnv;
     }
 
     /**
-     * Remove environment variable securely
-     *
-     * @param string $key
-     * @return void
+     * Sanitize environment value based on variable type
      */
-    private function removeSecureEnvironmentValue(string $key): void
+    private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
-        unset($this->secureEnvStorage[$key]);
-        putenv($key);
+        return match ($name) {
+            'COLUMNS', 'LINES' => $this->sanitizeNumericValue($value),
+            'TERM' => $this->sanitizeTermValue($value),
+            'CI', 'GITHUB_ACTIONS', 'GITLAB_CI' => $this->sanitizeBooleanValue($value),
+            'JENKINS_URL', 'TEAMCITY_VERSION' => $this->sanitizeAlphanumericValue($value),
+            default => $this->sanitizeAlphanumericValue($value),
+        };
+    }
+
+    /**
+     * Sanitize numeric values (COLUMNS, LINES)
+     */
+    private function sanitizeNumericValue(string $value): ?string
+    {
+        $filtered = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 9999]]);
+        return $filtered !== false ? (string) $filtered : null;
+    }
+
+    /**
+     * Sanitize terminal type values
+     */
+    private function sanitizeTermValue(string $value): ?string
+    {
+        $sanitized = preg_replace('/[^a-zA-Z0-9\-]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
+        return (strlen($sanitized) > 0 && strlen($sanitized) <= 50) ? $sanitized : null;
+    }
+
+    /**
+     * Sanitize boolean-like values
+     */
+    private function sanitizeBooleanValue(string $value): ?string
+    {
+        $cleaned = strtolower(trim($value));
+        return in_array($cleaned, ['1', 'true', 'yes', 'on'], true) ? $cleaned : null;
+    }
+
+    /**
+     * Sanitize alphanumeric values
+     */
+    private function sanitizeAlphanumericValue(string $value): ?string
+    {
+        $sanitized = preg_replace('/[^\w\-.]/', '', $value);
+        if ($sanitized === null) {
+            return null;
+        }
+        return (strlen($sanitized) > 0 && strlen($sanitized) <= 255) ? $sanitized : null;
+    }
+
+    /**
+     * Safely get server variable with sanitization
+     */
+    private function getServerVar(string $name): ?string
+    {
+        if (!preg_match('/^[A-Z_][A-Z0-9_]*$/', $name)) {
+            return null;
+        }
+
+        $value = filter_input(INPUT_SERVER, $name);
+
+        if ($value === null || $value === false || $value === '') {
+            return null;
+        }
+
+        return $this->sanitizeAlphanumericValue((string) $value);
+    }
+
+    /**
+     * Safely set environment variable with validation
+     */
+    private function setEnvVar(string $name, string $value): void
+    {
+        if (!preg_match('/^[A-Z_][A-Z0-9_]*$/', $name)) {
+            return;
+        }
+
+        $sanitizedValue = $this->sanitizeEnvironmentValue($name, $value);
+
+        if ($sanitizedValue !== null) {
+            $this->setSecureEnvironmentValue($name, $sanitizedValue);
+        }
+    }
+
+    /**
+     * Securely store environment variable without direct superglobal access
+     */
+    private function setSecureEnvironmentValue(string $name, string $value): void
+    {
+        $this->secureEnvStorage[$name] = $value;
+    }
+
+    /**
+     * Clear the environment variable cache
+     */
+    private function clearEnvironmentCache(): void
+    {
+        $this->secureEnvStorage = [];
+        $this->cachedEnv = null;
+    }
+
+    /**
+     * Securely remove environment variable from cache
+     */
+    private function removeSecureEnvironmentValue(string $name): void
+    {
+        unset($this->secureEnvStorage[$name]);
+        $this->clearEnvironmentCache();
     }
 }
