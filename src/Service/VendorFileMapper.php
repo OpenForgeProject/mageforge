@@ -34,12 +34,16 @@ class VendorFileMapper
 
             // Check if source starts with this module path
             if (str_starts_with($sourcePath, $path . '/')) {
-                 $pathInsideModule = substr($sourcePath, strlen($path) + 1);
+                $pathInsideModule = substr($sourcePath, strlen($path) + 1);
 
-                 // Remove view/frontend/ or view/base/ from the path
-                 $cleanPath = (string) preg_replace('#^view/(frontend|base)/#', '', $pathInsideModule);
+                // Remove view/frontend/ or view/base/ from the path
+                $cleanPath = (string) preg_replace(
+                    '#^view/(frontend|base)/#',
+                    '',
+                    $pathInsideModule
+                );
 
-                 return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
+                return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
             }
         }
 
