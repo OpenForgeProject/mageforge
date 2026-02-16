@@ -26,13 +26,14 @@ class VendorFileMapper
      *
      * @param string $sourcePath
      * @param string $themePath
+     * @param string|null $themeArea Optional theme area (frontend/adminhtml), if not provided will be extracted from path
      * @return string
      * @throws RuntimeException
      */
-    public function mapToThemePath(string $sourcePath, string $themePath): string
+    public function mapToThemePath(string $sourcePath, string $themePath, ?string $themeArea = null): string
     {
         // 1. Determine target theme area (frontend or adminhtml)
-        $themeArea = $this->extractThemeArea($themePath);
+        $themeArea = $themeArea ?? $this->extractThemeArea($themePath);
 
         // 2. Normalize: Ensure $sourcePath is relative from Magento Root if it's absolute
         $rootPath = rtrim($this->directoryList->getRoot(), '/');

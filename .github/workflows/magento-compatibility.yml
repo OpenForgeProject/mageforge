@@ -147,6 +147,45 @@ jobs:
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
 
+      - name: Test Copy Command Functionality
+        working-directory: magento2
+        run: |
+          echo "Test: Copy frontend file to frontend theme (dry-run):"
+          bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
+            Magento/luma \
+            --dry-run
+
+          echo "Test: Copy base file to frontend theme (dry-run):"
+          bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-theme/view/base/web/css/print.css \
+            Magento/blank \
+            --dry-run
+
+          echo "Test: Verify non-view file is rejected:"
+          if bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/etc/di.xml \
+            Magento/luma \
+            --dry-run 2>&1 | grep -q "not under a view"; then
+            echo "✓ Non-view file correctly rejected"
+          else
+            echo "✗ Non-view file validation failed"
+            exit 1
+          fi
+
+          echo "Test: Verify cross-area mapping is rejected (frontend -> adminhtml):"
+          if bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
+            Magento/backend \
+            --dry-run 2>&1 | grep -q "Cannot map file from area"; then
+            echo "✓ Cross-area mapping correctly rejected"
+          else
+            echo "✗ Cross-area validation failed"
+            exit 1
+          fi
+
+          echo "All copy command tests passed!"
+
       - name: Test Summary
         run: |
           echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} completed"
@@ -279,6 +318,45 @@ jobs:
           bin/magento theme:copy --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
+
+      - name: Test Copy Command Functionality
+        working-directory: magento2
+        run: |
+          echo "Test: Copy frontend file to frontend theme (dry-run):"
+          bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
+            Magento/luma \
+            --dry-run
+
+          echo "Test: Copy base file to frontend theme (dry-run):"
+          bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-theme/view/base/web/css/print.css \
+            Magento/blank \
+            --dry-run
+
+          echo "Test: Verify non-view file is rejected:"
+          if bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/etc/di.xml \
+            Magento/luma \
+            --dry-run 2>&1 | grep -q "not under a view"; then
+            echo "✓ Non-view file correctly rejected"
+          else
+            echo "✗ Non-view file validation failed"
+            exit 1
+          fi
+
+          echo "Test: Verify cross-area mapping is rejected (frontend -> adminhtml):"
+          if bin/magento mageforge:theme:copy-from-vendor \
+            vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
+            Magento/backend \
+            --dry-run 2>&1 | grep -q "Cannot map file from area"; then
+            echo "✓ Cross-area mapping correctly rejected"
+          else
+            echo "✗ Cross-area validation failed"
+            exit 1
+          fi
+
+          echo "All copy command tests passed!"
 
       - name: Test Summary
         run: |

@@ -52,9 +52,9 @@ class CopyFromVendorCommand extends AbstractCommand
             : $sourceFileArg;
 
         $themeCode = $this->getThemeCode($input);
-        $themePath = $this->getThemePath($themeCode);
+        [$themePath, $themeArea] = $this->getThemePathAndArea($themeCode);
 
-        $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
+        $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath, $themeArea);
         $absoluteDestPath = $this->getAbsoluteDestPath($destinationPath, $rootPath);
 
         if ($isDryRun) {
@@ -117,14 +117,21 @@ class CopyFromVendorCommand extends AbstractCommand
         );
     }
 
-    private function getThemePath(string $themeCode): string
+    /**
+     * Get theme path and area from theme code
+     *
+     * @param string $themeCode
+     * @return array{0: string, 1: string} [themePath, themeArea]
+     */
+    private function getThemePathAndArea(string $themeCode): array
     {
         $theme = $this->themeList->getThemeByCode($themeCode);
         if (!$theme) {
             throw new \RuntimeException("Theme not found: $themeCode");
         }
 
-        $regName = $theme->getArea() . '/' . $theme->getCode();
+        $themeArea = $theme->getArea();
+        $regName = $themeArea . '/' . $theme->getCode();
         $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $regName);
 
         if (!$themePath) {
@@ -132,7 +139,7 @@ class CopyFromVendorCommand extends AbstractCommand
             $themePath = $theme->getFullPath();
         }
 
-        return $themePath;
+        return [$themePath, $themeArea];
     }
 
     private function getAbsoluteDestPath(string $destinationPath, string $rootPath): string
