@@ -169,7 +169,10 @@ class NodePackageManager
         if (!$this->isPackageJsonValid($path)) {
             $io->error('package.json is missing or contains invalid JSON.');
             $io->writeln('<fg=yellow>Fix:</>');
-            $io->writeln('  Verify package.json exists at: ' . $path . '/package.json');
+            $sanitizedPath = preg_replace('/[[:cntrl:]]/', '', $path);
+            $io->writeln(
+                '  Verify package.json exists at: ' . $sanitizedPath . '/package.json'
+            );
             return;
         }
 
