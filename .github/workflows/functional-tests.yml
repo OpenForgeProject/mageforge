@@ -162,10 +162,16 @@ jobs:
           echo "Test help command:"
           bin/magento mageforge:theme:copy-from-vendor --help
 
-          echo "Test alias:"
+          echo "Test alias help:"
           bin/magento theme:copy --help
+
+          echo "Test dry-run without required arguments (expect validation failure but command should execute):"
+          bin/magento mageforge:theme:copy-from-vendor --dry-run || echo "Expected failure - missing or invalid arguments for copy-from-vendor"
+
+          echo "Test alias dry-run without required arguments (expect validation failure but alias should execute):"
+          bin/magento theme:copy --dry-run || echo "Expected failure - missing or invalid arguments for theme:copy alias"
           
-          echo "✓ Copy from vendor command and alias available"
+          echo "✓ Copy from vendor command and alias available and basic execution paths exercised"
 
       - name: Test Inspector Functionality
         working-directory: magento2
