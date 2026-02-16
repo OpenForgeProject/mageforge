@@ -43,40 +43,35 @@ class CopyFromVendorCommand extends AbstractCommand
 
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        try {
-            $sourceFileArg = $input->getArgument('file');
-            $isDryRun = $input->getOption('dry-run');
-            $absoluteSourcePath = $this->getAbsoluteSourcePath($sourceFileArg);
+        $sourceFileArg = $input->getArgument('file');
+        $isDryRun = $input->getOption('dry-run');
+        $absoluteSourcePath = $this->getAbsoluteSourcePath($sourceFileArg);
 
-            // Update sourceFileArg if it was normalized to relative path
-            $rootPath = $this->directoryList->getRoot();
-            $sourceFile = str_starts_with($absoluteSourcePath, $rootPath . '/')
-                ? substr($absoluteSourcePath, strlen($rootPath) + 1)
-                : $sourceFileArg;
+        // Update sourceFileArg if it was normalized to relative path
+        $rootPath = $this->directoryList->getRoot();
+        $sourceFile = str_starts_with($absoluteSourcePath, $rootPath . '/')
+            ? substr($absoluteSourcePath, strlen($rootPath) + 1)
+            : $sourceFileArg;
 
-            $themeCode = $this->getThemeCode($input);
-            $themePath = $this->getThemePath($themeCode);
+        $themeCode = $this->getThemeCode($input);
+        $themePath = $this->getThemePath($themeCode);
 
-            $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
-            $absoluteDestPath = $this->getAbsoluteDestPath($destinationPath, $rootPath);
+        $destinationPath = $this->vendorFileMapper->mapToThemePath($sourceFile, $themePath);
+        $absoluteDestPath = $this->getAbsoluteDestPath($destinationPath, $rootPath);
 
-            if ($isDryRun) {
-                $this->showDryRunPreview($sourceFile, $absoluteDestPath, $rootPath);
-                return Cli::RETURN_SUCCESS;
-            }
-
-            if (!$this->confirmCopy($sourceFile, $absoluteDestPath, $rootPath)) {
-                return Cli::RETURN_SUCCESS;
-            }
-
-            $this->performCopy($absoluteSourcePath, $absoluteDestPath);
-            $this->io->success("File copied successfully.");
-
+        if ($isDryRun) {
+            $this->showDryRunPreview($sourceFile, $absoluteDestPath, $rootPath);
             return Cli::RETURN_SUCCESS;
-        } catch (\Exception $e) {
-            $this->io->error($e->getMessage());
-            return Cli::RETURN_FAILURE;
         }
+
+        if (!$this->confirmCopy($sourceFile, $absoluteDestPath, $rootPath)) {
+            return Cli::RETURN_SUCCESS;
+        }
+
+        $this->performCopy($absoluteSourcePath, $absoluteDestPath);
+        $this->io->success("File copied successfully.");
+
+        return Cli::RETURN_SUCCESS;
     }
 
     private function getAbsoluteSourcePath(string $sourceFile): string
