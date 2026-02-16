@@ -308,13 +308,23 @@ class NodePackageManager
             return false; // Directory doesn't exist yet, so no permission issues
         }
 
+        $testFile = $nodeModulesPath . '/.write-test-' . time();
+
         try {
             // Try to write a test file
-            $testFile = $nodeModulesPath . '/.write-test-' . uniqid('', true);
             $this->fileDriver->filePutContents($testFile, 'test');
             $this->fileDriver->deleteFile($testFile);
             return false;
         } catch (\Exception $e) {
+            if (is_file($testFile) && !@unlink($testFile)) {
+                error_log(
+                    sprintf(
+                        '[MageForge] Failed to clean up test file "%s": %s',
+                        $testFile,
+                        $e->getMessage()
+                    )
+                );
+            }
             return true;
         }
     }
