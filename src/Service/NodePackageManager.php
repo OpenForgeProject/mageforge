@@ -149,23 +149,7 @@ class NodePackageManager
         $io->error('Failed to install node modules.');
         $io->newLine();
 
-        // Check 1: npm availability
-        if (!$this->isCommandAvailable('npm')) {
-            $io->error('npm is not installed or not available in PATH.');
-            $io->writeln('<fg=yellow>Fix:</>');
-            $io->writeln('  Install Node.js and npm: https://nodejs.org/');
-            return;
-        }
-
-        // Check 2: node availability
-        if (!$this->isCommandAvailable('node')) {
-            $io->error('Node.js is not installed or not available in PATH.');
-            $io->writeln('<fg=yellow>Fix:</>');
-            $io->writeln('  Install Node.js: https://nodejs.org/');
-            return;
-        }
-
-        // Check 3: package.json validity
+        // Check 1: package.json validity (project-specific, quick check)
         if (!$this->isPackageJsonValid($path)) {
             $io->error('package.json is missing or contains invalid JSON.');
             $io->writeln('<fg=yellow>Fix:</>');
@@ -173,6 +157,22 @@ class NodePackageManager
             $io->writeln(
                 '  Verify package.json exists at: ' . $sanitizedPath . '/package.json'
             );
+            return;
+        }
+
+        // Check 2: npm availability
+        if (!$this->isCommandAvailable('npm')) {
+            $io->error('npm is not installed or not available in PATH.');
+            $io->writeln('<fg=yellow>Fix:</>');
+            $io->writeln('  Install Node.js and npm: https://nodejs.org/');
+            return;
+        }
+
+        // Check 3: node availability
+        if (!$this->isCommandAvailable('node')) {
+            $io->error('Node.js is not installed or not available in PATH.');
+            $io->writeln('<fg=yellow>Fix:</>');
+            $io->writeln('  Install Node.js: https://nodejs.org/');
             return;
         }
 
