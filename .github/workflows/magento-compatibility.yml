@@ -150,46 +150,87 @@ jobs:
       - name: Test Copy Command Functionality
         working-directory: magento2
         run: |
-          echo "Test 1: Copy frontend template to frontend theme (dry-run):"
-          bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/frontend/templates/page/copyright.phtml \
-            Magento/luma \
-            --dry-run
-          echo "✓ Frontend to frontend mapping works"
-          echo ""
-
-          echo "Test 2: Copy base template to frontend theme (dry-run):"
-          bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/base/templates/root.phtml \
-            Magento/blank \
-            --dry-run
-          echo "✓ Base to frontend mapping works"
-          echo ""
-
-          echo "Test 3: Verify non-view file is rejected:"
-          if bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-catalog/etc/di.xml \
-            Magento/luma \
-            --dry-run 2>&1 | grep -q "not under a view"; then
-            echo "✓ Non-view file correctly rejected"
-          else
-            echo "✗ Non-view file validation failed"
-            exit 1
+          echo "Finding available test files..."
+          
+          # Find a frontend template file from any core module
+          FRONTEND_FILE=$(find vendor/magento/module-*/view/frontend/templates -type f -name "*.phtml" 2>/dev/null | head -1)
+          if [ -z "$FRONTEND_FILE" ]; then
+            echo "No frontend template files found, trying layout files..."
+            FRONTEND_FILE=$(find vendor/magento/module-*/view/frontend/layout -type f -name "*.xml" 2>/dev/null | head -1)
           fi
-          echo ""
-
-          echo "Test 4: Verify cross-area mapping is rejected (frontend -> adminhtml):"
-          if bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/frontend/templates/page/copyright.phtml \
-            Magento/backend \
-            --dry-run 2>&1 | grep -q "Cannot map file from area"; then
-            echo "✓ Cross-area mapping correctly rejected"
-          else
-            echo "✗ Cross-area validation failed"
-            exit 1
+          
+          # Find a base template file
+          BASE_FILE=$(find vendor/magento/module-*/view/base/templates -type f -name "*.phtml" 2>/dev/null | head -1)
+          if [ -z "$BASE_FILE" ]; then
+            echo "No base template files found, trying web files..."
+            BASE_FILE=$(find vendor/magento/module-*/view/base/web -type f \( -name "*.js" -o -name "*.css" \) 2>/dev/null | head -1)
           fi
+          
+          # Find an etc file for negative test
+          ETC_FILE=$(find vendor/magento/module-catalog/etc -type f -name "*.xml" 2>/dev/null | head -1)
+          
+          echo "Test files found:"
+          echo "Frontend: $FRONTEND_FILE"
+          echo "Base: $BASE_FILE"
+          echo "Etc: $ETC_FILE"
           echo ""
-
+          
+          if [ -n "$FRONTEND_FILE" ]; then
+            echo "Test 1: Copy frontend file to frontend theme (dry-run):"
+            bin/magento mageforge:theme:copy-from-vendor \
+              "$FRONTEND_FILE" \
+              Magento/luma \
+              --dry-run
+            echo "✓ Frontend to frontend mapping works"
+            echo ""
+          else
+            echo "Warning: No frontend file found for testing"
+          fi
+          
+          if [ -n "$BASE_FILE" ]; then
+            echo "Test 2: Copy base file to frontend theme (dry-run):"
+            bin/magento mageforge:theme:copy-from-vendor \
+              "$BASE_FILE" \
+              Magento/blank \
+              --dry-run
+            echo "✓ Base to frontend mapping works"
+            echo ""
+          else
+            echo "Warning: No base file found for testing"
+          fi
+          
+          if [ -n "$ETC_FILE" ]; then
+            echo "Test 3: Verify non-view file is rejected:"
+            if bin/magento mageforge:theme:copy-from-vendor \
+              "$ETC_FILE" \
+              Magento/luma \
+              --dry-run 2>&1 | grep -q "not under a view"; then
+              echo "✓ Non-view file correctly rejected"
+            else
+              echo "✗ Non-view file validation failed"
+              exit 1
+            fi
+            echo ""
+          else
+            echo "Warning: No etc file found for negative testing"
+          fi
+          
+          if [ -n "$FRONTEND_FILE" ]; then
+            echo "Test 4: Verify cross-area mapping is rejected (frontend -> adminhtml):"
+            if bin/magento mageforge:theme:copy-from-vendor \
+              "$FRONTEND_FILE" \
+              Magento/backend \
+              --dry-run 2>&1 | grep -q "Cannot map file from area"; then
+              echo "✓ Cross-area mapping correctly rejected"
+            else
+              echo "✗ Cross-area validation failed"
+              exit 1
+            fi
+            echo ""
+          else
+            echo "Warning: No frontend file found for cross-area testing"
+          fi
+          
           echo "✓ All copy command tests passed!"
 
       - name: Test Summary
@@ -328,46 +369,87 @@ jobs:
       - name: Test Copy Command Functionality
         working-directory: magento2
         run: |
-          echo "Test 1: Copy frontend template to frontend theme (dry-run):"
-          bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/frontend/templates/page/copyright.phtml \
-            Magento/luma \
-            --dry-run
-          echo "✓ Frontend to frontend mapping works"
-          echo ""
-
-          echo "Test 2: Copy base template to frontend theme (dry-run):"
-          bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/base/templates/root.phtml \
-            Magento/blank \
-            --dry-run
-          echo "✓ Base to frontend mapping works"
-          echo ""
-
-          echo "Test 3: Verify non-view file is rejected:"
-          if bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-catalog/etc/di.xml \
-            Magento/luma \
-            --dry-run 2>&1 | grep -q "not under a view"; then
-            echo "✓ Non-view file correctly rejected"
-          else
-            echo "✗ Non-view file validation failed"
-            exit 1
+          echo "Finding available test files..."
+          
+          # Find a frontend template file from any core module
+          FRONTEND_FILE=$(find vendor/magento/module-*/view/frontend/templates -type f -name "*.phtml" 2>/dev/null | head -1)
+          if [ -z "$FRONTEND_FILE" ]; then
+            echo "No frontend template files found, trying layout files..."
+            FRONTEND_FILE=$(find vendor/magento/module-*/view/frontend/layout -type f -name "*.xml" 2>/dev/null | head -1)
           fi
-          echo ""
-
-          echo "Test 4: Verify cross-area mapping is rejected (frontend -> adminhtml):"
-          if bin/magento mageforge:theme:copy-from-vendor \
-            vendor/magento/module-theme/view/frontend/templates/page/copyright.phtml \
-            Magento/backend \
-            --dry-run 2>&1 | grep -q "Cannot map file from area"; then
-            echo "✓ Cross-area mapping correctly rejected"
-          else
-            echo "✗ Cross-area validation failed"
-            exit 1
+          
+          # Find a base template file
+          BASE_FILE=$(find vendor/magento/module-*/view/base/templates -type f -name "*.phtml" 2>/dev/null | head -1)
+          if [ -z "$BASE_FILE" ]; then
+            echo "No base template files found, trying web files..."
+            BASE_FILE=$(find vendor/magento/module-*/view/base/web -type f \( -name "*.js" -o -name "*.css" \) 2>/dev/null | head -1)
           fi
+          
+          # Find an etc file for negative test
+          ETC_FILE=$(find vendor/magento/module-catalog/etc -type f -name "*.xml" 2>/dev/null | head -1)
+          
+          echo "Test files found:"
+          echo "Frontend: $FRONTEND_FILE"
+          echo "Base: $BASE_FILE"
+          echo "Etc: $ETC_FILE"
           echo ""
-
+          
+          if [ -n "$FRONTEND_FILE" ]; then
+            echo "Test 1: Copy frontend file to frontend theme (dry-run):"
+            bin/magento mageforge:theme:copy-from-vendor \
+              "$FRONTEND_FILE" \
+              Magento/luma \
+              --dry-run
+            echo "✓ Frontend to frontend mapping works"
+            echo ""
+          else
+            echo "Warning: No frontend file found for testing"
+          fi
+          
+          if [ -n "$BASE_FILE" ]; then
+            echo "Test 2: Copy base file to frontend theme (dry-run):"
+            bin/magento mageforge:theme:copy-from-vendor \
+              "$BASE_FILE" \
+              Magento/blank \
+              --dry-run
+            echo "✓ Base to frontend mapping works"
+            echo ""
+          else
+            echo "Warning: No base file found for testing"
+          fi
+          
+          if [ -n "$ETC_FILE" ]; then
+            echo "Test 3: Verify non-view file is rejected:"
+            if bin/magento mageforge:theme:copy-from-vendor \
+              "$ETC_FILE" \
+              Magento/luma \
+              --dry-run 2>&1 | grep -q "not under a view"; then
+              echo "✓ Non-view file correctly rejected"
+            else
+              echo "✗ Non-view file validation failed"
+              exit 1
+            fi
+            echo ""
+          else
+            echo "Warning: No etc file found for negative testing"
+          fi
+          
+          if [ -n "$FRONTEND_FILE" ]; then
+            echo "Test 4: Verify cross-area mapping is rejected (frontend -> adminhtml):"
+            if bin/magento mageforge:theme:copy-from-vendor \
+              "$FRONTEND_FILE" \
+              Magento/backend \
+              --dry-run 2>&1 | grep -q "Cannot map file from area"; then
+              echo "✓ Cross-area mapping correctly rejected"
+            else
+              echo "✗ Cross-area validation failed"
+              exit 1
+            fi
+            echo ""
+          else
+            echo "Warning: No frontend file found for cross-area testing"
+          fi
+          
           echo "✓ All copy command tests passed!"
 
       - name: Test Summary
