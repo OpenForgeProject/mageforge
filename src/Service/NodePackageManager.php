@@ -310,7 +310,7 @@ class NodePackageManager
 
         try {
             // Try to write a test file
-            $testFile = $nodeModulesPath . '/.write-test-' . time();
+            $testFile = $nodeModulesPath . '/.write-test-' . uniqid('', true);
             $this->fileDriver->filePutContents($testFile, 'test');
             $this->fileDriver->deleteFile($testFile);
             return false;
