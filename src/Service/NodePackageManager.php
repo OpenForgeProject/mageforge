@@ -244,8 +244,8 @@ class NodePackageManager
     private function isCommandAvailable(string $command): bool
     {
         try {
-            $this->shell->execute('which ' . $command . ' > /dev/null 2>&1');
-            return true;
+            $output = trim($this->shell->execute($command . ' --version 2>/dev/null'));
+            return $output !== '';
         } catch (\Exception $e) {
             return false;
         }
