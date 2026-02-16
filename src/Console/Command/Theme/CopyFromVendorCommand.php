@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
-use InvalidArgumentException;
-use Laravel\Prompts\SearchPrompt;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Component\ComponentRegistrar;
