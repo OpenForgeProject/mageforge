@@ -17,8 +17,11 @@ if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
 	TARGET_PATH="$1"
 	shift # Remove the first argument
 
+	# If path starts with 'src/', convert to vendor path
+	if [[ "${TARGET_PATH}" =~ ^src/ ]]; then
+		TARGET_PATH="vendor/openforgeproject/mageforge/${TARGET_PATH}"
 	# If path doesn't exist from magento dir, try from workspace root
-	if [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
+	elif [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
 		TARGET_PATH="../${TARGET_PATH}"
 	fi
 fi
