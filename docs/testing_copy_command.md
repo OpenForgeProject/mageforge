@@ -239,13 +239,13 @@ The command should be tested in CI/CD pipeline:
   run: |
     # Test basic functionality
     bin/magento mageforge:theme:copy-from-vendor --help
-    
+
     # Test dry-run mode
     bin/magento mageforge:theme:copy-from-vendor \
       vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
       Magento/luma \
       --dry-run
-    
+
     # Test error handling
     if bin/magento mageforge:theme:copy-from-vendor \
       vendor/magento/module-catalog/etc/di.xml \
