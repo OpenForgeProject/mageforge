@@ -24,19 +24,7 @@ class VendorFileMapper
             $sourcePath = substr($sourcePath, strlen($rootPath) + 1);
         }
 
-        // 2. Detect "Nested Module" Pattern (Priority 1) - Works for Hyva Compat & Vendor Themes
-        // Regex search for a segment matching Vendor_Module (e.g. Magento_Catalog).
-        // Captures (Group 1): "Vendor_Module"
-        if (preg_match('/([A-Z][a-zA-Z0-9]*_[A-Z][a-zA-Z0-9]*)/', $sourcePath, $matches, PREG_OFFSET_CAPTURE)) {
-            $offset = $matches[1][1];
-
-            // Extract from Vendor_Module onwards (e.g. "Mollie_Payment/templates/file.phtml")
-            $relativePath = substr($sourcePath, $offset);
-
-            return rtrim($themePath, '/') . '/' . ltrim($relativePath, '/');
-        }
-
-        // 3. Detect "Standard Module" Pattern (Priority 2)
+        // 2. Detect "Standard Module" Pattern (Priority 1) - Best for Local Modules & Composer Packages
         $modules = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         foreach ($modules as $moduleName => $path) {
             // Normalize module path relative to root
@@ -53,6 +41,18 @@ class VendorFileMapper
 
                  return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
             }
+        }
+
+        // 3. Detect "Nested Module" Pattern (Priority 2) - Works for Hyva Compat & Vendor Themes
+        // Regex search for a segment matching Vendor_Module (e.g. Magento_Catalog).
+        // Captures (Group 1): "Vendor_Module"
+        if (preg_match('/([A-Z][a-zA-Z0-9]*_[A-Z][a-zA-Z0-9]*)/', $sourcePath, $matches, PREG_OFFSET_CAPTURE)) {
+            $offset = $matches[1][1];
+
+            // Extract from Vendor_Module onwards (e.g. "Mollie_Payment/templates/file.phtml")
+            $relativePath = substr($sourcePath, $offset);
+
+            return rtrim($themePath, '/') . '/' . ltrim($relativePath, '/');
         }
 
         // 4. Fallback
