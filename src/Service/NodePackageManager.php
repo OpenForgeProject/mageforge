@@ -327,12 +327,43 @@ class NodePackageManager
      */
     private function hasSufficientDiskSpace(string $path): bool
     {
+        // Resolve to an existing directory for disk_free_space().
+        $checkPath = $path;
+        if (
+            !$this->fileDriver->isExists($checkPath)
+            && !$this->fileDriver->isDirectory($checkPath)
+        ) {
+            $parent = dirname($checkPath);
+            while (
+                $parent !== $checkPath
+                && !$this->fileDriver->isExists($parent)
+                && !$this->fileDriver->isDirectory($parent)
+            ) {
+                $checkPath = $parent;
+                $parent = dirname($checkPath);
+            }
+
+            if (
+                !$this->fileDriver->isExists($parent)
+                && !$this->fileDriver->isDirectory($parent)
+            ) {
+                // If no existing parent can be found, skip the check.
+                return true;
+            }
+
+            $checkPath = $parent;
+        }
+
         try {
-            $freeSpace = disk_free_space($path);
-            // Require at least 100MB free space
+            $freeSpace = disk_free_space($checkPath);
+            // Require at least 100MB free space; this is a conservative
+            // lower bound to reduce the risk of npm/yarn installs failing
+            // due to running out of disk space when creating node_modules.
             return $freeSpace !== false && $freeSpace > 100 * 1024 * 1024;
         } catch (\Exception $e) {
-            return true; // If we can't check, assume it's fine
+            // If we can't check disk space (e.g. due to a warning/error),
+            // assume it's fine rather than blocking the operation.
+            return true;
         }
     }
 }
