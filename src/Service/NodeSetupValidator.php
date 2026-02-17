@@ -6,7 +6,7 @@ namespace OpenForgeProject\MageForge\Service;
 
 use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
+use function Laravel\Prompts\confirm;
 /**
  * Service for validating and restoring Node.js setup files for Magento Standard themes
  */
