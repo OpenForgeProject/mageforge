@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.13.0](https://github.com/OpenForgeProject/mageforge/compare/0.12.0...0.13.0) (2026-02-17)
+
+
+### Added
+
+* add NodeSetupValidator for validating Magento default setup files ([#142](https://github.com/OpenForgeProject/mageforge/issues/142)) ([3f36d43](https://github.com/OpenForgeProject/mageforge/commit/3f36d433a04ac31be0ca84f04cd4495245ecf52e))
+
 ## [0.12.0](https://github.com/OpenForgeProject/mageforge/compare/0.11.0...0.12.0) (2026-02-14)
 
 
