@@ -9,6 +9,7 @@ use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\GruntTaskRunner;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
+use OpenForgeProject\MageForge\Service\NodeSetupValidator;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
@@ -28,7 +29,8 @@ class Builder implements BuilderInterface
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
         private readonly NodePackageManager $nodePackageManager,
-        private readonly GruntTaskRunner $gruntTaskRunner
+        private readonly GruntTaskRunner $gruntTaskRunner,
+        private readonly NodeSetupValidator $nodeSetupValidator
     ) {
     }
 
@@ -90,6 +92,13 @@ class Builder implements BuilderInterface
         OutputInterface $output,
         bool $isVerbose
     ): bool {
+        $rootPath = '.';
+
+        // Validate and restore Node.js setup files if needed
+        if (!$this->nodeSetupValidator->validateAndRestore($rootPath, $io, $isVerbose)) {
+            return false;
+        }
+
         // Check if Node/Grunt setup exists
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
             return false;

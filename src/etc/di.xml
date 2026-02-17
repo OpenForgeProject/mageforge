@@ -72,4 +72,12 @@
                   <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
             </arguments>
       </type>
+
+      <!-- Configure NodeSetupValidator Service -->
+      <type name="OpenForgeProject\MageForge\Service\NodeSetupValidator">
+            <arguments>
+                  <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+                  <argument name="nodePackageManager" xsi:type="object">OpenForgeProject\MageForge\Service\NodePackageManager</argument>
+            </arguments>
+      </type>
 </config>
