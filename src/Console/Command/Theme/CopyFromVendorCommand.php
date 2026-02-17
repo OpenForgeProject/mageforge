@@ -16,6 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\search;
 
 class CopyFromVendorCommand extends AbstractCommand
@@ -164,12 +165,32 @@ class CopyFromVendorCommand extends AbstractCommand
         ]);
         $this->io->newLine();
 
-        if (file_exists($absoluteDestPath)) {
-            $this->io->warning("File already exists at destination!");
-            return $this->io->confirm('Overwrite existing file?', false);
-        }
+        $this->setPromptEnvironment();
 
-        return $this->io->confirm('Proceed with copy?', true);
+        try {
+            if (file_exists($absoluteDestPath)) {
+                $this->io->warning("File already exists at destination!");
+                $result = confirm(
+                    label: 'Overwrite existing file?',
+                    default: false
+                );
+                \Laravel\Prompts\Prompt::terminal()->restoreTty();
+                $this->resetPromptEnvironment();
+                return $result;
+            }
+
+            $result = confirm(
+                label: 'Proceed with copy?',
+                default: true
+            );
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
+            return $result;
+        } catch (\Exception $e) {
+            $this->resetPromptEnvironment();
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function performCopy(string $absoluteSourcePath, string $absoluteDestPath): void
@@ -208,10 +229,6 @@ class CopyFromVendorCommand extends AbstractCommand
 
     private function fixPromptEnvironment(): void
     {
-        if (getenv('DDEV_PROJECT')) {
-             putenv('COLUMNS=100');
-             putenv('LINES=40');
-             putenv('TERM=xterm-256color');
-        }
+        $this->setPromptEnvironment();
     }
 }
