@@ -2,6 +2,9 @@
 /magento/
 /magento-temp/
 
+# AI Skills
+/.agents/
+
 # Trunk - exclude everything except configuration
 /.trunk/*
 !/.trunk/trunk.yaml
