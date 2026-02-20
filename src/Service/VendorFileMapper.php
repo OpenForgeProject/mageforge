@@ -202,6 +202,7 @@ class VendorFileMapper
         return false;
     }
 
+
     /**
      * Check if module is a registered Hyva compatibility module and retrieve its original module.
      *
@@ -210,43 +211,98 @@ class VendorFileMapper
      */
     private function getOriginalModuleFromCompatRegistry(string $compatModuleName): ?string
     {
-        // Check if Hyva Compat Registry class exists (soft dependency)
-        if (!class_exists('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry')) {
-            return null;
+        // 1. Try Registry (via Emulated Area)
+        if (class_exists('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry')) {
+            try {
+                // Emulate frontend area to load proper DI configuration for CompatModuleRegistry
+                // as CLI commands run in global scope where frontend/di.xml is ignored.
+                /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry|null $registry */
+                $registry = $this->appState->emulateAreaCode(
+                    Area::AREA_FRONTEND,
+                    function () {
+                        // Use create() to ensure we get a fresh instance with the emulated configuration.
+                        // get() might return a cached instance from global scope (empty).
+                        return $this->objectManager->create('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry');
+                    }
+                );
+
+                if ($registry) {
+                    // Iterate through original modules to find if current module is a registered compat module
+                    // We call getOrigModules inside the emulation callback ideally, but here we got the object
+                    foreach ($registry->getOrigModules() as $originalModule) {
+                        // Get compat modules for this original module
+                        $compatModules = $registry->getCompatModulesFor($originalModule);
+
+                        // Check exact match first
+                        if (in_array($compatModuleName, $compatModules, true)) {
+                            return $originalModule;
+                        }
+
+                        // Fallback: Case-insensitive check
+                        foreach ($compatModules as $compatModule) {
+                            if (strnatcasecmp($compatModuleName, $compatModule) === 0) {
+                                return $originalModule;
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore errors here, continue to manual parsing
+            }
         }
 
+        // 2. Fallback: Manual XML parsing because CLI execution might miss frontend/di.xml config
+        return $this->parseCompatModuleXml($compatModuleName);
+    }
+
+    /**
+     * Manual fallback to parse etc/frontend/di.xml for compatibility registration.
+     * This is required because CLI runs in global scope and might not load frontend DI args.
+     *
+     * @param string $moduleName
+     * @return string|null
+     */
+    private function parseCompatModuleXml(string $moduleName): ?string
+    {
         try {
-            // Emulate frontend area to load proper DI configuration for CompatModuleRegistry
-            // as CLI commands run in global scope where frontend/di.xml is ignored.
-            $registry = $this->appState->emulateAreaCode(
-                Area::AREA_FRONTEND,
-                function () {
-                    // Use create() to ensure we get a fresh instance with the emulated configuration.
-                    // get() might return a cached instance from global scope (empty).
-                    return $this->objectManager->create('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry');
-                }
-            );
+            $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+            if (!$path) {
+                return null;
+            }
 
-            /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry */
-            // Iterate through original modules to find if current module is a registered compat module
-            foreach ($registry->getOrigModules() as $originalModule) {
-                // Get compat modules for this original module
-                $compatModules = $registry->getCompatModulesFor($originalModule);
-                
-                // Check exact match first
-                if (in_array($compatModuleName, $compatModules, true)) {
-                    return $originalModule;
-                }
+            $diPath = $path . '/etc/frontend/di.xml';
+            if (!file_exists($diPath)) {
+                return null;
+            }
 
-                // Fallback: Case-insensitive check (some modules handle naming inconsistently)
-                foreach ($compatModules as $compatModule) {
-                    if (strnatcasecmp($compatModuleName, $compatModule) === 0) {
-                        return $originalModule;
+            $xmlContent = file_get_contents($diPath);
+            if (!$xmlContent) {
+                return null;
+            }
+
+            // Simple Regex to extract original_module for this compat module
+            // We look for the item where compat_module is defined as our module name
+            // Then extract the sibling item original_module
+
+            // Pattern to match the array structure for compatModules argument
+            // <item name="..." xsi:type="array">
+            //    <item name="original_module" xsi:type="string">Original_Module</item>
+            //    <item name="compat_module" xsi:type="string">Compat_Module</item>
+            // </item>
+
+            // Note: Order of items inside the array is not guaranteed, so we check if the block contains our module name as compat_module
+
+            if (preg_match_all('/<item\s+name="[^"]+"\s+xsi:type="array">(.*?)<\/item>/s', $xmlContent, $matches)) {
+                foreach ($matches[1] as $block) {
+                    if (str_contains($block, $moduleName)) {
+                        // This block likely belongs to our module. Extract original_module
+                        if (preg_match('/<item\s+name="original_module"\s+xsi:type="string">([^<]+)<\/item>/', $block, $origMatch)) {
+                            return $origMatch[1];
+                        }
                     }
                 }
             }
         } catch (\Throwable $e) {
-            // If anything fails (e.g. DI config issues), fallback to standard mapping
             return null;
         }
 
