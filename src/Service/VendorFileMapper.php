@@ -14,10 +14,12 @@ class VendorFileMapper
     /**
      * @param ComponentRegistrarInterface $componentRegistrar
      * @param DirectoryList $directoryList
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
      */
     public function __construct(
         private readonly ComponentRegistrarInterface $componentRegistrar,
-        private readonly DirectoryList $directoryList
+        private readonly DirectoryList $directoryList,
+        private readonly \Magento\Framework\ObjectManagerInterface $objectManager
     ) {
     }
 
@@ -55,6 +57,23 @@ class VendorFileMapper
 
                 // Validate area and extract clean path
                 $cleanPath = $this->validateAndExtractViewPath($pathInsideModule, $themeArea, $sourcePath);
+
+                // Priority 1A: Check if this is a Hyva Compatibility Module
+                // If so, map to its registered "original_module"
+                $originalModule = $this->getOriginalModuleFromCompatRegistry($moduleName);
+                if ($originalModule) {
+                    // Start with clean path (e.g. templates/Original_Module/foo.phtml or templates/foo.phtml)
+                    $targetPath = ltrim($cleanPath, '/');
+
+                    // If path contains the Original Module name as a subdirectory (Hyva convention), strip it
+                    // Example: templates/Mollie_Payment/foo.phtml -> templates/foo.phtml
+                    // This prevents Theme/Mollie_Payment/templates/Mollie_Payment/foo.phtml
+                    if (str_contains($targetPath, '/' . $originalModule . '/')) {
+                        $targetPath = str_replace('/' . $originalModule . '/', '/', $targetPath);
+                    }
+
+                    return rtrim($themePath, '/') . '/' . $originalModule . '/' . $targetPath;
+                }
 
                 return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
             }
@@ -173,5 +192,41 @@ class VendorFileMapper
         }
 
         return false;
+    }
+
+    /**
+     * Check if module is a registered Hyva compatibility module and retrieve its original module.
+     *
+     * @param string $compatModuleName
+     * @return string|null
+     */
+    private function getOriginalModuleFromCompatRegistry(string $compatModuleName): ?string
+    {
+        // Check if Hyva Compat Registry class exists (soft dependency)
+        // Note: class_exists takes a fully qualified class name string.
+        if (!class_exists('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry')) {
+            return null;
+        }
+
+        try {
+            /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry */
+            $registry = $this->objectManager->get('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry');
+
+            // Iterate through original modules to find if current module is a registered compat module
+            foreach ($registry->getOrigModules() as $originalModule) {
+                // Get compat modules for this original module
+                $compatModules = $registry->getCompatModulesFor($originalModule);
+                
+                // If our module is in the list, return the original module
+                if (in_array($compatModuleName, $compatModules, true)) {
+                    return $originalModule;
+                }
+            }
+        } catch (\Throwable $e) {
+            // If anything fails (e.g. DI config issues), fallback to standard mapping
+            return null;
+        }
+
+        return null;
     }
 }
