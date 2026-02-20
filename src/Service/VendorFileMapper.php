@@ -257,7 +257,7 @@ class VendorFileMapper
 
     /**
      * Manual fallback to parse etc/frontend/di.xml for compatibility registration.
-     * This is required because CLI runs in global scope and might not load frontend DI args.
+     * Use DOMDocument for robust XML parsing.
      *
      * @param string $moduleName
      * @return string|null
@@ -270,36 +270,66 @@ class VendorFileMapper
                 return null;
             }
 
-            $diPath = $path . '/etc/frontend/di.xml';
-            if (!file_exists($diPath)) {
-                return null;
+            // Check frontend/di.xml first, then global di.xml
+            $diFile = $path . '/etc/frontend/di.xml';
+            $globalDiFile = $path . '/etc/di.xml';
+
+            $filesToCheck = [];
+            if (file_exists($diFile)) {
+                $filesToCheck[] = $diFile;
+            }
+            if (file_exists($globalDiFile)) {
+                $filesToCheck[] = $globalDiFile;
             }
 
-            $xmlContent = file_get_contents($diPath);
-            if (!$xmlContent) {
-                return null;
-            }
+            foreach ($filesToCheck as $diPath) {
+                if (!is_file($diPath)) { // Extra check for symlinks/is_file
+                    continue;
+                }
 
-            // Simple Regex to extract original_module for this compat module
-            // We look for the item where compat_module is defined as our module name
-            // Then extract the sibling item original_module
+                $content = file_get_contents($diPath);
+                if (!$content) {
+                    continue;
+                }
 
-            // Pattern to match the array structure for compatModules argument
-            // <item name="..." xsi:type="array">
-            //    <item name="original_module" xsi:type="string">Original_Module</item>
-            //    <item name="compat_module" xsi:type="string">Compat_Module</item>
-            // </item>
+                $dom = new \DOMDocument();
+                // Suppress warnings for malformed XML or namespace issues
+                $libxmlState = libxml_use_internal_errors(true);
+                $dom->loadXML($content);
+                libxml_use_internal_errors($libxmlState);
 
-            // Note: Order of items inside the array is not guaranteed, so we check if the block contains our module name as compat_module
+                $xpath = new \DOMXPath($dom);
+                // Register namespace? Usually not needed if query is correct
+                // Try to find the compatModules argument node
+                $query = "//argument[@name='compatModules'][@xsi:type='array']/item[@xsi:type='array']";
+                $items = $xpath->query($query);
 
-            if (preg_match_all('/<item\s+name="[^"]+"\s+xsi:type="array">(.*?)<\/item>/s', $xmlContent, $matches)) {
-                foreach ($matches[1] as $block) {
-                    if (str_contains($block, $moduleName)) {
-                        // This block likely belongs to our module. Extract original_module
-                        if (preg_match('/<item\s+name="original_module"\s+xsi:type="string">([^<]+)<\/item>/', $block, $origMatch)) {
-                            return $origMatch[1];
-                        }
-                    }
+                if ($items === false || $items->length === 0) {
+                    continue;
+                }
+
+                foreach ($items as $item) {
+                     // Check children items for compat_module/original_module keys
+                     $compatModuleValue = null;
+                     $originalModuleValue = null;
+
+                     /** @var \DOMElement $item */
+                     $childNodes = $xpath->query('item', $item);
+                     foreach ($childNodes as $childNode) {
+                         /** @var \DOMElement $childNode */
+                         $nameAttr = $childNode->getAttribute('name');
+                         $value = trim($childNode->nodeValue);
+
+                         if ($nameAttr === 'compat_module') {
+                             $compatModuleValue = $value;
+                         } elseif ($nameAttr === 'original_module') {
+                             $originalModuleValue = $value;
+                         }
+                     }
+
+                     if ($compatModuleValue === $moduleName && $originalModuleValue) {
+                         return $originalModuleValue;
+                     }
                 }
             }
         } catch (\Throwable $e) {
