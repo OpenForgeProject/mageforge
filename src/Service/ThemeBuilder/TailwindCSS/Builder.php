@@ -19,6 +19,15 @@ class Builder implements BuilderInterface
 {
     private const THEME_NAME = 'TailwindCSS';
 
+    /**
+     * @param Shell $shell
+     * @param File $fileDriver
+     * @param StaticContentDeployer $staticContentDeployer
+     * @param StaticContentCleaner $staticContentCleaner
+     * @param CacheCleaner $cacheCleaner
+     * @param SymlinkCleaner $symlinkCleaner
+     * @param NodePackageManager $nodePackageManager
+     */
     public function __construct(
         private readonly Shell $shell,
         private readonly File $fileDriver,
@@ -30,6 +39,12 @@ class Builder implements BuilderInterface
     ) {
     }
 
+    /**
+     * Detect whether the theme is a TailwindCSS theme (non-Hyva).
+     *
+     * @param string $themePath
+     * @return bool
+     */
     public function detect(string $themePath): bool
     {
         // normalize path
@@ -60,6 +75,16 @@ class Builder implements BuilderInterface
         return false;
     }
 
+    /**
+     * Build TailwindCSS theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
@@ -126,6 +151,15 @@ class Builder implements BuilderInterface
         return true;
     }
 
+    /**
+     * Validate and repair Node dependencies for the theme.
+     *
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
@@ -148,11 +182,26 @@ class Builder implements BuilderInterface
         return true;
     }
 
+    /**
+     * Get the builder name.
+     *
+     * @return string
+     */
     public function getName(): string
     {
         return self::THEME_NAME;
     }
 
+    /**
+     * Run watch mode for TailwindCSS theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {

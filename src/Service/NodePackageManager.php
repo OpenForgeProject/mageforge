@@ -13,6 +13,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodePackageManager
 {
+    /**
+     * @param Shell $shell
+     * @param FileDriver $fileDriver
+     */
     public function __construct(
         private readonly Shell $shell,
         private readonly FileDriver $fileDriver

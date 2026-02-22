@@ -86,6 +86,12 @@ class TokensCommand extends AbstractCommand
         return Cli::RETURN_SUCCESS;
     }
 
+    /**
+     * Resolve theme code from argument or interactive prompt.
+     *
+     * @param string|null $themeCode
+     * @return string|null
+     */
     private function selectTheme(?string $themeCode): ?string
     {
         if (!empty($themeCode)) {
@@ -112,6 +118,13 @@ class TokensCommand extends AbstractCommand
         }
     }
 
+    /**
+     * Validate that the theme exists and is a Hyva theme.
+     *
+     * @param string $themeCode
+     * @param OutputInterface $output
+     * @return string|null
+     */
     private function validateHyvaTheme(string $themeCode, OutputInterface $output): ?string
     {
         $themePath = $this->themePath->getPath($themeCode);
@@ -150,6 +163,13 @@ class TokensCommand extends AbstractCommand
         return $themePath;
     }
 
+    /**
+     * Validate that the tailwind directory exists for the theme.
+     *
+     * @param string $themePath
+     * @param string $themeCode
+     * @return string|null
+     */
     private function validateTailwindDirectory(string $themePath, string $themeCode): ?string
     {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
@@ -167,6 +187,14 @@ class TokensCommand extends AbstractCommand
         return $tailwindPath;
     }
 
+    /**
+     * Run token generation in the tailwind directory.
+     *
+     * @param string $tailwindPath
+     * @param string $themeCode
+     * @param bool $isVerbose
+     * @return bool
+     */
     private function generateTokens(string $tailwindPath, string $themeCode, bool $isVerbose): bool
     {
         if ($isVerbose) {
@@ -197,6 +225,14 @@ class TokensCommand extends AbstractCommand
         }
     }
 
+    /**
+     * Report and store generated token output.
+     *
+     * @param string $tailwindPath
+     * @param string $themePath
+     * @param string $themeCode
+     * @return void
+     */
     private function handleOutputFile(string $tailwindPath, string $themePath, string $themeCode): void
     {
         $isVendorTheme = str_contains($themePath, '/vendor/');
@@ -215,6 +251,13 @@ class TokensCommand extends AbstractCommand
         $this->io->newLine();
     }
 
+    /**
+     * Copy generated tokens to var/generated for vendor themes.
+     *
+     * @param string $sourceFilePath
+     * @param string $themeCode
+     * @return string
+     */
     private function copyToVarGenerated(string $sourceFilePath, string $themeCode): string
     {
         $currentDir = getcwd();

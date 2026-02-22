@@ -9,7 +9,6 @@ use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\GruntTaskRunner;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
-use OpenForgeProject\MageForge\Service\NodeSetupValidator;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
@@ -21,6 +20,16 @@ class Builder implements BuilderInterface
 {
     private const THEME_NAME = 'MagentoStandard';
 
+    /**
+     * @param Shell $shell
+     * @param File $fileDriver
+     * @param StaticContentDeployer $staticContentDeployer
+     * @param StaticContentCleaner $staticContentCleaner
+     * @param CacheCleaner $cacheCleaner
+     * @param SymlinkCleaner $symlinkCleaner
+     * @param NodePackageManager $nodePackageManager
+     * @param GruntTaskRunner $gruntTaskRunner
+     */
     public function __construct(
         private readonly Shell $shell,
         private readonly File $fileDriver,
@@ -29,11 +38,16 @@ class Builder implements BuilderInterface
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
         private readonly NodePackageManager $nodePackageManager,
-        private readonly GruntTaskRunner $gruntTaskRunner,
-        private readonly NodeSetupValidator $nodeSetupValidator
+        private readonly GruntTaskRunner $gruntTaskRunner
     ) {
     }
 
+    /**
+     * Detect whether the theme is a standard Magento theme.
+     *
+     * @param string $themePath
+     * @return bool
+     */
     public function detect(string $themePath): bool
     {
         // normalize path
@@ -45,6 +59,16 @@ class Builder implements BuilderInterface
             && !$this->fileDriver->isExists($themePath . '/web/tailwind');
     }
 
+    /**
+     * Build Magento standard theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
@@ -85,6 +109,12 @@ class Builder implements BuilderInterface
 
     /**
      * Process Node.js and Grunt setup
+     *
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
      */
     private function processNodeSetup(
         string $themePath,
@@ -92,13 +122,6 @@ class Builder implements BuilderInterface
         OutputInterface $output,
         bool $isVerbose
     ): bool {
-        $rootPath = '.';
-
-        // Validate and restore Node.js setup files if needed
-        if (!$this->nodeSetupValidator->validateAndRestore($rootPath, $io, $isVerbose)) {
-            return false;
-        }
-
         // Check if Node/Grunt setup exists
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
             return false;
@@ -113,6 +136,15 @@ class Builder implements BuilderInterface
         return $this->gruntTaskRunner->runTasks($io, $output, $isVerbose);
     }
 
+    /**
+     * Validate and repair Node/Grunt dependencies for the theme.
+     *
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         $rootPath = '.';
@@ -140,10 +172,12 @@ class Builder implements BuilderInterface
         return true;
     }
 
-
-
     /**
      * Install Grunt if it's missing
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
      */
     private function installGruntIfMissing(SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -172,6 +206,9 @@ class Builder implements BuilderInterface
 
     /**
      * Check for outdated packages and report them
+     *
+     * @param SymfonyStyle $io
+     * @return void
      */
     private function checkOutdatedPackages(SymfonyStyle $io): void
     {
@@ -186,6 +223,16 @@ class Builder implements BuilderInterface
         }
     }
 
+    /**
+     * Run watch mode for Magento standard theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         if (!$this->detect($themePath)) {
@@ -237,6 +284,11 @@ class Builder implements BuilderInterface
         return true;
     }
 
+    /**
+     * Get the builder name.
+     *
+     * @return string
+     */
     public function getName(): string
     {
         return self::THEME_NAME;

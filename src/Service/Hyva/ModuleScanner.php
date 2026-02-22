@@ -17,6 +17,10 @@ class ModuleScanner
     private const SCAN_EXTENSIONS = ['js', 'xml', 'phtml'];
     private const EXCLUDE_DIRECTORIES = ['Test', 'tests', 'node_modules', 'vendor'];
 
+    /**
+     * @param File $fileDriver
+     * @param IncompatibilityDetector $incompatibilityDetector
+     */
     public function __construct(
         private readonly File $fileDriver,
         private readonly IncompatibilityDetector $incompatibilityDetector
@@ -26,6 +30,7 @@ class ModuleScanner
     /**
      * Scan a module directory for compatibility issues
      *
+     * @param string $modulePath
      * @return array<string, mixed> Array with structure: ['files' => [], 'totalIssues' => int, 'criticalIssues' => int]
      */
     public function scanModule(string $modulePath): array
@@ -66,6 +71,7 @@ class ModuleScanner
     /**
      * Recursively find all relevant files in a directory
      *
+     * @param string $directory
      * @return array<int, string>
      */
     private function findRelevantFiles(string $directory): array
@@ -134,6 +140,9 @@ class ModuleScanner
 
     /**
      * Check if module has Hyvä compatibility package (public wrapper)
+     *
+     * @param string $modulePath
+     * @return bool
      */
     public function hasHyvaCompatibilityPackage(string $modulePath): bool
     {
@@ -168,6 +177,7 @@ class ModuleScanner
     /**
      * Get module info from composer.json
      *
+     * @param string $modulePath
      * @return array<string, mixed>
      */
     public function getModuleInfo(string $modulePath): array

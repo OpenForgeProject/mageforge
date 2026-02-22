@@ -9,6 +9,8 @@ use Magento\Framework\Data\OptionSourceInterface;
 class InspectorTheme implements OptionSourceInterface
 {
     /**
+     * Return available inspector themes as options.
+     *
      * @return array<int, array<string, string>>
      */
     public function toOptionArray(): array

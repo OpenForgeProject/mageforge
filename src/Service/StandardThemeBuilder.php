@@ -9,6 +9,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class StandardThemeBuilder
 {
+    /**
+     * Create a standard theme builder.
+     *
+     * @param DependencyChecker $dependencyChecker
+     * @param GruntTaskRunner $gruntTaskRunner
+     * @param StaticContentDeployer $staticContentDeployer
+     */
     public function __construct(
         private readonly DependencyChecker $dependencyChecker,
         private readonly GruntTaskRunner $gruntTaskRunner,
@@ -17,6 +24,8 @@ class StandardThemeBuilder
     }
 
     /**
+     * Build assets for a standard Magento theme.
+     *
      * @param string $themeCode
      * @param SymfonyStyle $io
      * @param OutputInterface $output

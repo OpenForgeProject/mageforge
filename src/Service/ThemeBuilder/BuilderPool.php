@@ -14,6 +14,12 @@ class BuilderPool
     ) {
     }
 
+    /**
+     * Get the first builder that matches the theme path.
+     *
+     * @param string $themePath
+     * @return BuilderInterface|null
+     */
     public function getBuilder(string $themePath): ?BuilderInterface
     {
         foreach ($this->builders as $builder) {
@@ -26,6 +32,8 @@ class BuilderPool
     }
 
     /**
+     * Get all registered builders.
+     *
      * @return BuilderInterface[]
      */
     public function getBuilders(): array

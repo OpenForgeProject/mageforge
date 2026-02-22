@@ -11,12 +11,25 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StaticContentDeployer
 {
+    /**
+     * @param Shell $shell
+     * @param State $state
+     */
     public function __construct(
         private readonly Shell $shell,
         private readonly State $state
     ) {
     }
 
+    /**
+     * Deploy static content for a theme when not in developer mode.
+     *
+     * @param string $themeCode
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function deploy(
         string $themeCode,
         SymfonyStyle $io,

@@ -5,18 +5,29 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Service;
 
 use Magento\Framework\Shell;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class GruntTaskRunner
 {
     private const GRUNT_PATH = 'node_modules/.bin/grunt';
 
+    /**
+     * @param Shell $shell
+     */
     public function __construct(
         private readonly Shell $shell
     ) {
     }
 
+    /**
+     * Run the standard Grunt clean and less tasks.
+     *
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function runTasks(
         SymfonyStyle $io,
         OutputInterface $output,

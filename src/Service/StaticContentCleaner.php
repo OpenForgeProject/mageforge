@@ -17,6 +17,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class StaticContentCleaner
 {
+    /**
+     * @param State $state
+     * @param ThemeCleaner $themeCleaner
+     */
     public function __construct(
         private readonly State $state,
         private readonly ThemeCleaner $themeCleaner

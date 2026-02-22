@@ -34,12 +34,20 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const SCOPE_THIRD_PARTY = 'third-party';
     private const SCOPE_ALL = 'all';
 
+    /**
+     * @param CompatibilityChecker $compatibilityChecker
+     */
     public function __construct(
         private readonly CompatibilityChecker $compatibilityChecker
     ) {
         parent::__construct();
     }
 
+    /**
+     * Configure command options.
+     *
+     * @return void
+     */
     protected function configure(): void
     {
         $this->setName($this->getCommandName('hyva', 'compatibility:check'))
@@ -71,6 +79,13 @@ class CompatibilityCheckCommand extends AbstractCommand
             );
     }
 
+    /**
+     * Execute compatibility check command.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         // Check if we're in interactive mode (no options provided)
@@ -88,6 +103,10 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Run interactive mode with Laravel Prompts
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
     private function runInteractiveMode(InputInterface $input, OutputInterface $output): int
     {
@@ -168,6 +187,10 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Run direct mode with command line options
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
     private function runDirectMode(InputInterface $input, OutputInterface $output): int
     {
@@ -183,6 +206,14 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * Run the actual compatibility scan
+     *
+     * @param bool $showAll
+     * @param bool $thirdPartyOnly
+     * @param bool $includeVendor
+     * @param bool $detailed
+     * @param bool $incompatibleOnly
+     * @param OutputInterface $output
+     * @return int
      */
     private function runScan(
         bool $showAll,

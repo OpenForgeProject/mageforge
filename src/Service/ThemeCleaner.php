@@ -16,6 +16,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class ThemeCleaner
 {
+    /**
+     * @param Filesystem $filesystem
+     */
     public function __construct(
         private readonly Filesystem $filesystem
     ) {
