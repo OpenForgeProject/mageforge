@@ -36,9 +36,11 @@ class WatchCommand extends AbstractCommand
     }
 
     /**
-     * {@inheritdoc}
+     * Configure command.
+     *
+     * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName($this->getCommandName('theme', 'watch'))
             ->setDescription('Watches theme files for changes and rebuilds them automatically')
@@ -57,7 +59,11 @@ class WatchCommand extends AbstractCommand
     }
 
     /**
-     * {@inheritdoc}
+     * Execute command.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {

@@ -27,7 +27,13 @@ interface BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool;
+    public function build(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool;
 
     /**
      * Get the builder name used for registration.
@@ -45,7 +51,12 @@ interface BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool;
+    public function autoRepair(
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool;
 
     /**
      * Run the theme watch process.
@@ -57,5 +68,11 @@ interface BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool;
+    public function watch(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool;
 }

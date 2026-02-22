@@ -58,7 +58,10 @@ class CompatibilityChecker
             'hasIncompatibilities' => false,
         ];
 
-        $io->text(sprintf('Scanning %d modules for Hyvä compatibility...', count($modules)));
+        $io->text(sprintf(
+            'Scanning %d modules for Hyvä compatibility...',
+            count($modules)
+        ));
         $io->newLine();
 
         foreach ($modules as $moduleName => $modulePath) {

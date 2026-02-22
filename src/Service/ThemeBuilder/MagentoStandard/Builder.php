@@ -69,14 +69,24 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
-    {
+    public function build(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -204,12 +214,12 @@ class Builder implements BuilderInterface
         }
     }
 
-    /**
-     * Check for outdated packages and report them
-     *
-     * @param SymfonyStyle $io
-     * @return void
-     */
+        /**
+         * Check for outdated packages and report them
+         *
+         * @param SymfonyStyle $io
+         * @return void
+         */
     private function checkOutdatedPackages(SymfonyStyle $io): void
     {
         try {
@@ -233,26 +243,42 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
-    {
+    public function watch(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Vendor themes cannot be watched (read-only)
         if ($this->isVendorTheme($themePath)) {
-            $io->error('Watch mode is not supported for vendor themes. Vendor themes are read-only and should have pre-built assets.');
+            $io->error(
+                'Watch mode is not supported for vendor themes. Vendor themes are read-only and '
+                . 'should have pre-built assets.'
+            );
             return false;
         }
 
         // Check if Node/Grunt setup is intentionally absent
         if (!$this->hasNodeSetup()) {
-            $io->error('Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, node_modules, or grunt-config.json found.');
+            $io->error(
+                'Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, '
+                . 'node_modules, or grunt-config.json found.'
+            );
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -305,10 +331,20 @@ class Builder implements BuilderInterface
     {
         $rootPath = '.';
 
-        return $this->fileDriver->isExists($rootPath . '/package.json')
-            || $this->fileDriver->isExists($rootPath . '/package-lock.json')
-            || $this->fileDriver->isExists($rootPath . '/gruntfile.js')
-            || $this->fileDriver->isExists($rootPath . '/grunt-config.json');
+        $files = [
+            'package.json',
+            'package-lock.json',
+            'gruntfile.js',
+            'grunt-config.json',
+        ];
+
+        foreach ($files as $file) {
+            if ($this->fileDriver->isExists($rootPath . '/' . $file)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

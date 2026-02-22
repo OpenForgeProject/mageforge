@@ -85,14 +85,24 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
-    {
+    public function build(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -139,7 +149,12 @@ class Builder implements BuilderInterface
         chdir($currentDir);
 
         // Deploy static content
-        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentDeployer->deploy(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -160,8 +175,12 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
-    {
+    public function autoRepair(
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
 
         // Check if node_modules is in sync with package-lock.json
@@ -169,7 +188,11 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->warning('Node modules out of sync or missing. Installing npm dependencies...');
             }
-            if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
+            if (!$this->nodePackageManager->installNodeModules(
+                $tailwindPath,
+                $io,
+                $isVerbose
+            )) {
                 return false;
             }
         }
@@ -202,14 +225,24 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
-    {
+    public function watch(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
