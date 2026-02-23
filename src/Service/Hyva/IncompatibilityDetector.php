@@ -114,7 +114,7 @@ class IncompatibilityDetector
             return [];
         }
 
-        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $extension = $this->getExtensionFromPath($filePath);
         $fileType = $this->mapExtensionToType($extension);
 
         if (!isset(self::INCOMPATIBLE_PATTERNS[$fileType])) {
@@ -150,9 +150,11 @@ class IncompatibilityDetector
     /**
      * Scan content lines for pattern matches
      *
-     * @param array<int, string> $lines
-     * @param array<int, array<string, mixed>> $patterns
+     * @param array $lines
+     * @param array $patterns
      * @return array<int, array<string, mixed>>
+     * @phpstan-param array<int, string> $lines
+     * @phpstan-param array<int, array<string, mixed>> $patterns
      */
     private function scanContentForPatterns(array $lines, array $patterns): array
     {
@@ -202,5 +204,23 @@ class IncompatibilityDetector
             self::SEVERITY_WARNING => '⚠',
             default => 'ℹ',
         };
+    }
+
+    /**
+     * Get file extension without using pathinfo().
+     *
+     * @param string $path
+     * @return string
+     */
+    private function getExtensionFromPath(string $path): string
+    {
+        $trimmed = rtrim($path, '/');
+        $pos = strrpos($trimmed, '/');
+        $basename = $pos === false ? $trimmed : substr($trimmed, $pos + 1);
+        $dot = strrpos($basename, '.');
+        if ($dot === false) {
+            return '';
+        }
+        return strtolower(substr($basename, $dot + 1));
     }
 }
