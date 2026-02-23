@@ -24,7 +24,8 @@ class Inspector extends Template
      * @param State $state
      * @param ScopeConfigInterface $scopeConfig
      * @param DevHelper $devHelper
-     * @param array<string, mixed> $data
+     * @param array $data
+     * @phpstan-param array<string, mixed> $data
      */
     public function __construct(
         Context $context,
