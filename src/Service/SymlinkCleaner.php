@@ -58,14 +58,14 @@ class SymlinkCleaner
 
             foreach ($items as $item) {
                 // Check if item is a symlink
-                if (is_link($item)) {
+                if ($this->isSymlink($item)) {
                     $this->fileDriver->deleteFile($item);
                     $deletedCount++;
 
                     if ($isVerbose) {
                         $io->writeln(sprintf(
                             '  <fg=yellow>⚠</> Removed symlink: %s',
-                            basename($item)
+                            $this->getBasename($item)
                         ));
                     }
                 }
@@ -90,5 +90,38 @@ class SymlinkCleaner
             }
             return true;
         }
+    }
+
+    /**
+     * Check if a path is a symlink using stat info.
+     *
+     * @param string $path
+     * @return bool
+     */
+    private function isSymlink(string $path): bool
+    {
+        try {
+            $stat = $this->fileDriver->stat($path);
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return (($stat['mode'] ?? 0) & 0120000) === 0120000;
+    }
+
+    /**
+     * Get basename without using basename().
+     *
+     * @param string $path
+     * @return string
+     */
+    private function getBasename(string $path): string
+    {
+        $trimmed = rtrim($path, '/');
+        $pos = strrpos($trimmed, '/');
+        if ($pos === false) {
+            return $trimmed;
+        }
+        return substr($trimmed, $pos + 1);
     }
 }
