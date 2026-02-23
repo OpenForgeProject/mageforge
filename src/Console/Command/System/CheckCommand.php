@@ -146,8 +146,16 @@ class CheckCommand extends AbstractCommand
     private function getLatestLtsNodeVersion(): string
     {
         try {
-            $nodeData = file_get_contents(self::NODE_LTS_URL);
-            if ($nodeData === false) {
+            $httpClient = $this->httpClientFactory->create();
+            $httpClient->setTimeout(2);
+            $httpClient->get(self::NODE_LTS_URL);
+
+            if ($httpClient->getStatus() !== 200) {
+                return 'Unknown';
+            }
+
+            $nodeData = $httpClient->getBody();
+            if ($nodeData === '') {
                 return 'Unknown';
             }
 
@@ -163,6 +171,9 @@ class CheckCommand extends AbstractCommand
             }
             return 'Unknown';
         } catch (\Exception $e) {
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to fetch latest Node.js LTS version: ' . $e->getMessage());
+            }
             return 'Unknown';
         }
     }
@@ -185,11 +196,6 @@ class CheckCommand extends AbstractCommand
             return $version;
         }
 
-        $version = $this->getMysqlVersionViaPdo();
-        if (!empty($version)) {
-            return $version;
-        }
-
         return 'Unknown';
     }
 
@@ -202,10 +208,14 @@ class CheckCommand extends AbstractCommand
     {
         try {
             $connection = $this->resourceConnection->getConnection();
-            $version = $connection->fetchOne('SELECT VERSION()');
+            $select = $connection->select()->from(null, new \Zend_Db_Expr('VERSION()'));
+            $version = $connection->fetchOne($select);
 
             return !empty($version) ? $version : null;
         } catch (\Exception $e) {
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read MySQL version via Magento connection: ' . $e->getMessage());
+            }
             return null;
         }
     }
@@ -220,6 +230,9 @@ class CheckCommand extends AbstractCommand
         try {
             $output = trim($this->shell->execute('mysql --version 2>/dev/null'));
         } catch (\Exception $e) {
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read MySQL version via client: ' . $e->getMessage());
+            }
             return null;
         }
 
@@ -229,66 +242,6 @@ class CheckCommand extends AbstractCommand
         }
 
         return null;
-    }
-
-    /**
-     * Get MySQL version via PDO connection
-     *
-     * @return string|null
-     */
-    private function getMysqlVersionViaPdo(): ?string
-    {
-        try {
-            $config = $this->getDatabaseConfig();
-
-            // Default values if nothing is found
-            $host = $config['host'] ?? 'localhost';
-            $port = $config['port'] ?? '3306';
-            $user = $config['user'] ?? 'root';
-            $pass = $config['pass'] ?? '';
-
-            $dsn = "mysql:host=$host;port=$port";
-            $pdo = new \PDO($dsn, $user, $pass, [\PDO::ATTR_TIMEOUT => 1]);
-            $stmt = $pdo->query('SELECT VERSION()');
-            if ($stmt === false) {
-                return null;
-            }
-
-            $version = $stmt->fetchColumn();
-
-            return !empty($version) ? (string)$version : null;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get database configuration from environment variables
-     *
-     * @return array<string, string>
-     */
-    private function getDatabaseConfig(): array
-    {
-        $envMapping = [
-            'host' => ['DB_HOST', 'MYSQL_HOST', 'MAGENTO_DB_HOST'],
-            'port' => ['DB_PORT', 'MYSQL_PORT', 'MAGENTO_DB_PORT', '3306'],
-            'user' => ['DB_USER', 'MYSQL_USER', 'MAGENTO_DB_USER'],
-            'pass' => ['DB_PASSWORD', 'MYSQL_PASSWORD', 'MAGENTO_DB_PASSWORD'],
-            'name' => ['DB_NAME', 'MYSQL_DATABASE', 'MAGENTO_DB_NAME'],
-        ];
-
-        $config = [];
-        foreach ($envMapping as $key => $envVars) {
-            foreach ($envVars as $env) {
-                $value = $this->getEnvironmentVariable($env);
-                if ($value !== null) {
-                    $config[$key] = $value;
-                    break;
-                }
-            }
-        }
-
-        return $config;
     }
 
     /**
@@ -439,7 +392,9 @@ class CheckCommand extends AbstractCommand
                 return $resolverResult;
             }
         } catch (\Exception $e) {
-            // Ignore general exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read search engine config from Magento: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -469,7 +424,9 @@ class CheckCommand extends AbstractCommand
                 return ucfirst($engineConfig) . ' (Configured but not reachable)';
             }
         } catch (\Exception $e) {
-            // Ignore specific exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read search engine from deployment config: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -492,7 +449,9 @@ class CheckCommand extends AbstractCommand
                 }
             }
         } catch (\Exception $e) {
-            // Ignore specific exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read search engine via resolver: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -533,7 +492,9 @@ class CheckCommand extends AbstractCommand
                 }
             }
         } catch (\Exception $e) {
-            // Ignore
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to check search engine connections: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -573,7 +534,8 @@ class CheckCommand extends AbstractCommand
     /**
      * Format search engine version output
      *
-     * @param array<string, mixed> $info
+     * @param array $info
+     * @phpstan-param array<string, mixed> $info
      * @return string
      */
     private function formatSearchEngineVersion(array $info): string
@@ -607,7 +569,9 @@ class CheckCommand extends AbstractCommand
             // No fallback to native approaches anymore - rely on Magento's HTTP client only
             // This avoids using discouraged functions
         } catch (\Exception $e) {
-            // Ignore exceptions and return false
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Search engine connection check failed: ' . $e->getMessage());
+            }
         }
 
         return false;
@@ -636,7 +600,9 @@ class CheckCommand extends AbstractCommand
                 }
             }
         } catch (\Exception $e) {
-            // Ignore exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('HTTP client request failed for search engine: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -738,7 +704,9 @@ class CheckCommand extends AbstractCommand
                 return $serviceValue;
             }
         } catch (\Exception $e) {
-            // Ignore exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read Magento environment value: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -760,7 +728,9 @@ class CheckCommand extends AbstractCommand
                 return (string)$envValue;
             }
         } catch (\Exception $e) {
-            // Ignore exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read environment from deployment config: ' . $e->getMessage());
+            }
         }
 
         return null;
@@ -785,7 +755,9 @@ class CheckCommand extends AbstractCommand
                 }
             }
         } catch (\Exception $e) {
-            // Ignore exceptions
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to read environment from service: ' . $e->getMessage());
+            }
         }
 
         return null;
