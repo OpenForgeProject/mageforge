@@ -229,7 +229,9 @@ class Builder implements BuilderInterface
                 $io->writeln($outdated);
             }
         } catch (\Exception $e) {
-            // Ignore errors from npm outdated as it returns non-zero when packages are outdated
+            if ($io->isVerbose()) {
+                $io->warning('Failed to check outdated packages: ' . $e->getMessage());
+            }
         }
     }
 
