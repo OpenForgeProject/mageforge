@@ -214,12 +214,12 @@ class Builder implements BuilderInterface
         }
     }
 
-        /**
-         * Check for outdated packages and report them
-         *
-         * @param SymfonyStyle $io
-         * @return void
-         */
+    /**
+     * Check for outdated packages and report them
+     *
+     * @param SymfonyStyle $io
+     * @return void
+     */
     private function checkOutdatedPackages(SymfonyStyle $io): void
     {
         try {

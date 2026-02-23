@@ -196,8 +196,8 @@ class BlockCacheCollector
     /**
      * Check if current page is cacheable
      *
-        * Checks layout configuration to determine if page has cacheable="false" attribute.
-        * If any block on the page is marked as non-cacheable in layout XML, the page is non-cacheable.
+     * Checks layout configuration to determine if page has cacheable="false" attribute.
+     * If any block on the page is marked as non-cacheable in layout XML, the page is non-cacheable.
      *
      * @return bool True if page is cacheable, false otherwise
      */
@@ -236,12 +236,12 @@ class BlockCacheCollector
     /**
      * Format metrics for JSON export to frontend
      *
-        * @param array<string, mixed> $renderMetrics
-        * @param array<string, mixed> $cacheMetrics
-        * @return array<string, mixed>
-        * @phpstan-param RenderMetrics $renderMetrics
-        * @phpstan-param CacheInfo $cacheMetrics
-        * @phpstan-return FormattedMetrics
+     * @param array<string, mixed> $renderMetrics
+     * @param array<string, mixed> $cacheMetrics
+     * @return array<string, mixed>
+     * @phpstan-param RenderMetrics $renderMetrics
+     * @phpstan-param CacheInfo $cacheMetrics
+     * @phpstan-return FormattedMetrics
      */
     public function formatMetricsForJson(array $renderMetrics, array $cacheMetrics): array
     {
