@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
+use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Element\BlockInterface;
@@ -18,7 +19,7 @@ use OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector;
 class InspectorHints implements TemplateEngineInterface
 {
     /**
-     * Magento root path resolved at runtime.
+     * @var string
      */
     private string $magentoRoot;
 
@@ -27,22 +28,34 @@ class InspectorHints implements TemplateEngineInterface
      * @param bool $showBlockHints
      * @param Random $random
      * @param BlockCacheCollector $cacheCollector
+     * @param File $fileDriver
      */
     public function __construct(
         private readonly TemplateEngineInterface $subject,
         private readonly bool $showBlockHints,
         private readonly Random $random,
-        private readonly BlockCacheCollector $cacheCollector
+        private readonly BlockCacheCollector $cacheCollector,
+        private readonly File $fileDriver
     ) {
-        // Get Magento root directory - try multiple strategies
-        // 1. Try from BP constant (most reliable)
+        $this->magentoRoot = $this->resolveMagentoRoot();
+    }
+
+    /**
+     * Resolve Magento root directory.
+     */
+    private function resolveMagentoRoot(): string
+    {
         if (defined('BP')) {
-            $this->magentoRoot = BP;
-        } else {
-            // 2. Fallback: Calculate from file location (7 levels up)
-            // vendor/openforgeproject/mageforge/src/Model/TemplateEngine/Decorator/InspectorHints.php
-            $this->magentoRoot = dirname(__DIR__, 7);
+            return BP;
         }
+
+        // vendor/openforgeproject/mageforge/src/Model/TemplateEngine/Decorator/InspectorHints.php
+        $path = __DIR__;
+        for ($i = 0; $i < 7; $i++) {
+            $path = $this->fileDriver->getParentDirectory($path);
+        }
+
+        return $path;
     }
 
     /**
@@ -50,7 +63,8 @@ class InspectorHints implements TemplateEngineInterface
      *
      * @param BlockInterface $block
      * @param string $templateFile
-     * @param array<string, mixed> $dictionary
+     * @param array $dictionary
+     * @phpstan-param array<string, mixed> $dictionary
      * @return string
      */
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string
@@ -88,7 +102,8 @@ class InspectorHints implements TemplateEngineInterface
      * @param string $html
      * @param BlockInterface $block
      * @param string $templateFile
-     * @param array{renderTimeMs: float, startTime: int, endTime: int} $renderMetrics
+     * @param array $renderMetrics
+     * @phpstan-param array{renderTimeMs: float, startTime: int, endTime: int} $renderMetrics
      * @return string
      */
     private function injectInspectorAttributes(
