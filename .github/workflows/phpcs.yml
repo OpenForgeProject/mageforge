@@ -25,5 +25,4 @@ jobs:
         run: composer create-project magento/magento-coding-standard --stability=dev /tmp/magento-coding-standard
 
       - name: Run PHPCS
-        continue-on-error: true
         run: /tmp/magento-coding-standard/vendor/bin/phpcs -p -s --standard=Magento2 src/
