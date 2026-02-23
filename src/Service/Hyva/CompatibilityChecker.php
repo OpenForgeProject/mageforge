@@ -17,6 +17,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class CompatibilityChecker
 {
+    /**
+     * @param ComponentRegistrarInterface $componentRegistrar
+     * @param ModuleScanner $moduleScanner
+     */
     public function __construct(
         private readonly ComponentRegistrarInterface $componentRegistrar,
         private readonly ModuleScanner $moduleScanner
@@ -54,7 +58,10 @@ class CompatibilityChecker
             'hasIncompatibilities' => false,
         ];
 
-        $io->text(sprintf('Scanning %d modules for Hyvä compatibility...', count($modules)));
+        $io->text(sprintf(
+            'Scanning %d modules for Hyvä compatibility...',
+            count($modules)
+        ));
         $io->newLine();
 
         foreach ($modules as $moduleName => $modulePath) {
@@ -110,6 +117,9 @@ class CompatibilityChecker
 
     /**
      * Check if module is a vendor module
+     *
+     * @param string $modulePath
+     * @return bool
      */
     private function isVendorModule(string $modulePath): bool
     {
@@ -118,6 +128,9 @@ class CompatibilityChecker
 
     /**
      * Check if module is a core Magento module
+     *
+     * @param string $moduleName
+     * @return bool
      */
     private function isMagentoModule(string $moduleName): bool
     {
@@ -155,6 +168,7 @@ class CompatibilityChecker
      * Get status display string with colors
      *
      * @param array<string, mixed> $moduleData
+     * @return string
      */
     private function getStatusDisplay(array $moduleData): string
     {
@@ -177,6 +191,7 @@ class CompatibilityChecker
      * Get issues display string
      *
      * @param array<string, mixed> $moduleData
+     * @return string
      */
     private function getIssuesDisplay(array $moduleData): string
     {

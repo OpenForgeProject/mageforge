@@ -9,11 +9,23 @@ class BuilderFactory
     /** @var array<string, BuilderInterface> */
     private array $builders = [];
 
+    /**
+     * Register a builder by name.
+     *
+     * @param BuilderInterface $builder
+     * @return void
+     */
     public function addBuilder(BuilderInterface $builder): void
     {
         $this->builders[$builder->getName()] = $builder;
     }
 
+    /**
+     * Create a builder by type name.
+     *
+     * @param string $type
+     * @return BuilderInterface
+     */
     public function create(string $type): BuilderInterface
     {
         if (!isset($this->builders[$type])) {
@@ -24,6 +36,8 @@ class BuilderFactory
     }
 
     /**
+     * Get a list of available builder names.
+     *
      * @return array<string>
      */
     public function getAvailableBuilders(): array

@@ -19,6 +19,15 @@ class Builder implements BuilderInterface
 {
     private const THEME_NAME = 'HyvaThemes';
 
+    /**
+     * @param Shell $shell
+     * @param File $fileDriver
+     * @param StaticContentDeployer $staticContentDeployer
+     * @param StaticContentCleaner $staticContentCleaner
+     * @param CacheCleaner $cacheCleaner
+     * @param SymlinkCleaner $symlinkCleaner
+     * @param NodePackageManager $nodePackageManager
+     */
     public function __construct(
         private readonly Shell $shell,
         private readonly File $fileDriver,
@@ -30,6 +39,12 @@ class Builder implements BuilderInterface
     ) {
     }
 
+    /**
+     * Detect whether the theme is a Hyva theme.
+     *
+     * @param string $themePath
+     * @return bool
+     */
     public function detect(string $themePath): bool
     {
         // normalize path
@@ -60,14 +75,35 @@ class Builder implements BuilderInterface
         return false;
     }
 
-    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    /**
+     * Build Hyva theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
+    public function build(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool
     {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -89,7 +125,12 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
-        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentDeployer->deploy(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -99,6 +140,10 @@ class Builder implements BuilderInterface
 
     /**
      * Generate Hyva configuration
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
      */
     private function generateHyvaConfig(SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -119,6 +164,11 @@ class Builder implements BuilderInterface
 
     /**
      * Build the Hyva theme
+     *
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
      */
     private function buildTheme(string $themePath, SymfonyStyle $io, bool $isVerbose): bool
     {
@@ -155,6 +205,15 @@ class Builder implements BuilderInterface
         }
     }
 
+    /**
+     * Validate and repair Node dependencies for Hyva theme.
+     *
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
@@ -164,7 +223,11 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->warning('Node modules out of sync or missing. Installing dependencies...');
             }
-            if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
+            if (!$this->nodePackageManager->installNodeModules(
+                $tailwindPath,
+                $io,
+                $isVerbose
+            )) {
                 return false;
             }
         }
@@ -177,14 +240,35 @@ class Builder implements BuilderInterface
         return true;
     }
 
-    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    /**
+     * Run watch mode for Hyva theme assets.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
+    public function watch(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        OutputInterface $output,
+        bool $isVerbose
+    ): bool
     {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
+        if (!$this->staticContentCleaner->cleanIfNeeded(
+            $themeCode,
+            $io,
+            $output,
+            $isVerbose
+        )) {
             return false;
         }
 
@@ -223,6 +307,11 @@ class Builder implements BuilderInterface
         return true;
     }
 
+    /**
+     * Get the builder name.
+     *
+     * @return string
+     */
     public function getName(): string
     {
         return self::THEME_NAME;

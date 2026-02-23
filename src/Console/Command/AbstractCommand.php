@@ -267,6 +267,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Safely get environment variable with sanitization
+     *
+     * @param string $name
+     * @return string|null
      */
     private function getEnvVar(string $name): ?string
     {
@@ -281,6 +284,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Securely retrieve environment variable without direct superglobal access
+     *
+     * @param string $name
+     * @return string|null
      */
     private function getSecureEnvironmentValue(string $name): ?string
     {
@@ -329,6 +335,10 @@ abstract class AbstractCommand extends Command
 
     /**
      * Sanitize environment value based on variable type
+     *
+     * @param string $name
+     * @param string $value
+     * @return string|null
      */
     private function sanitizeEnvironmentValue(string $name, string $value): ?string
     {
@@ -343,6 +353,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Sanitize numeric values (COLUMNS, LINES)
+     *
+     * @param string $value
+     * @return string|null
      */
     private function sanitizeNumericValue(string $value): ?string
     {
@@ -352,6 +365,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Sanitize terminal type values
+     *
+     * @param string $value
+     * @return string|null
      */
     private function sanitizeTermValue(string $value): ?string
     {
@@ -364,6 +380,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Sanitize boolean-like values
+     *
+     * @param string $value
+     * @return string|null
      */
     private function sanitizeBooleanValue(string $value): ?string
     {
@@ -373,6 +392,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Sanitize alphanumeric values
+     *
+     * @param string $value
+     * @return string|null
      */
     private function sanitizeAlphanumericValue(string $value): ?string
     {
@@ -385,6 +407,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Safely get server variable with sanitization
+     *
+     * @param string $name
+     * @return string|null
      */
     private function getServerVar(string $name): ?string
     {
@@ -403,6 +428,10 @@ abstract class AbstractCommand extends Command
 
     /**
      * Safely set environment variable with validation
+     *
+     * @param string $name
+     * @param string $value
+     * @return void
      */
     private function setEnvVar(string $name, string $value): void
     {
@@ -419,6 +448,10 @@ abstract class AbstractCommand extends Command
 
     /**
      * Securely store environment variable without direct superglobal access
+     *
+     * @param string $name
+     * @param string $value
+     * @return void
      */
     private function setSecureEnvironmentValue(string $name, string $value): void
     {
@@ -436,6 +469,9 @@ abstract class AbstractCommand extends Command
 
     /**
      * Securely remove environment variable from cache
+     *
+     * @param string $name
+     * @return void
      */
     private function removeSecureEnvironmentValue(string $name): void
     {

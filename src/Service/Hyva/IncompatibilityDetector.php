@@ -94,6 +94,9 @@ class IncompatibilityDetector
         ],
     ];
 
+    /**
+     * @param File $fileDriver
+     */
     public function __construct(
         private readonly File $fileDriver
     ) {
@@ -102,6 +105,7 @@ class IncompatibilityDetector
     /**
      * Detect incompatibilities in a file
      *
+     * @param string $filePath
      * @return array<int, array<string, mixed>> Array of issues with keys: pattern, description, severity, line
      */
     public function detectInFile(string $filePath): array
@@ -129,6 +133,9 @@ class IncompatibilityDetector
 
     /**
      * Map file extension to pattern type
+     *
+     * @param string $extension
+     * @return string
      */
     private function mapExtensionToType(string $extension): string
     {
@@ -169,6 +176,9 @@ class IncompatibilityDetector
 
     /**
      * Get severity color for console output
+     *
+     * @param string $severity
+     * @return string
      */
     public function getSeverityColor(string $severity): string
     {
@@ -181,6 +191,9 @@ class IncompatibilityDetector
 
     /**
      * Get severity symbol
+     *
+     * @param string $severity
+     * @return string
      */
     public function getSeveritySymbol(string $severity): string
     {

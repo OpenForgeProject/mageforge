@@ -12,6 +12,33 @@ use Magento\Framework\View\LayoutInterface;
  *
  * Measures render time and extracts cache configuration with strict type safety (PHPStan Level 8).
  *
+ * @phpstan-type CacheInfo array{
+ *     cacheable: bool,
+ *     lifetime: int|null,
+ *     cacheKey: string,
+ *     cacheTags: array<int, string>,
+ *     pageCacheable: bool
+ * }
+ * @phpstan-type RenderMetrics array{
+ *     renderTimeMs: float,
+ *     startTime: int,
+ *     endTime: int
+ * }
+ * @phpstan-type PerformanceExport array{
+ *     renderTime: string,
+ *     timestamp: int
+ * }
+ * @phpstan-type CacheExport array{
+ *     cacheable: bool,
+ *     lifetime: int|null,
+ *     key: string,
+ *     tags: array<int, string>,
+ *     pageCacheable: bool
+ * }
+ * @phpstan-type FormattedMetrics array{
+ *     performance: PerformanceExport,
+ *     cache: CacheExport
+ * }
  */
 class BlockCacheCollector
 {
@@ -22,6 +49,7 @@ class BlockCacheCollector
         private readonly LayoutInterface $layout
     ) {
     }
+
     /**
      * Get cache information from block
      *
@@ -29,7 +57,8 @@ class BlockCacheCollector
      * to satisfy PHPStan Level 8 requirements.
      *
      * @param BlockInterface $block
-     * @return array{cacheable: bool, lifetime: int|null, cacheKey: string, cacheTags: array<int, string>, pageCacheable: bool}
+     * @return array<string, mixed>
+     * @phpstan-return CacheInfo
      */
     public function getCacheInfo(BlockInterface $block): array
     {
@@ -168,7 +197,7 @@ class BlockCacheCollector
      * Check if current page is cacheable
      *
      * Checks layout configuration to determine if page has cacheable="false" attribute.
-     * If ANY block on the page is marked as non-cacheable in layout XML, the entire page is non-cacheable.
+     * If any block on the page is marked as non-cacheable in layout XML, the page is non-cacheable.
      *
      * @return bool True if page is cacheable, false otherwise
      */
@@ -207,16 +236,22 @@ class BlockCacheCollector
     /**
      * Format metrics for JSON export to frontend
      *
-     * @param array{renderTimeMs: float, startTime: int, endTime: int} $renderMetrics
-     * @param array{cacheable: bool, lifetime: int|null, cacheKey: string, cacheTags: array<int, string>, pageCacheable: bool} $cacheMetrics
-     * @return array{performance: array{renderTime: string, timestamp: int}, cache: array{cacheable: bool, lifetime: int|null, key: string, tags: array<int, string>, pageCacheable: bool}}
+     * @param array<string, mixed> $renderMetrics
+     * @param array<string, mixed> $cacheMetrics
+     * @return array<string, mixed>
+     * @phpstan-param RenderMetrics $renderMetrics
+     * @phpstan-param CacheInfo $cacheMetrics
+     * @phpstan-return FormattedMetrics
      */
     public function formatMetricsForJson(array $renderMetrics, array $cacheMetrics): array
     {
+        $timestamp = (int) ($renderMetrics['startTime'] / 1_000_000_000);
+
         return [
             'performance' => [
                 'renderTime' => number_format($renderMetrics['renderTimeMs'], 2),
-                'timestamp' => (int)($renderMetrics['startTime'] / 1_000_000_000), // Convert ns to seconds
+                // Convert ns to seconds.
+                'timestamp' => $timestamp,
             ],
             'cache' => [
                 'cacheable' => $cacheMetrics['cacheable'],

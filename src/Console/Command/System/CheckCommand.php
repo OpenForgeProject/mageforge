@@ -41,7 +41,9 @@ class CheckCommand extends AbstractCommand
     }
 
     /**
-     * {@inheritdoc}
+     * Configure command.
+     *
+     * @return void
      */
     protected function configure(): void
     {
@@ -51,7 +53,11 @@ class CheckCommand extends AbstractCommand
     }
 
     /**
-     * {@inheritdoc}
+     * Execute command.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {

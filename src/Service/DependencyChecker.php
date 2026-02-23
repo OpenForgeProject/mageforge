@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Service;
 
 use Magento\Framework\Filesystem\Driver\File;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Magento\Framework\Shell;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DependencyChecker
 {
@@ -16,12 +16,23 @@ class DependencyChecker
     private const GRUNTFILE_SAMPLE = 'Gruntfile.js.sample';
     private const NODE_MODULES = 'node_modules';
 
+    /**
+     * @param File $fileDriver
+     * @param Shell $shell
+     */
     public function __construct(
         private readonly File $fileDriver,
         private readonly Shell $shell
     ) {
     }
 
+    /**
+     * Verify Magento frontend build dependencies and prompt for fixes.
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function checkDependencies(SymfonyStyle $io, bool $isVerbose): bool
     {
         if (!$this->checkPackageJson($io, $isVerbose) || !$this->checkNodeModules($io, $isVerbose)) {
@@ -33,6 +44,13 @@ class DependencyChecker
         return true;
     }
 
+    /**
+     * Ensure package.json exists, offering to copy from sample if needed.
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
     private function checkPackageJson(SymfonyStyle $io, bool $isVerbose): bool
     {
         if (!$this->fileDriver->isFile(self::PACKAGE_JSON)) {
@@ -62,6 +80,13 @@ class DependencyChecker
         return true;
     }
 
+    /**
+     * Ensure node_modules exists, offering to run npm install if needed.
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
     private function checkNodeModules(SymfonyStyle $io, bool $isVerbose): bool
     {
         if (!$this->fileDriver->isDirectory(self::NODE_MODULES)) {
@@ -92,6 +117,15 @@ class DependencyChecker
         return true;
     }
 
+    /**
+     * Ensure a file exists, offering to copy from a sample if present.
+     *
+     * @param SymfonyStyle $io
+     * @param string $file
+     * @param string $sampleFile
+     * @param bool $isVerbose
+     * @return bool
+     */
     private function checkFile(SymfonyStyle $io, string $file, string $sampleFile, bool $isVerbose): bool
     {
         if (!$this->fileDriver->isFile($file)) {

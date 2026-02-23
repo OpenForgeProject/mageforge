@@ -22,6 +22,13 @@ class InspectorCommand extends AbstractCommand
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
     private const ARGUMENT_ACTION = 'action';
 
+    /**
+     * @param WriterInterface $configWriter
+     * @param State $state
+     * @param CacheManager $cacheManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param string|null $name
+     */
     public function __construct(
         private readonly WriterInterface $configWriter,
         private readonly State $state,

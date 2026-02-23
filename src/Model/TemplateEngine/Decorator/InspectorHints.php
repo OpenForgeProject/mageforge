@@ -17,6 +17,9 @@ use OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector;
  */
 class InspectorHints implements TemplateEngineInterface
 {
+    /**
+     * Magento root path resolved at runtime.
+     */
     private string $magentoRoot;
 
     /**

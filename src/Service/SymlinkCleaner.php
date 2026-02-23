@@ -17,6 +17,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class SymlinkCleaner
 {
+    /**
+     * @param File $fileDriver
+     * @param State $state
+     */
     public function __construct(
         private readonly File $fileDriver,
         private readonly State $state

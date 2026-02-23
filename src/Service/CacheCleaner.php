@@ -9,11 +9,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class CacheCleaner
 {
+    /**
+     * @param Shell $shell
+     */
     public function __construct(
         private readonly Shell $shell
     ) {
     }
 
+    /**
+     * Clean Magento cache types used by frontend builds.
+     *
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
     public function clean(SymfonyStyle $io, bool $isVerbose): bool
     {
         try {
