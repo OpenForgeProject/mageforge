@@ -91,8 +91,7 @@ class Builder implements BuilderInterface
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose
-    ): bool
-    {
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
@@ -256,8 +255,7 @@ class Builder implements BuilderInterface
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose
-    ): bool
-    {
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
