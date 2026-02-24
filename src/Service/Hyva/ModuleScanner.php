@@ -203,7 +203,8 @@ class ModuleScanner
      */
     private function getBasename(string $path): string
     {
-        $trimmed = rtrim($path, '/');
+        $normalized = str_replace('\\', '/', $path);
+        $trimmed = rtrim($normalized, '/');
         $pos = strrpos($trimmed, '/');
         if ($pos === false) {
             return $trimmed;
