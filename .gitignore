@@ -1,9 +1,9 @@
+# AI Skills
+/.agents
+
 .vscode
 /magento/
 /magento-temp/
-
-# AI Skills
-/.agents/
 
 # Trunk - exclude everything except configuration
 /.trunk/*

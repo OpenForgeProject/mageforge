@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "github-actions-templates": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "7a28cb13b9fa427ae39c943ceb25d81f8135f848e1a1d434dc86a75926f51035"
+    },
+    "laravel-prompts": {
+      "source": "rawveg/skillsforge-marketplace",
+      "sourceType": "github",
+      "computedHash": "09a9aa1406cbfd4e20c7000cec0f12c74d2a3d657f404f1d05a3a57568188388"
+    }
+  }
+}

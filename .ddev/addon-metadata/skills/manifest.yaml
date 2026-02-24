@@ -1,9 +1,0 @@
-name: skills
-repository: OpenForgeProject/ddev-skills
-version: v1.3.1
-install_date: "2026-02-18T15:01:36+01:00"
-project_files:
-    - commands/web/skills
-    - .env.skills
-global_files: []
-removal_actions: []

@@ -16,7 +16,7 @@ web_environment: []
 corepack_enable: false
 hooks:
     post-start:
-        - exec-host: ddev skills
+        - exec-host: ddev npx skills experimental_install
 
 # Key features of DDEV's config.yaml:
 
