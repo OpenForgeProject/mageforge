@@ -214,7 +214,8 @@ class IncompatibilityDetector
      */
     private function getExtensionFromPath(string $path): string
     {
-        $trimmed = rtrim($path, '/');
+        $normalized = str_replace('\\', '/', $path);
+        $trimmed = rtrim($normalized, '/');
         $pos = strrpos($trimmed, '/');
         $basename = $pos === false ? $trimmed : substr($trimmed, $pos + 1);
         $dot = strrpos($basename, '.');
