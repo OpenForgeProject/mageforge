@@ -100,7 +100,13 @@ class SymlinkCleaner
      */
     private function isSymlink(string $path): bool
     {
-        return is_link($path);
+        try {
+            $stat = $this->fileDriver->stat($path);
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return (($stat['mode'] ?? 0) & 0120000) === 0120000;
     }
 
     /**
