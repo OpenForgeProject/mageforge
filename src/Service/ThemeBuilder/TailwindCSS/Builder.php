@@ -255,6 +255,20 @@ class Builder implements BuilderInterface
 
             $process = new Process(['npm', 'run', 'watch'], $tailwindPath);
             $process->setTimeout(null);
+
+            if (Process::isTtySupported() && $output->isDecorated()) {
+                try {
+                    $process->setTty(true);
+                } catch (\RuntimeException $exception) {
+                    if ($isVerbose) {
+                        $io->warning(
+                            'TTY mode is not supported in this environment; ' .
+                            'running watch without TTY.'
+                        );
+                    }
+                }
+            }
+
             $exitCode = $process->run(function ($type, $buffer) use ($output): void {
                 $output->write($buffer);
             });
