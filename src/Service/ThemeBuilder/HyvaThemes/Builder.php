@@ -284,7 +284,16 @@ class Builder implements BuilderInterface
             $isTty = defined('STDIN') && function_exists('stream_isatty')
                 && stream_isatty(STDIN); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
             if ($isTty && Process::isTtySupported()) {
-                $process->setTty(true);
+                try {
+                    $process->setTty(true);
+                } catch (\RuntimeException $exception) {
+                    if ($isVerbose) {
+                        $io->warning(
+                            'TTY is not supported in this environment; ' .
+                            'continuing without TTY.'
+                        );
+                    }
+                }
             }
 
             $exitCode = $process->run(function ($type, $buffer) use ($output): void {
