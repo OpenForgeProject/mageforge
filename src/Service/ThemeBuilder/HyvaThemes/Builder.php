@@ -14,6 +14,7 @@ use OpenForgeProject\MageForge\Service\SymlinkCleaner;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Process;
 
 class Builder implements BuilderInterface
 {
@@ -91,8 +92,7 @@ class Builder implements BuilderInterface
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose
-    ): bool
-    {
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
@@ -178,29 +178,19 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Change to tailwind directory and run build
-        $currentDir = getcwd();
-        if ($currentDir === false) {
-            $io->error('Cannot determine current directory');
-            return false;
-        }
-        chdir($tailwindPath);
-
         try {
             if ($isVerbose) {
                 $io->text('Running npm build...');
             }
             // Use --quiet only in non-verbose mode to suppress routine output
             $buildCommand = $isVerbose ? 'npm run build' : 'npm run build --quiet';
-            $this->shell->execute($buildCommand);
+            $this->shell->execute('cd %s && ' . $buildCommand, [$tailwindPath]);
             if ($isVerbose) {
                 $io->success('Hyvä theme build completed successfully.');
             }
-            chdir($currentDir);
             return true;
         } catch (\Exception $e) {
             $io->error('Failed to build Hyvä theme: ' . $e->getMessage());
-            chdir($currentDir);
             return false;
         }
     }
@@ -256,8 +246,7 @@ class Builder implements BuilderInterface
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose
-    ): bool
-    {
+    ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
@@ -289,12 +278,28 @@ class Builder implements BuilderInterface
                 $io->text('Starting watch mode... (use -v for verbose output)');
             }
 
-            chdir($tailwindPath);
-            $exitCode = 0;
-            // phpcs:ignore Magento2.Security.InsecureFunction.Found -- passthru required for interactive watch mode
-            passthru('npm run watch', $exitCode);
+            $process = new Process(['npm', 'run', 'watch'], $tailwindPath);
+            $process->setTimeout(null);
 
-            // Check if the command failed
+            $isTty = defined('STDIN') && function_exists('stream_isatty')
+                && stream_isatty(STDIN); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+            if ($isTty && Process::isTtySupported()) {
+                try {
+                    $process->setTty(true);
+                } catch (\RuntimeException $exception) {
+                    if ($isVerbose) {
+                        $io->warning(
+                            'TTY is not supported in this environment; ' .
+                            'continuing without TTY.'
+                        );
+                    }
+                }
+            }
+
+            $exitCode = $process->run(function ($type, $buffer) use ($output): void {
+                $output->write($buffer);
+            });
+
             if ($exitCode !== 0) {
                 $io->error(sprintf('Watch mode exited with error code: %d', $exitCode));
                 return false;

@@ -100,7 +100,9 @@ class VersionCommand extends AbstractCommand
                 return $data['tag_name'] ?? self::UNKNOWN_VERSION;
             }
         } catch (\Exception $e) {
-            // Fall through to return unknown
+            if ($this->io->isVerbose()) {
+                $this->io->warning('Failed to fetch latest version: ' . $e->getMessage());
+            }
         }
 
         return self::UNKNOWN_VERSION;

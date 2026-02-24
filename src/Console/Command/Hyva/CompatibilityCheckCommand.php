@@ -274,7 +274,8 @@ class CompatibilityCheckCommand extends AbstractCommand
     /**
      * Display compatibility check results
      *
-     * @param array<string, mixed> $results
+     * @param array $results
+     * @phpstan-param array<string, mixed> $results
      * @param bool $showAll
      */
     private function displayResults(array $results, bool $showAll): void
@@ -297,7 +298,8 @@ class CompatibilityCheckCommand extends AbstractCommand
     /**
      * Display detailed file-level issues
      *
-     * @param array<string, mixed> $results
+     * @param array $results
+     * @phpstan-param array<string, mixed> $results
      */
     private function displayDetailedIssues(array $results): void
     {
@@ -337,7 +339,8 @@ class CompatibilityCheckCommand extends AbstractCommand
     /**
      * Display summary statistics
      *
-     * @param array<string, mixed> $results
+     * @param array $results
+     * @phpstan-param array<string, mixed> $results
      */
     private function displaySummary(array $results): void
     {

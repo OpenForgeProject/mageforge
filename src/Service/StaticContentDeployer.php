@@ -49,10 +49,9 @@ class StaticContentDeployer
                 $io->text('Deploying static content...');
             }
 
-            $sanitizedThemeCode = escapeshellarg($themeCode);
             $shellOutput = $this->shell->execute(
                 "php bin/magento setup:static-content:deploy -t %s -f --quiet",
-                [$sanitizedThemeCode]
+                [$themeCode]
             );
 
             if ($isVerbose) {

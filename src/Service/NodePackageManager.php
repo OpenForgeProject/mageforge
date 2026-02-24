@@ -35,40 +35,30 @@ class NodePackageManager
      */
     public function installNodeModules(string $path, SymfonyStyle $io, bool $isVerbose): bool
     {
-        $currentDir = getcwd();
-        if ($currentDir === false) {
-            $io->error('Cannot determine current directory');
-            return false;
-        }
-
-        chdir($path);
-
         try {
             if ($this->fileDriver->isExists($path . '/package-lock.json')) {
                 try {
-                    $this->shell->execute('npm ci --quiet');
+                    $this->shell->execute('cd %s && npm ci --quiet', [$path]);
                 } catch (\Exception $e) {
                     if ($isVerbose) {
                         $io->warning('npm ci failed, falling back to npm install...');
                     }
-                    $this->shell->execute('npm install --quiet');
+                    $this->shell->execute('cd %s && npm install --quiet', [$path]);
                 }
             } else {
                 if ($isVerbose) {
                     $io->warning('No package-lock.json found, running npm install...');
                 }
-                $this->shell->execute('npm install --quiet');
+                $this->shell->execute('cd %s && npm install --quiet', [$path]);
             }
 
             if ($isVerbose) {
                 $io->success('Node modules installed successfully.');
             }
 
-            chdir($currentDir);
             return true;
         } catch (\Exception $e) {
             $io->error('Failed to install node modules: ' . $e->getMessage());
-            chdir($currentDir);
             return false;
         }
     }
@@ -94,19 +84,10 @@ class NodePackageManager
             return false;
         }
 
-        $currentDir = getcwd();
-        if ($currentDir === false) {
-            return false;
-        }
-
-        chdir($path);
-
         try {
-            $this->shell->execute('npm ls --depth=0 --json > /dev/null 2>&1');
-            chdir($currentDir);
+            $this->shell->execute('cd %s && npm ls --depth=0 --json > /dev/null 2>&1', [$path]);
             return true;
         } catch (\Exception $e) {
-            chdir($currentDir);
             return false;
         }
     }
@@ -120,23 +101,16 @@ class NodePackageManager
      */
     public function checkOutdatedPackages(string $path, SymfonyStyle $io): void
     {
-        $currentDir = getcwd();
-        if ($currentDir === false) {
-            return;
-        }
-
-        chdir($path);
-
         try {
-            $outdated = $this->shell->execute('npm outdated --json');
+            $outdated = $this->shell->execute('cd %s && npm outdated --json', [$path]);
             if ($outdated) {
                 $io->warning('Outdated packages found:');
                 $io->writeln($outdated);
             }
         } catch (\Exception $e) {
-            // npm outdated returns non-zero exit code when packages are outdated
+            if ($io->isVerbose()) {
+                $io->warning('Failed to check outdated packages: ' . $e->getMessage());
+            }
         }
-
-        chdir($currentDir);
     }
 }

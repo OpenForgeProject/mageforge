@@ -82,7 +82,7 @@ class ModuleScanner
             $items = $this->fileDriver->readDirectory($directory);
 
             foreach ($items as $item) {
-                $basename = basename($item);
+                $basename = $this->getBasename($item);
 
                 // Skip excluded directories
                 if ($this->fileDriver->isDirectory($item)) {
@@ -90,25 +90,21 @@ class ModuleScanner
                         continue;
                     }
                     // Recursively scan subdirectories
-                    $relevantFiles = array_merge($relevantFiles, $this->findRelevantFiles($item));
+                    foreach ($this->findRelevantFiles($item) as $childFile) {
+                        $relevantFiles[] = $childFile;
+                    }
                     continue;
                 }
 
                 // Check if file has relevant extension
-                $extension = pathinfo($item, PATHINFO_EXTENSION);
+                $extension = $this->getExtensionFromPath($item);
                 if (in_array($extension, self::SCAN_EXTENSIONS, true)) {
                     $relevantFiles[] = $item;
                 }
             }
         } catch (\Exception $e) {
-            // Skip directories that can't be read, but log details when debugging
-            if (getenv('MAGEFORGE_DEBUG')) {
-                error_log(sprintf(
-                    '[MageForge][ModuleScanner] Failed to read directory "%s": %s',
-                    $directory,
-                    $e->getMessage()
-                ));
-            }
+            // Skip directories that can't be read
+            return $relevantFiles;
         }
 
         return $relevantFiles;
@@ -117,7 +113,8 @@ class ModuleScanner
     /**
      * Check if module has Hyvä compatibility package based on composer data
      *
-     * @param array<string, mixed> $composerData Parsed composer.json data
+     * @param array $composerData Parsed composer.json data
+     * @phpstan-param array<string, mixed> $composerData
      */
     private function isHyvaCompatibilityPackage(array $composerData): bool
     {
@@ -162,14 +159,6 @@ class ModuleScanner
 
             return $this->isHyvaCompatibilityPackage($composerData);
         } catch (\Exception $e) {
-            // Log error when debugging to help identify JSON or file read issues
-            if (getenv('MAGEFORGE_DEBUG')) {
-                error_log(sprintf(
-                    '[MageForge][ModuleScanner] Failed to read composer.json at "%s": %s',
-                    $composerPath,
-                    $e->getMessage()
-                ));
-            }
             return false;
         }
     }
@@ -202,15 +191,40 @@ class ModuleScanner
                 'isHyvaAware' => $this->isHyvaCompatibilityPackage($composerData),
             ];
         } catch (\Exception $e) {
-            // Log error when debugging to help identify JSON parsing or file read issues
-            if (getenv('MAGEFORGE_DEBUG')) {
-                error_log(sprintf(
-                    '[MageForge][ModuleScanner] Failed to read module info at "%s": %s',
-                    $composerPath,
-                    $e->getMessage()
-                ));
-            }
             return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
         }
+    }
+
+    /**
+     * Get basename without using basename().
+     *
+     * @param string $path
+     * @return string
+     */
+    private function getBasename(string $path): string
+    {
+        $normalized = str_replace('\\', '/', $path);
+        $trimmed = rtrim($normalized, '/');
+        $pos = strrpos($trimmed, '/');
+        if ($pos === false) {
+            return $trimmed;
+        }
+        return substr($trimmed, $pos + 1);
+    }
+
+    /**
+     * Get file extension without using pathinfo().
+     *
+     * @param string $path
+     * @return string
+     */
+    private function getExtensionFromPath(string $path): string
+    {
+        $basename = $this->getBasename($path);
+        $pos = strrpos($basename, '.');
+        if ($pos === false) {
+            return '';
+        }
+        return strtolower(substr($basename, $pos + 1));
     }
 }

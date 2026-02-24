@@ -208,24 +208,15 @@ class TokensCommand extends AbstractCommand
             $this->io->text("Working directory: $tailwindPath");
         }
 
-        $currentDir = getcwd();
-        if ($currentDir === false) {
-            $this->io->error("Cannot determine current directory");
-            return false;
-        }
-        chdir($tailwindPath);
-
         try {
             if ($isVerbose) {
                 $this->io->text('Running npx hyva-tokens...');
             }
 
-            $this->shell->execute('npx hyva-tokens');
-            chdir($currentDir);
+            $this->shell->execute('cd %s && npx hyva-tokens', [$tailwindPath]);
 
             return true;
         } catch (\Exception $e) {
-            chdir($currentDir);
             $this->io->error('Failed to generate Hyvä design tokens: ' . $e->getMessage());
             return false;
         }

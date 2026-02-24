@@ -148,7 +148,7 @@ class BlockCacheCollector
                     return true;
                 }
             } catch (\ReflectionException $e) {
-                // If reflection fails, assume not private
+                return false;
             }
         }
 
@@ -236,8 +236,8 @@ class BlockCacheCollector
     /**
      * Format metrics for JSON export to frontend
      *
-     * @param array<string, mixed> $renderMetrics
-     * @param array<string, mixed> $cacheMetrics
+     * @param array $renderMetrics
+     * @param array $cacheMetrics
      * @return array<string, mixed>
      * @phpstan-param RenderMetrics $renderMetrics
      * @phpstan-param CacheInfo $cacheMetrics
