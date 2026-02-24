@@ -100,13 +100,7 @@ class SymlinkCleaner
      */
     private function isSymlink(string $path): bool
     {
-        try {
-            $stat = $this->fileDriver->stat($path);
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        return (($stat['mode'] ?? 0) & 0120000) === 0120000;
+        return is_link($path);
     }
 
     /**
@@ -117,7 +111,8 @@ class SymlinkCleaner
      */
     private function getBasename(string $path): string
     {
-        $trimmed = rtrim($path, '/');
+        $normalized = str_replace('\\', '/', $path);
+        $trimmed = rtrim($normalized, '/');
         $pos = strrpos($trimmed, '/');
         if ($pos === false) {
             return $trimmed;
