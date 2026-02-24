@@ -280,6 +280,13 @@ class Builder implements BuilderInterface
 
             $process = new Process(['npm', 'run', 'watch'], $tailwindPath);
             $process->setTimeout(null);
+
+            $isTty = defined('STDIN') && function_exists('stream_isatty')
+                && stream_isatty(STDIN); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+            if ($isTty && Process::isTtySupported()) {
+                $process->setTty(true);
+            }
+
             $exitCode = $process->run(function ($type, $buffer) use ($output): void {
                 $output->write($buffer);
             });
