@@ -141,16 +141,29 @@ class CopyFromVendorCommand extends AbstractCommand
             throw new \RuntimeException('No themes found to copy to.');
         }
 
+        if (!$input->isInteractive()) {
+            $themeList = implode(', ', array_keys($options));
+            throw new \RuntimeException(
+                "Theme argument is missing. Available themes: $themeList"
+            );
+        }
+
         $this->fixPromptEnvironment();
 
-        return (string) search(
-            label: 'Select target theme',
-            options: fn (string $value) => array_filter(
-                $options,
-                fn ($option) => str_contains(strtolower($option), strtolower($value))
-            ),
-            placeholder: 'Search for a theme...'
-        );
+        try {
+            $result = search(
+                label: 'Select target theme',
+                options: fn (string $value) => array_filter(
+                    $options,
+                    fn ($option) => str_contains(strtolower($option), strtolower($value))
+                ),
+                placeholder: 'Search for a theme...'
+            );
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            return (string) $result;
+        } finally {
+            $this->resetPromptEnvironment();
+        }
     }
 
     /**

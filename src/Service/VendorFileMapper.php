@@ -211,29 +211,32 @@ class VendorFileMapper
      *
      * @param string $compatModuleName
      * @return string|null
+     * @phpcs:disable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
      */
     private function getOriginalModuleFromCompatRegistry(string $compatModuleName): ?string
     {
+        $registryClass = 'Hyva\CompatModuleFallback\Model\CompatModuleRegistry';
+        //phpcs:enable
+
         // 1. Try Registry (via Emulated Area)
-        if (!class_exists(\Hyva\CompatModuleFallback\Model\CompatModuleRegistry::class)) {
+        if (!class_exists($registryClass)) {
             return $this->parseCompatModuleXml($compatModuleName);
         }
 
         try {
             // Emulate frontend area to load proper DI configuration for CompatModuleRegistry
             // as CLI commands run in global scope where frontend/di.xml is ignored.
-            /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry|null $registry */
+            /** @var mixed|\Hyva\CompatModuleFallback\Model\CompatModuleRegistry|null $registry */
             $registry = $this->appState->emulateAreaCode(
                 Area::AREA_FRONTEND,
-                function () {
+                function () use ($registryClass) {
                     // Use create() to ensure we get a fresh instance with the emulated configuration.
                     // get() might return a cached instance from global scope (empty).
-                    return $this->objectManager->create(\Hyva\CompatModuleFallback\Model\CompatModuleRegistry::class);
+                    return $this->objectManager->create($registryClass);
                 }
             );
 
             if ($registry) {
-                 /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry */
                 return $this->findOriginalModuleInRegistry($registry, $compatModuleName);
             }
         } catch (\Throwable $e) {
@@ -248,7 +251,7 @@ class VendorFileMapper
     /**
      * Find original module in registry
      *
-     * @param \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry
+     * @param mixed $registry Hyva\CompatModuleFallback\Model\CompatModuleRegistry
      * @param string $compatModuleName
      * @return string|null
      */
@@ -366,6 +369,8 @@ class VendorFileMapper
     }
 
     /**
+     * Find original module in XML items
+     *
      * @param \DOMNodeList<\DOMNode> $items
      * @param \DOMXPath $xpath
      * @param string $moduleName
