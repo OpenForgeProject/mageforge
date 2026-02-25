@@ -20,6 +20,10 @@ use Magento\Framework\Filesystem\Driver\File;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\search;
 
+/**
+ * CLI command to copy files from vendor/ into a theme with proper path
+ * resolution and optional dry-run support.
+ */
 class CopyFromVendorCommand extends AbstractCommand
 {
     /**
