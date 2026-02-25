@@ -291,74 +291,112 @@ class VendorFileMapper
                 return null;
             }
 
-            // Check frontend/di.xml first, then global di.xml
-            $diFile = $path . '/etc/frontend/di.xml';
-            $globalDiFile = $path . '/etc/di.xml';
-
-            $filesToCheck = [];
-            if ($this->fileDriver->isExists($diFile)) {
-                $filesToCheck[] = $diFile;
-            }
-            if ($this->fileDriver->isExists($globalDiFile)) {
-                $filesToCheck[] = $globalDiFile;
-            }
+            $filesToCheck = $this->getDiFilesToCheck($path);
 
             foreach ($filesToCheck as $diPath) {
-                if (!$this->fileDriver->isFile($diPath)) { // Extra check for symlinks/is_file
-                    continue;
-                }
-
-                $content = $this->fileDriver->fileGetContents($diPath);
-                if (!$content) {
-                    continue;
-                }
-
-                $dom = new \DOMDocument();
-                // Suppress warnings for malformed XML or namespace issues
-                $libxmlState = libxml_use_internal_errors(true);
-                $dom->loadXML($content);
-                libxml_use_internal_errors($libxmlState);
-
-                $xpath = new \DOMXPath($dom);
-                // Register namespace? Usually not needed if query is correct
-                // Try to find the compatModules argument node
-                $query = "//argument[@name='compatModules'][@xsi:type='array']/item[@xsi:type='array']";
-                $items = $xpath->query($query);
-
-                if ($items === false || $items->length === 0) {
-                    continue;
-                }
-
-                foreach ($items as $item) {
-                    // Check children items for compat_module/original_module keys
-                    $compatModuleValue = null;
-                    $originalModuleValue = null;
-
-                    /** @var \DOMElement $item */
-                    $childNodes = $xpath->query('item', $item);
-                    if ($childNodes === false) {
-                        continue;
-                    }
-
-                    foreach ($childNodes as $childNode) {
-                        /** @var \DOMElement $childNode */
-                        $nameAttr = $childNode->getAttribute('name');
-                        $value = trim((string) $childNode->nodeValue);
-
-                        if ($nameAttr === 'compat_module') {
-                            $compatModuleValue = $value;
-                        } elseif ($nameAttr === 'original_module') {
-                            $originalModuleValue = $value;
-                        }
-                    }
-
-                    if ($compatModuleValue === $moduleName && $originalModuleValue) {
-                        return $originalModuleValue;
-                    }
+                $originalModule = $this->parseDiFileForCompatModule($diPath, $moduleName);
+                if ($originalModule) {
+                    return $originalModule;
                 }
             }
         } catch (\Throwable $e) {
             return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get DI files to check for compat module registration
+     *
+     * @param string $modulePath
+     * @return array<string>
+     */
+    private function getDiFilesToCheck(string $modulePath): array
+    {
+        $diFile = $modulePath . '/etc/frontend/di.xml';
+        $globalDiFile = $modulePath . '/etc/di.xml';
+
+        $filesToCheck = [];
+        if ($this->fileDriver->isExists($diFile)) {
+            $filesToCheck[] = $diFile;
+        }
+        if ($this->fileDriver->isExists($globalDiFile)) {
+            $filesToCheck[] = $globalDiFile;
+        }
+
+        return $filesToCheck;
+    }
+
+    /**
+     * Parse a single di.xml file for compat module registration
+     *
+     * @param string $diPath
+     * @param string $moduleName
+     * @return string|null
+     */
+    private function parseDiFileForCompatModule(string $diPath, string $moduleName): ?string
+    {
+        if (!$this->fileDriver->isFile($diPath)) {
+            return null;
+        }
+
+        $content = $this->fileDriver->fileGetContents($diPath);
+        if (!$content) {
+            return null;
+        }
+
+        $dom = new \DOMDocument();
+        $libxmlState = libxml_use_internal_errors(true);
+        $dom->loadXML($content);
+        libxml_use_internal_errors($libxmlState);
+
+        $xpath = new \DOMXPath($dom);
+        $query = "//argument[@name='compatModules'][@xsi:type='array']/item[@xsi:type='array']";
+        $items = $xpath->query($query);
+
+        if ($items === false || $items->length === 0) {
+            return null;
+        }
+
+        return $this->findOriginalModuleInXmlItems($items, $xpath, $moduleName);
+    }
+
+    /**
+     * Find original module in XML items
+     *
+     * @param \DOMNodeList<\DOMNode> $items
+     * @param \DOMXPath $xpath
+     * @param string $moduleName
+     * @return string|null
+     */
+    private function findOriginalModuleInXmlItems(\DOMNodeList $items, \DOMXPath $xpath, string $moduleName): ?string
+    {
+        foreach ($items as $item) {
+            $compatModuleValue = null;
+            $originalModuleValue = null;
+
+            /** @var \DOMElement $item */
+            $childNodes = $xpath->query('item', $item);
+            if ($childNodes === false) {
+                continue;
+            }
+
+            foreach ($childNodes as $childNode) {
+                /** @var \DOMElement $childNode */
+                $nameAttr = $childNode->getAttribute('name');
+                $value = trim((string) $childNode->nodeValue);
+
+                if ($nameAttr === 'compat_module') {
+                    $compatModuleValue = $value;
+                } elseif ($nameAttr === 'original_module') {
+                    $originalModuleValue = $value;
+                }
+            }
+
+            if ($compatModuleValue === $moduleName && $originalModuleValue) {
+                return $originalModuleValue;
+            }
         }
 
         return null;
