@@ -233,6 +233,7 @@ class VendorFileMapper
             );
 
             if ($registry) {
+                 /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry */
                 return $this->findOriginalModuleInRegistry($registry, $compatModuleName);
             }
         } catch (\Throwable $e) {
@@ -255,9 +256,11 @@ class VendorFileMapper
     {
         // Iterate through original modules to find if current module is a registered compat module
         // We call getOrigModules inside the emulation callback ideally, but here we got the object
-        foreach ($registry->getOrigModules() as $originalModule) {
+        /** @var mixed $mixedRegistry */
+        $mixedRegistry = $registry;
+        foreach ($mixedRegistry->getOrigModules() as $originalModule) {
             // Get compat modules for this original module
-            $compatModules = $registry->getCompatModulesFor($originalModule);
+            $compatModules = $mixedRegistry->getCompatModulesFor($originalModule);
 
             // Check exact match first
             if (in_array($compatModuleName, $compatModules, true)) {
@@ -363,8 +366,6 @@ class VendorFileMapper
     }
 
     /**
-     * Find original module in XML items
-     *
      * @param \DOMNodeList<\DOMNode> $items
      * @param \DOMXPath $xpath
      * @param string $moduleName
