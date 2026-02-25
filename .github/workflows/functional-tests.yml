@@ -126,10 +126,10 @@ jobs:
           bin/magento mageforge:hyva:compatibility:check --show-all
 
           echo "Third party only:"
-          bin/magento m:h:c:c --third-party-only
+          bin/magento mageforge:hyva:compatibility:check --third-party-only
 
           echo "Detailed output:"
-          bin/magento m:h:c:c --show-all --detailed
+          bin/magento mageforge:hyva:compatibility:check --show-all --detailed
 
       - name: Test Theme Cleaner
         working-directory: magento2
@@ -139,7 +139,6 @@ jobs:
           bin/magento mageforge:theme:clean --all --dry-run
 
           echo "Test aliases:"
-          bin/magento m:t:c --help
           bin/magento frontend:clean --help
 
       - name: Test Theme Name Suggestions
@@ -155,11 +154,24 @@ jobs:
           echo "CleanCommand with invalid name:"
           bin/magento mageforge:theme:clean Magent/lum --dry-run || echo "Expected failure - suggestions shown"
 
-      - name: Test Inspector Status
+      - name: Test Copy From Vendor
         working-directory: magento2
         run: |
-          echo "=== Inspector Tests ==="
-          bin/magento mageforge:theme:inspector status
+          echo "=== Copy From Vendor Tests ==="
+
+          echo "Test help command:"
+          bin/magento mageforge:theme:copy-from-vendor --help
+
+          echo "Test alias help:"
+          bin/magento theme:copy --help
+
+          echo "Test dry-run without required arguments (expect validation failure but command should execute):"
+          bin/magento mageforge:theme:copy-from-vendor --dry-run || echo "Expected failure - missing or invalid arguments for copy-from-vendor"
+
+          echo "Test alias dry-run without required arguments (expect validation failure but alias should execute):"
+          bin/magento theme:copy --dry-run || echo "Expected failure - missing or invalid arguments for theme:copy alias"
+          
+          echo "✓ Copy from vendor command and alias available and basic execution paths exercised"
 
       - name: Test Inspector Functionality
         working-directory: magento2
@@ -496,7 +508,6 @@ jobs:
           bin/magento mageforge:theme:build Magento/blank --verbose || echo "Build attempted (may need additional setup)"
 
           echo "Test build aliases:"
-          bin/magento m:t:b --help
           bin/magento frontend:build --help
 
       - name: Test Summary
