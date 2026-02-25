@@ -46,7 +46,7 @@ class CopyFromVendorCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName('mageforge:theme:copy-from-vendor')
+        $this->setName($this->getCommandName('theme', 'copy-from-vendor'))
              ->setDescription('Copy a file from vendor/ to a specific theme with correct path resolution')
              ->setAliases(['theme:copy'])
              ->addArgument('file', InputArgument::REQUIRED, 'Path to the source file (vendor/...)')
