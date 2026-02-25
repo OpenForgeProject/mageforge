@@ -9,6 +9,7 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Filesystem\DirectoryList;
 use RuntimeException;
 use Magento\Framework\App\Area;
+use Magento\Framework\Filesystem\Driver\File;
 
 class VendorFileMapper
 {
@@ -17,12 +18,14 @@ class VendorFileMapper
      * @param DirectoryList $directoryList
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param \Magento\Framework\App\State $appState
+     * @param File $fileDriver
      */
     public function __construct(
         private readonly ComponentRegistrarInterface $componentRegistrar,
         private readonly DirectoryList $directoryList,
         private readonly \Magento\Framework\ObjectManagerInterface $objectManager,
-        private readonly \Magento\Framework\App\State $appState
+        private readonly \Magento\Framework\App\State $appState,
+        private readonly File $fileDriver
     ) {
     }
 
@@ -31,7 +34,8 @@ class VendorFileMapper
      *
      * @param string $sourcePath
      * @param string $themePath
-     * @param string|null $themeArea Optional theme area (frontend/adminhtml), if not provided will be extracted from path
+     * @param string|null $themeArea Optional theme area (frontend/adminhtml),
+     *                               if not provided will be extracted from path
      * @return string
      * @throws RuntimeException
      */
@@ -202,7 +206,6 @@ class VendorFileMapper
         return false;
     }
 
-
     /**
      * Check if module is a registered Hyva compatibility module and retrieve its original module.
      *
@@ -212,43 +215,29 @@ class VendorFileMapper
     private function getOriginalModuleFromCompatRegistry(string $compatModuleName): ?string
     {
         // 1. Try Registry (via Emulated Area)
-        if (class_exists('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry')) {
-            try {
-                // Emulate frontend area to load proper DI configuration for CompatModuleRegistry
-                // as CLI commands run in global scope where frontend/di.xml is ignored.
-                /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry|null $registry */
-                $registry = $this->appState->emulateAreaCode(
-                    Area::AREA_FRONTEND,
-                    function () {
-                        // Use create() to ensure we get a fresh instance with the emulated configuration.
-                        // get() might return a cached instance from global scope (empty).
-                        return $this->objectManager->create('\Hyva\CompatModuleFallback\Model\CompatModuleRegistry');
-                    }
-                );
+        if (!class_exists(\Hyva\CompatModuleFallback\Model\CompatModuleRegistry::class)) {
+            return $this->parseCompatModuleXml($compatModuleName);
+        }
 
-                if ($registry) {
-                    // Iterate through original modules to find if current module is a registered compat module
-                    // We call getOrigModules inside the emulation callback ideally, but here we got the object
-                    foreach ($registry->getOrigModules() as $originalModule) {
-                        // Get compat modules for this original module
-                        $compatModules = $registry->getCompatModulesFor($originalModule);
-
-                        // Check exact match first
-                        if (in_array($compatModuleName, $compatModules, true)) {
-                            return $originalModule;
-                        }
-
-                        // Fallback: Case-insensitive check
-                        foreach ($compatModules as $compatModule) {
-                            if (strnatcasecmp($compatModuleName, $compatModule) === 0) {
-                                return $originalModule;
-                            }
-                        }
-                    }
+        try {
+            // Emulate frontend area to load proper DI configuration for CompatModuleRegistry
+            // as CLI commands run in global scope where frontend/di.xml is ignored.
+            /** @var \Hyva\CompatModuleFallback\Model\CompatModuleRegistry|null $registry */
+            $registry = $this->appState->emulateAreaCode(
+                Area::AREA_FRONTEND,
+                function () {
+                    // Use create() to ensure we get a fresh instance with the emulated configuration.
+                    // get() might return a cached instance from global scope (empty).
+                    return $this->objectManager->create(\Hyva\CompatModuleFallback\Model\CompatModuleRegistry::class);
                 }
-            } catch (\Throwable $e) {
-                // Ignore errors here, continue to manual parsing
+            );
+
+            if ($registry) {
+                return $this->findOriginalModuleInRegistry($registry, $compatModuleName);
             }
+        } catch (\Throwable $e) {
+            // Ignore errors here, continue to manual parsing
+            unset($e);
         }
 
         // 2. Fallback: Manual XML parsing because CLI execution might miss frontend/di.xml config
@@ -256,7 +245,39 @@ class VendorFileMapper
     }
 
     /**
+     * Find original module in registry
+     *
+     * @param \Hyva\CompatModuleFallback\Model\CompatModuleRegistry $registry
+     * @param string $compatModuleName
+     * @return string|null
+     */
+    private function findOriginalModuleInRegistry($registry, string $compatModuleName): ?string
+    {
+        // Iterate through original modules to find if current module is a registered compat module
+        // We call getOrigModules inside the emulation callback ideally, but here we got the object
+        foreach ($registry->getOrigModules() as $originalModule) {
+            // Get compat modules for this original module
+            $compatModules = $registry->getCompatModulesFor($originalModule);
+
+            // Check exact match first
+            if (in_array($compatModuleName, $compatModules, true)) {
+                return $originalModule;
+            }
+
+            // Fallback: Case-insensitive check
+            foreach ($compatModules as $compatModule) {
+                if (strnatcasecmp($compatModuleName, $compatModule) === 0) {
+                    return $originalModule;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Manual fallback to parse etc/frontend/di.xml for compatibility registration.
+     *
      * Use DOMDocument for robust XML parsing.
      *
      * @param string $moduleName
@@ -275,19 +296,19 @@ class VendorFileMapper
             $globalDiFile = $path . '/etc/di.xml';
 
             $filesToCheck = [];
-            if (file_exists($diFile)) {
+            if ($this->fileDriver->isExists($diFile)) {
                 $filesToCheck[] = $diFile;
             }
-            if (file_exists($globalDiFile)) {
+            if ($this->fileDriver->isExists($globalDiFile)) {
                 $filesToCheck[] = $globalDiFile;
             }
 
             foreach ($filesToCheck as $diPath) {
-                if (!is_file($diPath)) { // Extra check for symlinks/is_file
+                if (!$this->fileDriver->isFile($diPath)) { // Extra check for symlinks/is_file
                     continue;
                 }
 
-                $content = file_get_contents($diPath);
+                $content = $this->fileDriver->fileGetContents($diPath);
                 if (!$content) {
                     continue;
                 }
@@ -309,27 +330,31 @@ class VendorFileMapper
                 }
 
                 foreach ($items as $item) {
-                     // Check children items for compat_module/original_module keys
-                     $compatModuleValue = null;
-                     $originalModuleValue = null;
+                    // Check children items for compat_module/original_module keys
+                    $compatModuleValue = null;
+                    $originalModuleValue = null;
 
-                     /** @var \DOMElement $item */
-                     $childNodes = $xpath->query('item', $item);
-                     foreach ($childNodes as $childNode) {
-                         /** @var \DOMElement $childNode */
-                         $nameAttr = $childNode->getAttribute('name');
-                         $value = trim($childNode->nodeValue);
+                    /** @var \DOMElement $item */
+                    $childNodes = $xpath->query('item', $item);
+                    if ($childNodes === false) {
+                        continue;
+                    }
 
-                         if ($nameAttr === 'compat_module') {
-                             $compatModuleValue = $value;
-                         } elseif ($nameAttr === 'original_module') {
-                             $originalModuleValue = $value;
-                         }
-                     }
+                    foreach ($childNodes as $childNode) {
+                        /** @var \DOMElement $childNode */
+                        $nameAttr = $childNode->getAttribute('name');
+                        $value = trim((string) $childNode->nodeValue);
 
-                     if ($compatModuleValue === $moduleName && $originalModuleValue) {
-                         return $originalModuleValue;
-                     }
+                        if ($nameAttr === 'compat_module') {
+                            $compatModuleValue = $value;
+                        } elseif ($nameAttr === 'original_module') {
+                            $originalModuleValue = $value;
+                        }
+                    }
+
+                    if ($compatModuleValue === $moduleName && $originalModuleValue) {
+                        return $originalModuleValue;
+                    }
                 }
             }
         } catch (\Throwable $e) {

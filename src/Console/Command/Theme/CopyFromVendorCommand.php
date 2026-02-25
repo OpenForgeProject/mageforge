@@ -15,21 +15,35 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Magento\Framework\Filesystem\Driver\File;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\search;
 
 class CopyFromVendorCommand extends AbstractCommand
 {
+    /**
+     * @param ThemeList $themeList
+     * @param VendorFileMapper $vendorFileMapper
+     * @param DirectoryList $directoryList
+     * @param ComponentRegistrarInterface $componentRegistrar
+     * @param File $fileDriver
+     */
     public function __construct(
         private readonly ThemeList $themeList,
         private readonly VendorFileMapper $vendorFileMapper,
         private readonly DirectoryList $directoryList,
-        private readonly ComponentRegistrarInterface $componentRegistrar
+        private readonly ComponentRegistrarInterface $componentRegistrar,
+        private readonly File $fileDriver
     ) {
         parent::__construct();
     }
 
+    /**
+     * Configure the command
+     *
+     * @return void
+     */
     protected function configure(): void
     {
         $this->setName('mageforge:theme:copy-from-vendor')
@@ -40,6 +54,13 @@ class CopyFromVendorCommand extends AbstractCommand
              ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Preview the copy operation without performing it');
     }
 
+    /**
+     * Execute the command
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $sourceFileArg = $input->getArgument('file');
@@ -73,6 +94,13 @@ class CopyFromVendorCommand extends AbstractCommand
         return Cli::RETURN_SUCCESS;
     }
 
+    /**
+     * Get absolute source path
+     *
+     * @param string $sourceFile
+     * @return string
+     * @throws \RuntimeException
+     */
     private function getAbsoluteSourcePath(string $sourceFile): string
     {
         $rootPath = $this->directoryList->getRoot();
@@ -82,13 +110,20 @@ class CopyFromVendorCommand extends AbstractCommand
             $absoluteSourcePath = $rootPath . '/' . $sourceFile;
         }
 
-        if (!file_exists($absoluteSourcePath)) {
+        if (!$this->fileDriver->isExists($absoluteSourcePath)) {
             throw new \RuntimeException("Source file not found: $absoluteSourcePath");
         }
 
         return $absoluteSourcePath;
     }
 
+    /**
+     * Get theme code
+     *
+     * @param InputInterface $input
+     * @return string
+     * @throws \RuntimeException
+     */
     private function getThemeCode(InputInterface $input): string
     {
         $themeCode = $input->getArgument('theme');
@@ -136,13 +171,22 @@ class CopyFromVendorCommand extends AbstractCommand
         $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $regName);
 
         if (!$themePath) {
-            $this->io->warning("Theme path not found via ComponentRegistrar for $regName, falling back to getFullPath()");
+            $this->io->warning(
+                "Theme path not found via ComponentRegistrar for $regName, falling back to getFullPath()"
+            );
             $themePath = $theme->getFullPath();
         }
 
         return [$themePath, $themeArea];
     }
 
+    /**
+     * Get absolute destination path
+     *
+     * @param string $destinationPath
+     * @param string $rootPath
+     * @return string
+     */
     private function getAbsoluteDestPath(string $destinationPath, string $rootPath): string
     {
         if (str_starts_with($destinationPath, '/')) {
@@ -151,6 +195,14 @@ class CopyFromVendorCommand extends AbstractCommand
         return $rootPath . '/' . $destinationPath;
     }
 
+    /**
+     * Confirm copy operation
+     *
+     * @param string $sourceFile
+     * @param string $absoluteDestPath
+     * @param string $rootPath
+     * @return bool
+     */
     private function confirmCopy(string $sourceFile, string $absoluteDestPath, string $rootPath): bool
     {
         $destinationDisplay = str_starts_with($absoluteDestPath, $rootPath . '/')
@@ -168,7 +220,7 @@ class CopyFromVendorCommand extends AbstractCommand
         $this->setPromptEnvironment();
 
         try {
-            if (file_exists($absoluteDestPath)) {
+            if ($this->fileDriver->isExists($absoluteDestPath)) {
                 $this->io->warning("File already exists at destination!");
                 $result = confirm(
                     label: 'Overwrite existing file?',
@@ -193,17 +245,31 @@ class CopyFromVendorCommand extends AbstractCommand
         }
     }
 
+    /**
+     * Perform copy operation
+     *
+     * @param string $absoluteSourcePath
+     * @param string $absoluteDestPath
+     * @return void
+     * @throws \RuntimeException
+     */
     private function performCopy(string $absoluteSourcePath, string $absoluteDestPath): void
     {
-        $directory = dirname($absoluteDestPath);
-        if (!is_dir($directory)) {
-            if (!mkdir($directory, 0777, true) && !is_dir($directory)) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $directory));
-            }
+        $directory = $this->fileDriver->getParentDirectory($absoluteDestPath);
+        if (!$this->fileDriver->isDirectory($directory)) {
+            $this->fileDriver->createDirectory($directory);
         }
-        copy($absoluteSourcePath, $absoluteDestPath);
+        $this->fileDriver->copy($absoluteSourcePath, $absoluteDestPath);
     }
 
+    /**
+     * Show dry run preview
+     *
+     * @param string $sourceFile
+     * @param string $absoluteDestPath
+     * @param string $rootPath
+     * @return void
+     */
     private function showDryRunPreview(string $sourceFile, string $absoluteDestPath, string $rootPath): void
     {
         $destinationDisplay = str_starts_with($absoluteDestPath, $rootPath . '/')
@@ -218,7 +284,7 @@ class CopyFromVendorCommand extends AbstractCommand
         ]);
         $this->io->newLine();
 
-        if (file_exists($absoluteDestPath)) {
+        if ($this->fileDriver->isExists($absoluteDestPath)) {
             $this->io->warning("File already exists at destination and would be overwritten!");
         } else {
             $this->io->info("File would be created at destination.");
@@ -227,6 +293,11 @@ class CopyFromVendorCommand extends AbstractCommand
         $this->io->note("No files were modified (dry-run mode).");
     }
 
+    /**
+     * Fix prompt environment
+     *
+     * @return void
+     */
     private function fixPromptEnvironment(): void
     {
         $this->setPromptEnvironment();
