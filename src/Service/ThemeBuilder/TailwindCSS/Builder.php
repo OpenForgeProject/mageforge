@@ -238,7 +238,7 @@ class Builder implements BuilderInterface
                     $process->setTty(true);
                 } catch (\RuntimeException $exception) {
                     if ($isVerbose) {
-                        $io->warning('TTY mode is not supported in this environment; ' . 'running watch without TTY.');
+                        $io->warning('TTY mode is not supported in this environment; running watch without TTY.');
                     }
                 }
             }
