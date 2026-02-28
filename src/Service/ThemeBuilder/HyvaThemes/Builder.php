@@ -270,7 +270,7 @@ class Builder implements BuilderInterface
                     $process->setTty(true);
                 } catch (\RuntimeException $exception) {
                     if ($isVerbose) {
-                        $io->warning('TTY is not supported in this environment; ' . 'continuing without TTY.');
+                        $io->warning('TTY is not supported in this environment; continuing without TTY.');
                     }
                 }
             }
