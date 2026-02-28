@@ -264,7 +264,7 @@ class Builder implements BuilderInterface
 
             // phpcs:disable Magento2.Functions.DiscouragedFunction.Discouraged
             $isTty = defined('STDIN') && function_exists('stream_isatty') && stream_isatty(STDIN);
-            // phpcs: enable Magento2.Functions.DiscouragedFunction.Discouraged
+            // phpcs:enable Magento2.Functions.DiscouragedFunction.Discouraged
             if ($isTty && Process::isTtySupported()) {
                 try {
                     $process->setTty(true);
