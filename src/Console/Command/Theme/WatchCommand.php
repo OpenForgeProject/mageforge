@@ -42,19 +42,11 @@ class WatchCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'watch'))
+        $this
+            ->setName($this->getCommandName('theme', 'watch'))
             ->setDescription('Watches theme files for changes and rebuilds them automatically')
-            ->addArgument(
-                'themeCode',
-                InputArgument::OPTIONAL,
-                'Theme to watch (format: Vendor/theme)'
-            )
-            ->addOption(
-                'theme',
-                't',
-                InputOption::VALUE_OPTIONAL,
-                'Theme to watch (format: Vendor/theme)'
-            )
+            ->addArgument('themeCode', InputArgument::OPTIONAL, 'Theme to watch (format: Vendor/theme)')
+            ->addOption('theme', 't', InputOption::VALUE_OPTIONAL, 'Theme to watch (format: Vendor/theme)')
             ->setAliases(['frontend:watch']);
     }
 
@@ -95,11 +87,7 @@ class WatchCommand extends AbstractCommand
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             // Try to suggest similar themes
-            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
-                $themeCode,
-                $this->themeSuggester,
-                $output
-            );
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions($themeCode, $this->themeSuggester, $output);
 
             // If no theme was selected, exit
             if ($correctedTheme === null) {

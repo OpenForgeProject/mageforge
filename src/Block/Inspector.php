@@ -32,7 +32,7 @@ class Inspector extends Template
         private readonly State $state,
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly DevHelper $devHelper,
-        array $data = []
+        array $data = [],
     ) {
         parent::__construct($context, $data);
     }

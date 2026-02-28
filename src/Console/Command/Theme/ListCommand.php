@@ -32,7 +32,8 @@ class ListCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'list'))
+        $this
+            ->setName($this->getCommandName('theme', 'list'))
             ->setDescription('Lists all available Magento themes')
             ->setAliases(['frontend:list']);
     }
@@ -61,7 +62,7 @@ class ListCommand extends AbstractCommand
             $table->addRow([
                 sprintf('<fg=yellow>%s</>', $theme->getCode()),
                 $theme->getThemeTitle(),
-                $path
+                $path,
             ]);
         }
 

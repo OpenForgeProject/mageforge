@@ -23,7 +23,7 @@ class CompatibilityChecker
      */
     public function __construct(
         private readonly ComponentRegistrarInterface $componentRegistrar,
-        private readonly ModuleScanner $moduleScanner
+        private readonly ModuleScanner $moduleScanner,
     ) {
     }
 
@@ -44,7 +44,7 @@ class CompatibilityChecker
         OutputInterface $output,
         bool $showAll = false,
         bool $thirdPartyOnly = false,
-        bool $excludeVendor = true
+        bool $excludeVendor = true,
     ): array {
         $modules = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         $results = [
@@ -60,10 +60,7 @@ class CompatibilityChecker
             'hasIncompatibilities' => false,
         ];
 
-        $io->text(sprintf(
-            'Scanning %d modules for Hyvä compatibility...',
-            count($modules)
-        ));
+        $io->text(sprintf('Scanning %d modules for Hyvä compatibility...', count($modules)));
         $io->newLine();
 
         foreach ($modules as $moduleName => $modulePath) {
@@ -110,10 +107,7 @@ class CompatibilityChecker
 
             $results['summary']['criticalIssues'] += (int) $scanResult['criticalIssues'];
             // Calculate warnings explicitly to support future severity levels
-            $warningCount = max(
-                0,
-                (int) $scanResult['totalIssues'] - (int) $scanResult['criticalIssues']
-            );
+            $warningCount = max(0, (int) $scanResult['totalIssues'] - (int) $scanResult['criticalIssues']);
             $results['summary']['warningIssues'] += (int) $warningCount;
         }
 

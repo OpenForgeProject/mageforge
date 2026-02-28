@@ -23,7 +23,7 @@ class SymlinkCleaner
      */
     public function __construct(
         private readonly File $fileDriver,
-        private readonly State $state
+        private readonly State $state,
     ) {
     }
 
@@ -35,11 +35,8 @@ class SymlinkCleaner
      * @param bool $isVerbose Whether to show verbose output
      * @return bool True on success or if no action needed, false on error
      */
-    public function cleanSymlinks(
-        string $themePath,
-        SymfonyStyle $io,
-        bool $isVerbose
-    ): bool {
+    public function cleanSymlinks(string $themePath, SymfonyStyle $io, bool $isVerbose): bool
+    {
         try {
             // Only clean symlinks in developer mode
             if ($this->state->getMode() !== State::MODE_DEVELOPER) {
@@ -63,19 +60,13 @@ class SymlinkCleaner
                     $deletedCount++;
 
                     if ($isVerbose) {
-                        $io->writeln(sprintf(
-                            '  <fg=yellow>⚠</> Removed symlink: %s',
-                            $this->getBasename($item)
-                        ));
+                        $io->writeln(sprintf('  <fg=yellow>⚠</> Removed symlink: %s', $this->getBasename($item)));
                     }
                 }
             }
 
             if ($deletedCount > 0 && $isVerbose) {
-                $io->success(sprintf(
-                    'Removed %d symlink(s) from web/css/',
-                    $deletedCount
-                ));
+                $io->success(sprintf('Removed %d symlink(s) from web/css/', $deletedCount));
             }
 
             return true;
@@ -83,10 +74,7 @@ class SymlinkCleaner
             // Don't fail the build process if symlink cleanup fails
             // Just warn the user and continue
             if ($isVerbose) {
-                $io->warning(sprintf(
-                    'Could not clean symlinks: %s',
-                    $e->getMessage()
-                ));
+                $io->warning(sprintf('Could not clean symlinks: %s', $e->getMessage()));
             }
             return true;
         }

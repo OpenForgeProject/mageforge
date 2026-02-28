@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service;
 
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StandardThemeBuilder
 {
@@ -19,7 +19,7 @@ class StandardThemeBuilder
     public function __construct(
         private readonly DependencyChecker $dependencyChecker,
         private readonly GruntTaskRunner $gruntTaskRunner,
-        private readonly StaticContentDeployer $staticContentDeployer
+        private readonly StaticContentDeployer $staticContentDeployer,
     ) {
     }
 
@@ -38,7 +38,7 @@ class StandardThemeBuilder
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
-        array &$successList
+        array &$successList,
     ): bool {
         // Check dependencies
         if (!$this->dependencyChecker->checkDependencies($io, $isVerbose)) {
@@ -52,7 +52,7 @@ class StandardThemeBuilder
             if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
                 return false;
             }
-            $successList[] = "Global: Grunt tasks executed";
+            $successList[] = 'Global: Grunt tasks executed';
             $gruntTasksRun = true;
         }
 

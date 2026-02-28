@@ -23,7 +23,7 @@ class StaticContentCleaner
      */
     public function __construct(
         private readonly State $state,
-        private readonly ThemeCleaner $themeCleaner
+        private readonly ThemeCleaner $themeCleaner,
     ) {
     }
 
@@ -36,12 +36,8 @@ class StaticContentCleaner
      * @param bool $isVerbose Whether to show verbose output
      * @return bool True if cleaning was performed or not needed, false on error
      */
-    public function cleanIfNeeded(
-        string $themeCode,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose
-    ): bool {
+    public function cleanIfNeeded(string $themeCode, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
         try {
             // Only clean in developer mode
             if ($this->state->getMode() !== State::MODE_DEVELOPER) {
@@ -57,7 +53,7 @@ class StaticContentCleaner
             if ($isVerbose) {
                 $io->note(sprintf(
                     "Developer mode detected: Cleaning existing static files for theme '%s'...",
-                    $themeCode
+                    $themeCode,
                 ));
             }
 
@@ -65,7 +61,7 @@ class StaticContentCleaner
             $cleanedStatic = $this->themeCleaner->cleanPubStatic($themeCode, $io, false, $isVerbose);
             $cleanedPreprocessed = $this->themeCleaner->cleanViewPreprocessed($themeCode, $io, false, $isVerbose);
 
-            return ($cleanedStatic > 0 || $cleanedPreprocessed > 0);
+            return $cleanedStatic > 0 || $cleanedPreprocessed > 0;
         } catch (\Exception $e) {
             $io->error('Failed to check/clean static content: ' . $e->getMessage());
             return false;

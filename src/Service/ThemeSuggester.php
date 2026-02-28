@@ -24,7 +24,7 @@ class ThemeSuggester
      * @param ThemeList $themeList
      */
     public function __construct(
-        private readonly ThemeList $themeList
+        private readonly ThemeList $themeList,
     ) {
     }
 

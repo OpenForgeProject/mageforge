@@ -33,7 +33,7 @@ class BuildCommand extends AbstractCommand
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
         private readonly BuilderPool $builderPool,
-        private readonly ThemeSuggester $themeSuggester
+        private readonly ThemeSuggester $themeSuggester,
     ) {
         parent::__construct();
     }
@@ -45,12 +45,13 @@ class BuildCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'build'))
+        $this
+            ->setName($this->getCommandName('theme', 'build'))
             ->setDescription('Builds a Magento theme')
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
-                'Theme codes to build (format: Vendor/theme, Vendor/theme 2, ...)'
+                'Theme codes to build (format: Vendor/theme, Vendor/theme 2, ...)',
             )
             ->setAliases(['frontend:build']);
     }
@@ -149,7 +150,7 @@ class BuildCommand extends AbstractCommand
         array $themeCodes,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): int {
         $startTime = microtime(true);
         $successList = [];
@@ -177,12 +178,12 @@ class BuildCommand extends AbstractCommand
                 }
 
                 // Show which theme is currently being built (with validated/corrected name)
-                $themeNameCyan = sprintf("<fg=cyan>%s</>", $validatedTheme);
+                $themeNameCyan = sprintf('<fg=cyan>%s</>', $validatedTheme);
                 $spinner = new Spinner(sprintf(
-                    "Building %s (%d of %d) ...",
+                    'Building %s (%d of %d) ...',
                     $themeNameCyan,
                     $currentTheme,
-                    $totalThemes
+                    $totalThemes,
                 ));
                 $success = false;
 
@@ -194,18 +195,18 @@ class BuildCommand extends AbstractCommand
                 if ($success) {
                     // Show that the theme was successfully built
                     $io->writeln(sprintf(
-                        "   Building %s (%d of %d) ... <fg=green>done</>",
+                        '   Building %s (%d of %d) ... <fg=green>done</>',
                         $themeNameCyan,
                         $currentTheme,
-                        $totalThemes
+                        $totalThemes,
                     ));
                 } else {
                     // Show that an error occurred while building the theme
                     $io->writeln(sprintf(
-                        "   Building %s (%d of %d) ... <fg=red>failed</>",
+                        '   Building %s (%d of %d) ... <fg=red>failed</>',
                         $themeNameCyan,
                         $currentTheme,
-                        $totalThemes
+                        $totalThemes,
                     ));
                 }
             }
@@ -224,20 +225,13 @@ class BuildCommand extends AbstractCommand
      * @param OutputInterface $output
      * @return string|null Validated/corrected theme code or null if invalid/cancelled
      */
-    private function validateAndCorrectTheme(
-        string $themeCode,
-        SymfonyStyle $io,
-        OutputInterface $output
-    ): ?string {
+    private function validateAndCorrectTheme(string $themeCode, SymfonyStyle $io, OutputInterface $output): ?string
+    {
         // Get theme path
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             // Try to suggest similar themes
-            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
-                $themeCode,
-                $this->themeSuggester,
-                $output
-            );
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions($themeCode, $this->themeSuggester, $output);
 
             // If no theme was selected, return null
             if ($correctedTheme === null) {
@@ -273,7 +267,7 @@ class BuildCommand extends AbstractCommand
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
-        array &$successList
+        array &$successList,
     ): bool {
         $themePath = $this->themePath->getPath($themeCode);
 
@@ -290,7 +284,7 @@ class BuildCommand extends AbstractCommand
         }
 
         if ($isVerbose) {
-            $io->section(sprintf("Building theme %s using %s builder", $themeCode, $builder->getName()));
+            $io->section(sprintf('Building theme %s using %s builder', $themeCode, $builder->getName()));
         }
 
         // Build the theme
@@ -299,7 +293,7 @@ class BuildCommand extends AbstractCommand
             return false;
         }
 
-        $successList[] = sprintf("%s: Built successfully using %s builder", $themeCode, $builder->getName());
+        $successList[] = sprintf('%s: Built successfully using %s builder', $themeCode, $builder->getName());
         return true;
     }
 
@@ -318,7 +312,7 @@ class BuildCommand extends AbstractCommand
         SymfonyStyle $io,
         OutputInterface $output,
         bool $isVerbose,
-        array &$successList
+        array &$successList,
     ): bool {
         // Validate and correct theme
         $validatedTheme = $this->validateAndCorrectTheme($themeCode, $io, $output);
@@ -341,11 +335,8 @@ class BuildCommand extends AbstractCommand
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
         $io->newLine();
-        $io->success(sprintf(
-            "🚀 Build process completed in %.2f seconds with the following results:",
-            $duration
-        ));
-        $io->writeln("Summary:");
+        $io->success(sprintf('🚀 Build process completed in %.2f seconds with the following results:', $duration));
+        $io->writeln('Summary:');
         $io->newLine();
 
         if (empty($successList)) {
@@ -363,10 +354,10 @@ class BuildCommand extends AbstractCommand
                     $details = str_replace(
                         $matches[0],
                         $matches[1] . '<fg=magenta>' . $matches[2] . '</>' . $matches[3],
-                        $details
+                        $details,
                     );
                 }
-                $io->writeln(sprintf("✅ <fg=cyan>%s</>: %s", $themeName, $details));
+                $io->writeln(sprintf('✅ <fg=cyan>%s</>: %s', $themeName, $details));
             } else {
                 $io->writeln("✅ $success");
             }
