@@ -22,7 +22,7 @@ class DependencyChecker
      */
     public function __construct(
         private readonly File $fileDriver,
-        private readonly Shell $shell
+        private readonly Shell $shell,
     ) {
     }
 
@@ -61,7 +61,7 @@ class DependencyChecker
                 if ($isVerbose) {
                     $io->warning("The 'package.json.sample' file does not exist in the Magento root path.");
                 }
-                $io->error("Skipping this theme build.");
+                $io->error('Skipping this theme build.');
                 return false;
             } else {
                 if ($isVerbose) {
@@ -108,7 +108,7 @@ class DependencyChecker
                     return false;
                 }
             } else {
-                $io->error("Skipping this theme build.");
+                $io->error('Skipping this theme build.');
                 return false;
             }
         } elseif ($isVerbose) {
@@ -136,7 +136,7 @@ class DependencyChecker
                 if ($isVerbose) {
                     $io->warning("The '$sampleFile' file does not exist in the Magento root path.");
                 }
-                $io->error("Skipping this theme build.");
+                $io->error('Skipping this theme build.');
                 return false;
             } else {
                 if ($isVerbose) {

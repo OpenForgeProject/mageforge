@@ -46,7 +46,7 @@ class BlockCacheCollector
      * @param LayoutInterface $layout
      */
     public function __construct(
-        private readonly LayoutInterface $layout
+        private readonly LayoutInterface $layout,
     ) {
     }
 
@@ -116,7 +116,7 @@ class BlockCacheCollector
             return null; // Unlimited
         }
 
-        if (is_numeric($lifetimeRaw) && (int)$lifetimeRaw === 0) {
+        if (is_numeric($lifetimeRaw) && (int) $lifetimeRaw === 0) {
             return null; // Unlimited
         }
 

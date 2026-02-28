@@ -36,7 +36,7 @@ class Builder implements BuilderInterface
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
-        private readonly NodePackageManager $nodePackageManager
+        private readonly NodePackageManager $nodePackageManager,
     ) {
     }
 
@@ -91,19 +91,14 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -139,12 +134,7 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
-        if (!$this->staticContentDeployer->deploy(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -165,12 +155,8 @@ class Builder implements BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function autoRepair(
-        string $themePath,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose
-    ): bool {
+    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
         $tailwindPath = rtrim($themePath, '/') . '/web/tailwind';
 
         // Check if node_modules is in sync with package-lock.json
@@ -178,11 +164,7 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->warning('Node modules out of sync or missing. Installing npm dependencies...');
             }
-            if (!$this->nodePackageManager->installNodeModules(
-                $tailwindPath,
-                $io,
-                $isVerbose
-            )) {
+            if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
                 return false;
             }
         }
@@ -220,19 +202,14 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -261,10 +238,7 @@ class Builder implements BuilderInterface
                     $process->setTty(true);
                 } catch (\RuntimeException $exception) {
                     if ($isVerbose) {
-                        $io->warning(
-                            'TTY mode is not supported in this environment; ' .
-                            'running watch without TTY.'
-                        );
+                        $io->warning('TTY mode is not supported in this environment; running watch without TTY.');
                     }
                 }
             }

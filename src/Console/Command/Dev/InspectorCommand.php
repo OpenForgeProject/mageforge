@@ -34,7 +34,7 @@ class InspectorCommand extends AbstractCommand
         private readonly State $state,
         private readonly CacheManager $cacheManager,
         private readonly ScopeConfigInterface $scopeConfig,
-        ?string $name = null
+        ?string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -46,30 +46,29 @@ class InspectorCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'inspector'))
+        $this
+            ->setName($this->getCommandName('theme', 'inspector'))
             ->setDescription('Manage MageForge Frontend Inspector (Actions: enable|disable|status)')
             ->addArgument(
                 self::ARGUMENT_ACTION,
                 InputArgument::REQUIRED,
-                'Action to perform: enable, disable, or status'
+                'Action to perform: enable, disable, or status',
             )
-            ->setHelp(
-                <<<HELP
-The <info>%command.name%</info> command manages the MageForge Frontend Inspector:
+            ->setHelp(<<<HELP
+                The <info>%command.name%</info> command manages the MageForge Frontend Inspector:
 
-  <info>php %command.full_name%</info> <comment>enable</comment>
-  Enable the inspector (requires developer mode)
+                  <info>php %command.full_name%</info> <comment>enable</comment>
+                  Enable the inspector (requires developer mode)
 
-  <info>php %command.full_name%</info> <comment>disable</comment>
-  Disable the inspector
+                  <info>php %command.full_name%</info> <comment>disable</comment>
+                  Disable the inspector
 
-  <info>php %command.full_name%</info> <comment>status</comment>
-  Show current inspector status
+                  <info>php %command.full_name%</info> <comment>status</comment>
+                  Show current inspector status
 
-The inspector allows you to hover over frontend elements to see template paths,
-block classes, modules, and other metadata. Activate with Ctrl+Shift+I.
-HELP
-            );
+                The inspector allows you to hover over frontend elements to see template paths,
+                block classes, modules, and other metadata. Activate with Ctrl+Shift+I.
+                HELP);
 
         parent::configure();
     }
@@ -83,14 +82,11 @@ HELP
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $action = strtolower((string)$input->getArgument(self::ARGUMENT_ACTION));
+        $action = strtolower((string) $input->getArgument(self::ARGUMENT_ACTION));
 
         // Validate action
         if (!in_array($action, ['enable', 'disable', 'status'], true)) {
-            $this->io->error(sprintf(
-                'Invalid action "%s". Use: enable, disable, or status',
-                $action
-            ));
+            $this->io->error(sprintf('Invalid action "%s". Use: enable, disable, or status', $action));
             return Cli::RETURN_FAILURE;
         }
 

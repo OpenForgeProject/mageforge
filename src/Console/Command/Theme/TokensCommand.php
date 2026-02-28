@@ -48,13 +48,14 @@ class TokensCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('hyva', 'tokens'))
+        $this
+            ->setName($this->getCommandName('hyva', 'tokens'))
             ->setAliases(['hyva:tokens'])
             ->setDescription('Generate Hyvä design tokens from design.tokens.json or hyva.config.json')
             ->addArgument(
                 'themeCode',
                 InputArgument::OPTIONAL,
-                'Theme code to generate tokens for (format: Vendor/theme)'
+                'Theme code to generate tokens for (format: Vendor/theme)',
             );
     }
 
@@ -136,11 +137,7 @@ class TokensCommand extends AbstractCommand
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             // Try to suggest similar themes
-            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
-                $themeCode,
-                $this->themeSuggester,
-                $output
-            );
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions($themeCode, $this->themeSuggester, $output);
 
             // If no theme was selected, exit
             if ($correctedTheme === null) {

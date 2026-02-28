@@ -19,7 +19,7 @@ class NodePackageManager
      */
     public function __construct(
         private readonly Shell $shell,
-        private readonly FileDriver $fileDriver
+        private readonly FileDriver $fileDriver,
     ) {
     }
 

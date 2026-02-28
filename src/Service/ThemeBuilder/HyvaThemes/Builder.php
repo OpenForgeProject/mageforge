@@ -36,7 +36,7 @@ class Builder implements BuilderInterface
         private readonly StaticContentCleaner $staticContentCleaner,
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
-        private readonly NodePackageManager $nodePackageManager
+        private readonly NodePackageManager $nodePackageManager,
     ) {
     }
 
@@ -91,19 +91,14 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -125,12 +120,7 @@ class Builder implements BuilderInterface
         }
 
         // Deploy static content
-        if (!$this->staticContentDeployer->deploy(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentDeployer->deploy($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -213,11 +203,7 @@ class Builder implements BuilderInterface
             if ($isVerbose) {
                 $io->warning('Node modules out of sync or missing. Installing dependencies...');
             }
-            if (!$this->nodePackageManager->installNodeModules(
-                $tailwindPath,
-                $io,
-                $isVerbose
-            )) {
+            if (!$this->nodePackageManager->installNodeModules($tailwindPath, $io, $isVerbose)) {
                 return false;
             }
         }
@@ -245,19 +231,14 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -281,17 +262,15 @@ class Builder implements BuilderInterface
             $process = new Process(['npm', 'run', 'watch'], $tailwindPath);
             $process->setTimeout(null);
 
-            $isTty = defined('STDIN') && function_exists('stream_isatty')
-                && stream_isatty(STDIN); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+            // phpcs:disable Magento2.Functions.DiscouragedFunction.Discouraged
+            $isTty = defined('STDIN') && function_exists('stream_isatty') && stream_isatty(STDIN);
+            // phpcs:enable Magento2.Functions.DiscouragedFunction.Discouraged
             if ($isTty && Process::isTtySupported()) {
                 try {
                     $process->setTty(true);
                 } catch (\RuntimeException $exception) {
                     if ($isVerbose) {
-                        $io->warning(
-                            'TTY is not supported in this environment; ' .
-                            'continuing without TTY.'
-                        );
+                        $io->warning('TTY is not supported in this environment; continuing without TTY.');
                     }
                 }
             }

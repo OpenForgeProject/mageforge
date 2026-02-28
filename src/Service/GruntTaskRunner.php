@@ -16,7 +16,7 @@ class GruntTaskRunner
      * @param Shell $shell
      */
     public function __construct(
-        private readonly Shell $shell
+        private readonly Shell $shell,
     ) {
     }
 
@@ -28,11 +28,8 @@ class GruntTaskRunner
      * @param bool $isVerbose
      * @return bool
      */
-    public function runTasks(
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose
-    ): bool {
+    public function runTasks(SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
         try {
             if ($isVerbose) {
                 $io->text('Running grunt clean...');

@@ -98,7 +98,7 @@ class IncompatibilityDetector
      * @param File $fileDriver
      */
     public function __construct(
-        private readonly File $fileDriver
+        private readonly File $fileDriver,
     ) {
     }
 

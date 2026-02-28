@@ -10,7 +10,7 @@ class BuilderPool
      * @param BuilderInterface[] $builders
      */
     public function __construct(
-        private readonly array $builders = []
+        private readonly array $builders = [],
     ) {
     }
 
