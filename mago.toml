@@ -1,0 +1,14 @@
+# Mago configuration for MageForge
+# https://mago.carthage.software/
+
+[source]
+paths = ["src/"]
+includes = ["../../"]
+extensions = ["php", "phtml"]
+
+[parser]
+enable-short-tags = false
+
+[formatter]
+inline-empty-constructor-braces = false
+inline-empty-classlike-braces = false
