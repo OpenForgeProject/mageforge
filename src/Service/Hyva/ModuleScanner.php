@@ -23,7 +23,7 @@ class ModuleScanner
      */
     public function __construct(
         private readonly File $fileDriver,
-        private readonly IncompatibilityDetector $incompatibilityDetector
+        private readonly IncompatibilityDetector $incompatibilityDetector,
     ) {
     }
 

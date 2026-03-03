@@ -31,7 +31,7 @@ class CleanCommand extends AbstractCommand
         private readonly ThemeCleaner $themeCleaner,
         private readonly ThemeList $themeList,
         private readonly ThemePath $themePath,
-        private readonly ThemeSuggester $themeSuggester
+        private readonly ThemeSuggester $themeSuggester,
     ) {
         parent::__construct();
     }
@@ -43,24 +43,20 @@ class CleanCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'clean'))
+        $this
+            ->setName($this->getCommandName('theme', 'clean'))
             ->setDescription('Clean theme static files and cache directories')
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
-                'Theme codes to clean (format: Vendor/theme, Vendor/theme 2, ...)'
+                'Theme codes to clean (format: Vendor/theme, Vendor/theme 2, ...)',
             )
-            ->addOption(
-                'all',
-                'a',
-                InputOption::VALUE_NONE,
-                'Clean all themes'
-            )
+            ->addOption('all', 'a', InputOption::VALUE_NONE, 'Clean all themes')
             ->addOption(
                 'dry-run',
                 null,
                 InputOption::VALUE_NONE,
-                'Show what would be cleaned without actually deleting anything'
+                'Show what would be cleaned without actually deleting anything',
             )
             ->setAliases(['frontend:clean']);
     }
@@ -269,11 +265,7 @@ class CleanCommand extends AbstractCommand
 
         if ($themePath === null) {
             // Try to suggest similar themes
-            $correctedTheme = $this->handleInvalidThemeWithSuggestions(
-                $themeName,
-                $this->themeSuggester,
-                $output
-            );
+            $correctedTheme = $this->handleInvalidThemeWithSuggestions($themeName, $this->themeSuggester, $output);
 
             // If no theme was selected, mark as failed
             if ($correctedTheme === null) {
@@ -309,9 +301,9 @@ class CleanCommand extends AbstractCommand
     private function displayThemeHeader(string $themeName, int $currentTheme, int $totalThemes): void
     {
         if ($totalThemes > 1) {
-            $this->io->section(sprintf("Cleaning theme %d of %d: %s", $currentTheme, $totalThemes, $themeName));
+            $this->io->section(sprintf('Cleaning theme %d of %d: %s', $currentTheme, $totalThemes, $themeName));
         } else {
-            $this->io->section(sprintf("Cleaning static files for theme: %s", $themeName));
+            $this->io->section(sprintf('Cleaning static files for theme: %s', $themeName));
         }
     }
 
@@ -356,7 +348,7 @@ class CleanCommand extends AbstractCommand
                 $action,
                 $cleaned,
                 $cleaned === 1 ? 'y' : 'ies',
-                $themeName
+                $themeName,
             ));
         } else {
             $this->io->writeln(sprintf("  <fg=yellow>ℹ</> No files to clean for theme '%s'", $themeName));
@@ -401,7 +393,7 @@ class CleanCommand extends AbstractCommand
                 $action,
                 $totalCleaned,
                 $totalCleaned === 1 ? 'y' : 'ies',
-                $themeCode
+                $themeCode,
             ));
         } else {
             $this->io->info(sprintf("No files to clean for theme '%s'", $themeCode));
@@ -421,19 +413,19 @@ class CleanCommand extends AbstractCommand
         int $totalThemes,
         int $totalCleaned,
         array $failedThemes,
-        bool $dryRun
+        bool $dryRun,
     ): void {
         $successCount = $totalThemes - count($failedThemes);
 
         if ($successCount > 0 && $totalCleaned > 0) {
             $action = $dryRun ? 'Would clean' : 'Successfully cleaned';
             $this->io->success(sprintf(
-                "%s %d director%s across %d theme%s",
+                '%s %d director%s across %d theme%s',
                 $action,
                 $totalCleaned,
                 $totalCleaned === 1 ? 'y' : 'ies',
                 $successCount,
-                $successCount === 1 ? '' : 's'
+                $successCount === 1 ? '' : 's',
             ));
         } else {
             $this->io->info('No files were cleaned.');
@@ -441,10 +433,10 @@ class CleanCommand extends AbstractCommand
 
         if (!empty($failedThemes)) {
             $this->io->warning(sprintf(
-                "Failed to process %d theme%s: %s",
+                'Failed to process %d theme%s: %s',
                 count($failedThemes),
                 count($failedThemes) === 1 ? '' : 's',
-                implode(', ', $failedThemes)
+                implode(', ', $failedThemes),
             ));
         }
     }

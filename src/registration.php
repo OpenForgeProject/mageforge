@@ -4,8 +4,4 @@ declare(strict_types=1);
 
 use Magento\Framework\Component\ComponentRegistrar;
 
-ComponentRegistrar::register(
-    ComponentRegistrar::MODULE,
-    'OpenForgeProject_MageForge',
-    __DIR__
-);
+ComponentRegistrar::register(ComponentRegistrar::MODULE, 'OpenForgeProject_MageForge', __DIR__);

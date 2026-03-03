@@ -38,7 +38,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * @param CompatibilityChecker $compatibilityChecker
      */
     public function __construct(
-        private readonly CompatibilityChecker $compatibilityChecker
+        private readonly CompatibilityChecker $compatibilityChecker,
     ) {
         parent::__construct();
     }
@@ -50,32 +50,33 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('hyva', 'compatibility:check'))
+        $this
+            ->setName($this->getCommandName('hyva', 'compatibility:check'))
             ->setDescription('Check modules for Hyvä theme compatibility issues')
             ->setAliases(['hyva:check'])
             ->addOption(
                 self::OPTION_SHOW_ALL,
                 'a',
                 InputOption::VALUE_NONE,
-                'Show all modules including compatible ones'
+                'Show all modules including compatible ones',
             )
             ->addOption(
                 self::OPTION_THIRD_PARTY_ONLY,
                 't',
                 InputOption::VALUE_NONE,
-                'Check only third-party modules (exclude Magento_* modules)'
+                'Check only third-party modules (exclude Magento_* modules)',
             )
             ->addOption(
                 self::OPTION_INCLUDE_VENDOR,
                 null,
                 InputOption::VALUE_NONE,
-                'Include Magento core modules (default: third-party modules only)'
+                'Include Magento core modules (default: third-party modules only)',
             )
             ->addOption(
                 self::OPTION_DETAILED,
                 'd',
                 InputOption::VALUE_NONE,
-                'Show detailed file-level issues for incompatible modules'
+                'Show detailed file-level issues for incompatible modules',
             );
     }
 
@@ -89,7 +90,8 @@ class CompatibilityCheckCommand extends AbstractCommand
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         // Check if we're in interactive mode (no options provided)
-        $hasOptions = $input->getOption(self::OPTION_SHOW_ALL)
+        $hasOptions =
+            $input->getOption(self::OPTION_SHOW_ALL)
             || $input->getOption(self::OPTION_THIRD_PARTY_ONLY)
             || $input->getOption(self::OPTION_INCLUDE_VENDOR)
             || $input->getOption(self::OPTION_DETAILED);
@@ -142,10 +144,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $scope = $scopePrompt->prompt();
 
             // Detailed view confirmation
-            $detailedPrompt = new ConfirmPrompt(
-                label: 'Show detailed file-level issues?',
-                default: false,
-            );
+            $detailedPrompt = new ConfirmPrompt(label: 'Show detailed file-level issues?', default: false);
 
             $detailed = $detailedPrompt->prompt();
 
@@ -221,9 +220,8 @@ class CompatibilityCheckCommand extends AbstractCommand
         bool $includeVendor,
         bool $detailed,
         bool $incompatibleOnly,
-        OutputInterface $output
+        OutputInterface $output,
     ): int {
-
         // Determine filter logic:
         // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
         // - includeVendor: Also scan Magento_* core modules
@@ -237,7 +235,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $output,
             $showAll,
             $scanThirdPartyOnly,
-            $excludeVendor
+            $excludeVendor,
         );
 
         // Determine display mode:
@@ -266,9 +264,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->io->newLine();
 
         // Return appropriate exit code
-        return $results['summary']['criticalIssues'] > 0
-            ? Cli::RETURN_FAILURE
-            : Cli::RETURN_SUCCESS;
+        return $results['summary']['criticalIssues'] > 0 ? Cli::RETURN_FAILURE : Cli::RETURN_SUCCESS;
     }
 
     /**
@@ -289,10 +285,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             return;
         }
 
-        $this->io->table(
-            ['Module', 'Status', 'Issues'],
-            $tableData
-        );
+        $this->io->table(['Module', 'Status', 'Issues'], $tableData);
     }
 
     /**
@@ -327,7 +320,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                         $color,
                         $symbol,
                         $issue['line'],
-                        $issue['description']
+                        $issue['description'],
                     ));
                 }
             }
@@ -367,7 +360,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->writeln(sprintf(
                 '<fg=red>⚠</> Found <fg=red;options=bold>%d critical compatibility issue(s)</> in %d scanned modules.',
                 $summary['criticalIssues'],
-                $summary['total']
+                $summary['total'],
             ));
             $this->io->writeln('These modules require modifications to work with Hyvä themes.');
         } elseif ($summary['warningIssues'] > 0) {
@@ -375,7 +368,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->writeln(sprintf(
                 '<fg=yellow>ℹ</> Found <fg=yellow;options=bold>%d warning(s)</> in %d scanned modules.',
                 $summary['warningIssues'],
-                $summary['total']
+                $summary['total'],
             ));
             $this->io->writeln('Review these modules for potential compatibility issues.');
         } else {

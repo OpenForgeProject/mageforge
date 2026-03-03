@@ -17,7 +17,7 @@ class StaticContentDeployer
      */
     public function __construct(
         private readonly Shell $shell,
-        private readonly State $state
+        private readonly State $state,
     ) {
     }
 
@@ -30,12 +30,8 @@ class StaticContentDeployer
      * @param bool $isVerbose
      * @return bool
      */
-    public function deploy(
-        string $themeCode,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose
-    ): bool {
+    public function deploy(string $themeCode, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    {
         try {
             // Only deploy if not in developer mode
             if ($this->state->getMode() === State::MODE_DEVELOPER) {
@@ -49,17 +45,13 @@ class StaticContentDeployer
                 $io->text('Deploying static content...');
             }
 
-            $shellOutput = $this->shell->execute(
-                "php bin/magento setup:static-content:deploy -t %s -f --quiet",
-                [$themeCode]
-            );
+            $shellOutput = $this->shell->execute('php bin/magento setup:static-content:deploy -t %s -f --quiet', [
+                $themeCode,
+            ]);
 
             if ($isVerbose) {
                 $output->writeln($shellOutput);
-                $io->success(sprintf(
-                    "Static content deployed for theme '%s'.",
-                    $themeCode
-                ));
+                $io->success(sprintf("Static content deployed for theme '%s'.", $themeCode));
             }
 
             return true;

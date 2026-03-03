@@ -20,7 +20,7 @@ class ThemeCleaner
      * @param Filesystem $filesystem
      */
     public function __construct(
-        private readonly Filesystem $filesystem
+        private readonly Filesystem $filesystem,
     ) {
     }
 
@@ -37,7 +37,7 @@ class ThemeCleaner
         string $themeCode,
         SymfonyStyle $io,
         bool $dryRun = false,
-        bool $isVerbose = false
+        bool $isVerbose = false,
     ): int {
         $cleaned = 0;
         $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
@@ -71,11 +71,7 @@ class ThemeCleaner
                     $cleaned++;
                 } catch (\Exception $e) {
                     if ($isVerbose) {
-                        $io->writeln(sprintf(
-                            '  <fg=red>✗</> Failed to clean: var/%s - %s',
-                            $path,
-                            $e->getMessage()
-                        ));
+                        $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/%s - %s', $path, $e->getMessage()));
                     }
                 }
             }
@@ -97,7 +93,7 @@ class ThemeCleaner
         string $themeCode,
         SymfonyStyle $io,
         bool $dryRun = false,
-        bool $isVerbose = false
+        bool $isVerbose = false,
     ): int {
         $cleaned = 0;
         $staticDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::STATIC_VIEW);
@@ -130,7 +126,7 @@ class ThemeCleaner
                     $io->writeln(sprintf(
                         '  <fg=red>✗</> Failed to clean: pub/static/%s - %s',
                         $pathToClean,
-                        $e->getMessage()
+                        $e->getMessage(),
                     ));
                 }
             }
@@ -147,11 +143,8 @@ class ThemeCleaner
      * @param bool $isVerbose Whether to show verbose output
      * @return int Number of directories cleaned
      */
-    public function cleanPageCache(
-        SymfonyStyle $io,
-        bool $dryRun = false,
-        bool $isVerbose = false
-    ): int {
+    public function cleanPageCache(SymfonyStyle $io, bool $dryRun = false, bool $isVerbose = false): int
+    {
         $cleaned = 0;
         $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
 
@@ -167,10 +160,7 @@ class ThemeCleaner
                 $cleaned++;
             } catch (\Exception $e) {
                 if ($isVerbose) {
-                    $io->writeln(sprintf(
-                        '  <fg=red>✗</> Failed to clean: var/page_cache - %s',
-                        $e->getMessage()
-                    ));
+                    $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/page_cache - %s', $e->getMessage()));
                 }
             }
         }
@@ -186,11 +176,8 @@ class ThemeCleaner
      * @param bool $isVerbose Whether to show verbose output
      * @return int Number of directories cleaned
      */
-    public function cleanVarTmp(
-        SymfonyStyle $io,
-        bool $dryRun = false,
-        bool $isVerbose = false
-    ): int {
+    public function cleanVarTmp(SymfonyStyle $io, bool $dryRun = false, bool $isVerbose = false): int
+    {
         $cleaned = 0;
         $varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
 
@@ -206,10 +193,7 @@ class ThemeCleaner
                 $cleaned++;
             } catch (\Exception $e) {
                 if ($isVerbose) {
-                    $io->writeln(sprintf(
-                        '  <fg=red>✗</> Failed to clean: var/tmp - %s',
-                        $e->getMessage()
-                    ));
+                    $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/tmp - %s', $e->getMessage()));
                 }
             }
         }
@@ -225,11 +209,8 @@ class ThemeCleaner
      * @param bool $isVerbose Whether to show verbose output
      * @return int Number of directories cleaned
      */
-    public function cleanGenerated(
-        SymfonyStyle $io,
-        bool $dryRun = false,
-        bool $isVerbose = false
-    ): int {
+    public function cleanGenerated(SymfonyStyle $io, bool $dryRun = false, bool $isVerbose = false): int
+    {
         $cleaned = 0;
         $generatedDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::GENERATED);
 
@@ -244,10 +225,7 @@ class ThemeCleaner
                     $deletedCount++;
                 } catch (\Exception $e) {
                     if ($isVerbose) {
-                        $io->writeln(sprintf(
-                            '  <fg=red>✗</> Failed to clean: generated/code - %s',
-                            $e->getMessage()
-                        ));
+                        $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/code - %s', $e->getMessage()));
                     }
                 }
             }
@@ -262,7 +240,7 @@ class ThemeCleaner
                     if ($isVerbose) {
                         $io->writeln(sprintf(
                             '  <fg=red>✗</> Failed to clean: generated/metadata - %s',
-                            $e->getMessage()
+                            $e->getMessage(),
                         ));
                     }
                 }
@@ -277,10 +255,7 @@ class ThemeCleaner
             }
         } catch (\Exception $e) {
             if ($isVerbose) {
-                $io->writeln(sprintf(
-                    '  <fg=red>✗</> Failed to clean: generated - %s',
-                    $e->getMessage()
-                ));
+                $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated - %s', $e->getMessage()));
             }
         }
 

@@ -34,7 +34,7 @@ class InspectorHints
         private readonly StoreManagerInterface $storeManager,
         private readonly DevHelper $devHelper,
         private readonly InspectorHintsFactory $inspectorHintsFactory,
-        private readonly State $state
+        private readonly State $state,
     ) {
     }
 
@@ -48,7 +48,7 @@ class InspectorHints
      */
     public function afterCreate(
         TemplateEngineFactory $subject,
-        TemplateEngineInterface $invocationResult
+        TemplateEngineInterface $invocationResult,
     ): TemplateEngineInterface {
         // Only activate in developer mode
         if ($this->state->getMode() !== State::MODE_DEVELOPER) {

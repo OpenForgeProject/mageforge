@@ -32,7 +32,7 @@ interface BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool;
 
     /**
@@ -51,12 +51,7 @@ interface BuilderInterface
      * @param bool $isVerbose
      * @return bool
      */
-    public function autoRepair(
-        string $themePath,
-        SymfonyStyle $io,
-        OutputInterface $output,
-        bool $isVerbose
-    ): bool;
+    public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool;
 
     /**
      * Run the theme watch process.
@@ -73,6 +68,6 @@ interface BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool;
 }

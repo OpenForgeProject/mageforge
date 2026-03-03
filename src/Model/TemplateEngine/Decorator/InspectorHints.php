@@ -35,7 +35,7 @@ class InspectorHints implements TemplateEngineInterface
         private readonly bool $showBlockHints,
         private readonly Random $random,
         private readonly BlockCacheCollector $cacheCollector,
-        private readonly File $fileDriver
+        private readonly File $fileDriver,
     ) {
         $this->magentoRoot = $this->resolveMagentoRoot();
     }
@@ -110,7 +110,7 @@ class InspectorHints implements TemplateEngineInterface
         string $html,
         BlockInterface $block,
         string $templateFile,
-        array $renderMetrics
+        array $renderMetrics,
     ): string {
         $wrapperId = 'mageforge-' . $this->random->getRandomString(16);
 
@@ -162,7 +162,7 @@ class InspectorHints implements TemplateEngineInterface
             "<!-- MAGEFORGE_START %s -->\n%s\n<!-- MAGEFORGE_END %s -->",
             $jsonMetadata,
             $html,
-            $wrapperId
+            $wrapperId,
         );
 
         return $wrappedHtml;

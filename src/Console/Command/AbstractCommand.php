@@ -134,7 +134,7 @@ abstract class AbstractCommand extends Command
     protected function handleInvalidThemeWithSuggestions(
         string $invalidTheme,
         ThemeSuggester $themeSuggester,
-        OutputInterface $output
+        OutputInterface $output,
     ): ?string {
         $suggestions = $themeSuggester->findSimilarThemes($invalidTheme);
 
@@ -169,7 +169,7 @@ abstract class AbstractCommand extends Command
             label: 'Did you mean one of these themes?',
             options: $options,
             scroll: 10,
-            hint: 'Arrow keys to navigate, Enter to confirm'
+            hint: 'Arrow keys to navigate, Enter to confirm',
         );
 
         try {
@@ -375,7 +375,7 @@ abstract class AbstractCommand extends Command
         if ($sanitized === null) {
             return null;
         }
-        return (strlen($sanitized) > 0 && strlen($sanitized) <= 50) ? $sanitized : null;
+        return strlen($sanitized) > 0 && strlen($sanitized) <= 50 ? $sanitized : null;
     }
 
     /**
@@ -402,7 +402,7 @@ abstract class AbstractCommand extends Command
         if ($sanitized === null) {
             return null;
         }
-        return (strlen($sanitized) > 0 && strlen($sanitized) <= 255) ? $sanitized : null;
+        return strlen($sanitized) > 0 && strlen($sanitized) <= 255 ? $sanitized : null;
     }
 
     /**

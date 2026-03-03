@@ -13,7 +13,7 @@ class ThemePath
      * @param ComponentRegistrarInterface $componentRegistrar
      */
     public function __construct(
-        private readonly ComponentRegistrarInterface $componentRegistrar
+        private readonly ComponentRegistrarInterface $componentRegistrar,
     ) {
     }
 

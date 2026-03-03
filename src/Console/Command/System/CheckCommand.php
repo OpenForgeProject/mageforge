@@ -35,7 +35,7 @@ class CheckCommand extends AbstractCommand
         private readonly Escaper $escaper,
         private readonly ResourceConnection $resourceConnection,
         private readonly ClientFactory $httpClientFactory,
-        private readonly Shell $shell
+        private readonly Shell $shell,
     ) {
         parent::__construct();
     }
@@ -47,7 +47,8 @@ class CheckCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('system', 'check'))
+        $this
+            ->setName($this->getCommandName('system', 'check'))
             ->setDescription('Displays system information like PHP version and Node.js version')
             ->setAliases(['system:check']);
     }
@@ -85,34 +86,31 @@ class CheckCommand extends AbstractCommand
         $dbDisplay = $dbType . ' ' . $mysqlVersion;
 
         $this->io->section('System Components');
-        $this->io->table(
-            ['Component', 'Version/Status'],
-            [
-                ['PHP', $phpVersion . ' (Memory limit: ' . $this->getPhpMemoryLimit() . ')'],
-                new TableSeparator(),
-                ['Composer', $composerVersion],
-                new TableSeparator(),
-                ['Node.js', $nodeVersionDisplay],
-                new TableSeparator(),
-                ['NPM', $npmVersion],
-                new TableSeparator(),
-                ['Git', $gitVersion],
-                new TableSeparator(),
-                ['Database', $dbDisplay],
-                new TableSeparator(),
-                ['Xdebug', $xdebugStatus],
-                new TableSeparator(),
-                ['Redis', $redisStatus],
-                new TableSeparator(),
-                ['Search Engine', $searchEngineStatus],
-                new TableSeparator(),
-                ['OS', $osInfo],
-                new TableSeparator(),
-                ['Disk Space', $diskSpace],
-                new TableSeparator(),
-                ['Magento', $magentoVersion]
-            ]
-        );
+        $this->io->table(['Component', 'Version/Status'], [
+            ['PHP', $phpVersion . ' (Memory limit: ' . $this->getPhpMemoryLimit() . ')'],
+            new TableSeparator(),
+            ['Composer', $composerVersion],
+            new TableSeparator(),
+            ['Node.js', $nodeVersionDisplay],
+            new TableSeparator(),
+            ['NPM', $npmVersion],
+            new TableSeparator(),
+            ['Git', $gitVersion],
+            new TableSeparator(),
+            ['Database', $dbDisplay],
+            new TableSeparator(),
+            ['Xdebug', $xdebugStatus],
+            new TableSeparator(),
+            ['Redis', $redisStatus],
+            new TableSeparator(),
+            ['Search Engine', $searchEngineStatus],
+            new TableSeparator(),
+            ['OS', $osInfo],
+            new TableSeparator(),
+            ['Disk Space', $diskSpace],
+            new TableSeparator(),
+            ['Magento', $magentoVersion],
+        ]);
 
         if (!empty($phpExtensions)) {
             $this->io->section('PHP Extensions');
@@ -511,19 +509,22 @@ class CheckCommand extends AbstractCommand
             'http://localhost:9200',
             'http://127.0.0.1:9200',
             'http://elasticsearch:9200',
-            'http://opensearch:9200'
+            'http://opensearch:9200',
         ];
 
         $envHosts = [
-            'ELASTICSEARCH_HOST', 'ES_HOST', 'OPENSEARCH_HOST'
+            'ELASTICSEARCH_HOST',
+            'ES_HOST',
+            'OPENSEARCH_HOST',
         ];
 
         foreach ($envHosts as $envVar) {
             $hostValue = $this->getEnvironmentVariable($envVar);
             if (!empty($hostValue)) {
-                $port = $this->getEnvironmentVariable('ELASTICSEARCH_PORT') ??
-                       $this->getEnvironmentVariable('ES_PORT') ??
-                       $this->getEnvironmentVariable('OPENSEARCH_PORT') ?? '9200';
+                $port =
+                    $this->getEnvironmentVariable('ELASTICSEARCH_PORT') ?? $this->getEnvironmentVariable(
+                        'ES_PORT',
+                    ) ?? $this->getEnvironmentVariable('OPENSEARCH_PORT') ?? '9200';
                 $elasticHosts[] = "http://{$hostValue}:{$port}";
             }
         }
@@ -617,8 +618,19 @@ class CheckCommand extends AbstractCommand
     {
         $extensions = [];
         $requiredExtensions = [
-            'curl', 'dom', 'fileinfo', 'gd', 'intl', 'json', 'mbstring',
-            'openssl', 'pdo_mysql', 'simplexml', 'soap', 'xml', 'zip'
+            'curl',
+            'dom',
+            'fileinfo',
+            'gd',
+            'intl',
+            'json',
+            'mbstring',
+            'openssl',
+            'pdo_mysql',
+            'simplexml',
+            'soap',
+            'xml',
+            'zip',
         ];
 
         foreach ($requiredExtensions as $ext) {
@@ -649,8 +661,8 @@ class CheckCommand extends AbstractCommand
         $totalSpace = disk_total_space('.');
         $freeSpace = disk_free_space('.');
 
-        $totalGB = round($totalSpace / 1024 / 1024 / 1024, 2);
-        $freeGB = round($freeSpace / 1024 / 1024 / 1024, 2);
+        $totalGB = round((($totalSpace / 1024) / 1024) / 1024, 2);
+        $freeGB = round((($freeSpace / 1024) / 1024) / 1024, 2);
         $usedGB = round($totalGB - $freeGB, 2);
         $usedPercent = round(($usedGB / $totalGB) * 100, 2);
 
@@ -725,7 +737,7 @@ class CheckCommand extends AbstractCommand
             $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
             $envValue = $deploymentConfig->get('system/default/environment/' . $name);
             if ($envValue !== null) {
-                return (string)$envValue;
+                return (string) $envValue;
             }
         } catch (\Exception $e) {
             if ($this->io->isVerbose()) {
@@ -751,7 +763,7 @@ class CheckCommand extends AbstractCommand
             if (method_exists($environmentService, $method)) {
                 $value = $environmentService->$method();
                 if ($value !== null) {
-                    return (string)$value;
+                    return (string) $value;
                 }
             }
         } catch (\Exception $e) {
@@ -773,7 +785,7 @@ class CheckCommand extends AbstractCommand
     {
         // Use ini_get for certain system variables as a safer alternative
         if (in_array($name, ['memory_limit', 'max_execution_time'])) {
-            $value = (string)ini_get($name);
+            $value = (string) ini_get($name);
             if ($value !== '') {
                 return $value;
             }

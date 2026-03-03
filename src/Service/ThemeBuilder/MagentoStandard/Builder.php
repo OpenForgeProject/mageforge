@@ -38,7 +38,7 @@ class Builder implements BuilderInterface
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
         private readonly NodePackageManager $nodePackageManager,
-        private readonly GruntTaskRunner $gruntTaskRunner
+        private readonly GruntTaskRunner $gruntTaskRunner,
     ) {
     }
 
@@ -55,8 +55,10 @@ class Builder implements BuilderInterface
 
         // Check if this is a standard Magento theme by looking for theme.xml
         // and ensuring it's not a Hyva theme (no tailwind directory)
-        return $this->fileDriver->isExists($themePath . '/theme.xml')
-            && !$this->fileDriver->isExists($themePath . '/web/tailwind');
+        return (
+            $this->fileDriver->isExists($themePath . '/theme.xml')
+            && !$this->fileDriver->isExists($themePath . '/web/tailwind')
+        );
     }
 
     /**
@@ -74,19 +76,14 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 
@@ -130,7 +127,7 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         // Check if Node/Grunt setup exists
         if (!$this->autoRepair($themePath, $io, $output, $isVerbose)) {
@@ -250,7 +247,7 @@ class Builder implements BuilderInterface
         string $themePath,
         SymfonyStyle $io,
         OutputInterface $output,
-        bool $isVerbose
+        bool $isVerbose,
     ): bool {
         if (!$this->detect($themePath)) {
             return false;
@@ -258,10 +255,8 @@ class Builder implements BuilderInterface
 
         // Vendor themes cannot be watched (read-only)
         if ($this->isVendorTheme($themePath)) {
-            $io->error(
-                'Watch mode is not supported for vendor themes. Vendor themes are read-only and '
-                . 'should have pre-built assets.'
-            );
+            $io->error('Watch mode is not supported for vendor themes. Vendor themes are read-only and '
+            . 'should have pre-built assets.');
             return false;
         }
 
@@ -269,18 +264,13 @@ class Builder implements BuilderInterface
         if (!$this->hasNodeSetup()) {
             $io->error(
                 'Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, '
-                . 'node_modules, or grunt-config.json found.'
+                . 'node_modules, or grunt-config.json found.',
             );
             return false;
         }
 
         // Clean static content if in developer mode
-        if (!$this->staticContentCleaner->cleanIfNeeded(
-            $themeCode,
-            $io,
-            $output,
-            $isVerbose
-        )) {
+        if (!$this->staticContentCleaner->cleanIfNeeded($themeCode, $io, $output, $isVerbose)) {
             return false;
         }
 

@@ -13,7 +13,7 @@ class CacheCleaner
      * @param Shell $shell
      */
     public function __construct(
-        private readonly Shell $shell
+        private readonly Shell $shell,
     ) {
     }
 
@@ -31,9 +31,7 @@ class CacheCleaner
                 $io->text('Cleaning cache...');
             }
 
-            $this->shell->execute(
-                'bin/magento cache:clean full_page block_html layout translate'
-            );
+            $this->shell->execute('bin/magento cache:clean full_page block_html layout translate');
 
             if ($isVerbose) {
                 $io->success('Cache cleaned successfully.');

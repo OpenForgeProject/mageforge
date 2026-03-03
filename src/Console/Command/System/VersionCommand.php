@@ -23,7 +23,7 @@ class VersionCommand extends AbstractCommand
      * @param File $fileDriver
      */
     public function __construct(
-        private readonly File $fileDriver
+        private readonly File $fileDriver,
     ) {
         parent::__construct();
     }
@@ -35,7 +35,8 @@ class VersionCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('system', 'version'))
+        $this
+            ->setName($this->getCommandName('system', 'version'))
             ->setDescription('Displays the module version and the latest version')
             ->setAliases(['system:version']);
     }
@@ -56,7 +57,7 @@ class VersionCommand extends AbstractCommand
         $this->io->section('Versions');
         $this->io->listing([
             "Module Version: $moduleVersion",
-            "Latest Version: $latestVersion"
+            "Latest Version: $latestVersion",
         ]);
 
         return Cli::RETURN_SUCCESS;
@@ -70,9 +71,7 @@ class VersionCommand extends AbstractCommand
     private function getModuleVersion(): string
     {
         try {
-            $composerJson = $this->fileDriver->fileGetContents(
-                __DIR__ . '/../../../../composer.json'
-            );
+            $composerJson = $this->fileDriver->fileGetContents(__DIR__ . '/../../../../composer.json');
             $composerData = json_decode($composerJson, true);
             return $composerData['version'] ?? self::UNKNOWN_VERSION;
         } catch (\Exception $e) {
@@ -91,8 +90,8 @@ class VersionCommand extends AbstractCommand
             $client = new Client();
             $response = $client->get(self::API_URL, [
                 'headers' => [
-                    'User-Agent' => 'MageForge-Version-Check'
-                ]
+                    'User-Agent' => 'MageForge-Version-Check',
+                ],
             ]);
 
             if ($response->getStatusCode() === 200) {

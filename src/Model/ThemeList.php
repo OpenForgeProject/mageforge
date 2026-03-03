@@ -14,7 +14,7 @@ class ThemeList
      * @param MagentoThemeList $magentoThemeList
      */
     public function __construct(
-        private readonly MagentoThemeList $magentoThemeList
+        private readonly MagentoThemeList $magentoThemeList,
     ) {
     }
 
