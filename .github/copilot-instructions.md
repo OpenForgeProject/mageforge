@@ -115,6 +115,14 @@ public function build($themePath, $io)
 - Use **named arguments** when many parameters
 - Prefer **Enums** over constants (PHP 8.3+)
 
+### Soft Dependencies (Hyvä Compatibility)
+
+**MageForge MUST work with AND without Hyvä Themes installed.**
+
+- **No Hard Dependencies**: Do not type-hint classes from optional modules (like Hyvä) in constructors or method signatures.
+- **Use `mixed` + `class_exists()`**: When using third-party classes that might not exist, use `mixed` type hints and verify existence with `class_exists()` or strings.
+- **PHPStan**: Use inline `@var` annotations to tell PHPStan about the type after verifying availability, or suppress specific errors for missing classes if necessary.
+
 ## Builder Pattern for Theme Types
 
 ### Creating New Builders
