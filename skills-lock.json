@@ -10,6 +10,11 @@
       "source": "rawveg/skillsforge-marketplace",
       "sourceType": "github",
       "computedHash": "09a9aa1406cbfd4e20c7000cec0f12c74d2a3d657f404f1d05a3a57568188388"
+    },
+    "magento-performance-analyst": {
+      "source": "maxnorm/magento2-agent-skills",
+      "sourceType": "github",
+      "computedHash": "9e5de533bf800faeb608d9937dbf3f59f659bacd784587f60b8d60092f68dba2"
     }
   }
 }
