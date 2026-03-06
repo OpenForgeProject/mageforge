@@ -1,6 +1,6 @@
 # Testing Guide: Copy From Vendor Command
 
-This guide describes how to test the `mageforge:theme:copy-from-vendor` command with different theme types and scenarios.
+This guide describes how to test the `mageforge:copy:template` command with different theme types and scenarios.
 
 ## Automated Tests
 
@@ -26,7 +26,7 @@ ddev magento setup:upgrade
 
 ```bash
 # Test with view/frontend file
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
   Magento/luma \
   --dry-run
@@ -38,7 +38,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Test with view/base file (should work with frontend theme)
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-theme/view/base/web/css/print.css \
   Magento/blank \
   --dry-run
@@ -50,7 +50,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Test with Hyvä-specific file
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/hyva-themes/magento2-default-theme/Magento_Catalog/templates/product/list/item.phtml \
   Hyva/default \
   --dry-run
@@ -64,7 +64,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Test with view/adminhtml file
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-backend/view/adminhtml/templates/page/header.phtml \
   Magento/backend \
   --dry-run
@@ -76,7 +76,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Test with view/base file (should work with adminhtml theme)
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-ui/view/base/web/js/grid/columns/column.js \
   Magento/backend \
   --dry-run
@@ -90,7 +90,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # This should FAIL with clear error message
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
   Magento/backend \
   --dry-run
@@ -102,7 +102,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # This should FAIL with clear error message
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-backend/view/adminhtml/templates/dashboard.phtml \
   Magento/luma \
   --dry-run
@@ -114,7 +114,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # This should FAIL with clear error message
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/etc/di.xml \
   Magento/luma \
   --dry-run
@@ -126,7 +126,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # This should FAIL with clear error message
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/nonexistent.phtml \
   Magento/luma \
   --dry-run
@@ -140,7 +140,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Test interactive theme selection (omit theme argument)
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/product/view.phtml \
   --dry-run
 
@@ -157,7 +157,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Copy a file that doesn't exist in theme yet
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/product/list/toolbar.phtml \
   Magento/luma
 
@@ -171,7 +171,7 @@ ddev magento mageforge:theme:copy-from-vendor \
 
 ```bash
 # Copy to same location again
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/templates/product/list/toolbar.phtml \
   Magento/luma
 
@@ -238,16 +238,16 @@ The command should be tested in CI/CD pipeline:
 - name: Test Copy Command
   run: |
     # Test basic functionality
-    bin/magento mageforge:theme:copy-from-vendor --help
+    bin/magento mageforge:copy:template --help
 
     # Test dry-run mode
-    bin/magento mageforge:theme:copy-from-vendor \
+    bin/magento mageforge:copy:template \
       vendor/magento/module-catalog/view/frontend/templates/product/list.phtml \
       Magento/luma \
       --dry-run
 
     # Test error handling
-    if bin/magento mageforge:theme:copy-from-vendor \
+    if bin/magento mageforge:copy:template \
       vendor/magento/module-catalog/etc/di.xml \
       Magento/luma \
       --dry-run 2>&1 | grep -q "not under a view"; then
@@ -285,7 +285,7 @@ For large files or batch operations:
 
 ```bash
 # Time the operation
-time ddev magento mageforge:theme:copy-from-vendor \
+time ddev magento mageforge:copy:template \
   vendor/magento/module-catalog/view/frontend/layout/catalog_product_view.xml \
   Magento/luma \
   --dry-run
@@ -302,7 +302,7 @@ After each deployment or environment update:
 ddev magento dev:tests:run unit vendor/openforgeproject/mageforge/Test/
 
 # Run smoke test
-ddev magento mageforge:theme:copy-from-vendor \
+ddev magento mageforge:copy:template \
   vendor/magento/module-theme/view/frontend/templates/page/copyright.phtml \
   Magento/luma \
   --dry-run

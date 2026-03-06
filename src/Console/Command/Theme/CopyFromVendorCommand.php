@@ -50,9 +50,9 @@ class CopyFromVendorCommand extends AbstractCommand
      */
     protected function configure(): void
     {
-        $this->setName($this->getCommandName('theme', 'copy-from-vendor'))
+        $this->setName($this->getCommandName('copy', 'template'))
              ->setDescription('Copy a file from vendor/ to a specific theme with correct path resolution')
-             ->setAliases(['theme:copy'])
+             ->setAliases(['copy:template'])
              ->addArgument('file', InputArgument::REQUIRED, 'Path to the source file (vendor/...)')
              ->addArgument('theme', InputArgument::OPTIONAL, 'Target theme code (e.g. Magento/luma)')
              ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Preview the copy operation without performing it');

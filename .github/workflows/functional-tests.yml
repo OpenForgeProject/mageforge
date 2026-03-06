@@ -160,13 +160,13 @@ jobs:
           echo "=== Copy From Vendor Tests ==="
 
           echo "Test help command:"
-          bin/magento mageforge:theme:copy-from-vendor --help
+          bin/magento mageforge:copy:template --help
 
           echo "Test alias help:"
           bin/magento theme:copy --help
 
           echo "Test dry-run without required arguments (expect validation failure but command should execute):"
-          bin/magento mageforge:theme:copy-from-vendor --dry-run || echo "Expected failure - missing or invalid arguments for copy-from-vendor"
+          bin/magento mageforge:copy:template --dry-run || echo "Expected failure - missing or invalid arguments for copy-from-vendor"
 
           echo "Test alias dry-run without required arguments (expect validation failure but alias should execute):"
           bin/magento theme:copy --dry-run || echo "Expected failure - missing or invalid arguments for theme:copy alias"
