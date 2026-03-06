@@ -5,3 +5,5 @@ parameters:
     level: 8
     paths:
         - src
+    scanDirectories:
+        - ../../../generated/code/OpenForgeProject/MageForge
