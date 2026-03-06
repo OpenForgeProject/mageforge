@@ -73,18 +73,39 @@ class VendorFileMapper
                     // Start with clean path (e.g. templates/Original_Module/foo.phtml or templates/foo.phtml)
                     $targetPath = ltrim($cleanPath, '/');
 
-                    // If path contains the Original Module name as a subdirectory (Hyva convention), strip it
-                    // Example: templates/Mollie_Payment/foo.phtml -> templates/foo.phtml
-                    // This prevents Theme/Mollie_Payment/templates/Mollie_Payment/foo.phtml
-                    // Note: Check both strict and case-insensitive to be safe
-                    if (str_contains($targetPath, '/' . $originalModule . '/')) {
-                        $targetPath = str_replace('/' . $originalModule . '/', '/', $targetPath);
-                    } elseif (stripos($targetPath, '/' . $originalModule . '/') !== false) {
-                        // Case-insensitive replacement if strict failed
-                         $targetPath = str_ireplace('/' . $originalModule . '/', '/', $targetPath);
+                    // Check if file actually exists in the original module's path
+                    $originalModulePath = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $originalModule);
+                    $existsInOriginal = false;
+
+                    if ($originalModulePath) {
+                        $pathInOriginal = $originalModulePath . '/' . $pathInsideModule;
+                        $existsInOriginal = $this->fileDriver->isExists($pathInOriginal);
+
+                        // If not found in current area (e.g. frontend), check if original uses 'base' area instead
+                        if (!$existsInOriginal && str_starts_with($pathInsideModule, 'view/' . $themeArea . '/')) {
+                            $basePathInOriginal = $originalModulePath . '/' . str_replace('view/' . $themeArea . '/', 'view/base/', $pathInsideModule);
+                            $existsInOriginal = $this->fileDriver->isExists($basePathInOriginal);
+                        }
                     }
 
-                    return rtrim($themePath, '/') . '/' . $originalModule . '/' . $targetPath;
+                    if ($existsInOriginal) {
+                        // File exists in original module: resolve path with original module namespace
+                        // If path contains the Original Module name as a subdirectory (Hyva convention), strip it
+                        // Example: templates/Mollie_Payment/foo.phtml -> templates/foo.phtml
+                        // This prevents Theme/Mollie_Payment/templates/Mollie_Payment/foo.phtml
+                        if (str_contains($targetPath, '/' . $originalModule . '/')) {
+                            $targetPath = str_replace('/' . $originalModule . '/', '/', $targetPath);
+                        } elseif (stripos($targetPath, '/' . $originalModule . '/') !== false) {
+                            // Case-insensitive replacement if strict failed
+                            $targetPath = str_ireplace('/' . $originalModule . '/', '/', $targetPath);
+                        }
+
+                        return rtrim($themePath, '/') . '/' . $originalModule . '/' . $targetPath;
+                    }
+
+                    // File does NOT exist in original module (e.g. compat-specific template):
+                    // resolve path with compat module namespace
+                    return rtrim($themePath, '/') . '/' . $moduleName . '/' . $targetPath;
                 }
 
                 return rtrim($themePath, '/') . '/' . $moduleName . '/' . ltrim($cleanPath, '/');
@@ -358,54 +379,18 @@ class VendorFileMapper
         libxml_use_internal_errors($libxmlState);
 
         $xpath = new \DOMXPath($dom);
-        $query = "//argument[@name='compatModules'][@xsi:type='array']/item[@xsi:type='array']";
-        $items = $xpath->query($query);
+        // Look for original_module specifically within CompatModuleRegistry arguments
+        $query = "//type[@name='Hyva\CompatModuleFallback\Model\CompatModuleRegistry']//item[@name='original_module']";
+        $nodes = $xpath->query($query);
 
-        if ($items === false || $items->length === 0) {
-            return null;
-        }
-
-        /** @var \DOMNodeList<\DOMNode> $items */
-        return $this->findOriginalModuleInXmlItems($items, $xpath, $moduleName);
-    }
-
-    /**
-     * Find original module in XML items
-     *
-     * @param \DOMNodeList<\DOMNode> $items
-     * @param \DOMXPath $xpath
-     * @param string $moduleName
-     * @return string|null
-     */
-    private function findOriginalModuleInXmlItems(\DOMNodeList $items, \DOMXPath $xpath, string $moduleName): ?string
-    {
-        foreach ($items as $item) {
-            $compatModuleValue = null;
-            $originalModuleValue = null;
-
-            /** @var \DOMElement $item */
-            $childNodes = $xpath->query('item', $item);
-            if ($childNodes === false) {
-                continue;
-            }
-
-            foreach ($childNodes as $childNode) {
-                /** @var \DOMElement $childNode */
-                $nameAttr = $childNode->getAttribute('name');
-                $value = trim((string) $childNode->nodeValue);
-
-                if ($nameAttr === 'compat_module') {
-                    $compatModuleValue = $value;
-                } elseif ($nameAttr === 'original_module') {
-                    $originalModuleValue = $value;
-                }
-            }
-
-            if ($compatModuleValue === $moduleName && $originalModuleValue) {
-                return $originalModuleValue;
+        if ($nodes !== false && $nodes->length > 0) {
+            $node = $nodes->item(0);
+            if ($node) {
+                return trim((string) $node->nodeValue);
             }
         }
 
+        // Fallback to older logic if needed or just return null
         return null;
     }
 }
