@@ -5,3 +5,6 @@ parameters:
     level: 8
     paths:
         - src
+    ignoreErrors:
+        # Magento 2 auto-generated classes
+        - '#[a-zA-Z0-9\\_]+Factory#'

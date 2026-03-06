@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
-use Laravel\Prompts\SelectPrompt;
+use Laravel\Prompts\SearchPrompt;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
@@ -108,11 +108,14 @@ class TokensCommand extends AbstractCommand
         $themes = $this->themeList->getAllThemes();
         $options = array_map(fn($theme) => $theme->getCode(), $themes);
 
-        $themeCodePrompt = new SelectPrompt(
+        $themeCodePrompt = new SearchPrompt(
             label: 'Select theme to generate tokens for',
-            options: $options,
+            options: fn(string $value) => empty($value)
+                ? $options
+                : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+            placeholder: 'Type to search theme...',
             scroll: 10,
-            hint: 'Arrow keys to navigate, Enter to confirm',
+            hint: 'Type to search, arrow keys to navigate, Enter to confirm',
         );
 
         try {

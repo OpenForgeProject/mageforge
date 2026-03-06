@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
-use Laravel\Prompts\MultiSelectPrompt;
+use Laravel\Prompts\MultiSearchPrompt;
 use Laravel\Prompts\Spinner;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
@@ -82,11 +82,13 @@ class BuildCommand extends AbstractCommand
             // Set environment variables for Laravel Prompts
             $this->setPromptEnvironment();
 
-            $themeCodesPrompt = new MultiSelectPrompt(
+            $themeCodesPrompt = new MultiSearchPrompt(
                 label: 'Select themes to build',
-                options: $options,
-                default: [], // No default selection
-                hint: 'Arrow keys to navigate, Space to toggle, Enter to confirm (scroll with arrows if needed)',
+                options: fn(string $value) => empty($value)
+                    ? $options
+                    : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+                placeholder: 'Type to search theme...',
+                hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
                 required: false,
             );
 
