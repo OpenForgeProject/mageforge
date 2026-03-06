@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.14.0](https://github.com/OpenForgeProject/mageforge/compare/0.13.0...0.14.0) (2026-03-06)
+
+
+### Added
+
+* replace MultiSelectPrompt with MultiSearchPrompt for theme selection ([bc89442](https://github.com/OpenForgeProject/mageforge/commit/bc89442fa6f9d77043462c02e842437211065cd7))
+
 ## [0.13.0](https://github.com/OpenForgeProject/mageforge/compare/0.12.0...0.13.0) (2026-03-03)
 
 
