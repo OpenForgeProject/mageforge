@@ -365,6 +365,7 @@ class VendorFileMapper
             return null;
         }
 
+        /** @var \DOMNodeList<\DOMNode> $items */
         return $this->findOriginalModuleInXmlItems($items, $xpath, $moduleName);
     }
 
