@@ -4,7 +4,7 @@
     "github-actions-templates": {
       "source": "wshobson/agents",
       "sourceType": "github",
-      "computedHash": "7a28cb13b9fa427ae39c943ceb25d81f8135f848e1a1d434dc86a75926f51035"
+      "computedHash": "8604814828637308a8cdc45c53e647f0029395328184937312330e4b8e8c587f"
     },
     "laravel-prompts": {
       "source": "rawveg/skillsforge-marketplace",
