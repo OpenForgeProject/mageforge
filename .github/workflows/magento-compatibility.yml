@@ -15,9 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - magento-version: "2.4.6-p14"
-            php-version: "8.2"
-            search-engine-name: "opensearch"
           - magento-version: "2.4.7-p9"
             php-version: "8.3"
             search-engine-name: "opensearch"

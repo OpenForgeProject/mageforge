@@ -9,7 +9,7 @@ MageForge is a powerful CLI front-end development toolkit for Magento 2 that sim
 
 ## Supported Magento Versions
 
-MageForge requires Magento 2.4.7 or higher.
+MageForge requires Magento 2.4.7 or higher with PHP 8.3 or higher.
 Please ensure that your Magento installation meets this requirement before installation.
 
 ## Features
