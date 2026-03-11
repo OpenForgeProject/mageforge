@@ -18,7 +18,7 @@ jobs:
           - magento-version: "2.4.7"
             php-version: "8.3"
             search-engine-name: "opensearch"
-          - magento-version: "2.4.7-p8"
+          - magento-version: "2.4.7-p9"
             php-version: "8.3"
             search-engine-name: "opensearch"
 
