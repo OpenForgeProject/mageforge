@@ -17,6 +17,16 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.14.1](https://github.com/OpenForgeProject/mageforge/compare/0.14.0...0.14.1) (2026-03-12)
+
+
+### Fixed
+
+* ensure theme codes are indexed correctly in commands ([#149](https://github.com/OpenForgeProject/mageforge/issues/149)) ([f9175a7](https://github.com/OpenForgeProject/mageforge/commit/f9175a75e017965a0014cd71b940ce354ce64633))
+* update Magento requirement to 2.4.7 with PHP 8.3 in README ([3b4cfca](https://github.com/OpenForgeProject/mageforge/commit/3b4cfca7a041f0dca8b9c3c88f2114789628471c))
+* update Magento version to 2.4.7-p9 in compatibility workflow ([79eb0b2](https://github.com/OpenForgeProject/mageforge/commit/79eb0b264918d662f7e2308c022ea3f6ddd5ea94))
+* update PHP version and Magento version in compatibility matrix ([8d662f6](https://github.com/OpenForgeProject/mageforge/commit/8d662f6864f9a8a7f5a78ab508dc59fe54712adb))
+
 ## [0.14.0](https://github.com/OpenForgeProject/mageforge/compare/0.13.0...0.14.0) (2026-03-06)
 
 
