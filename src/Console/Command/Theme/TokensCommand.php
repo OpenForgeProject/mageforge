@@ -106,7 +106,7 @@ class TokensCommand extends AbstractCommand
         }
 
         $themes = $this->themeList->getAllThemes();
-        $options = array_map(fn($theme) => $theme->getCode(), $themes);
+        $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
 
         $themeCodePrompt = new SearchPrompt(
             label: 'Select theme to generate tokens for',

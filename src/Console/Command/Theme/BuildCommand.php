@@ -70,7 +70,7 @@ class BuildCommand extends AbstractCommand
 
         if (empty($themeCodes)) {
             $themes = $this->themeList->getAllThemes();
-            $options = array_map(fn($theme) => $theme->getCode(), $themes);
+            $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
 
             // Check if we're in an interactive terminal environment
             if (!$this->isInteractiveTerminal($output)) {

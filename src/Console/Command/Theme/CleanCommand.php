@@ -141,7 +141,7 @@ class CleanCommand extends AbstractCommand
     private function selectThemesInteractively(OutputInterface $output): ?array
     {
         $themes = $this->themeList->getAllThemes();
-        $options = array_map(fn($theme) => $theme->getCode(), $themes);
+        $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
 
         if (!$this->isInteractiveTerminal($output)) {
             $this->displayAvailableThemes($themes);
