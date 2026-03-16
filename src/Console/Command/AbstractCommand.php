@@ -478,4 +478,54 @@ abstract class AbstractCommand extends Command
         unset($this->secureEnvStorage[$name]);
         $this->clearEnvironmentCache();
     }
+
+    /**
+     * Resolve wildcard theme codes (e.g., Vendor/* to all underlying vendor themes)
+     *
+     * @param string[] $themeCodes
+     * @param \OpenForgeProject\MageForge\Model\ThemeList $themeList
+     * @return string[]
+     */
+    protected function resolveWildcardThemes(array $themeCodes, \OpenForgeProject\MageForge\Model\ThemeList $themeList): array
+    {
+        $resolved = [];
+        $availableThemes = null;
+
+        foreach ($themeCodes as $code) {
+            if (\str_ends_with($code, '/*')) {
+                // Lazy-load themes only when needed
+                if ($availableThemes === null) {
+                    $availableThemes = array_map(
+                        fn($theme) => $theme->getCode(),
+                        $themeList->getAllThemes()
+                    );
+                }
+
+                $prefix = substr($code, 0, -1); // Keeps the trailing slash, e.g. "Vendor/"
+                
+                $matched = array_filter(
+                    $availableThemes,
+                    fn(string $availableCode) => \str_starts_with($availableCode, $prefix)
+                );
+
+                if (empty($matched)) {
+                    $this->io->warning(sprintf("No themes found for prefix '%s'", $prefix));
+                } else {
+                    $this->io->note(sprintf(
+                        "Resolved '%s' to %d theme(s): %s",
+                        $code,
+                        count($matched),
+                        implode(', ', $matched)
+                    ));
+                }
+
+                $resolved = array_merge($resolved, $matched);
+            } else {
+                $resolved[] = $code;
+            }
+        }
+
+        // Return a fresh list without duplicates
+        return array_values(array_unique($resolved));
+    }
 }

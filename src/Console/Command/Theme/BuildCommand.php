@@ -66,6 +66,17 @@ class BuildCommand extends AbstractCommand
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $themeCodes = $input->getArgument('themeCodes');
+
+        // Allow wildcards using the AbstractCommand helper
+        if (!empty($themeCodes)) {
+            $themeCodes = $this->resolveWildcardThemes($themeCodes, $this->themeList);
+            
+            // If wildcards matched nothing and no other explicit themes remain
+            if (empty($themeCodes)) {
+                return Command::SUCCESS;
+            }
+        }
+
         $isVerbose = $this->isVerbose($output);
 
         if (empty($themeCodes)) {
@@ -337,12 +348,19 @@ class BuildCommand extends AbstractCommand
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
         $io->newLine();
-        $io->success(sprintf('🚀 Build process completed in %.2f seconds with the following results:', $duration));
-        $io->writeln('Summary:');
-        $io->newLine();
-
-        if (empty($successList)) {
-            $io->warning('No themes were built successfully.');
+        
+        $successCount = count($successList);
+        
+        if ($successCount > 0) {
+            $io->success(sprintf(
+                '🚀 Successfully built %d theme(s). Build process completed in %.2f seconds.', 
+                $successCount, 
+                $duration
+            ));
+            $io->writeln('Summary:');
+            $io->newLine();
+        } else {
+            $io->warning(sprintf('Build process completed in %.2f seconds, but no themes were built successfully.', $duration));
             return;
         }
 

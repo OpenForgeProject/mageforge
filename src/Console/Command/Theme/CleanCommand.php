@@ -105,6 +105,15 @@ class CleanCommand extends AbstractCommand
             return $this->getAllThemeCodes();
         }
 
+        if (!empty($themeCodes)) {
+            $themeCodes = $this->resolveWildcardThemes($themeCodes, $this->themeList);
+            
+            // If wildcards matched nothing and no other explicit themes remain
+            if (empty($themeCodes)) {
+                return null;
+            }
+        }
+
         if (empty($themeCodes)) {
             return $this->selectThemesInteractively($output);
         }
