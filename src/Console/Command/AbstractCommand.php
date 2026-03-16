@@ -486,8 +486,10 @@ abstract class AbstractCommand extends Command
      * @param \OpenForgeProject\MageForge\Model\ThemeList $themeList
      * @return string[]
      */
-    protected function resolveWildcardThemes(array $themeCodes, \OpenForgeProject\MageForge\Model\ThemeList $themeList): array
-    {
+    protected function resolveWildcardThemes(
+        array $themeCodes,
+        \OpenForgeProject\MageForge\Model\ThemeList $themeList
+    ): array {
         $resolved = [];
         $availableThemes = null;
 
@@ -519,7 +521,7 @@ abstract class AbstractCommand extends Command
                     ));
                 }
 
-                $resolved = array_merge($resolved, $matched);
+                array_push($resolved, ...$matched);
             } else {
                 $resolved[] = $code;
             }

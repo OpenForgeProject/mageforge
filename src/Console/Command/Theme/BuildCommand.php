@@ -353,14 +353,17 @@ class BuildCommand extends AbstractCommand
         
         if ($successCount > 0) {
             $io->success(sprintf(
-                '🚀 Successfully built %d theme(s). Build process completed in %.2f seconds.', 
-                $successCount, 
+                '🚀 Successfully built %d theme(s). Build process completed in %.2f seconds.',
+                $successCount,
                 $duration
             ));
             $io->writeln('Summary:');
             $io->newLine();
         } else {
-            $io->warning(sprintf('Build process completed in %.2f seconds, but no themes were built successfully.', $duration));
+            $io->warning(sprintf(
+                'Build process completed in %.2f seconds, but no themes were built successfully.',
+                $duration
+            ));
             return;
         }
 
