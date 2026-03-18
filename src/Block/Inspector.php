@@ -89,7 +89,8 @@ class Inspector extends Template
      */
     public function getTheme(): string
     {
-        return (string) $this->scopeConfig->getValue('mageforge/inspector/theme') ?: 'dark';
+        $value = $this->scopeConfig->getValue('mageforge/inspector/theme');
+        return is_string($value) && $value !== '' ? $value : 'dark';
     }
 
     /**

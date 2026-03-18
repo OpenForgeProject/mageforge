@@ -77,7 +77,7 @@ class WatchCommand extends AbstractCommand
                 label: 'Select theme to watch',
                 options: fn(string $value) => empty($value)
                     ? $options
-                    : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+                    : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
                 placeholder: 'Type to search theme...',
                 scroll: 10,
                 hint: 'Type to search, arrow keys to navigate, Enter to confirm',
@@ -85,6 +85,11 @@ class WatchCommand extends AbstractCommand
 
             $themeCode = $themeCodePrompt->prompt();
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
+        }
+
+        if (!is_string($themeCode)) {
+            $this->io->error('No valid theme code provided.');
+            return self::FAILURE;
         }
 
         $themePath = $this->themePath->getPath($themeCode);

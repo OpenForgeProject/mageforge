@@ -68,7 +68,8 @@ class TokensCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $themeCode = $this->selectTheme($input->getArgument('themeCode'));
+        $arg = $input->getArgument('themeCode');
+        $themeCode = $this->selectTheme(is_string($arg) ? $arg : null);
         if ($themeCode === null) {
             return Cli::RETURN_FAILURE;
         }
@@ -112,7 +113,7 @@ class TokensCommand extends AbstractCommand
             label: 'Select theme to generate tokens for',
             options: fn(string $value) => empty($value)
                 ? $options
-                : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+                : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
             placeholder: 'Type to search theme...',
             scroll: 10,
             hint: 'Type to search, arrow keys to navigate, Enter to confirm',
@@ -121,7 +122,7 @@ class TokensCommand extends AbstractCommand
         try {
             $themeCode = $themeCodePrompt->prompt();
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            return $themeCode;
+            return is_string($themeCode) ? $themeCode : null;
         } catch (\Exception $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             return null;

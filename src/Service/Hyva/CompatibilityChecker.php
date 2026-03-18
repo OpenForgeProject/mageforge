@@ -14,6 +14,29 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * This service scans modules, detects incompatibilities with Hyvä theme framework,
  * and provides formatted results with summary statistics.
+ *
+ * @phpstan-import-type ScanIssue from IncompatibilityDetector
+ * @phpstan-import-type ScanResult from ModuleScanner
+ * @phpstan-import-type ModuleInfo from ModuleScanner
+ * @phpstan-type ModuleEntry array{
+ *     compatible: bool,
+ *     hasWarnings: bool,
+ *     scanResult: ScanResult,
+ *     moduleInfo: ModuleInfo
+ * }
+ * @phpstan-type CheckSummary array{
+ *     total: int,
+ *     compatible: int,
+ *     incompatible: int,
+ *     hyvaAware: int,
+ *     criticalIssues: int,
+ *     warningIssues: int
+ * }
+ * @phpstan-type CheckResults array{
+ *     modules: array<string, ModuleEntry>,
+ *     summary: CheckSummary,
+ *     hasIncompatibilities: bool
+ * }
  */
 class CompatibilityChecker
 {
@@ -37,7 +60,7 @@ class CompatibilityChecker
      * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory
      * @return array<string, mixed> Results with structure: ['modules' => [], 'summary' => [],
      *     'hasIncompatibilities' => bool]
-     * @phpstan-return array{modules: array<string, mixed>, summary: array<string, int>, hasIncompatibilities: bool}
+     * @phpstan-return CheckResults
      */
     public function check(
         SymfonyStyle $io,
@@ -86,7 +109,6 @@ class CompatibilityChecker
             $hasWarnings = $scanResult['totalIssues'] > $scanResult['criticalIssues'];
 
             $results['modules'][$moduleName] = [
-                'path' => $modulePath,
                 'compatible' => $isCompatible,
                 'hasWarnings' => $hasWarnings,
                 'scanResult' => $scanResult,
@@ -140,7 +162,7 @@ class CompatibilityChecker
      * Format results for display
      *
      * @param array $results
-     * @phpstan-param array<string, mixed> $results
+     * @phpstan-param CheckResults $results
      * @param bool $showAll
      * @return array<int, array<int, string>>
      */
@@ -168,7 +190,7 @@ class CompatibilityChecker
      * Get status display string with colors
      *
      * @param array $moduleData
-     * @phpstan-param array<string, mixed> $moduleData
+     * @phpstan-param ModuleEntry $moduleData
      * @return string
      */
     private function getStatusDisplay(array $moduleData): string
@@ -192,7 +214,7 @@ class CompatibilityChecker
      * Get issues display string
      *
      * @param array $moduleData
-     * @phpstan-param array<string, mixed> $moduleData
+     * @phpstan-param ModuleEntry $moduleData
      * @return string
      */
     private function getIssuesDisplay(array $moduleData): string
@@ -223,21 +245,13 @@ class CompatibilityChecker
      *
      * @param string $moduleName
      * @param array $moduleData
-     * @phpstan-param array<string, mixed> $moduleData
-     * @return array<int, array<string, mixed>>
+     * @phpstan-param ModuleEntry $moduleData
+     * @return array<int, array{file: string, issues: array<int, ScanIssue>}>
      */
     public function getDetailedIssues(string $moduleName, array $moduleData): array
     {
-        // Safely access nested array structure
-        $scanResult = $moduleData['scanResult'] ?? [];
-        if (!is_array($scanResult)) {
-            return [];
-        }
-
-        $files = $scanResult['files'] ?? [];
-        if (!is_array($files)) {
-            return [];
-        }
+        $scanResult = $moduleData['scanResult'];
+        $files = $scanResult['files'];
 
         $details = [];
 

@@ -6,8 +6,8 @@ namespace OpenForgeProject\MageForge\Console\Command;
 
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
-use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use OpenForgeProject\MageForge\Model\ThemeList;
+use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -183,7 +183,7 @@ abstract class AbstractCommand extends Command
                 return null;
             }
 
-            return $selection;
+            return is_string($selection) ? $selection : null;
         } catch (\Exception $e) {
             $this->resetPromptEnvironment();
             $this->io->error('Selection failed: ' . $e->getMessage());
@@ -487,10 +487,8 @@ abstract class AbstractCommand extends Command
      * @param ThemeList $themeList
      * @return array<string>
      */
-    protected function resolveVendorThemes(
-        array $themeCodes,
-        ThemeList $themeList
-    ): array {
+    protected function resolveVendorThemes(array $themeCodes, ThemeList $themeList): array
+    {
         $resolved = [];
         $availableThemes = null;
 
@@ -502,10 +500,7 @@ abstract class AbstractCommand extends Command
             if ($isExplicitWildcard || $isVendorOnly) {
                 // Lazy-load themes only when needed
                 if ($availableThemes === null) {
-                    $availableThemes = array_map(
-                        fn($theme) => $theme->getCode(),
-                        $themeList->getAllThemes()
-                    );
+                    $availableThemes = array_map(fn($theme) => $theme->getCode(), $themeList->getAllThemes());
                 }
 
                 if ($isExplicitWildcard) {
@@ -514,10 +509,10 @@ abstract class AbstractCommand extends Command
                     $prefix = $code . '/'; // e.g. "Vendor" -> "Vendor/"
                 }
 
-                $matched = array_filter(
-                    $availableThemes,
-                    fn(string $availableCode) => \str_starts_with($availableCode, $prefix)
-                );
+                $matched = array_filter($availableThemes, fn(string $availableCode) => \str_starts_with(
+                    $availableCode,
+                    $prefix,
+                ));
 
                 if (empty($matched)) {
                     $this->io->warning(sprintf("No themes found for vendor/prefix '%s'", $prefix));
@@ -532,7 +527,7 @@ abstract class AbstractCommand extends Command
                         "Resolved vendor '%s' to %d theme(s): %s",
                         $code,
                         count($matched),
-                        implode(', ', $matched)
+                        implode(', ', $matched),
                     ));
 
                     foreach ($matched as $match) {

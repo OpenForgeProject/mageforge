@@ -19,6 +19,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * Scans modules for RequireJS, Knockout.js, jQuery, and UI Components usage
  * that would be incompatible with Hyvä themes.
+ *
+ * @phpstan-import-type CheckResults from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
+ * @phpstan-import-type CheckSummary from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
+ * @phpstan-import-type ModuleEntry from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
  */
 class CompatibilityCheckCommand extends AbstractCommand
 {
@@ -146,7 +150,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             // Detailed view confirmation
             $detailedPrompt = new ConfirmPrompt(label: 'Show detailed file-level issues?', default: false);
 
-            $detailed = $detailedPrompt->prompt();
+            $detailed = (bool) $detailedPrompt->prompt();
 
             // Map selected options to flags
             $showAll = $displayMode === self::DISPLAY_MODE_SHOW_ALL;
@@ -193,10 +197,10 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     private function runDirectMode(InputInterface $input, OutputInterface $output): int
     {
-        $showAll = $input->getOption(self::OPTION_SHOW_ALL);
-        $thirdPartyOnly = $input->getOption(self::OPTION_THIRD_PARTY_ONLY);
-        $includeVendor = $input->getOption(self::OPTION_INCLUDE_VENDOR);
-        $detailed = $input->getOption(self::OPTION_DETAILED);
+        $showAll = (bool) $input->getOption(self::OPTION_SHOW_ALL);
+        $thirdPartyOnly = (bool) $input->getOption(self::OPTION_THIRD_PARTY_ONLY);
+        $includeVendor = (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR);
+        $detailed = (bool) $input->getOption(self::OPTION_DETAILED);
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
@@ -271,7 +275,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display compatibility check results
      *
      * @param array $results
-     * @phpstan-param array<string, mixed> $results
+     * @phpstan-param CheckResults $results
      * @param bool $showAll
      */
     private function displayResults(array $results, bool $showAll): void
@@ -292,7 +296,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display detailed file-level issues
      *
      * @param array $results
-     * @phpstan-param array<string, mixed> $results
+     * @phpstan-param CheckResults $results
      */
     private function displayDetailedIssues(array $results): void
     {
@@ -333,7 +337,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display summary statistics
      *
      * @param array $results
-     * @phpstan-param array<string, mixed> $results
+     * @phpstan-param array{summary: CheckSummary} $results
      */
     private function displaySummary(array $results): void
     {
