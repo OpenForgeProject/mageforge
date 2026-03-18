@@ -113,7 +113,7 @@ class TokensCommand extends AbstractCommand
             label: 'Select theme to generate tokens for',
             options: fn(string $value) => empty($value)
                 ? $options
-                : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+                : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
             placeholder: 'Type to search theme...',
             scroll: 10,
             hint: 'Type to search, arrow keys to navigate, Enter to confirm',

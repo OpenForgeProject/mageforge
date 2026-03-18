@@ -98,7 +98,7 @@ class BuildCommand extends AbstractCommand
                 label: 'Select themes to build',
                 options: fn(string $value) => empty($value)
                     ? $options
-                    : array_values(array_filter($options, fn($option) => stripos((string)$option, $value) !== false)),
+                    : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
                 placeholder: 'Type to search theme...',
                 hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
                 required: false,
@@ -357,14 +357,14 @@ class BuildCommand extends AbstractCommand
             $io->success(sprintf(
                 '🚀 Successfully built %d theme(s). Build process completed in %.2f seconds.',
                 $successCount,
-                $duration
+                $duration,
             ));
             $io->writeln('Summary:');
             $io->newLine();
         } else {
             $io->warning(sprintf(
                 'Build process completed in %.2f seconds, but no themes were built successfully.',
-                $duration
+                $duration,
             ));
             return;
         }

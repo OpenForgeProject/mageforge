@@ -121,7 +121,11 @@ class ModuleScanner
     {
         // Check if this IS a Hyvä compatibility package
         $packageName = $composerData['name'] ?? '';
-        if (is_string($packageName) && str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
+        if (
+            is_string($packageName)
+            && str_starts_with($packageName, 'hyva-themes/')
+            && str_contains($packageName, '-compat')
+        ) {
             return true;
         }
 

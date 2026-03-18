@@ -164,7 +164,12 @@ class CheckCommand extends AbstractCommand
 
             /** @var array<int, array<string, mixed>> $nodes */
             foreach ($nodes as $node) {
-                if (isset($node['lts']) && $node['lts'] !== false && isset($node['version']) && is_string($node['version'])) {
+                if (
+                    isset($node['lts'])
+                    && $node['lts'] !== false
+                    && isset($node['version'])
+                    && is_string($node['version'])
+                ) {
                     return trim($node['version'], 'v');
                 }
             }
@@ -669,8 +674,8 @@ class CheckCommand extends AbstractCommand
         $totalSpace = disk_total_space('.');
         $freeSpace = disk_free_space('.');
 
-        $totalGB = round((($totalSpace / 1024) / 1024) / 1024, 2);
-        $freeGB = round((($freeSpace / 1024) / 1024) / 1024, 2);
+        $totalGB = round($totalSpace / 1024 / 1024 / 1024, 2);
+        $freeGB = round($freeSpace / 1024 / 1024 / 1024, 2);
         $usedGB = round($totalGB - $freeGB, 2);
         $usedPercent = round(($usedGB / $totalGB) * 100, 2);
 
