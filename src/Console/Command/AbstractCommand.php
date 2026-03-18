@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Console\Command;
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
+use OpenForgeProject\MageForge\Model\ThemeList;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -482,13 +483,13 @@ abstract class AbstractCommand extends Command
     /**
      * Resolve wildcard theme codes (e.g., Vendor/* to all underlying vendor themes)
      *
-     * @param string[] $themeCodes
-     * @param \OpenForgeProject\MageForge\Model\ThemeList $themeList
-     * @return string[]
+     * @param array<string> $themeCodes
+     * @param ThemeList $themeList
+     * @return array<string>
      */
     protected function resolveWildcardThemes(
         array $themeCodes,
-        \OpenForgeProject\MageForge\Model\ThemeList $themeList
+        ThemeList $themeList
     ): array {
         $resolved = [];
         $availableThemes = null;
