@@ -51,7 +51,7 @@ class BuildCommand extends AbstractCommand
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
-                'Theme codes to build (format: Vendor/theme, Vendor/theme 2, ...)',
+                'Theme codes to build (format: Vendor/theme, Vendor, ...)',
             )
             ->setAliases(['frontend:build']);
     }
@@ -69,8 +69,8 @@ class BuildCommand extends AbstractCommand
 
         // Allow wildcards using the AbstractCommand helper
         if (!empty($themeCodes)) {
-            $themeCodes = $this->resolveWildcardThemes($themeCodes, $this->themeList);
-            
+            $themeCodes = $this->resolveVendorThemes($themeCodes, $this->themeList);
+
             // If wildcards matched nothing and no other explicit themes remain
             if (empty($themeCodes)) {
                 return Command::SUCCESS;
@@ -348,9 +348,9 @@ class BuildCommand extends AbstractCommand
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
     {
         $io->newLine();
-        
+
         $successCount = count($successList);
-        
+
         if ($successCount > 0) {
             $io->success(sprintf(
                 '🚀 Successfully built %d theme(s). Build process completed in %.2f seconds.',

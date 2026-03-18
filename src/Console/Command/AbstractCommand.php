@@ -481,13 +481,13 @@ abstract class AbstractCommand extends Command
     }
 
     /**
-     * Resolve wildcard theme codes (e.g., Vendor/* to all underlying vendor themes)
+     * Resolve vendor theme codes (e.g., Vendor to all underlying vendor themes)
      *
      * @param array<string> $themeCodes
      * @param ThemeList $themeList
      * @return array<string>
      */
-    protected function resolveWildcardThemes(
+    protected function resolveVendorThemes(
         array $themeCodes,
         ThemeList $themeList
     ): array {
@@ -495,7 +495,11 @@ abstract class AbstractCommand extends Command
         $availableThemes = null;
 
         foreach ($themeCodes as $code) {
-            if (\str_ends_with($code, '/*')) {
+            // Check if it's explicitly a wildcard OR just a vendor name without a slash
+            $isExplicitWildcard = \str_ends_with($code, '/*');
+            $isVendorOnly = !\str_contains($code, '/');
+
+            if ($isExplicitWildcard || $isVendorOnly) {
                 // Lazy-load themes only when needed
                 if ($availableThemes === null) {
                     $availableThemes = array_map(
@@ -504,25 +508,37 @@ abstract class AbstractCommand extends Command
                     );
                 }
 
-                $prefix = substr($code, 0, -1); // Keeps the trailing slash, e.g. "Vendor/"
-                
+                if ($isExplicitWildcard) {
+                    $prefix = substr($code, 0, -1); // Keeps the trailing slash, e.g. "Vendor/"
+                } else {
+                    $prefix = $code . '/'; // e.g. "Vendor" -> "Vendor/"
+                }
+
                 $matched = array_filter(
                     $availableThemes,
                     fn(string $availableCode) => \str_starts_with($availableCode, $prefix)
                 );
 
                 if (empty($matched)) {
-                    $this->io->warning(sprintf("No themes found for prefix '%s'", $prefix));
+                    $this->io->warning(sprintf("No themes found for vendor/prefix '%s'", $prefix));
+
+                    // If they typed just a word and it wasn't a vendor,
+                    // we still add it so standard Magento validation kicks in later.
+                    if ($isVendorOnly) {
+                        $resolved[] = $code;
+                    }
                 } else {
                     $this->io->note(sprintf(
-                        "Resolved '%s' to %d theme(s): %s",
+                        "Resolved vendor '%s' to %d theme(s): %s",
                         $code,
                         count($matched),
                         implode(', ', $matched)
                     ));
-                }
 
-                array_push($resolved, ...$matched);
+                    foreach ($matched as $match) {
+                        $resolved[] = $match;
+                    }
+                }
             } else {
                 $resolved[] = $code;
             }

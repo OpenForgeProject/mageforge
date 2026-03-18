@@ -56,6 +56,7 @@ bin/magento mageforge:theme:build [<themeCodes>...]
 
 **Implementation Details**:
 
+- `themeCodes` accepts single themes (`Vendor/theme`) or just the vendor name (`Vendor`) to target all themes of a specific vendor.
 - If no theme codes are provided, displays an interactive prompt to select themes
 - For each selected theme:
   1. Resolves the theme path
@@ -109,11 +110,13 @@ bin/magento mageforge:theme:watch [--theme=THEME]
 **Usage**:
 
 ```bash
-bin/magento mageforge:theme:clean [<themename>]
+bin/magento mageforge:theme:clean [<themename>...]
 ```
 
 **Implementation Details**:
 
+- Can accept multiple themes like `Vendor/theme1 Vendor/theme2`.
+- Accepts simply the vendor name `Vendor` to clean all registered themes for a vendor.
 - If no theme name is provided:
   - In interactive terminals, displays an interactive prompt to select the theme to clean
   - In non-interactive environments, prints the list of available themes and exits, requiring an explicit theme name
