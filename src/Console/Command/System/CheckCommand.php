@@ -164,8 +164,7 @@ class CheckCommand extends AbstractCommand
 
             /** @var array<int, array<string, mixed>> $nodes */
             foreach ($nodes as $node) {
-                if (
-                    isset($node['lts'])
+                if (isset($node['lts'])
                     && $node['lts'] !== false
                     && isset($node['version'])
                     && is_string($node['version'])
