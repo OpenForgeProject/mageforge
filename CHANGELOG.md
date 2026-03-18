@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.15.1](https://github.com/OpenForgeProject/mageforge/compare/0.15.0...0.15.1) (2026-03-18)
+
+
+### Fixed
+
+* update phpstan to level 9 ([#152](https://github.com/OpenForgeProject/mageforge/issues/152)) ([c57f6c7](https://github.com/OpenForgeProject/mageforge/commit/c57f6c71c4c15a738b115b667db744b395553e5a))
+
 ## [0.15.0](https://github.com/OpenForgeProject/mageforge/compare/0.14.1...0.15.0) (2026-03-18)
 
 
