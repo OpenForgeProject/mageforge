@@ -95,7 +95,6 @@ class CompatibilityChecker
             $hasWarnings = $scanResult['totalIssues'] > $scanResult['criticalIssues'];
 
             $results['modules'][$moduleName] = [
-                'path' => $modulePath,
                 'compatible' => $isCompatible,
                 'hasWarnings' => $hasWarnings,
                 'scanResult' => $scanResult,
