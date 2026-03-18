@@ -553,11 +553,11 @@ class CheckCommand extends AbstractCommand
             return 'Search Engine Available';
         }
         if (isset($version['distribution']) && $version['distribution'] === 'opensearch') {
-            return 'OpenSearch ' . ($version['number'] ?? '');
+            return 'OpenSearch ' . (is_string($version['number']) ? $version['number'] : '');
         }
 
         if (isset($version['number'])) {
-            return 'Elasticsearch ' . $version['number'];
+            return 'Elasticsearch ' . (is_string($version['number']) ? $version['number'] : '');
         }
 
         return 'Search Engine Available';
