@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Console\Command;
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
+use OpenForgeProject\MageForge\Model\ThemeList;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -477,5 +478,73 @@ abstract class AbstractCommand extends Command
     {
         unset($this->secureEnvStorage[$name]);
         $this->clearEnvironmentCache();
+    }
+
+    /**
+     * Resolve vendor theme codes (e.g., Vendor to all underlying vendor themes)
+     *
+     * @param array<string> $themeCodes
+     * @param ThemeList $themeList
+     * @return array<string>
+     */
+    protected function resolveVendorThemes(
+        array $themeCodes,
+        ThemeList $themeList
+    ): array {
+        $resolved = [];
+        $availableThemes = null;
+
+        foreach ($themeCodes as $code) {
+            // Check if it's explicitly a wildcard OR just a vendor name without a slash
+            $isExplicitWildcard = \str_ends_with($code, '/*');
+            $isVendorOnly = !\str_contains($code, '/');
+
+            if ($isExplicitWildcard || $isVendorOnly) {
+                // Lazy-load themes only when needed
+                if ($availableThemes === null) {
+                    $availableThemes = array_map(
+                        fn($theme) => $theme->getCode(),
+                        $themeList->getAllThemes()
+                    );
+                }
+
+                if ($isExplicitWildcard) {
+                    $prefix = substr($code, 0, -1); // Keeps the trailing slash, e.g. "Vendor/"
+                } else {
+                    $prefix = $code . '/'; // e.g. "Vendor" -> "Vendor/"
+                }
+
+                $matched = array_filter(
+                    $availableThemes,
+                    fn(string $availableCode) => \str_starts_with($availableCode, $prefix)
+                );
+
+                if (empty($matched)) {
+                    $this->io->warning(sprintf("No themes found for vendor/prefix '%s'", $prefix));
+
+                    // If they typed just a word and it wasn't a vendor,
+                    // we still add it so standard Magento validation kicks in later.
+                    if ($isVendorOnly) {
+                        $resolved[] = $code;
+                    }
+                } else {
+                    $this->io->note(sprintf(
+                        "Resolved vendor '%s' to %d theme(s): %s",
+                        $code,
+                        count($matched),
+                        implode(', ', $matched)
+                    ));
+
+                    foreach ($matched as $match) {
+                        $resolved[] = $match;
+                    }
+                }
+            } else {
+                $resolved[] = $code;
+            }
+        }
+
+        // Return a fresh list without duplicates
+        return array_values(array_unique($resolved));
     }
 }

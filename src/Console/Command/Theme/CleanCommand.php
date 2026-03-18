@@ -49,7 +49,7 @@ class CleanCommand extends AbstractCommand
             ->addArgument(
                 'themeCodes',
                 InputArgument::IS_ARRAY,
-                'Theme codes to clean (format: Vendor/theme, Vendor/theme 2, ...)',
+                'Theme codes to clean (format: Vendor/theme, Vendor, ...)',
             )
             ->addOption('all', 'a', InputOption::VALUE_NONE, 'Clean all themes')
             ->addOption(
@@ -103,6 +103,15 @@ class CleanCommand extends AbstractCommand
 
         if ($cleanAll) {
             return $this->getAllThemeCodes();
+        }
+
+        if (!empty($themeCodes)) {
+            $themeCodes = $this->resolveVendorThemes($themeCodes, $this->themeList);
+
+            // If wildcards matched nothing and no other explicit themes remain
+            if (empty($themeCodes)) {
+                return null;
+            }
         }
 
         if (empty($themeCodes)) {
