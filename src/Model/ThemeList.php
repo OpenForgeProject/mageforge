@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Model;
 
 use Magento\Framework\View\Design\Theme\ThemeList as MagentoThemeList;
-use Magento\Framework\View\Design\ThemeInterface;
+use Magento\Theme\Model\Theme;
 
 class ThemeList
 {
@@ -22,11 +22,11 @@ class ThemeList
     /**
      * Get all themes
      *
-     * @return array<string, ThemeInterface>
+     * @return array<string, Theme>
      */
     public function getAllThemes(): array
     {
-        /** @var array<string, ThemeInterface> $items */
+        /** @var array<string, Theme> $items */
         $items = $this->magentoThemeList->getItems();
         return $items;
     }

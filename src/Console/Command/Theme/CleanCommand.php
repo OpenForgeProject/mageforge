@@ -164,7 +164,7 @@ class CleanCommand extends AbstractCommand
     /**
      * Display available themes for non-interactive environments
      *
-     * @param array<\Magento\Theme\Model\Theme> $themes
+     * @param \Magento\Theme\Model\Theme[] $themes
      * @return void
      */
     private function displayAvailableThemes(array $themes): void
@@ -189,9 +189,9 @@ class CleanCommand extends AbstractCommand
     /**
      * Prompt user to select themes
      *
-     * @param array<string> $options
-     * @param array<\Magento\Theme\Model\Theme> $themes
-     * @return array<string>|null
+     * @param string[] $options
+     * @param \Magento\Theme\Model\Theme[] $themes
+     * @return string[]|null
      */
     private function promptForThemes(array $options, array $themes): ?array
     {
