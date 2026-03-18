@@ -9,7 +9,6 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-// phpcs:disable Generic.Files.LineLength.TooLong
 /**
  * Service that orchestrates Hyvä compatibility checking across Magento modules
  *
@@ -19,11 +18,26 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @phpstan-import-type ScanIssue from IncompatibilityDetector
  * @phpstan-import-type ScanResult from ModuleScanner
  * @phpstan-import-type ModuleInfo from ModuleScanner
- * @phpstan-type ModuleEntry array{compatible: bool, hasWarnings: bool, scanResult: ScanResult, moduleInfo: ModuleInfo}
- * @phpstan-type CheckSummary array{total: int, compatible: int, incompatible: int, hyvaAware: int, criticalIssues: int, warningIssues: int}
- * @phpstan-type CheckResults array{modules: array<string, ModuleEntry>, summary: CheckSummary, hasIncompatibilities: bool}
+ * @phpstan-type ModuleEntry array{
+ *     compatible: bool,
+ *     hasWarnings: bool,
+ *     scanResult: ScanResult,
+ *     moduleInfo: ModuleInfo
+ * }
+ * @phpstan-type CheckSummary array{
+ *     total: int,
+ *     compatible: int,
+ *     incompatible: int,
+ *     hyvaAware: int,
+ *     criticalIssues: int,
+ *     warningIssues: int
+ * }
+ * @phpstan-type CheckResults array{
+ *     modules: array<string, ModuleEntry>,
+ *     summary: CheckSummary,
+ *     hasIncompatibilities: bool
+ * }
  */
-// phpcs:enable Generic.Files.LineLength.TooLong
 class CompatibilityChecker
 {
     /**
