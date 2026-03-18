@@ -673,10 +673,24 @@ class CheckCommand extends AbstractCommand
         $totalSpace = disk_total_space('.');
         $freeSpace = disk_free_space('.');
 
+        if ($totalSpace === false || $freeSpace === false) {
+            return 'Unknown';
+        }
+
+        if ($totalSpace <= 0) {
+            $totalGB = 0.0;
+            $usedGB = 0.0;
+            $usedPercent = 0.0;
+
+            return "$usedGB GB / $totalGB GB ($usedPercent%)";
+        }
+
         $totalGB = round($totalSpace / 1024 / 1024 / 1024, 2);
         $freeGB = round($freeSpace / 1024 / 1024 / 1024, 2);
         $usedGB = round($totalGB - $freeGB, 2);
-        $usedPercent = round(($usedGB / $totalGB) * 100, 2);
+        $usedPercent = $totalGB > 0.0
+            ? round(($usedGB / $totalGB) * 100, 2)
+            : 0.0;
 
         return "$usedGB GB / $totalGB GB ($usedPercent%)";
     }
