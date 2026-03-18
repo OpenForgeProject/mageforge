@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.15.0](https://github.com/OpenForgeProject/mageforge/compare/0.14.1...0.15.0) (2026-03-18)
+
+
+### Added
+
+* add wildcard theme resolution to build and clean commands ([#150](https://github.com/OpenForgeProject/mageforge/issues/150)) ([ec4316d](https://github.com/OpenForgeProject/mageforge/commit/ec4316def7318a88395e3566eb1415757990b181))
+
 ## [0.14.1](https://github.com/OpenForgeProject/mageforge/compare/0.14.0...0.14.1) (2026-03-12)
 
 
