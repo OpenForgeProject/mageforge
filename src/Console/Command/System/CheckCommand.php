@@ -162,8 +162,9 @@ class CheckCommand extends AbstractCommand
                 return 'Unknown';
             }
 
+            /** @var array<int, array<string, mixed>> $nodes */
             foreach ($nodes as $node) {
-                if (isset($node['lts']) && $node['lts'] !== false) {
+                if (isset($node['lts']) && $node['lts'] !== false && isset($node['version']) && is_string($node['version'])) {
                     return trim($node['version'], 'v');
                 }
             }
@@ -407,12 +408,15 @@ class CheckCommand extends AbstractCommand
     private function checkSearchEngineViaDeploymentConfig($objectManager): ?string
     {
         try {
+            /** @var \Magento\Framework\App\DeploymentConfig $deploymentConfig */
             $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
             $engineConfig = $deploymentConfig->get('system/search/engine');
 
-            if (!empty($engineConfig)) {
-                $host = $deploymentConfig->get('system/search/engine_host') ?: 'localhost';
-                $port = $deploymentConfig->get('system/search/engine_port') ?: '9200';
+            if (!empty($engineConfig) && is_string($engineConfig)) {
+                $hostRaw = $deploymentConfig->get('system/search/engine_host');
+                $portRaw = $deploymentConfig->get('system/search/engine_port');
+                $host = is_string($hostRaw) ? $hostRaw : 'localhost';
+                $port = is_string($portRaw) ? $portRaw : '9200';
 
                 $url = "http://{$host}:{$port}";
                 if ($this->testElasticsearchConnection($url)) {
@@ -439,12 +443,11 @@ class CheckCommand extends AbstractCommand
     private function checkSearchEngineViaEngineResolver($objectManager): ?string
     {
         try {
+            /** @var \Magento\Framework\Search\EngineResolverInterface $engineResolver */
             $engineResolver = $objectManager->get(\Magento\Framework\Search\EngineResolverInterface::class);
-            if ($engineResolver) {
-                $currentEngine = $engineResolver->getCurrentSearchEngine();
-                if (!empty($currentEngine)) {
-                    return ucfirst($currentEngine) . ' (Magento config)';
-                }
+            $currentEngine = $engineResolver->getCurrentSearchEngine();
+            if (!empty($currentEngine)) {
+                return ucfirst($currentEngine) . ' (Magento config)';
             }
         } catch (\Exception $e) {
             if ($this->io->isVerbose()) {
@@ -541,12 +544,16 @@ class CheckCommand extends AbstractCommand
      */
     private function formatSearchEngineVersion(array $info): string
     {
-        if (isset($info['version']['distribution']) && $info['version']['distribution'] === 'opensearch') {
-            return 'OpenSearch ' . $info['version']['number'];
+        $version = $info['version'] ?? null;
+        if (!is_array($version)) {
+            return 'Search Engine Available';
+        }
+        if (isset($version['distribution']) && $version['distribution'] === 'opensearch') {
+            return 'OpenSearch ' . ($version['number'] ?? '');
         }
 
-        if (isset($info['version']['number'])) {
-            return 'Elasticsearch ' . $info['version']['number'];
+        if (isset($version['number'])) {
+            return 'Elasticsearch ' . $version['number'];
         }
 
         return 'Search Engine Available';
@@ -597,6 +604,7 @@ class CheckCommand extends AbstractCommand
             if ($status === 200 && !empty($response)) {
                 $data = json_decode($response, true);
                 if (is_array($data)) {
+                    /** @var array<string, mixed> $data */
                     return $data;
                 }
             }
@@ -734,9 +742,10 @@ class CheckCommand extends AbstractCommand
     private function getValueFromDeploymentConfig($objectManager, string $name): ?string
     {
         try {
+            /** @var \Magento\Framework\App\DeploymentConfig $deploymentConfig */
             $deploymentConfig = $objectManager->get(\Magento\Framework\App\DeploymentConfig::class);
             $envValue = $deploymentConfig->get('system/default/environment/' . $name);
-            if ($envValue !== null) {
+            if ($envValue !== null && is_scalar($envValue)) {
                 return (string) $envValue;
             }
         } catch (\Exception $e) {
@@ -760,7 +769,7 @@ class CheckCommand extends AbstractCommand
         try {
             $environmentService = $objectManager->get(\Magento\Framework\App\EnvironmentInterface::class);
             $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($name))));
-            if (method_exists($environmentService, $method)) {
+            if (is_object($environmentService) && method_exists($environmentService, $method)) {
                 $value = $environmentService->$method();
                 if ($value !== null) {
                     return (string) $value;

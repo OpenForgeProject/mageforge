@@ -73,7 +73,10 @@ class VersionCommand extends AbstractCommand
         try {
             $composerJson = $this->fileDriver->fileGetContents(__DIR__ . '/../../../../composer.json');
             $composerData = json_decode($composerJson, true);
-            return $composerData['version'] ?? self::UNKNOWN_VERSION;
+            if (is_array($composerData) && isset($composerData['version']) && is_string($composerData['version'])) {
+                return $composerData['version'];
+            }
+            return self::UNKNOWN_VERSION;
         } catch (\Exception $e) {
             return self::UNKNOWN_VERSION;
         }
@@ -96,7 +99,9 @@ class VersionCommand extends AbstractCommand
 
             if ($response->getStatusCode() === 200) {
                 $data = json_decode($response->getBody()->getContents(), true);
-                return $data['tag_name'] ?? self::UNKNOWN_VERSION;
+                if (is_array($data) && isset($data['tag_name']) && is_string($data['tag_name'])) {
+                    return $data['tag_name'];
+                }
             }
         } catch (\Exception $e) {
             if ($this->io->isVerbose()) {

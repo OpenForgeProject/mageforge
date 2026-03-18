@@ -65,6 +65,7 @@ class BuildCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
+        /** @var array<string> $themeCodes */
         $themeCodes = $input->getArgument('themeCodes');
 
         // Allow wildcards using the AbstractCommand helper
@@ -106,6 +107,7 @@ class BuildCommand extends AbstractCommand
             try {
                 $themeCodes = $themeCodesPrompt->prompt();
                 \Laravel\Prompts\Prompt::terminal()->restoreTty();
+                /** @var array<string> $themeCodes */
 
                 // Reset environment
                 $this->resetPromptEnvironment();

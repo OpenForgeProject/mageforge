@@ -82,7 +82,8 @@ class InspectorCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $action = strtolower((string) $input->getArgument(self::ARGUMENT_ACTION));
+        $arg = $input->getArgument(self::ARGUMENT_ACTION);
+        $action = strtolower(is_string($arg) ? $arg : '');
 
         // Validate action
         if (!in_array($action, ['enable', 'disable', 'status'], true)) {

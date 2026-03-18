@@ -107,6 +107,7 @@ class IncompatibilityDetector
      *
      * @param string $filePath
      * @return array<int, array<string, mixed>> Array of issues with keys: pattern, description, severity, line
+     * @phpstan-return array<int, array{description: string, severity: string, line: int, pattern: string}>
      */
     public function detectInFile(string $filePath): array
     {
@@ -153,8 +154,9 @@ class IncompatibilityDetector
      * @param array $lines
      * @param array $patterns
      * @return array<int, array<string, mixed>>
+     * @phpstan-return array<int, array{description: string, severity: string, line: int, pattern: string}>
      * @phpstan-param array<int, string> $lines
-     * @phpstan-param array<int, array<string, mixed>> $patterns
+     * @phpstan-param array<int, array{pattern: string, description: string, severity: string}> $patterns
      */
     private function scanContentForPatterns(array $lines, array $patterns): array
     {

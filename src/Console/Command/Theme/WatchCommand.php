@@ -87,6 +87,11 @@ class WatchCommand extends AbstractCommand
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
         }
 
+        if (!is_string($themeCode)) {
+            $this->io->error('No valid theme code provided.');
+            return self::FAILURE;
+        }
+
         $themePath = $this->themePath->getPath($themeCode);
         if ($themePath === null) {
             // Try to suggest similar themes

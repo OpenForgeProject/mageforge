@@ -183,7 +183,7 @@ abstract class AbstractCommand extends Command
                 return null;
             }
 
-            return $selection;
+            return is_string($selection) ? $selection : null;
         } catch (\Exception $e) {
             $this->resetPromptEnvironment();
             $this->io->error('Selection failed: ' . $e->getMessage());

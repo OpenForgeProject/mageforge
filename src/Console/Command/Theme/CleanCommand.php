@@ -70,7 +70,7 @@ class CleanCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $dryRun = $input->getOption('dry-run');
+        $dryRun = (bool) $input->getOption('dry-run');
 
         if ($dryRun) {
             $this->io->note('DRY RUN MODE: No files will be deleted');
@@ -98,6 +98,7 @@ class CleanCommand extends AbstractCommand
      */
     private function resolveThemeCodes(InputInterface $input, OutputInterface $output): ?array
     {
+        /** @var array<string> $themeCodes */
         $themeCodes = $input->getArgument('themeCodes');
         $cleanAll = $input->getOption('all');
 
@@ -163,7 +164,7 @@ class CleanCommand extends AbstractCommand
     /**
      * Display available themes for non-interactive environments
      *
-     * @param array<mixed> $themes
+     * @param array<\Magento\Theme\Model\Theme> $themes
      * @return void
      */
     private function displayAvailableThemes(array $themes): void
@@ -189,7 +190,7 @@ class CleanCommand extends AbstractCommand
      * Prompt user to select themes
      *
      * @param array<string> $options
-     * @param array<mixed> $themes
+     * @param array<\Magento\Theme\Model\Theme> $themes
      * @return array<string>|null
      */
     private function promptForThemes(array $options, array $themes): ?array
@@ -216,6 +217,7 @@ class CleanCommand extends AbstractCommand
                 return null;
             }
 
+            /** @var array<string> $themeCodes */
             return $themeCodes;
         } catch (\Exception $e) {
             $this->resetPromptEnvironment();
@@ -231,7 +233,7 @@ class CleanCommand extends AbstractCommand
      * @param array<string> $themeCodes
      * @param bool $dryRun
      * @param OutputInterface $output
-     * @return array<int, mixed> [totalCleaned, failedThemes]
+     * @return array{int, array<string>} [totalCleaned, failedThemes]
      */
     private function processThemes(array $themeCodes, bool $dryRun, OutputInterface $output): array
     {

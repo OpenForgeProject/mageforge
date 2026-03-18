@@ -32,6 +32,7 @@ class ModuleScanner
      *
      * @param string $modulePath
      * @return array<string, mixed> Array with structure: ['files' => [], 'totalIssues' => int, 'criticalIssues' => int]
+     * @phpstan-return array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}
      */
     public function scanModule(string $modulePath): array
     {
@@ -120,14 +121,17 @@ class ModuleScanner
     {
         // Check if this IS a Hyvä compatibility package
         $packageName = $composerData['name'] ?? '';
-        if (str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
+        if (is_string($packageName) && str_starts_with($packageName, 'hyva-themes/') && str_contains($packageName, '-compat')) {
             return true;
         }
 
         // Check dependencies for Hyvä packages
         $requires = $composerData['require'] ?? [];
+        if (!is_array($requires)) {
+            return false;
+        }
         foreach ($requires as $package => $version) {
-            if (str_starts_with($package, 'hyva-themes/')) {
+            if (is_string($package) && str_starts_with($package, 'hyva-themes/')) {
                 return true;
             }
         }
@@ -157,6 +161,7 @@ class ModuleScanner
                 return false;
             }
 
+            /** @var array<string, mixed> $composerData */
             return $this->isHyvaCompatibilityPackage($composerData);
         } catch (\Exception $e) {
             return false;
@@ -168,6 +173,7 @@ class ModuleScanner
      *
      * @param string $modulePath
      * @return array<string, mixed>
+     * @phpstan-return array{name: string, version: string, isHyvaAware: bool}
      */
     public function getModuleInfo(string $modulePath): array
     {
@@ -185,9 +191,10 @@ class ModuleScanner
                 return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
             }
 
+            /** @var array<string, mixed> $composerData */
             return [
-                'name' => $composerData['name'] ?? 'Unknown',
-                'version' => $composerData['version'] ?? 'Unknown',
+                'name' => is_string($composerData['name'] ?? null) ? $composerData['name'] : 'Unknown',
+                'version' => is_string($composerData['version'] ?? null) ? $composerData['version'] : 'Unknown',
                 'isHyvaAware' => $this->isHyvaCompatibilityPackage($composerData),
             ];
         } catch (\Exception $e) {
