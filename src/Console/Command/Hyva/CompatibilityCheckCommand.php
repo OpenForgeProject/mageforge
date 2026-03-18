@@ -19,6 +19,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * Scans modules for RequireJS, Knockout.js, jQuery, and UI Components usage
  * that would be incompatible with Hyvä themes.
+ *
+ * @phpstan-import-type CheckResults from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
+ * @phpstan-import-type CheckSummary from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
+ * @phpstan-import-type ModuleEntry from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
  */
 class CompatibilityCheckCommand extends AbstractCommand
 {
@@ -271,7 +275,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display compatibility check results
      *
      * @param array $results
-     * @phpstan-param array{modules: array<string, array{compatible: bool, hasWarnings: bool, scanResult: array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}, moduleInfo: array{name: string, version: string, isHyvaAware: bool}}>, hasIncompatibilities: bool} $results
+     * @phpstan-param CheckResults $results
      * @param bool $showAll
      */
     private function displayResults(array $results, bool $showAll): void
@@ -292,7 +296,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display detailed file-level issues
      *
      * @param array $results
-     * @phpstan-param array{modules: array<string, array{compatible: bool, hasWarnings: bool, scanResult: array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}, moduleInfo: array{name: string, version: string, isHyvaAware: bool}}>, hasIncompatibilities: bool} $results
+     * @phpstan-param CheckResults $results
      */
     private function displayDetailedIssues(array $results): void
     {
@@ -333,7 +337,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * Display summary statistics
      *
      * @param array $results
-     * @phpstan-param array{summary: array{total: int, compatible: int, incompatible: int, hyvaAware: int, criticalIssues: int, warningIssues: int}} $results
+     * @phpstan-param array{summary: CheckSummary} $results
      */
     private function displaySummary(array $results): void
     {

@@ -11,6 +11,8 @@ use Magento\Framework\Filesystem\Driver\File;
  *
  * Uses pattern matching to identify RequireJS, Knockout.js, jQuery, and UI Components
  * usage that would be problematic in a Hyvä environment.
+ *
+ * @phpstan-type ScanIssue array{description: string, severity: string, line: int, pattern: string}
  */
 class IncompatibilityDetector
 {
@@ -107,7 +109,7 @@ class IncompatibilityDetector
      *
      * @param string $filePath
      * @return array<int, array<string, mixed>> Array of issues with keys: pattern, description, severity, line
-     * @phpstan-return array<int, array{description: string, severity: string, line: int, pattern: string}>
+     * @phpstan-return array<int, ScanIssue>
      */
     public function detectInFile(string $filePath): array
     {
@@ -154,7 +156,7 @@ class IncompatibilityDetector
      * @param array $lines
      * @param array $patterns
      * @return array<int, array<string, mixed>>
-     * @phpstan-return array<int, array{description: string, severity: string, line: int, pattern: string}>
+     * @phpstan-return array<int, ScanIssue>
      * @phpstan-param array<int, string> $lines
      * @phpstan-param array<int, array{pattern: string, description: string, severity: string}> $patterns
      */

@@ -9,12 +9,21 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+// phpcs:disable Generic.Files.LineLength.TooLong
 /**
  * Service that orchestrates Hyvä compatibility checking across Magento modules
  *
  * This service scans modules, detects incompatibilities with Hyvä theme framework,
  * and provides formatted results with summary statistics.
+ *
+ * @phpstan-import-type ScanIssue from IncompatibilityDetector
+ * @phpstan-import-type ScanResult from ModuleScanner
+ * @phpstan-import-type ModuleInfo from ModuleScanner
+ * @phpstan-type ModuleEntry array{compatible: bool, hasWarnings: bool, scanResult: ScanResult, moduleInfo: ModuleInfo}
+ * @phpstan-type CheckSummary array{total: int, compatible: int, incompatible: int, hyvaAware: int, criticalIssues: int, warningIssues: int}
+ * @phpstan-type CheckResults array{modules: array<string, ModuleEntry>, summary: CheckSummary, hasIncompatibilities: bool}
  */
+// phpcs:enable Generic.Files.LineLength.TooLong
 class CompatibilityChecker
 {
     /**
@@ -37,7 +46,7 @@ class CompatibilityChecker
      * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory
      * @return array<string, mixed> Results with structure: ['modules' => [], 'summary' => [],
      *     'hasIncompatibilities' => bool]
-     * @phpstan-return array{modules: array<string, array{compatible: bool, hasWarnings: bool, scanResult: array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}, moduleInfo: array{name: string, version: string, isHyvaAware: bool}}>, summary: array{total: int, compatible: int, incompatible: int, hyvaAware: int, criticalIssues: int, warningIssues: int}, hasIncompatibilities: bool}
+     * @phpstan-return CheckResults
      */
     public function check(
         SymfonyStyle $io,
@@ -140,7 +149,7 @@ class CompatibilityChecker
      * Format results for display
      *
      * @param array $results
-     * @phpstan-param array{modules: array<string, array{compatible: bool, hasWarnings: bool, scanResult: array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}, moduleInfo: array{name: string, version: string, isHyvaAware: bool}}>} $results
+     * @phpstan-param CheckResults $results
      * @param bool $showAll
      * @return array<int, array<int, string>>
      */
@@ -168,7 +177,7 @@ class CompatibilityChecker
      * Get status display string with colors
      *
      * @param array $moduleData
-     * @phpstan-param array{compatible: bool, hasWarnings: bool, scanResult: array<string, mixed>, moduleInfo: array<string, mixed>} $moduleData
+     * @phpstan-param ModuleEntry $moduleData
      * @return string
      */
     private function getStatusDisplay(array $moduleData): string
@@ -192,7 +201,7 @@ class CompatibilityChecker
      * Get issues display string
      *
      * @param array $moduleData
-     * @phpstan-param array{compatible: bool, hasWarnings: bool, scanResult: array{totalIssues: int, criticalIssues: int}, moduleInfo: array<string, mixed>} $moduleData
+     * @phpstan-param ModuleEntry $moduleData
      * @return string
      */
     private function getIssuesDisplay(array $moduleData): string
@@ -223,8 +232,8 @@ class CompatibilityChecker
      *
      * @param string $moduleName
      * @param array $moduleData
-     * @phpstan-param array{compatible: bool, hasWarnings: bool, scanResult: array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}, moduleInfo: array{name: string, version: string, isHyvaAware: bool}} $moduleData
-     * @return array<int, array{file: string, issues: array<int, array{description: string, severity: string, line: int, pattern: string}>}>
+     * @phpstan-param ModuleEntry $moduleData
+     * @return array<int, array{file: string, issues: array<int, ScanIssue>}>
      */
     public function getDetailedIssues(string $moduleName, array $moduleData): array
     {

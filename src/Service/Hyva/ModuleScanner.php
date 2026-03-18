@@ -11,6 +11,10 @@ use Magento\Framework\Filesystem\Driver\File;
  *
  * Recursively scans JavaScript, XML, and PHTML files within module directories
  * to identify patterns that may be incompatible with Hyvä themes.
+ *
+ * @phpstan-import-type ScanIssue from IncompatibilityDetector
+ * @phpstan-type ScanResult array{files: array<string, array<int, ScanIssue>>, totalIssues: int, criticalIssues: int}
+ * @phpstan-type ModuleInfo array{name: string, version: string, isHyvaAware: bool}
  */
 class ModuleScanner
 {
@@ -32,7 +36,7 @@ class ModuleScanner
      *
      * @param string $modulePath
      * @return array<string, mixed> Array with structure: ['files' => [], 'totalIssues' => int, 'criticalIssues' => int]
-     * @phpstan-return array{files: array<string, array<int, array{description: string, severity: string, line: int, pattern: string}>>, totalIssues: int, criticalIssues: int}
+     * @phpstan-return ScanResult
      */
     public function scanModule(string $modulePath): array
     {
@@ -176,7 +180,7 @@ class ModuleScanner
      *
      * @param string $modulePath
      * @return array<string, mixed>
-     * @phpstan-return array{name: string, version: string, isHyvaAware: bool}
+     * @phpstan-return ModuleInfo
      */
     public function getModuleInfo(string $modulePath): array
     {
