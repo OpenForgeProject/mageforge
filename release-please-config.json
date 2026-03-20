@@ -12,7 +12,7 @@
       "include-v-in-tag": false,
       "include-component-in-tag": false,
       "pull-request-title-pattern": "chore: Next Release ${version}",
-      "pull-request-header": "## Release ${version}",
+      "pull-request-header": "## Upcoming Release",
       "changelog-sections": [
         {
           "type": "feat",
