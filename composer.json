@@ -13,8 +13,8 @@
     }
   },
   "require": {
-    "php": ">=8.3",
-    "magento/framework": ">=103.0.7",
+    "php": "^8.3 || ^8.4 || ^8.5",
+    "magento/framework": "^103.0.7",
     "laravel/prompts": "^0.3.5"
   }
 }
