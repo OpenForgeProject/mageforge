@@ -356,8 +356,6 @@ function _registerMageforgeInspector() {
 
             this.floatingButton.type = 'button';
             this.floatingButton.title = 'Activate Inspector (Ctrl+Shift+I)';
-
-            // Icon + Text with unique gradient ID
             this.floatingButton.innerHTML = `
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
                     <g stroke-width="0"></g>
