@@ -6,14 +6,11 @@ This document provides detailed information and advanced tips for using MageForg
 
 ### Command Efficiency
 
-- Use shortcodes for faster command execution:
-  - `m:t:b` instead of `mageforge:theme:build`
-  - `m:t:w` instead of `mageforge:theme:watch`
-  - `m:s:c` for system check
-
 - Alternative aliases for common commands:
   - `frontend:build` for `mageforge:theme:build`
   - `frontend:watch` for `mageforge:theme:watch`
+
+Check `bin/magento mageforge` for a full list of available commands.
 
 ### Development Workflow
 
@@ -54,7 +51,7 @@ This prevents accidental modification attempts and ensures build process stabili
 MageForge automatically detects if a Magento Standard theme intentionally omits Node.js/Grunt setup. If none of the following files exist:
 - `package.json`
 - `package-lock.json`
-- `gruntfile.js`
+- `Gruntfile.js`
 - `grunt-config.json`
 
 The builder will skip all Node/Grunt-related steps and only:
@@ -83,20 +80,57 @@ For custom Tailwind setups (non-Hyvä), MageForge supports:
 - PostCSS processing
 - Custom directory structures
 
-### Avanta B2B Theme
+### Avanta B2B Themes
 
-MageForge has special support for Avanta B2B themes with:
-- B2B-specific component scanning
-- Special optimization for B2B module templates
+Avanta is a B2B theme built on top of Hyvä. Because MageForge detects Hyvä themes via `etc/hyva-themes.json`, Avanta themes are automatically recognised and built using the Hyvä builder — no additional configuration required.
+
+```bash
+bin/magento mageforge:theme:build Vendor/avanta
+```
+
+All Hyvä builder features apply: TailwindCSS compilation, PurgeCSS optimisation, and watch mode.
 
 ## Performance Optimization
 
-- Build specific theme components instead of entire themes for faster development
-- Use the production flag for minified, optimized output when ready for deployment
-- Consider selective watching for large themes to improve performance
+### Build Multiple Themes in One Pass
+
+`mageforge:theme:build` accepts multiple theme codes, so you can build several themes without re-running the command:
+
+```bash
+bin/magento mageforge:theme:build Vendor/theme1 Vendor/theme2
+```
+
+You can also pass a vendor prefix to build all themes from that vendor at once:
+
+```bash
+bin/magento mageforge:theme:build Hyva
+```
+
+### Use Watch Mode During Development
+
+Instead of triggering full rebuilds manually, use watch mode. It detects file changes and recompiles only what is needed, keeping feedback loops short:
+
+```bash
+bin/magento mageforge:theme:watch Vendor/theme
+```
+
+### Verbose Output for Debugging Slow Builds
+
+Add `-v` to see each step's timing and output, which helps identify bottlenecks:
+
+```bash
+bin/magento mageforge:theme:build Vendor/theme -v
+```
+
+### Vendor Themes Are Built Instantly
+
+Themes installed via Composer (in the `vendor/` directory) are detected automatically. MageForge skips all Node.js and Grunt steps for them, as their assets are pre-built. Building a vendor theme only runs static content deployment and cache clean.
+
+### Themes Without Node.js/Grunt
+
+Themes that omit `package.json` / `Gruntfile.js` also skip the Node.js pipeline entirely, resulting in significantly faster builds (static content deployment and cache clean only).
 
 ## Troubleshooting
-
 Common issues and solutions:
 
 1. **Build Failures**:
