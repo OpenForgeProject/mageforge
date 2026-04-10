@@ -17,6 +17,21 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.16.0](https://github.com/OpenForgeProject/mageforge/compare/0.15.1...0.16.0) (2026-04-10)
+
+
+### Added
+
+* add CSP whitelist and update Alpine.js to version 3.15.11 with hash security ([#159](https://github.com/OpenForgeProject/mageforge/issues/159)) ([fa811bd](https://github.com/OpenForgeProject/mageforge/commit/fa811bddbf48d531b528163eb210335a3c01eeca))
+* update PHP and Magento framework requirements in composer.json [#155](https://github.com/OpenForgeProject/mageforge/issues/155) ([#156](https://github.com/OpenForgeProject/mageforge/issues/156)) ([9a3f92d](https://github.com/OpenForgeProject/mageforge/commit/9a3f92dc102a9d7e2671d8b8330a276a18d8b042))
+
+
+### Fixed
+
+* add keydownHandler and impove performance observers to inspector ([#160](https://github.com/OpenForgeProject/mageforge/issues/160)) ([5639b87](https://github.com/OpenForgeProject/mageforge/commit/5639b87ecc92277ca429055f37382997fd48aefb))
+* Refactor inspector.js into ES modules ([#161](https://github.com/OpenForgeProject/mageforge/issues/161)) ([f3fb74d](https://github.com/OpenForgeProject/mageforge/commit/f3fb74dc7e6090de172d0f1350bef713c1803ad5))
+* updated advanced_usage.md for better understanding ([#158](https://github.com/OpenForgeProject/mageforge/issues/158)) ([956efe4](https://github.com/OpenForgeProject/mageforge/commit/956efe4053d6ac75de5cc04b89c685da46e94bf6))
+
 ## [0.15.1](https://github.com/OpenForgeProject/mageforge/compare/0.15.0...0.15.1) (2026-03-18)
 
 
