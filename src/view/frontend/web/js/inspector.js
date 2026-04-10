@@ -4,7 +4,10 @@
  * Alpine.js component for inspecting templates, blocks, and modules
  */
 
-document.addEventListener('alpine:init', () => {
+// Extracted into a named function so it can be called either from the
+// alpine:init event (normal case) or immediately when Alpine has already
+// started (e.g. Hyvä themes where Alpine loads before this deferred script).
+function _registerMageforgeInspector() {
     Alpine.data('mageforgeInspector', () => ({
         isOpen: false,
         isPickerActive: false,
@@ -2373,4 +2376,20 @@ document.addEventListener('alpine:init', () => {
             this.panelData.module = data.module || 'N/A';
         },
     }));
-});
+}
+
+// If Alpine has already initialised (e.g. it was loaded by Hyvä before this
+// deferred script executed), register the component straight away and
+// re-initialise any [x-data="mageforgeInspector"] elements that Alpine skipped
+// because the component was not yet registered at that point.
+// Otherwise, register on alpine:init which fires before Alpine processes the DOM.
+if (typeof Alpine !== 'undefined') {
+    _registerMageforgeInspector();
+    document.querySelectorAll('[x-data="mageforgeInspector"]').forEach(function (el) {
+        if (typeof Alpine.initTree === 'function') {
+            Alpine.initTree(el);
+        }
+    });
+} else {
+    document.addEventListener('alpine:init', _registerMageforgeInspector);
+}

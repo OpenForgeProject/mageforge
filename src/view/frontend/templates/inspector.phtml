@@ -15,22 +15,23 @@
 <link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($block->getCssUrl()) ?>" />
 
 <!-- Alpine.js Bootstrap (load only if not already present) -->
-<script>
+<?php
+$alpineBootstrap = <<<JS
 (function() {
     'use strict';
 
-    // Check if Alpine.js is already loaded (Hyvä themes)
+    // Check if Alpine.js is already loaded (Hyvä themes) to avoid conflicts
     if (typeof Alpine !== 'undefined') {
         console.log('[MageForge Inspector] Alpine.js already loaded');
         return;
     }
 
-    // Load Alpine.js dynamically for non-Hyvä themes
     console.log('[MageForge Inspector] Loading Alpine.js from CDN');
 
     var alpineScript = document.createElement('script');
-    alpineScript.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js';
-    alpineScript.defer = true;
+    alpineScript.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js';
+    alpineScript.integrity = 'sha256-vuumPQiVb2T6Bg9rainIejQb8Gn7lslFnCIsb9QuWK4=';
+    alpineScript.crossOrigin = 'anonymous';
     alpineScript.onload = function() {
         console.log('[MageForge Inspector] Alpine.js loaded successfully');
     };
@@ -38,13 +39,25 @@
         console.error('[MageForge Inspector] Failed to load Alpine.js');
     };
 
-    document.head.appendChild(alpineScript);
+    // Defer injection until DOMContentLoaded so that all <script defer> tags
+    // (including inspector.js) have already executed and registered their
+    // alpine:init listener before Alpine starts.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            document.head.appendChild(alpineScript);
+        });
+    } else {
+        // DOMContentLoaded already fired (e.g. script injected late)
+        document.head.appendChild(alpineScript);
+    }
 })();
-</script>
+JS;
+?>
+<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $alpineBootstrap, false) ?>
 
 <script defer src="<?= $escaper->escapeUrl($block->getJsUrl()) ?>"></script>
 
-<!-- Inspector Component Wrapper -->
+<!-- MageForge Inspector Component Wrapper -->
 <div class="mageforge-inspector"
      x-data="mageforgeInspector"
      data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"></div>
