@@ -15,17 +15,17 @@
 <link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($block->getCssUrl()) ?>" />
 
 <!-- Alpine.js Bootstrap (load only if not already present) -->
-<script>
+<?php
+$alpineBootstrap = <<<JS
 (function() {
     'use strict';
 
-    // Check if Alpine.js is already loaded (Hyvä themes)
+    // Check if Alpine.js is already loaded (Hyvä themes) to avoid conflicts
     if (typeof Alpine !== 'undefined') {
         console.log('[MageForge Inspector] Alpine.js already loaded');
         return;
     }
 
-    // Load Alpine.js dynamically for non-Hyvä themes
     console.log('[MageForge Inspector] Loading Alpine.js from CDN');
 
     var alpineScript = document.createElement('script');
@@ -41,7 +41,9 @@
 
     document.head.appendChild(alpineScript);
 })();
-</script>
+JS;
+?>
+<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $alpineBootstrap, false) ?>
 
 <script defer src="<?= $escaper->escapeUrl($block->getJsUrl()) ?>"></script>
 
