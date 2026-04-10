@@ -19,6 +19,7 @@ function _registerMageforgeInspector() {
         floatingButton: null,
         mouseMoveHandler: null,
         clickHandler: null,
+        keydownHandler: null,
         hoverTimeout: null,
         hoverDelay: 50, // ms delay for accurate position calculation
         lastBadgeUpdate: 0,
@@ -58,6 +59,7 @@ function _registerMageforgeInspector() {
         longTasks: [],
         resourceMetrics: null,
         pageTimings: null,
+        performanceObservers: [],
 
         // Feature Discovery
         MAX_NEW_BADGE_VIEWS: 5,
@@ -95,6 +97,40 @@ function _registerMageforgeInspector() {
                 }
             } catch (e) {
                 console.warn('MageForge: Failed to load feature views', e);
+            }
+        },
+
+        destroy() {
+            // Remove keyboard listener
+            if (this.keydownHandler) {
+                document.removeEventListener('keydown', this.keydownHandler);
+            }
+
+            // Disconnect all PerformanceObservers
+            this.performanceObservers.forEach(observer => observer.disconnect());
+            this.performanceObservers = [];
+
+            // Close inspector and clean up active event listeners
+            if (this.isOpen || this.isPinned) {
+                this.closeInspector();
+            }
+
+            // Remove injected DOM elements
+            if (this.highlightBox) {
+                this.highlightBox.remove();
+                this.highlightBox = null;
+            }
+            if (this.infoBadge) {
+                this.infoBadge.remove();
+                this.infoBadge = null;
+            }
+            if (this.floatingButton) {
+                this.floatingButton.remove();
+                this.floatingButton = null;
+            }
+            if (this.connectorSvg) {
+                this.connectorSvg.remove();
+                this.connectorSvg = null;
             }
         },
 
@@ -252,7 +288,7 @@ function _registerMageforgeInspector() {
          * Setup keyboard shortcuts
          */
         setupKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
+            this.keydownHandler = (e) => {
                 // Ctrl+Shift+I or Cmd+Option+I
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
                     e.preventDefault();
@@ -263,7 +299,8 @@ function _registerMageforgeInspector() {
                 if (e.key === 'Escape' && this.isOpen) {
                     this.closeInspector();
                 }
-            });
+            };
+            document.addEventListener('keydown', this.keydownHandler);
         },
 
         /**
@@ -319,11 +356,6 @@ function _registerMageforgeInspector() {
 
             this.floatingButton.type = 'button';
             this.floatingButton.title = 'Activate Inspector (Ctrl+Shift+I)';
-
-            // Generate unique ID for SVG gradient to avoid collisions
-            const gradientId = 'mageforge-gradient-' + Math.random().toString(36).substr(2, 9);
-
-            // Icon + Text with unique gradient ID
             this.floatingButton.innerHTML = `
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
                     <g stroke-width="0"></g>
@@ -1388,17 +1420,6 @@ function _registerMageforgeInspector() {
         },
 
         /**
-         * Render render time section
-         */
-        renderRenderTimeSection(container, performanceData) {
-            const renderTime = parseFloat(performanceData.renderTime);
-            const color = this.getRenderTimeColor(renderTime);
-            const formattedTime = `${performanceData.renderTime} ms`;
-
-            container.appendChild(this.createInfoSection('PHP Render Time', formattedTime, color));
-        },
-
-        /**
          * Render cache section
          */
         renderCacheSection(container, cacheData) {
@@ -1443,80 +1464,6 @@ function _registerMageforgeInspector() {
             }
         },
 
-        /**
-         * Render DOM complexity section
-         */
-        renderDOMComplexitySection(container, element) {
-            const complexity = this.calculateDOMComplexity(element);
-            const rating = this.getComplexityRating(complexity);
-
-            // Child count
-            container.appendChild(
-                this.createInfoSection('Child Nodes', complexity.childCount.toString(), '#60a5fa')
-            );
-
-            // Tree depth
-            const depthColor = complexity.depth > this.PERF_DOM_DEPTH_WARNING ? '#f59e0b' : '#34d399';
-            container.appendChild(
-                this.createInfoSection('Tree Depth', complexity.depth.toString(), depthColor)
-            );
-
-            // Total nodes
-            const totalColor = rating === 'high' ? '#ef4444' : (rating === 'medium' ? '#f59e0b' : '#34d399');
-            container.appendChild(
-                this.createInfoSection('Total Nodes', complexity.totalNodes.toString(), totalColor)
-            );
-
-            // Complexity rating
-            const ratingEmoji = rating === 'low' ? '✅' : (rating === 'medium' ? '⚠️' : '❌');
-            const ratingText = `${ratingEmoji} ${rating.toUpperCase()}`;
-            container.appendChild(
-                this.createInfoSection('Complexity', ratingText, totalColor)
-            );
-        },
-
-        /**
-         * Render Web Vitals section
-         */
-        renderWebVitalsSection(container, element) {
-            const vitalsInfo = this.getWebVitalsForElement(element);
-
-            if (vitalsInfo.isLCP) {
-                container.appendChild(
-                    this.createInfoSection('LCP Element', '✅ Yes - Performance Critical!', '#ef4444')
-                );
-            }
-
-            if (vitalsInfo.contributesCLS && vitalsInfo.contributesCLS > 0) {
-                container.appendChild(
-                    this.createInfoSection('CLS Impact', `${vitalsInfo.contributesCLS.toFixed(3)}`, '#f59e0b')
-                );
-            }
-
-            if (!vitalsInfo.isLCP && !vitalsInfo.contributesCLS) {
-                container.appendChild(
-                    this.createInfoSection('Web Vitals', 'Not Critical', '#94a3b8')
-                );
-            }
-        },
-
-        /**
-         * Render page timings section
-         */
-        renderPageTimingsSection(container) {
-            if (!this.pageTimings) {
-                return;
-            }
-
-            container.appendChild(
-                this.createInfoSection('DOMContentLoaded', `${this.pageTimings.domContentLoaded} ms`, '#60a5fa')
-            );
-
-            container.appendChild(
-                this.createInfoSection('Page Load', `${this.pageTimings.loadComplete} ms`, '#a78bfa')
-            );
-        },
-
         // ============================================================================
         // Performance Analysis Utilities
         // ============================================================================
@@ -1543,6 +1490,7 @@ function _registerMageforgeInspector() {
                     };
                 });
                 lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+                this.performanceObservers.push(lcpObserver);
 
                 // Cumulative Layout Shift (CLS)
                 const clsObserver = new PerformanceObserver((list) => {
@@ -1557,6 +1505,7 @@ function _registerMageforgeInspector() {
                     }
                 });
                 clsObserver.observe({ type: 'layout-shift', buffered: true });
+                this.performanceObservers.push(clsObserver);
 
                 // Interaction to Next Paint (INP) - via first-input as fallback
                 const inpObserver = new PerformanceObserver((list) => {
@@ -1571,6 +1520,7 @@ function _registerMageforgeInspector() {
                     }
                 });
                 inpObserver.observe({ type: 'first-input', buffered: true });
+                this.performanceObservers.push(inpObserver);
 
                 // First Contentful Paint (FCP)
                 const paintObserver = new PerformanceObserver((list) => {
@@ -1584,6 +1534,7 @@ function _registerMageforgeInspector() {
                     }
                 });
                 paintObserver.observe({ type: 'paint', buffered: true });
+                this.performanceObservers.push(paintObserver);
 
                 // Long Tasks (>50ms)
                 const longTaskObserver = new PerformanceObserver((list) => {
@@ -1596,6 +1547,7 @@ function _registerMageforgeInspector() {
                     }
                 });
                 longTaskObserver.observe({ type: 'longtask', buffered: true });
+                this.performanceObservers.push(longTaskObserver);
 
                 // Element Timing API - for elements with elementtiming attribute
                 const elementTimingObserver = new PerformanceObserver((list) => {
@@ -1610,6 +1562,7 @@ function _registerMageforgeInspector() {
                     }
                 });
                 elementTimingObserver.observe({ type: 'element', buffered: true });
+                this.performanceObservers.push(elementTimingObserver);
             } catch (e) {
                 console.warn('[MageForge Inspector] Performance tracking failed:', e);
             }
