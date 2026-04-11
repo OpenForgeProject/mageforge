@@ -68,7 +68,6 @@ function _registerMageforgeInspector() {
         webVitals: {
             lcp: null,
             cls: [],
-            inp: null,
             fcp: null,
             elementTimings: [] // Element Timing API results
         },

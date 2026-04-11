@@ -42,21 +42,6 @@ export const vitalsMethods = {
             clsObserver.observe({ type: 'layout-shift', buffered: true });
             this.performanceObservers.push(clsObserver);
 
-            // Interaction to Next Paint (INP) - via first-input as fallback
-            const inpObserver = new PerformanceObserver((list) => {
-                const entries = list.getEntries();
-                if (entries.length > 0) {
-                    const firstEntry = entries[0];
-                    this.webVitals.inp = {
-                        delay: firstEntry.processingStart - firstEntry.startTime,
-                        duration: firstEntry.duration,
-                        time: firstEntry.startTime
-                    };
-                }
-            });
-            inpObserver.observe({ type: 'first-input', buffered: true });
-            this.performanceObservers.push(inpObserver);
-
             // First Contentful Paint (FCP)
             const paintObserver = new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
