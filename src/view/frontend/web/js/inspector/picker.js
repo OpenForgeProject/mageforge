@@ -136,7 +136,6 @@ export const pickerMethods = {
                 this.showHighlight(element);
                 this.updatePanelData(element);
                 this.showInfoBadge(element);
-                this.incrementFeatureViews();
             }, this.hoverDelay);
         } else if (!element && this.hoveredElement) {
             // Only hide highlight when leaving element, keep badge visible

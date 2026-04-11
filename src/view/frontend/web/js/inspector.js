@@ -75,13 +75,6 @@ function _registerMageforgeInspector() {
         pageTimings: null,
         performanceObservers: [],
 
-        // Feature Discovery
-        MAX_NEW_BADGE_VIEWS: 5,
-        featureViews: {
-            'performance': 0,
-            'core-web-vitals': 0
-        },
-
         // ====================================================================
         // Lifecycle
         // ====================================================================
@@ -101,7 +94,6 @@ function _registerMageforgeInspector() {
             this.createFloatingButton();
             this.initWebVitalsTracking();
             this.cachePageTimings();
-            this.loadFeatureViews();
 
             // Dispatch init event for Hyvä integration
             this.$dispatch('mageforge:inspector:init');
@@ -138,39 +130,6 @@ function _registerMageforgeInspector() {
             if (this.connectorSvg) {
                 this.connectorSvg.remove();
                 this.connectorSvg = null;
-            }
-        },
-
-        // ====================================================================
-        // Feature Views
-        // ====================================================================
-
-        loadFeatureViews() {
-            try {
-                const stored = localStorage.getItem('mageforge_feature_views');
-                if (stored) {
-                    this.featureViews = { ...this.featureViews, ...JSON.parse(stored) };
-                }
-            } catch (e) {
-                console.warn('MageForge: Failed to load feature views', e);
-            }
-        },
-
-        incrementFeatureViews() {
-            let changed = false;
-            ['performance', 'core-web-vitals'].forEach(feature => {
-                if (this.featureViews[feature] < this.MAX_NEW_BADGE_VIEWS) {
-                    this.featureViews[feature]++;
-                    changed = true;
-                }
-            });
-
-            if (changed) {
-                try {
-                    localStorage.setItem('mageforge_feature_views', JSON.stringify(this.featureViews));
-                } catch (e) {
-                    // Ignore storage errors
-                }
             }
         },
 
