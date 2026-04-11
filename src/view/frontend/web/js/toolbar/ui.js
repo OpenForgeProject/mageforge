@@ -41,6 +41,20 @@ export const uiMethods = {
             ));
         });
 
+        // Footer – Toggle All
+        const menuFooter = document.createElement('div');
+        menuFooter.className = 'mageforge-toolbar-menu-footer';
+        this.toggleAllButton = document.createElement('button');
+        this.toggleAllButton.type = 'button';
+        this.toggleAllButton.className = 'mageforge-toolbar-menu-toggle-all';
+        this.toggleAllButton.textContent = 'Activate All';
+        this.toggleAllButton.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleAllAudits();
+        };
+        menuFooter.appendChild(this.toggleAllButton);
+        this.menu.appendChild(menuFooter);
+
         // Burger button (left)
         this.burgerButton = document.createElement('button');
         this.burgerButton.className = 'mageforge-toolbar-burger';
@@ -150,6 +164,16 @@ export const uiMethods = {
                 status.className = 'mageforge-toolbar-menu-status';
             }
         }
+        this.updateToggleAllButton();
+    },
+
+    /**
+     * Sync the Toggle All button label to current active state.
+     */
+    updateToggleAllButton() {
+        if (!this.toggleAllButton) return;
+        const allActive = this.activeAudits.size === this.getAudits().length;
+        this.toggleAllButton.textContent = allActive ? 'Deactivate All' : 'Activate All';
     },
 
     /**

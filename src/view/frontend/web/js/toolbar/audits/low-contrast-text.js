@@ -155,7 +155,7 @@ function isLargeText(el) {
 /** @type {import('./index.js').AuditDefinition} */
 export default {
     key: 'low-contrast-text',
-    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 3v18"></path><path d="M12 9l4.65 -6.155"></path><path d="M12 14.3l7.37 -9.21"></path><path d="M12 19.6l8.85 -9.536"></path></svg>',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336m-9 1.732a8 8 0 0 0 4.001 14.928l-.001 -16a8 8 0 0 0 -4 1.072"></path></svg>',
     label: 'Low Contrast Text',
     description: 'Highlight text failing WCAG AA contrast',
 
@@ -163,9 +163,8 @@ export default {
      * @param {object} context - Alpine toolbar component instance
      */
     run(context) {
-        const existing = document.querySelectorAll(`.${HIGHLIGHT_CLASS}`);
-        if (existing.length > 0) {
-            existing.forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+        if (!context.activeAudits.has('low-contrast-text')) {
+            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
             return;
         }
 

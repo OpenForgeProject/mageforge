@@ -4,7 +4,7 @@
       <default>
             <dev>
                   <mageforge_inspector>
-                        <enabled>0</enabled>
+                        <enabled>1</enabled>
                   </mageforge_inspector>
             </dev>
             <mageforge>

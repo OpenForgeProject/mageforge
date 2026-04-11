@@ -136,23 +136,16 @@ export default {
     run(context) {
         injectCss();
 
-        // Toggle: remove overlay if already visible
-        const existing = document.getElementById(OVERLAY_ID);
-        if (existing) {
+        if (!context.activeAudits.has('tab-order')) {
             context._tabOrderObserver?.disconnect();
             context._tabOrderObserver = null;
             if (context._tabOrderScrollHandler) {
                 document.removeEventListener('scroll', context._tabOrderScrollHandler, { capture: true });
                 context._tabOrderScrollHandler = null;
             }
-            existing.remove();
+            document.getElementById(OVERLAY_ID)?.remove();
             return;
         }
-
-        // Clear other audit highlights
-        document.querySelectorAll('.mageforge-toolbar-audit-highlight').forEach(el => {
-            el.classList.remove('mageforge-toolbar-audit-highlight');
-        });
 
         const allFocusable = Array.from(document.querySelectorAll(FOCUSABLE_SELECTOR))
             .filter(isVisible);

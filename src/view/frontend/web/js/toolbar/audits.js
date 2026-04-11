@@ -25,15 +25,33 @@ export const auditMethods = {
     },
 
     /**
+     * Activates all inactive audits or deactivates all if all are already active.
+     */
+    toggleAllAudits() {
+        const allActive = this.activeAudits.size === audits.length;
+        if (allActive) {
+            this.deactivateAllAudits();
+        } else {
+            audits.forEach(audit => {
+                if (!this.activeAudits.has(audit.key)) {
+                    this.runAudit(audit.key);
+                }
+            });
+        }
+    },
+
+    /**
      * Deactivates all currently active audits (called when closing the toolbar).
      */
     deactivateAllAudits() {
         this.activeAudits.forEach(key => {
             const audit = audits.find(a => a.key === key);
+            this.activeAudits.delete(key);
             if (audit) audit.run(this);
             this.setAuditActive(key, false);
         });
         this.activeAudits.clear();
+        this.updateToggleAllButton();
     },
 
     /**

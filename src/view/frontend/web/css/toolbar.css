@@ -326,6 +326,7 @@
    Audit Highlights
    ========================================================================== */
 
+.mageforge-audit-images-without-alt,
 .mageforge-toolbar-audit-highlight,
 .mageforge-audit-images-without-dimensions,
 .mageforge-audit-images-without-lazy-load,
@@ -385,6 +386,88 @@
 @keyframes mageforge-toolbar-fade-out {
     from { opacity: 1; }
     to   { opacity: 0; }
+}
+
+/* ============================================================================
+   Menu Footer / Toggle All
+   ========================================================================== */
+
+.mageforge-toolbar-menu-footer {
+    border-top: 1px solid var(--mageforge-border-color);
+    margin-top: 4px;
+    padding-top: 6px;
+}
+
+.mageforge-toolbar-menu-toggle-all {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    background: none;
+    border: 1px solid var(--mageforge-border-color);
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--mageforge-color-slate-400);
+    font-family: var(--mageforge-font-family);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.mageforge-toolbar-menu-toggle-all:hover {
+    color: var(--mageforge-color-white);
+    background: var(--mageforge-surface-glass-hover);
+    border-color: var(--mageforge-border-glass);
+}
+
+/* ============================================================================
+   Theme Overrides
+   ========================================================================== */
+
+/*
+ * Only the menu popup switches to light; the burger button intentionally stays
+ * dark so it remains visible regardless of the page background colour.
+ */
+
+/* Light Mode */
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu {
+    --mageforge-bg-dark: rgba(255, 255, 255, 0.98);
+    --mageforge-bg-dark-alt: rgba(248, 250, 252, 0.98);
+    --mageforge-border-color: rgba(0, 0, 0, 0.12);
+    --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.05);
+    --mageforge-shadow-sm: rgba(0, 0, 0, 0.1);
+    --mageforge-shadow-md: rgba(0, 0, 0, 0.15);
+    --mageforge-shadow-lg: rgba(0, 0, 0, 0.2);
+    --mageforge-color-white: #0f172a;
+    --mageforge-color-slate-400: #64748b;
+}
+
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu-toggle {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Auto Mode – Light System Preference */
+@media (prefers-color-scheme: light) {
+    .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu {
+        --mageforge-bg-dark: rgba(255, 255, 255, 0.98);
+        --mageforge-bg-dark-alt: rgba(248, 250, 252, 0.98);
+        --mageforge-border-color: rgba(0, 0, 0, 0.12);
+        --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.05);
+        --mageforge-shadow-sm: rgba(0, 0, 0, 0.1);
+        --mageforge-shadow-md: rgba(0, 0, 0, 0.15);
+        --mageforge-shadow-lg: rgba(0, 0, 0, 0.2);
+        --mageforge-color-white: #0f172a;
+        --mageforge-color-slate-400: #64748b;
+    }
+
+    .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu-toggle {
+        background: rgba(0, 0, 0, 0.15);
+    }
 }
 
 /* ============================================================================

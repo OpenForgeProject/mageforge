@@ -18,9 +18,8 @@ export default {
      * @param {object} context - Alpine toolbar component instance
      */
     run(context) {
-        const existing = document.querySelectorAll(`.${HIGHLIGHT_CLASS}`);
-        if (existing.length > 0) {
-            existing.forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+        if (!context.activeAudits.has('inputs-without-label')) {
+            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
             return;
         }
 
