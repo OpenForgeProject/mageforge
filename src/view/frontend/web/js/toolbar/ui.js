@@ -141,6 +141,9 @@ export const uiMethods = {
         if (!item) return;
         item.classList.toggle('mageforge-active', active);
         if (!active) {
+            item.classList.remove('mageforge-active--error');
+        }
+        if (!active) {
             const status = item.querySelector('.mageforge-toolbar-menu-status');
             if (status) {
                 status.textContent = '';

@@ -14,10 +14,18 @@
  */
 
 import imagesWithoutAlt from './images-without-alt.js';
+import imagesWithoutDimensions from './images-without-dimensions.js';
+import imagesWithoutLazyLoad from './images-without-lazy-load.js';
+import inputsWithoutLabel from './inputs-without-label.js';
+import lowContrastText from './low-contrast-text.js';
 import tabOrder from './tab-order.js';
 
 /** @type {AuditDefinition[]} */
 export const audits = [
     imagesWithoutAlt,
+    imagesWithoutDimensions,
+    imagesWithoutLazyLoad,
+    inputsWithoutLabel,
+    lowContrastText,
     tabOrder,
 ];
