@@ -279,6 +279,60 @@ bin/magento new-alias --help
     ```
 - **Toggle**: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
 
+## MageForge Toolbar
+
+The toolbar is a standalone Alpine.js component (`mageforgeToolbar`) fully separated from the Inspector.
+
+### File Structure
+
+```
+src/view/frontend/web/
+  js/
+    toolbar.js                      # Entry point: imports modules, registers Alpine component
+    toolbar/
+      ui.js                         # DOM construction; builds menu dynamically from audit registry
+      menu.js                       # toggleMenu / openMenu / closeMenu
+      feedback.js                   # showFeedback() – fixed-position toast above toolbar
+      audits.js                     # runAudit() dispatcher + getAudits(); delegates to registry
+      audits/
+        index.js                    # Audit registry – import & list all audits here
+        images-without-alt.js       # Example audit: highlights images missing alt attribute
+  css/
+    toolbar.css                     # All toolbar styles; uses :root CSS variables throughout
+```
+
+### Adding a New Audit
+
+1. Create `toolbar/audits/<your-audit-key>.js` with the following shape:
+
+   ```js
+   export default {
+       key: 'your-audit-key',      // unique string
+       icon: '🔍',                 // emoji shown in menu
+       label: 'Audit Name',        // short display name
+       description: 'What it does',
+       run(context) {
+           // context = Alpine toolbar component instance
+           // use context.showFeedback('message', 'success'|'error') for feedback
+       },
+   };
+   ```
+
+2. Import and add it to the `audits` array in `toolbar/audits/index.js`:
+
+   ```js
+   import yourAudit from './your-audit-key.js';
+   export const audits = [ imagesWithoutAlt, yourAudit ];
+   ```
+
+The menu is built automatically from the registry – no further changes required.
+
+### Architecture Notes
+
+- **Alpine component**: `mageforgeToolbar` (separate from `mageforgeInspector`)
+- **Communication with Inspector**: Custom events on `window` (`mageforge:toolbar:toggle-inspector`, `mageforge:toolbar:inspector-state`)
+- **CSS variables**: All colours and shadows are defined as `--mageforge-*` custom properties in `toolbar.css :root`; never use hardcoded `rgba()` values
+
 ## Common Pitfalls
 
 - **Shell commands in builders**: Use `Shell` service (DI), not `exec()` directly
