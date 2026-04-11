@@ -217,11 +217,10 @@ export const uiMethods = {
         this.infoBadge.style.display = 'block';
 
         const badgeRect = this.infoBadge.getBoundingClientRect();
-        const badgeOffset = 0;
 
         // Calculate initial position
         let x = rect.left + window.scrollX;
-        let y = rect.bottom + window.scrollY + badgeOffset;
+        let y = rect.bottom + window.scrollY;
 
         // Validate coordinates
         if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0) {
@@ -235,7 +234,7 @@ export const uiMethods = {
         // Check vertical space and adjust if needed
         const showAbove = this.shouldShowAbove(y, badgeRect.height);
         if (showAbove) {
-            y = rect.top + window.scrollY - badgeRect.height - badgeOffset;
+            y = rect.top + window.scrollY - badgeRect.height;
             if (y < window.scrollY + 10) {
                 y = window.scrollY + 10;
             }
