@@ -175,7 +175,7 @@ export const accessibilityMethods = {
         return interactiveTags.includes(tagName) ||
                interactiveRoles.includes(role) ||
                element.hasAttribute('onclick') ||
-               element.style.cursor === 'pointer';
+               window.getComputedStyle(element).cursor === 'pointer';
     },
 
     /**
