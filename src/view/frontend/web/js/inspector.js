@@ -14,6 +14,7 @@ import { accessibilityMethods } from './inspector/accessibility.js';
 import { performanceMethods } from './inspector/performance.js';
 import { vitalsMethods } from './inspector/vitals.js';
 import { draggableMethods } from './inspector/draggable.js';
+import { blockDataMap } from './inspector/blockData.js';
 
 // Extracted into a named function so it can be called either from the
 // alpine:init event (normal case) or immediately when Alpine has already
@@ -139,7 +140,7 @@ function _registerMageforgeInspector() {
         // ====================================================================
 
         updatePanelData(element) {
-            const data = element._mageforgeBlockData;
+            const data = blockDataMap.get(element);
 
             if (!data) {
                 this.panelData.template = 'N/A';

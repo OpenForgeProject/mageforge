@@ -2,6 +2,8 @@
  * MageForge Inspector - Keyboard Shortcuts, Inspector Toggle & Element Picker
  */
 
+import { blockDataMap } from './blockData.js';
+
 export const pickerMethods = {
     /**
      * Setup keyboard shortcuts
@@ -226,8 +228,7 @@ export const pickerMethods = {
         // Check if this element is part of a MageForge block
         const block = this.findBlockForElement(target);
         if (block) {
-            // Attach block data to element for easy access
-            target._mageforgeBlockData = block.data;
+            blockDataMap.set(target, block.data);
             return target;
         }
 
