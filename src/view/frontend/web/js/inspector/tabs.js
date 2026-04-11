@@ -37,15 +37,6 @@ export const tabsMethods = {
             textSpan.textContent = tab.label;
             button.appendChild(textSpan);
 
-            // Show "New" badge for Performance and Core Web Vitals if seen < 5 times
-            if (['performance', 'core-web-vitals'].includes(tab.id) &&
-                (this.featureViews[tab.id] || 0) < this.MAX_NEW_BADGE_VIEWS) {
-                const badge = document.createElement('span');
-                badge.className = 'mageforge-badge-new';
-                badge.textContent = 'NEW';
-                button.appendChild(badge);
-            }
-
             button.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();

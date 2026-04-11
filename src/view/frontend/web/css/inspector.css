@@ -461,19 +461,6 @@
     border-bottom-color: var(--mageforge-color-blue);
 }
 
-.mageforge-badge-new {
-    background: linear-gradient(135deg, var(--mageforge-color-amber) 0%, var(--mageforge-color-amber) 100%);
-    color: white;
-    font-size: 8px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    animation: mageforge-pulse 2s infinite;
-}
-
 /* ============================================================================
    Info Sections & Data Display
    ========================================================================== */
