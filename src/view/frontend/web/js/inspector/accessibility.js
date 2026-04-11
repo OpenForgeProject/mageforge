@@ -94,7 +94,7 @@ export const accessibilityMethods = {
      */
     analyzeAccessibility(element) {
         const tagName = element.tagName.toLowerCase();
-        const role = element.getAttribute('role') || this.getImplicitRole(tagName);
+        const role = element.getAttribute('role') || this.getImplicitRole(tagName, element);
 
         return {
             tagName: tagName,
@@ -181,7 +181,23 @@ export const accessibilityMethods = {
     /**
      * Get implicit ARIA role for HTML elements
      */
-    getImplicitRole(tagName) {
+    getImplicitRole(tagName, element) {
+        // input role depends on type attribute
+        if (tagName === 'input' && element) {
+            const type = (element.getAttribute('type') || 'text').toLowerCase();
+            const inputRoleMap = {
+                'checkbox': 'checkbox',
+                'radio':    'radio',
+                'button':   'button',
+                'submit':   'button',
+                'reset':    'button',
+                'range':    'slider',
+                'number':   'spinbutton',
+                'search':   'searchbox',
+            };
+            return inputRoleMap[type] || 'textbox';
+        }
+
         const roleMap = {
             'button': 'button',
             'a': 'link',
