@@ -47,8 +47,8 @@ export const draggableMethods = {
         this.dragStartY = e.clientY;
 
         const rect = this.infoBadge.getBoundingClientRect();
-        this.initialBadgeX = rect.left;
-        this.initialBadgeY = rect.top;
+        this.initialBadgeX = rect.left + window.scrollX;
+        this.initialBadgeY = rect.top + window.scrollY;
 
         // Remove static arrow
         const arrow = this.infoBadge.querySelector('.mageforge-inspector-arrow');
@@ -113,6 +113,11 @@ export const draggableMethods = {
 
         document.body.appendChild(svg);
         this.connectorSvg = svg;
+
+        // Update line on scroll (SVG is fixed, coordinates are viewport-relative)
+        this.connectorScrollHandler = () => this.updateConnector();
+        window.addEventListener('scroll', this.connectorScrollHandler, { passive: true });
+
         this.updateConnector();
     },
 
@@ -120,6 +125,10 @@ export const draggableMethods = {
      * Remove connector
      */
     removeConnector() {
+        if (this.connectorScrollHandler) {
+            window.removeEventListener('scroll', this.connectorScrollHandler);
+            this.connectorScrollHandler = null;
+        }
         if (this.connectorSvg) {
             this.connectorSvg.remove();
             this.connectorSvg = null;

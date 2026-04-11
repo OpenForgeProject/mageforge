@@ -52,8 +52,10 @@ function _registerMageforgeInspector() {
         initialBadgeX: 0,
         initialBadgeY: 0,
         connectorSvg: null,
+        dragStartHandler: null,
         dragHandler: null,
         dragEndHandler: null,
+        connectorScrollHandler: null,
 
         // Performance Thresholds
         PERF_RENDER_TIME_GOOD: 50, // ms
