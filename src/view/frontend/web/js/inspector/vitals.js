@@ -214,7 +214,7 @@ export const vitalsMethods = {
 
                 // Categorize
                 if (resource.name.match(/\.(js|mjs)$/)) result.byType.script++;
-                else if (resource.name.includes('.css')) result.byType.css++;
+                else if (resource.name.match(/\.css(\?.*)?$/)) result.byType.css++;
                 else if (resource.name.match(/\.(jpg|jpeg|png|gif|webp|svg|avif)$/i)) result.byType.img++;
                 else if (resource.name.match(/\.(woff2?|ttf|otf|eot)$/i)) result.byType.font++;
                 else result.byType.other++;
