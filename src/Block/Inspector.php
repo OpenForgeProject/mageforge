@@ -73,6 +73,16 @@ class Inspector extends Template
     }
 
     /**
+     * Get Toolbar CSS file URL
+     *
+     * @return string
+     */
+    public function getToolbarCssUrl(): string
+    {
+        return $this->getViewFileUrl('OpenForgeProject_MageForge::css/toolbar.css');
+    }
+
+    /**
      * Get JS file URL
      *
      * @return string
@@ -80,6 +90,16 @@ class Inspector extends Template
     public function getJsUrl(): string
     {
         return $this->getViewFileUrl('OpenForgeProject_MageForge::js/inspector.js');
+    }
+
+    /**
+     * Get Toolbar JS file URL
+     *
+     * @return string
+     */
+    public function getToolbarJsUrl(): string
+    {
+        return $this->getViewFileUrl('OpenForgeProject_MageForge::js/toolbar.js');
     }
 
     /**

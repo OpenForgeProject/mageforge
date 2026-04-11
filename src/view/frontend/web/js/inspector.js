@@ -31,7 +31,6 @@ function _registerMageforgeInspector() {
         selectedElement: null,
         highlightBox: null,
         infoBadge: null,
-        floatingButton: null,
         mouseMoveHandler: null,
         clickHandler: null,
         keydownHandler: null,
@@ -93,9 +92,13 @@ function _registerMageforgeInspector() {
             this.setupKeyboardShortcuts();
             this.createHighlightBox();
             this.createInfoBadge();
-            this.createFloatingButton();
             this.initWebVitalsTracking();
             this.cachePageTimings();
+
+            // Listen for toggle event from MageForge Toolbar
+            window.addEventListener('mageforge:toolbar:toggle-inspector', () => {
+                this.toggleInspector();
+            });
 
             // Dispatch init event for Hyvä integration
             this.$dispatch('mageforge:inspector:init');
@@ -124,10 +127,6 @@ function _registerMageforgeInspector() {
             if (this.infoBadge) {
                 this.infoBadge.remove();
                 this.infoBadge = null;
-            }
-            if (this.floatingButton) {
-                this.floatingButton.remove();
-                this.floatingButton = null;
             }
             if (this.connectorSvg) {
                 this.connectorSvg.remove();

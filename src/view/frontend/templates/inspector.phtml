@@ -12,6 +12,7 @@
  */
 ?>
 <!-- MageForge Inspector Assets -->
+<link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($block->getToolbarCssUrl()) ?>" />
 <link rel="stylesheet" type="text/css" href="<?= $escaper->escapeUrl($block->getCssUrl()) ?>" />
 
 <!-- Alpine.js Bootstrap (load only if not already present) -->
@@ -60,7 +61,13 @@ JS;
 ?>
 <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $alpineBootstrap, false) ?>
 
+<script type="module" src="<?= $escaper->escapeUrl($block->getToolbarJsUrl()) ?>"></script>
 <script type="module" src="<?= $escaper->escapeUrl($block->getJsUrl()) ?>"></script>
+
+<!-- MageForge Toolbar Component -->
+<div class="mageforge-toolbar-root"
+     x-data="mageforgeToolbar"
+     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"></div>
 
 <!-- MageForge Inspector Component Wrapper -->
 <div class="mageforge-inspector"
