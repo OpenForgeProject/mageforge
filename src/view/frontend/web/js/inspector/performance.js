@@ -107,7 +107,6 @@ export const performanceMethods = {
         if (this.renderRenderTimeMetric(container, element)) hasMetrics = true;
         if (this.renderLCPMetric(container, element)) hasMetrics = true;
         if (this.renderCLSMetric(container, element)) hasMetrics = true;
-        if (this.renderINPMetric(container, element)) hasMetrics = true;
         if (this.renderElementTimingMetric(container, element)) hasMetrics = true;
         if (this.renderImageOptimizationMetric(container, element)) hasMetrics = true;
         if (this.renderResourceMetric(container, element)) hasMetrics = true;
@@ -167,19 +166,6 @@ export const performanceMethods = {
             const stabilityColor = stabilityScore > 0.75 ? '#34d399' : (stabilityScore > 0.5 ? '#f59e0b' : '#ef4444');
             container.appendChild(
                 this.createInfoSection('Layout Stability Score', stabilityScore, stabilityColor)
-            );
-            return true;
-        }
-        return false;
-    },
-
-    renderINPMetric(container, element) {
-        const isInteractive = this.checkIfInteractive(element, element.tagName.toLowerCase(), element.getAttribute('role'));
-        if (isInteractive && this.webVitals.inp) {
-            const inpValue = this.webVitals.inp.duration.toFixed(0);
-            const inpColor = inpValue < 200 ? '#34d399' : (inpValue < 500 ? '#f59e0b' : '#ef4444');
-            container.appendChild(
-                this.createInfoSection('INP (Interaction)', `${inpValue} ms`, inpColor)
             );
             return true;
         }
