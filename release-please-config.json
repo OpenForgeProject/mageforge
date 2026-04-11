@@ -11,8 +11,9 @@
       "prerelease": false,
       "include-v-in-tag": false,
       "include-component-in-tag": false,
-      "pull-request-title-pattern": "chore: Next Release ${version}",
-      "pull-request-header": "## Release ${version}",
+      "pull-request-title-pattern": "Next Release ${version}",
+      "pull-request-header": "## Release",
+      "pull-request-footer": "If you have any questions about the release, please contact the maintainers.",
       "changelog-sections": [
         {
           "type": "feat",
