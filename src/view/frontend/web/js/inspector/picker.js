@@ -153,7 +153,7 @@ export const pickerMethods = {
         // Handle click outside badge when pinned
         if (this.isPinned && this.infoBadge) {
             // Check if click is outside badge
-            if (!this.infoBadge.contains(e.target) && !this.floatingButton.contains(e.target)) {
+            if (!this.infoBadge.contains(e.target) && (!this.floatingButton || !this.floatingButton.contains(e.target))) {
                 this.unpinBadge();
                 return;
             }
