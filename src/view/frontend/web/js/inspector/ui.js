@@ -2,6 +2,8 @@
  * MageForge Inspector - UI Element Creation & Badge Positioning
  */
 
+import { blockDataMap } from './blockData.js';
+
 export const uiMethods = {
     /**
      * Create highlight overlay box
@@ -160,7 +162,7 @@ export const uiMethods = {
      * Build badge content with element metadata
      */
     buildBadgeContent(element) {
-        const data = element._mageforgeBlockData || {
+        const data = blockDataMap.get(element) || {
             template: '',
             block: '',
             module: '',
