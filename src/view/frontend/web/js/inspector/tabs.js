@@ -124,21 +124,21 @@ export const tabsMethods = {
      * Render inherited structure from parent element
      */
     renderInheritedStructure(container, element, parentBlock) {
-        const parentData = parentBlock.data || {
-            template: '',
-            block: '',
-            module: '',
-            viewModel: '',
-            parent: '',
-            alias: '',
-            override: '0'
-        };
+        const src = parentBlock.data || {};
 
-        // Convert to expected format
-        parentData.blockClass = parentData.block;
-        parentData.parentBlock = parentData.parent;
-        parentData.blockAlias = parentData.alias;
-        parentData.isOverride = parentData.override === '1';
+        const parentData = {
+            template:    src.template   || '',
+            block:       src.block      || '',
+            module:      src.module     || '',
+            viewModel:   src.viewModel  || '',
+            parent:      src.parent     || '',
+            alias:       src.alias      || '',
+            override:    src.override   || '0',
+            blockClass:  src.block      || '',
+            parentBlock: src.parent     || '',
+            blockAlias:  src.alias      || '',
+            isOverride:  src.override === '1',
+        };
 
         // Inheritance note
         const inheritanceNote = document.createElement('div');
