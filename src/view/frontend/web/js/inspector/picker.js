@@ -122,20 +122,15 @@ export const pickerMethods = {
         if (element && element !== this.hoveredElement) {
             // Debounce hover updates for accurate positioning
             this.hoverTimeout = setTimeout(() => {
-                // Throttle badge updates to prevent flickering
                 const now = Date.now();
-                if (now - this.lastBadgeUpdate < this.badgeUpdateDelay) {
-                    // Only update highlight, keep badge
-                    this.hoveredElement = element;
-                    this.showHighlight(element);
-                    return;
-                }
-
                 this.hoveredElement = element;
-                this.lastBadgeUpdate = now;
                 this.showHighlight(element);
                 this.updatePanelData(element);
                 this.showInfoBadge(element);
+                // Only update the throttle timestamp when enough time has passed
+                if (now - this.lastBadgeUpdate >= this.badgeUpdateDelay) {
+                    this.lastBadgeUpdate = now;
+                }
             }, this.hoverDelay);
         } else if (!element && this.hoveredElement) {
             // Only hide highlight when leaving element, keep badge visible
