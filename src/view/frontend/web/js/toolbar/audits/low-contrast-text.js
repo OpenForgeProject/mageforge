@@ -22,10 +22,11 @@ const _colorCtx = _colorCanvas.getContext('2d', { willReadFrequently: true });
 function parseColor(color) {
     if (!color || color === 'transparent') return null;
     _colorCtx.clearRect(0, 0, 1, 1);
-    _colorCtx.fillStyle = '#ffffff'; // reset to white
+    _colorCtx.fillStyle = '#fe01fe'; // sentinel: vivid pink never used as real text color
+    const sentinel = _colorCtx.fillStyle; // read back canonical form
     _colorCtx.fillStyle = color;
     // If fillStyle is unchanged, the browser could not parse the color
-    if (_colorCtx.fillStyle === '#ffffff') return null;
+    if (_colorCtx.fillStyle === sentinel) return null;
     _colorCtx.fillRect(0, 0, 1, 1);
     const d = _colorCtx.getImageData(0, 0, 1, 1).data;
     return [d[0], d[1], d[2], d[3] / 255];
