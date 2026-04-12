@@ -2,7 +2,7 @@
  * MageForge Toolbar - Audit dispatcher
  */
 
-import { audits } from './audits/index.js';
+import { audits, auditGroups } from './audits/index.js';
 
 export const auditMethods = {
     /**
@@ -62,6 +62,33 @@ export const auditMethods = {
      */
     getAudits() {
         return audits;
+    },
+
+    /**
+     * Returns all registered audit groups.
+     *
+     * @returns {import('./audits/index.js').AuditGroup[]}
+     */
+    getAuditGroups() {
+        return auditGroups;
+    },
+
+    /**
+     * Toggle collapsed state of a menu group.
+     *
+     * @param {string} key
+     */
+    toggleGroup(key) {
+        if (this.collapsedGroups.has(key)) {
+            this.collapsedGroups.delete(key);
+        } else {
+            this.collapsedGroups.add(key);
+        }
+        if (!this.menu) return;
+        const group = this.menu.querySelector(`[data-group-key="${key}"]`);
+        if (group) {
+            group.classList.toggle('mageforge-toolbar-menu-group--collapsed', this.collapsedGroups.has(key));
+        }
     },
 
     /**

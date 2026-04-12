@@ -15,6 +15,9 @@ function _registerMageforgeToolbar() {
         /** @type {Set<string>} Keys of currently active audits */
         activeAudits: new Set(),
 
+        /** @type {Set<string>} Keys of currently collapsed groups */
+        collapsedGroups: new Set(),
+
         /** @type {HTMLDivElement|null} */
         container: null,
 

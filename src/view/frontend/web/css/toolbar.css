@@ -324,6 +324,62 @@
 }
 
 /* ============================================================================
+   Menu Groups
+   ========================================================================== */
+
+.mageforge-toolbar-menu-group {
+    margin-bottom: 4px;
+}
+
+.mageforge-toolbar-menu-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 4px 4px 4px 6px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--mageforge-border-color);
+    cursor: pointer;
+    margin-bottom: 4px;
+}
+
+.mageforge-toolbar-menu-group-header:hover .mageforge-toolbar-menu-group-label,
+.mageforge-toolbar-menu-group-header:hover .mageforge-toolbar-menu-group-chevron {
+    color: var(--mageforge-color-white);
+}
+
+.mageforge-toolbar-menu-group-label {
+    font-family: var(--mageforge-font-family);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mageforge-color-slate-400);
+    transition: color 0.15s ease;
+}
+
+.mageforge-toolbar-menu-group-chevron {
+    color: var(--mageforge-color-slate-400);
+    line-height: 0;
+    transition:
+        color 0.15s ease,
+        transform 0.2s ease;
+}
+
+.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-chevron {
+    transform: rotate(-90deg);
+}
+
+.mageforge-toolbar-menu-group-items {
+    overflow: hidden;
+}
+
+.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-items {
+    display: none;
+}
+
+/* ============================================================================
    Audit Highlights
    ========================================================================== */
 
