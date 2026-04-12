@@ -11,6 +11,10 @@ export const uiMethods = {
             this.container.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
         }
 
+        if (this.$el && this.$el.getAttribute('data-show-labels') === '0') {
+            this.container.classList.add('mageforge-toolbar--no-labels');
+        }
+
         // Menu popup (before buttons so it sits correctly in stacking context)
         this.menu = document.createElement('div');
         this.menu.className = 'mageforge-toolbar-menu';

@@ -18,6 +18,7 @@ use Magento\Framework\View\Element\Template\Context;
 class Inspector extends Template
 {
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
+    private const XML_PATH_SHOW_BUTTON_LABELS = 'mageforge/inspector/show_button_labels';
 
     /**
      * @param Context $context
@@ -100,6 +101,18 @@ class Inspector extends Template
     public function getToolbarJsUrl(): string
     {
         return $this->getViewFileUrl('OpenForgeProject_MageForge::js/toolbar.js');
+    }
+
+    /**
+     * Whether button labels should be displayed in the toolbar
+     *
+     * @return bool
+     */
+    public function getShowButtonLabels(): bool
+    {
+        $value = $this->scopeConfig->getValue(self::XML_PATH_SHOW_BUTTON_LABELS);
+        // Default to true when not explicitly set to '0'
+        return $value !== '0';
     }
 
     /**

@@ -67,7 +67,8 @@ JS;
 <!-- MageForge Toolbar Component -->
 <div class="mageforge-toolbar-root"
      x-data="mageforgeToolbar"
-     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"></div>
+     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"
+     data-show-labels="<?= $block->getShowButtonLabels() ? '1' : '0' ?>"></div>
 
 <!-- MageForge Inspector Component Wrapper -->
 <div class="mageforge-inspector"

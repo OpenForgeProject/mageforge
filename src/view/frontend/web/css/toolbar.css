@@ -132,6 +132,11 @@
     line-height: 1;
 }
 
+.mageforge-toolbar--no-labels .mageforge-toolbar-burger-label,
+.mageforge-toolbar--no-labels .mageforge-inspector-float-button span {
+    display: none;
+}
+
 /* ============================================================================
    Audit Menu
    ========================================================================== */
