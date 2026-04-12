@@ -175,7 +175,9 @@ class InspectorCommand extends AbstractCommand
             ]);
         } elseif (!$isEnabled) {
             $this->io->newLine();
-            $this->io->note('Inspector is disabled. Run "bin/magento mageforge:theme:inspector enable" to activate it.');
+            $this->io->note(
+                'Inspector is disabled. Run "bin/magento mageforge:theme:inspector enable" to activate it.'
+            );
         } else {
             $this->io->newLine();
             $this->io->writeln('<info>✓</info> Inspector is active and ready to use!');
