@@ -1,0 +1,60 @@
+/**
+ * MageForge Toolbar Audit – Tab Order
+ *
+ * Injected on-demand by the tab-order audit.
+ * Relies on CSS custom properties defined in toolbar.css :root.
+ */
+
+.mageforge-tab-order-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999997;
+    overflow: visible;
+}
+
+.mageforge-tab-order-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.mageforge-tab-order-line {
+    stroke: var(--mageforge-color-blue);
+    stroke-width: 1.5;
+    stroke-opacity: 0.5;
+    stroke-dasharray: 4 3;
+    fill: none;
+}
+
+.mageforge-tab-order-line--negative {
+    stroke: var(--mageforge-color-red);
+}
+
+.mageforge-tab-order-badge {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--mageforge-color-blue);
+    color: var(--mageforge-color-white);
+    font-family: var(--mageforge-font-family);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.mageforge-tab-order-badge--negative {
+    background: var(--mageforge-color-red);
+}

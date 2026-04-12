@@ -1,0 +1,42 @@
+/**
+ * MageForge Toolbar Audit – Images without width/height
+ *
+ * Images missing explicit width and height attributes cause Cumulative Layout Shift (CLS).
+ */
+
+const HIGHLIGHT_CLASS = 'mageforge-audit-images-without-dimensions';
+
+/** @type {import('./index.js').AuditDefinition} */
+export default {
+    key: 'images-without-dimensions',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 5h11"></path><path d="M12 7l2 -2l-2 -2"></path><path d="M5 3l-2 2l2 2"></path><path d="M19 10v11"></path><path d="M17 19l2 2l2 -2"></path><path d="M21 12l-2 -2l-2 2"></path><path d="M3 12a2 2 0 0 1 2 -2h7a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2l0 -7"></path></svg>',
+    label: 'Images without Dimensions',
+    description: 'Highlight images missing width/height',
+
+    /**
+     * @param {object} context - Alpine toolbar component instance
+     * @param {boolean} active  - true = activate, false = deactivate
+     */
+    run(context, active) {
+        if (!active) {
+            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+            return;
+        }
+
+        const images = Array.from(document.querySelectorAll('img')).filter(img => {
+            if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
+            const style = getComputedStyle(img);
+            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            return !img.hasAttribute('width') || !img.hasAttribute('height');
+        });
+
+        if (images.length === 0) {
+            context.setAuditCounterBadge('images-without-dimensions', '0', 'success');
+            return;
+        }
+
+        images.forEach(img => img.classList.add(HIGHLIGHT_CLASS));
+        images[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        context.setAuditCounterBadge('images-without-dimensions', `${images.length}`, 'error');
+    },
+};

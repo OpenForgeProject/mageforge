@@ -73,20 +73,16 @@ export const accessibilityMethods = {
      */
     getLazyLoadingStyle(lazyLoading) {
         let lazyColor = '#94a3b8';
-        let lazyIcon = '⚡';
 
         if (lazyLoading.includes('Native')) {
             lazyColor = '#34d399';
-            lazyIcon = '✅';
         } else if (lazyLoading.includes('JavaScript')) {
             lazyColor = '#22d3ee';
-            lazyIcon = '🔧';
         } else if (lazyLoading === 'Not set') {
             lazyColor = '#f59e0b';
-            lazyIcon = '⚠️';
         }
 
-        return { lazyIcon, lazyColor };
+        return { lazyColor };
     },
 
     /**
@@ -147,8 +143,11 @@ export const accessibilityMethods = {
 
         const ariaLabelledBy = element.getAttribute('aria-labelledby');
         if (ariaLabelledBy) {
-            const labelElement = document.getElementById(ariaLabelledBy);
-            return labelElement ? labelElement.textContent.trim() : ariaLabelledBy;
+            const labelText = ariaLabelledBy.trim().split(/\s+/)
+                .map(id => document.getElementById(id)?.textContent?.trim())
+                .filter(Boolean)
+                .join(' ');
+            return labelText || ariaLabelledBy;
         }
 
         const altText = tagName === 'img' ? element.getAttribute('alt') : null;
@@ -240,6 +239,10 @@ export const accessibilityMethods = {
         if (focusableTags.includes(tagName)) {
             // Check if disabled
             if (element.hasAttribute('disabled')) {
+                return false;
+            }
+            // hidden inputs are never focusable
+            if (tagName === 'input' && (element.getAttribute('type') || '').toLowerCase() === 'hidden') {
                 return false;
             }
             // Links need href

@@ -45,51 +45,12 @@ export const uiMethods = {
     },
 
     /**
-     * Create floating button for inspector activation
-     */
-    createFloatingButton() {
-        this.floatingButton = document.createElement('button');
-        this.floatingButton.className = 'mageforge-inspector mageforge-inspector-float-button';
-
-        // Propagate theme from root element to injected body element
-        if (this.$el && this.$el.hasAttribute('data-theme')) {
-            this.floatingButton.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
-        }
-
-        this.floatingButton.type = 'button';
-        this.floatingButton.title = 'Activate Inspector (Ctrl+Shift+I)';
-        this.floatingButton.innerHTML = `
-            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
-                <g stroke-width="0"></g>
-                <g stroke-linecap="round" stroke-linejoin="round"></g>
-                <g>
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
-                </g>
-            </svg>
-            <span>MageForge Inspector</span>
-        `;
-
-        // Click to toggle inspector
-        this.floatingButton.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.toggleInspector();
-        };
-
-        document.body.appendChild(this.floatingButton);
-    },
-
-    /**
-     * Update floating button state
+     * Notify the toolbar about the current inspector open/closed state
      */
     updateFloatingButton() {
-        if (!this.floatingButton) return;
-
-        if (this.isOpen) {
-            this.floatingButton.classList.add('mageforge-active');
-        } else {
-            this.floatingButton.classList.remove('mageforge-active');
-        }
+        window.dispatchEvent(new CustomEvent('mageforge:toolbar:inspector-state', {
+            detail: { active: this.isOpen }
+        }));
     },
 
     /**

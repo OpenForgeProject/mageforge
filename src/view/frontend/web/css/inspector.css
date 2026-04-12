@@ -77,30 +77,25 @@
 }
 
 /* ============================================================================
-   Floating Button
+   Inspector Float Button
    ========================================================================== */
 
 .mageforge-inspector-float-button {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
     height: 36px;
     padding: 0 14px;
     background: linear-gradient(135deg, var(--mageforge-color-blue) 0%, var(--mageforge-color-blue-dark) 100%);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 5px;
     cursor: pointer;
-    z-index: 9999998;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: var(--mageforge-font-family);
-    font-size: 14px;
+    font-size: 0.75rem;
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
     backdrop-filter: blur(8px);
     letter-spacing: 0.025em;
 }
@@ -114,7 +109,6 @@
     transform: translateY(0);
 }
 
-/* Active state (inspector open) */
 .mageforge-inspector-float-button.mageforge-active {
     background: linear-gradient(135deg, var(--mageforge-color-green) 0%, var(--mageforge-color-green-dark) 100%);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 8px 20px rgba(16, 185, 129, 0.5);
@@ -291,14 +285,6 @@
         min-width: 280px;
         max-width: calc(100vw - 40px);
         font-size: 10px;
-    }
-
-    .mageforge-inspector-float-button {
-        bottom: 10px;
-        left: 10px;
-        font-size: 11px;
-        height: 32px;
-        padding: 0 12px;
     }
 }
 
