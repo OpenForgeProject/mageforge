@@ -424,6 +424,24 @@
     border-color: var(--mageforge-border-glass);
 }
 
+.mageforge-toolbar-menu-credit {
+    margin-top: 8px;
+    text-align: center;
+    font-family: var(--mageforge-font-family);
+    font-size: 10px;
+    color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-toolbar-menu-credit-link {
+    color: var(--mageforge-color-slate-400);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.mageforge-toolbar-menu-credit-link:hover {
+    color: var(--mageforge-color-blue);
+}
+
 /* ============================================================================
    Theme Overrides
    ========================================================================== */

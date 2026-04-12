@@ -53,6 +53,10 @@ export const uiMethods = {
             this.toggleAllAudits();
         };
         menuFooter.appendChild(this.toggleAllButton);
+        const credit = document.createElement('div');
+        credit.className = 'mageforge-toolbar-menu-credit';
+        credit.innerHTML = `Built with ♥ by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>`;
+        menuFooter.appendChild(credit);
         this.menu.appendChild(menuFooter);
 
         // Burger button (left)
