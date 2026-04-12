@@ -103,11 +103,12 @@ export const uiMethods = {
         this.container.appendChild(this.burgerButton);
 
         // Close menu when clicking outside the toolbar
-        document.addEventListener('click', (e) => {
+        this._outsideClickHandler = (e) => {
             if (this.menuOpen && !this.container.contains(e.target)) {
                 this.closeMenu();
             }
-        });
+        };
+        document.addEventListener('click', this._outsideClickHandler);
 
         document.body.appendChild(this.container);
     },
@@ -127,17 +128,39 @@ export const uiMethods = {
         item.type = 'button';
         item.className = 'mageforge-toolbar-menu-item';
         item.dataset.auditKey = key;
-        item.innerHTML = `
-            <span class="mageforge-toolbar-menu-icon">${icon}</span>
-            <span class="mageforge-toolbar-menu-text">
-                <span class="mageforge-toolbar-menu-label-row">
-                    <span class="mageforge-toolbar-menu-label">${label}</span>
-                    <span class="mageforge-toolbar-menu-status"></span>
-                </span>
-                <span class="mageforge-toolbar-menu-desc">${description}</span>
-            </span>
-            <span class="mageforge-toolbar-menu-toggle"></span>
-        `;
+
+        const iconEl = document.createElement('span');
+        iconEl.className = 'mageforge-toolbar-menu-icon';
+        iconEl.innerHTML = icon;
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'mageforge-toolbar-menu-label';
+        labelEl.textContent = label;
+
+        const statusEl = document.createElement('span');
+        statusEl.className = 'mageforge-toolbar-menu-status';
+
+        const labelRowEl = document.createElement('span');
+        labelRowEl.className = 'mageforge-toolbar-menu-label-row';
+        labelRowEl.appendChild(labelEl);
+        labelRowEl.appendChild(statusEl);
+
+        const descEl = document.createElement('span');
+        descEl.className = 'mageforge-toolbar-menu-desc';
+        descEl.textContent = description;
+
+        const textEl = document.createElement('span');
+        textEl.className = 'mageforge-toolbar-menu-text';
+        textEl.appendChild(labelRowEl);
+        textEl.appendChild(descEl);
+
+        const toggleEl = document.createElement('span');
+        toggleEl.className = 'mageforge-toolbar-menu-toggle';
+
+        item.appendChild(iconEl);
+        item.appendChild(textEl);
+        item.appendChild(toggleEl);
+
         item.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -159,8 +182,6 @@ export const uiMethods = {
         item.classList.toggle('mageforge-active', active);
         if (!active) {
             item.classList.remove('mageforge-active--error');
-        }
-        if (!active) {
             const status = item.querySelector('.mageforge-toolbar-menu-status');
             if (status) {
                 status.textContent = '';

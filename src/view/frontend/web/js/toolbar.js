@@ -36,6 +36,10 @@ function _registerMageforgeToolbar() {
         },
 
         destroy() {
+            if (this._outsideClickHandler) {
+                document.removeEventListener('click', this._outsideClickHandler);
+                this._outsideClickHandler = null;
+            }
             if (this.container) {
                 this.container.remove();
                 this.container = null;

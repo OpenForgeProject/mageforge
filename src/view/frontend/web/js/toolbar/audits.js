@@ -44,9 +44,9 @@ export const auditMethods = {
      * Deactivates all currently active audits (called when closing the toolbar).
      */
     deactivateAllAudits() {
-        this.activeAudits.forEach(key => {
+        const keys = [...this.activeAudits];
+        keys.forEach(key => {
             const audit = audits.find(a => a.key === key);
-            this.activeAudits.delete(key);
             if (audit) audit.run(this);
             this.setAuditActive(key, false);
         });
