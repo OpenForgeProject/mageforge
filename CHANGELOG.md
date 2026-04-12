@@ -17,6 +17,34 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.17.0](https://github.com/OpenForgeProject/mageforge/compare/0.16.0...0.17.0) (2026-04-12)
+
+
+### Added
+
+* add MageForge Toolbar with basic audits ([#167](https://github.com/OpenForgeProject/mageforge/issues/167)) ([2a8a8ba](https://github.com/OpenForgeProject/mageforge/commit/2a8a8ba02f53befd2b290e06f19f89480571f27e))
+
+
+### Fixed
+
+* adjust initial badge position and add scroll handler for connector ([#162](https://github.com/OpenForgeProject/mageforge/issues/162)) ([84baaf0](https://github.com/OpenForgeProject/mageforge/commit/84baaf07e328ecec143f1dbae6db5fec504375df))
+* enhance role determination for input elements in accessibility analysis ([adb7996](https://github.com/OpenForgeProject/mageforge/commit/adb799637aab11b040934738f2f47326d2249c0c))
+* enhance structure rendering with additional properties ([109418b](https://github.com/OpenForgeProject/mageforge/commit/109418bb1cd5060fbd56bce30717520eeffef1cd))
+* handle click outside inspector overlay correctly when pinned ([c885f81](https://github.com/OpenForgeProject/mageforge/commit/c885f8133ca6c74292248b17bbe2cbf2da805d05))
+* improve badge update logic to prevent flickering ([5526e15](https://github.com/OpenForgeProject/mageforge/commit/5526e1541ec4eca0a403b1095f975d509d6da866))
+* improve CSS resource matching in element resource categorization ([a1dba6a](https://github.com/OpenForgeProject/mageforge/commit/a1dba6af5557831626f91f12f6833b4282e821b4))
+* remove INP metric tracking from performance and vitals modules ([#165](https://github.com/OpenForgeProject/mageforge/issues/165)) ([6c78a39](https://github.com/OpenForgeProject/mageforge/commit/6c78a399f78f1b13a56db5a96098e3ff7a5a1a1c))
+* remove unused badge offset in position calculation for info badge ([686387b](https://github.com/OpenForgeProject/mageforge/commit/686387b2fad00af960249b329362bdcd8b470da4))
+* update cursor check for interactive elements in accessibility analysis ([c430f99](https://github.com/OpenForgeProject/mageforge/commit/c430f99d7c8b2decb4a494df7cc721ca2bfd1b21))
+* update pull request header for clarity on changes ([ccd5a47](https://github.com/OpenForgeProject/mageforge/commit/ccd5a47c6c50093194cfd14ab8645c0b18415ac9))
+* update pull request title and header formatting in config ([0dbab2e](https://github.com/OpenForgeProject/mageforge/commit/0dbab2ecf6b233b0534e8106d0e9a5951708b144))
+
+
+### Changed
+
+* remove feature views and new badge logic from inspector ([#164](https://github.com/OpenForgeProject/mageforge/issues/164)) ([3bf7143](https://github.com/OpenForgeProject/mageforge/commit/3bf714332cd1d85d3ca5235318a7e3adbc72f47a))
+* use WeakMap for block data storage in inspector ([#166](https://github.com/OpenForgeProject/mageforge/issues/166)) ([5c383fd](https://github.com/OpenForgeProject/mageforge/commit/5c383fd7e099b8ebe684129cc5e9b07646d3b9eb))
+
 ## [0.16.0](https://github.com/OpenForgeProject/mageforge/compare/0.15.1...0.16.0) (2026-04-10)
 
 
