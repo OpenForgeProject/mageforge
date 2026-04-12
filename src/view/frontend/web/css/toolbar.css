@@ -159,7 +159,6 @@
     font-size: 1rem;
     font-weight: 400;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     background: linear-gradient(90deg, var(--mageforge-color-blue), var(--mageforge-color-white));
     -webkit-background-clip: text;
     background-clip: text;

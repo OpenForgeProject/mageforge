@@ -100,6 +100,38 @@ function _registerMageforgeInspector() {
                 this.toggleInspector();
             });
 
+            // Listen for inspector-state sync from toolbar
+            window.addEventListener('mageforge:toolbar:inspector-state', (e) => {
+                if (this._inspectorFloatButton) {
+                    this._inspectorFloatButton.classList.toggle('mageforge-active', e.detail.active);
+                }
+            });
+
+            // Append inspector button to toolbar container (toolbar renders before inspector)
+            const toolbarContainer = document.querySelector('.mageforge-toolbar');
+            if (toolbarContainer) {
+                this._inspectorFloatButton = document.createElement('button');
+                this._inspectorFloatButton.className = 'mageforge-inspector-float-button';
+                this._inspectorFloatButton.type = 'button';
+                this._inspectorFloatButton.title = 'Activate Inspector (Ctrl+Shift+I)';
+                this._inspectorFloatButton.innerHTML = `
+                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
+                        <g stroke-width="0"></g>
+                        <g stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
+                        </g>
+                    </svg>
+                    <span>Inspector</span>
+                `;
+                this._inspectorFloatButton.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.toggleInspector();
+                };
+                toolbarContainer.appendChild(this._inspectorFloatButton);
+            }
+
             // Dispatch init event for Hyvä integration
             this.$dispatch('mageforge:inspector:init');
         },
@@ -131,6 +163,10 @@ function _registerMageforgeInspector() {
             if (this.connectorSvg) {
                 this.connectorSvg.remove();
                 this.connectorSvg = null;
+            }
+            if (this._inspectorFloatButton) {
+                this._inspectorFloatButton.remove();
+                this._inspectorFloatButton = null;
             }
         },
 

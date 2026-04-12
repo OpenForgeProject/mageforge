@@ -25,9 +25,6 @@ function _registerMageforgeToolbar() {
         menu: null,
 
         /** @type {HTMLButtonElement|null} */
-        inspectorButton: null,
-
-        /** @type {HTMLButtonElement|null} */
         toggleAllButton: null,
 
         // ====================================================================
@@ -36,10 +33,6 @@ function _registerMageforgeToolbar() {
 
         init() {
             this.createToolbar();
-
-            window.addEventListener('mageforge:toolbar:inspector-state', (e) => {
-                this.setInspectorActive(e.detail.active);
-            });
         },
 
         destroy() {

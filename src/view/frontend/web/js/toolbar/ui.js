@@ -87,7 +87,7 @@ export const uiMethods = {
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
                 </g>
             </svg>
-            <span>MageForge Inspector</span>
+            <span>Inspector</span>
         `;
         this.inspectorButton.onclick = (e) => {
             e.preventDefault();
@@ -97,7 +97,6 @@ export const uiMethods = {
 
         this.container.appendChild(this.menu);
         this.container.appendChild(this.burgerButton);
-        this.container.appendChild(this.inspectorButton);
 
         // Close menu when clicking outside the toolbar
         document.addEventListener('click', (e) => {
@@ -174,21 +173,6 @@ export const uiMethods = {
         if (!this.toggleAllButton) return;
         const allActive = this.activeAudits.size === this.getAudits().length;
         this.toggleAllButton.textContent = allActive ? 'Deactivate All' : 'Activate All';
-    },
-
-    /**
-     * Reflect inspector open/closed state on the inspector button
-     *
-     * @param {boolean} active
-     */
-    setInspectorActive(active) {
-        if (!this.inspectorButton) return;
-
-        if (active) {
-            this.inspectorButton.classList.add('mageforge-active');
-        } else {
-            this.inspectorButton.classList.remove('mageforge-active');
-        }
     },
 
     toggleMenu() {
