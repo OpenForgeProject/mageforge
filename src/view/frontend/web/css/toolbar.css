@@ -35,6 +35,8 @@
     --mageforge-burger-bg-hover: rgba(30, 41, 59, 0.95);
     --mageforge-toolbar-burger-active-bg: #10b981;
     --mageforge-toolbar-burger-active-border: #10b981;
+    --mageforge-toggle-bg-off: rgba(255, 255, 255, 0.15);
+    --mageforge-toggle-bg-off-light: rgba(0, 0, 0, 0.15);
 }
 
 .mageforge-toolbar *,
@@ -118,7 +120,7 @@
 
 .mageforge-toolbar-burger-label {
     font-family: var(--mageforge-font-family);
-    font-size: .75rem;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.03em;
     color: var(--mageforge-color-white);
@@ -246,7 +248,7 @@
     width: 28px;
     height: 16px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--mageforge-toggle-bg-off);
     position: relative;
     transition: background 0.2s ease;
     margin-left: auto;
@@ -465,10 +467,13 @@
 }
 
 .mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu-toggle {
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--mageforge-toggle-bg-off-light);
 }
 
-/* Auto Mode – Light System Preference */
+/*
+ * Auto Mode – Light System Preference
+ * NOTE: Keep these custom-property overrides in sync with the [data-theme="light"] block above.
+ */
 @media (prefers-color-scheme: light) {
     .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu {
         --mageforge-bg-dark: rgba(255, 255, 255, 0.98);
@@ -483,7 +488,7 @@
     }
 
     .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu-toggle {
-        background: rgba(0, 0, 0, 0.15);
+        background: var(--mageforge-toggle-bg-off-light);
     }
 }
 
@@ -495,12 +500,6 @@
     .mageforge-toolbar {
         bottom: 10px;
         left: 10px;
-    }
-
-    .mageforge-inspector-float-button {
-        font-size: 11px;
-        height: 32px;
-        padding: 0 12px;
     }
 
     .mageforge-toolbar-burger {
