@@ -81,7 +81,6 @@ function _registerMageforgeInspector() {
         lastBlocksCacheTime: 0,
 
         // Window event handler refs (for cleanup)
-        _toggleInspectorHandler: null,
         _inspectorStateHandler: null,
 
         // ====================================================================
@@ -98,10 +97,6 @@ function _registerMageforgeInspector() {
             this.createInfoBadge();
             this.initWebVitalsTracking();
             this.cachePageTimings();
-
-            // Listen for toggle event from MageForge Toolbar
-            this._toggleInspectorHandler = () => this.toggleInspector();
-            window.addEventListener('mageforge:toolbar:toggle-inspector', this._toggleInspectorHandler);
 
             // Listen for inspector-state sync from toolbar
             this._inspectorStateHandler = (e) => {
@@ -166,10 +161,6 @@ function _registerMageforgeInspector() {
 
         destroy() {
             // Remove window event listeners
-            if (this._toggleInspectorHandler) {
-                window.removeEventListener('mageforge:toolbar:toggle-inspector', this._toggleInspectorHandler);
-                this._toggleInspectorHandler = null;
-            }
             if (this._inspectorStateHandler) {
                 window.removeEventListener('mageforge:toolbar:inspector-state', this._inspectorStateHandler);
                 this._inspectorStateHandler = null;
