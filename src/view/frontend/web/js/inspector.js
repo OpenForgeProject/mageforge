@@ -139,10 +139,15 @@ function _registerMageforgeInspector() {
         },
 
         _appendInspectorButton() {
+            const _attach = (container) => {
+                container.querySelector('.mageforge-inspector-float-button')?.remove();
+                this._inspectorFloatButton = this._createInspectorFloatButton();
+                container.appendChild(this._inspectorFloatButton);
+            };
+
             const toolbarContainer = document.querySelector('.mageforge-toolbar');
             if (toolbarContainer) {
-                this._inspectorFloatButton = this._createInspectorFloatButton();
-                toolbarContainer.appendChild(this._inspectorFloatButton);
+                _attach(toolbarContainer);
                 return;
             }
 
@@ -151,8 +156,7 @@ function _registerMageforgeInspector() {
                 const container = document.querySelector('.mageforge-toolbar');
                 if (container) {
                     observer.disconnect();
-                    this._inspectorFloatButton = this._createInspectorFloatButton();
-                    container.appendChild(this._inspectorFloatButton);
+                    _attach(container);
                 }
             });
             observer.observe(document.body, { childList: true, subtree: true });
