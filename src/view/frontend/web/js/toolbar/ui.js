@@ -150,6 +150,8 @@ export const uiMethods = {
         header.appendChild(chevron);
         group.appendChild(header);
 
+        group.classList.toggle('mageforge-toolbar-menu-group--collapsed', this.collapsedGroups.has(key));
+
         const items = document.createElement('div');
         items.className = 'mageforge-toolbar-menu-group-items';
 

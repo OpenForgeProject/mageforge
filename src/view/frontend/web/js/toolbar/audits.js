@@ -84,6 +84,7 @@ export const auditMethods = {
         } else {
             this.collapsedGroups.add(key);
         }
+        localStorage.setItem('mageforge-toolbar-collapsed-groups', JSON.stringify([...this.collapsedGroups]));
         if (!this.menu) return;
         const group = this.menu.querySelector(`[data-group-key="${key}"]`);
         if (group) {
