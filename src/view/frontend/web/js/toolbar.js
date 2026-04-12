@@ -58,8 +58,16 @@ function _registerMageforgeToolbar() {
     }));
 }
 
+// re-initialise any [x-data="mageforgeToolbar"] elements that Alpine skipped
+// because the component was not yet registered at that point.
+// Otherwise, register on alpine:init which fires before Alpine processes the DOM.
 if (typeof Alpine !== 'undefined') {
     _registerMageforgeToolbar();
+    document.querySelectorAll('[x-data="mageforgeToolbar"]').forEach(function (el) {
+        if (typeof Alpine.initTree === 'function') {
+            Alpine.initTree(el);
+        }
+    });
 } else {
     document.addEventListener('alpine:init', _registerMageforgeToolbar);
 }
