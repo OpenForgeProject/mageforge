@@ -78,29 +78,9 @@ export const uiMethods = {
             this.toggleMenu();
         };
 
-        // Inspector toggle button (right) – delegates to inspector via custom event
-        this.inspectorButton = document.createElement('button');
-        this.inspectorButton.className = 'mageforge-inspector-float-button';
-        this.inspectorButton.type = 'button';
-        this.inspectorButton.title = 'Activate Inspector (Ctrl+Shift+I)';
-        this.inspectorButton.innerHTML = `
-            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
-                <g stroke-width="0"></g>
-                <g stroke-linecap="round" stroke-linejoin="round"></g>
-                <g>
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
-                </g>
-            </svg>
-            <span>Inspector</span>
-        `;
-        this.inspectorButton.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.dispatchEvent(new CustomEvent('mageforge:toolbar:toggle-inspector'));
-        };
-
         this.container.appendChild(this.menu);
         this.container.appendChild(this.burgerButton);
+        // Note: inspector button is appended by the mageforgeInspector Alpine component via _appendInspectorButton()
 
         // Close menu when clicking outside the toolbar
         this._outsideClickHandler = (e) => {
@@ -214,5 +194,15 @@ export const uiMethods = {
         this.menuOpen = false;
         this.menu.style.display = 'none';
         this.burgerButton.classList.remove('mageforge-active');
+    },
+
+    destroyToolbar() {
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+            this._outsideClickHandler = null;
+        }
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
     },
 };
