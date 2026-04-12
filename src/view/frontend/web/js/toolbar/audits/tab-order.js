@@ -161,6 +161,11 @@ export default {
 
         renderOverlay(sorted);
 
+        // Always recompute from the live DOM so detached / newly added elements are handled correctly
+        const rerender = () => renderOverlay(
+            sortByTabOrder(Array.from(document.querySelectorAll(FOCUSABLE_SELECTOR)).filter(isVisible))
+        );
+
         // Re-render on resize or scroll (e.g. DevTools panel, page scroll)
         context._tabOrderObserver = new ResizeObserver(() => {
             if (!document.getElementById(OVERLAY_ID)) {
@@ -168,7 +173,7 @@ export default {
                 context._tabOrderObserver = null;
                 return;
             }
-            renderOverlay(sorted);
+            rerender();
         });
         context._tabOrderObserver.observe(document.body);
 
@@ -178,7 +183,7 @@ export default {
             scrollRaf = requestAnimationFrame(() => {
                 scrollRaf = null;
                 if (document.getElementById(OVERLAY_ID)) {
-                    renderOverlay(sorted);
+                    rerender();
                 }
             });
         };
