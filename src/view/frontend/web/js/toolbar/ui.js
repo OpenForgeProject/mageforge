@@ -184,6 +184,7 @@ export const uiMethods = {
         item.type = 'button';
         item.className = 'mageforge-toolbar-menu-item';
         item.dataset.auditKey = key;
+        item.setAttribute('aria-pressed', 'false');
 
         const iconEl = document.createElement('span');
         iconEl.className = 'mageforge-toolbar-menu-icon';
@@ -236,6 +237,7 @@ export const uiMethods = {
         const item = this.menu.querySelector(`[data-audit-key="${key}"]`);
         if (!item) return;
         item.classList.toggle('mageforge-active', active);
+        item.setAttribute('aria-pressed', String(active));
         if (!active) {
             item.classList.remove('mageforge-active--error');
             const status = item.querySelector('.mageforge-toolbar-menu-status');
