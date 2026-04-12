@@ -26,6 +26,9 @@ export default {
         const viewportBottom = window.innerHeight;
 
         const images = Array.from(document.querySelectorAll('img')).filter(img => {
+            if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
+            const style = getComputedStyle(img);
+            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
             if (img.getAttribute('loading') === 'lazy') return false;
             const rect = img.getBoundingClientRect();
             return rect.top > viewportBottom;

@@ -22,9 +22,12 @@ export default {
             return;
         }
 
-        const images = Array.from(document.querySelectorAll('img')).filter(img =>
-            !img.hasAttribute('width') || !img.hasAttribute('height')
-        );
+        const images = Array.from(document.querySelectorAll('img')).filter(img => {
+            if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
+            const style = getComputedStyle(img);
+            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            return !img.hasAttribute('width') || !img.hasAttribute('height');
+        });
 
         if (images.length === 0) {
             context.setAuditCounterBadge('images-without-dimensions', '0', 'success');

@@ -20,9 +20,12 @@ export default {
             return;
         }
 
-        const images = Array.from(document.querySelectorAll('img')).filter(img =>
-            !img.hasAttribute('alt') || img.getAttribute('alt').trim() === ''
-        );
+        const images = Array.from(document.querySelectorAll('img')).filter(img => {
+            if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
+            const style = getComputedStyle(img);
+            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            return !img.hasAttribute('alt') || img.getAttribute('alt').trim() === '';
+        });
 
         if (images.length === 0) {
             context.setAuditCounterBadge('images-without-alt', '0', 'success');
