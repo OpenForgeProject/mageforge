@@ -144,7 +144,7 @@ export const accessibilityMethods = {
         const ariaLabelledBy = element.getAttribute('aria-labelledby');
         if (ariaLabelledBy) {
             const labelText = ariaLabelledBy.trim().split(/\s+/)
-                .map(id => document.getElementById(id)?.textContent.trim())
+                .map(id => document.getElementById(id)?.textContent?.trim())
                 .filter(Boolean)
                 .join(' ');
             return labelText || ariaLabelledBy;
