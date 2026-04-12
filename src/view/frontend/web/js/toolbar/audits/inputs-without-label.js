@@ -16,9 +16,10 @@ export default {
 
     /**
      * @param {object} context - Alpine toolbar component instance
+     * @param {boolean} active  - true = activate, false = deactivate
      */
-    run(context) {
-        if (!context.activeAudits.has('inputs-without-label')) {
+    run(context, active) {
+        if (!active) {
             document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
             return;
         }
@@ -32,7 +33,7 @@ export default {
             // title as fallback label
             if (input.hasAttribute('title') && input.getAttribute('title').trim()) return false;
             // <label for="id"> association
-            if (input.id && document.querySelector(`label[for="${input.id}"]`)) return false;
+            if (input.id && document.querySelector(`label[for="${CSS.escape(input.id)}"]`)) return false;
             // implicit label (input is a descendant of <label>)
             if (input.closest('label')) return false;
             return true;

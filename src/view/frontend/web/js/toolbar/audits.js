@@ -20,7 +20,7 @@ export const auditMethods = {
         } else {
             this.activeAudits.add(auditKey);
         }
-        audit.run(this);
+        audit.run(this, !isActive);
         this.setAuditActive(auditKey, !isActive);
     },
 
@@ -46,8 +46,9 @@ export const auditMethods = {
     deactivateAllAudits() {
         const keys = [...this.activeAudits];
         keys.forEach(key => {
+            this.activeAudits.delete(key);
             const audit = audits.find(a => a.key === key);
-            if (audit) audit.run(this);
+            if (audit) audit.run(this, false);
             this.setAuditActive(key, false);
         });
         this.activeAudits.clear();

@@ -10,7 +10,7 @@
  * @property {string} icon        - Emoji or SVG string shown in menu
  * @property {string} label       - Short display name
  * @property {string} description - Tooltip / subtitle text
- * @property {function(object): void} run - Audit logic; receives Alpine component as context
+ * @property {function(object, boolean): void} run - Audit logic; receives Alpine component as context and active state
  */
 
 import imagesWithoutAlt from './images-without-alt.js';

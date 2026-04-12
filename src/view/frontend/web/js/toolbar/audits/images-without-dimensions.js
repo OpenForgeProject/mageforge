@@ -15,9 +15,10 @@ export default {
 
     /**
      * @param {object} context - Alpine toolbar component instance
+     * @param {boolean} active  - true = activate, false = deactivate
      */
-    run(context) {
-        if (!context.activeAudits.has('images-without-dimensions')) {
+    run(context, active) {
+        if (!active) {
             document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
             return;
         }

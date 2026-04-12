@@ -132,11 +132,12 @@ export default {
 
     /**
      * @param {object} context - Alpine toolbar component instance
+     * @param {boolean} active  - true = activate, false = deactivate
      */
-    run(context) {
+    run(context, active) {
         injectCss();
 
-        if (!context.activeAudits.has('tab-order')) {
+        if (!active) {
             context._tabOrderObserver?.disconnect();
             context._tabOrderObserver = null;
             if (context._tabOrderScrollHandler) {

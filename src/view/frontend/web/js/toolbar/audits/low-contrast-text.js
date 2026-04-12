@@ -22,12 +22,10 @@ const _colorCtx = _colorCanvas.getContext('2d', { willReadFrequently: true });
 function parseColor(color) {
     if (!color || color === 'transparent') return null;
     _colorCtx.clearRect(0, 0, 1, 1);
-    _colorCtx.fillStyle = 'black'; // reset
+    _colorCtx.fillStyle = '#ffffff'; // reset to white
     _colorCtx.fillStyle = color;
-    // If the browser couldn't parse it, fillStyle stays at the reset value
-    if (_colorCtx.fillStyle === '#000000' && color !== 'black' && color !== '#000000' && color !== '#000') {
-        // Could be valid black or invalid – draw and check to confirm
-    }
+    // If fillStyle is unchanged, the browser could not parse the color
+    if (_colorCtx.fillStyle === '#ffffff') return null;
     _colorCtx.fillRect(0, 0, 1, 1);
     const d = _colorCtx.getImageData(0, 0, 1, 1).data;
     return [d[0], d[1], d[2], d[3] / 255];
@@ -161,9 +159,10 @@ export default {
 
     /**
      * @param {object} context - Alpine toolbar component instance
+     * @param {boolean} active  - true = activate, false = deactivate
      */
-    run(context) {
-        if (!context.activeAudits.has('low-contrast-text')) {
+    run(context, active) {
+        if (!active) {
             document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
             return;
         }
