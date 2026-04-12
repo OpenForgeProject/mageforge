@@ -29,7 +29,7 @@ export default {
         )).filter(input => {
             // aria-label or aria-labelledby present
             if (input.hasAttribute('aria-label') && input.getAttribute('aria-label').trim()) return false;
-            if (input.hasAttribute('aria-labelledby') && document.getElementById(input.getAttribute('aria-labelledby'))) return false;
+            if (input.hasAttribute('aria-labelledby') && input.getAttribute('aria-labelledby').trim().split(/\s+/).some(id => document.getElementById(id))) return false;
             // title as fallback label
             if (input.hasAttribute('title') && input.getAttribute('title').trim()) return false;
             // <label for="id"> association
