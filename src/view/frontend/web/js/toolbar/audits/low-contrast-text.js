@@ -98,7 +98,7 @@ function hasDirectText(el) {
 function isVisible(el) {
     if (el.offsetWidth === 0 && el.offsetHeight === 0) return false;
     const style = getComputedStyle(el);
-    return style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
+    return style.visibility !== 'hidden' && style.display !== 'none' && parseFloat(style.opacity) > 0;
 }
 
 /**

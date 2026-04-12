@@ -35,10 +35,12 @@ function _registerMageforgeToolbar() {
         // ====================================================================
 
         init() {
-            const saved = localStorage.getItem('mageforge-toolbar-collapsed-groups');
-            if (saved) {
-                try { JSON.parse(saved).forEach(key => this.collapsedGroups.add(key)); } catch (_) {}
-            }
+            try {
+                const saved = localStorage.getItem('mageforge-toolbar-collapsed-groups');
+                if (saved) {
+                    try { JSON.parse(saved).forEach(key => this.collapsedGroups.add(key)); } catch (_) {}
+                }
+            } catch (_) {}
             this.createToolbar();
         },
 
