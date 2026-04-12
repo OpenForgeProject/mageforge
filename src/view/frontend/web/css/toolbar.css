@@ -360,7 +360,6 @@
     font-family: var(--mageforge-font-family);
     font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
     text-transform: uppercase;
     transition: color 0.15s ease;
     letter-spacing: 0.08em;
