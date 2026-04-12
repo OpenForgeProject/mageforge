@@ -145,6 +145,14 @@ bin/magento mageforge:theme:inspector disable
 - **License**: [LICENSE](LICENSE)
 - **Changelog**: [CHANGELOG](CHANGELOG.md)
 
+## Credits
+
+MageForge uses the following third-party libraries:
+
+| Library | Author | License |
+| ------- | ------ | ------- |
+| [Tabler Icons](https://tabler.io/icons) | codecalm | [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE) |
+
 ---
 
 Thank you for using MageForge!
