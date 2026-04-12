@@ -76,6 +76,14 @@ function _registerMageforgeInspector() {
         pageTimings: null,
         performanceObservers: [],
 
+        // Block detection cache
+        cachedBlocks: null,
+        lastBlocksCacheTime: 0,
+
+        // Window event handler refs (for cleanup)
+        _toggleInspectorHandler: null,
+        _inspectorStateHandler: null,
+
         // ====================================================================
         // Lifecycle
         // ====================================================================
@@ -85,10 +93,6 @@ function _registerMageforgeInspector() {
             this.mouseMoveHandler = (e) => this.handleMouseMove(e);
             this.clickHandler = (e) => this.handleClick(e);
 
-            // Cache for block detection
-            this.cachedBlocks = null;
-            this.lastBlocksCacheTime = 0;
-
             this.setupKeyboardShortcuts();
             this.createHighlightBox();
             this.createInfoBadge();
@@ -96,47 +100,93 @@ function _registerMageforgeInspector() {
             this.cachePageTimings();
 
             // Listen for toggle event from MageForge Toolbar
-            window.addEventListener('mageforge:toolbar:toggle-inspector', () => {
-                this.toggleInspector();
-            });
+            this._toggleInspectorHandler = () => this.toggleInspector();
+            window.addEventListener('mageforge:toolbar:toggle-inspector', this._toggleInspectorHandler);
 
             // Listen for inspector-state sync from toolbar
-            window.addEventListener('mageforge:toolbar:inspector-state', (e) => {
+            this._inspectorStateHandler = (e) => {
                 if (this._inspectorFloatButton) {
                     this._inspectorFloatButton.classList.toggle('mageforge-active', e.detail.active);
                 }
-            });
+            };
+            window.addEventListener('mageforge:toolbar:inspector-state', this._inspectorStateHandler);
 
-            // Append inspector button to toolbar container (toolbar renders before inspector)
-            const toolbarContainer = document.querySelector('.mageforge-toolbar');
-            if (toolbarContainer) {
-                this._inspectorFloatButton = document.createElement('button');
-                this._inspectorFloatButton.className = 'mageforge-inspector-float-button';
-                this._inspectorFloatButton.type = 'button';
-                this._inspectorFloatButton.title = 'Activate Inspector (Ctrl+Shift+I)';
-                this._inspectorFloatButton.innerHTML = `
-                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
-                        <g stroke-width="0"></g>
-                        <g stroke-linecap="round" stroke-linejoin="round"></g>
-                        <g>
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
-                        </g>
-                    </svg>
-                    <span>Inspector</span>
-                `;
-                this._inspectorFloatButton.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.toggleInspector();
-                };
-                toolbarContainer.appendChild(this._inspectorFloatButton);
-            }
+            // Append inspector button to toolbar container.
+            // The toolbar initialises before the inspector, but guard with a
+            // MutationObserver fallback for edge cases where it hasn't rendered yet.
+            this._appendInspectorButton();
 
             // Dispatch init event for Hyvä integration
             this.$dispatch('mageforge:inspector:init');
         },
 
+        _createInspectorFloatButton() {
+            const btn = document.createElement('button');
+            btn.className = 'mageforge-inspector-float-button';
+            btn.type = 'button';
+            btn.title = 'Activate Inspector (Ctrl+Shift+I)';
+            btn.innerHTML = `
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
+                    <g stroke-width="0"></g>
+                    <g stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3l1-1h12l1 1v6h-1V3H2v8h5v1H2l-1-1V3zm14.707 9.707L9 6v9.414l2.707-2.707h4zM10 13V8.414l3.293 3.293h-2L10 13z"></path>
+                    </g>
+                </svg>
+                <span>Inspector</span>
+            `;
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleInspector();
+            };
+            return btn;
+        },
+
+        _appendInspectorButton() {
+            const toolbarContainer = document.querySelector('.mageforge-toolbar');
+            if (toolbarContainer) {
+                this._inspectorFloatButton = this._createInspectorFloatButton();
+                toolbarContainer.appendChild(this._inspectorFloatButton);
+                return;
+            }
+
+            // Toolbar not in DOM yet – wait for it
+            const observer = new MutationObserver(() => {
+                const container = document.querySelector('.mageforge-toolbar');
+                if (container) {
+                    observer.disconnect();
+                    this._inspectorFloatButton = this._createInspectorFloatButton();
+                    container.appendChild(this._inspectorFloatButton);
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            this._buttonObserver = observer;
+        },
+
         destroy() {
+            // Remove window event listeners
+            if (this._toggleInspectorHandler) {
+                window.removeEventListener('mageforge:toolbar:toggle-inspector', this._toggleInspectorHandler);
+                this._toggleInspectorHandler = null;
+            }
+            if (this._inspectorStateHandler) {
+                window.removeEventListener('mageforge:toolbar:inspector-state', this._inspectorStateHandler);
+                this._inspectorStateHandler = null;
+            }
+
+            // Disconnect button injection observer if still running
+            if (this._buttonObserver) {
+                this._buttonObserver.disconnect();
+                this._buttonObserver = null;
+            }
+
+            // Clear pending hover timeout
+            if (this.hoverTimeout) {
+                clearTimeout(this.hoverTimeout);
+                this.hoverTimeout = null;
+            }
+
             // Remove keyboard listener
             if (this.keydownHandler) {
                 document.removeEventListener('keydown', this.keydownHandler);
