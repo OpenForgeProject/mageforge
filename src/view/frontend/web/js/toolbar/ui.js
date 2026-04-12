@@ -89,7 +89,7 @@ export const uiMethods = {
                 <span class="mageforge-toolbar-burger-bar"></span>
                 <span class="mageforge-toolbar-burger-bar"></span>
             </span>
-            <span class="mageforge-toolbar-burger-label">Toolbar</span>
+            <span class="mageforge-toolbar-burger-label">MageForge Toolbar</span>
         `;
         this.burgerButton.onclick = (e) => {
             e.preventDefault();

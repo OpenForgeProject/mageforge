@@ -23,6 +23,7 @@
     --mageforge-color-red-alpha-35: rgba(239, 68, 68, 0.35);
     --mageforge-color-slate-200: #e2e8f0;
     --mageforge-color-slate-400: #94a3b8;
+    --mageforge-color-orange: #fb923c;
     --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
     --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
     --mageforge-border-color: rgba(148, 163, 184, 0.15);
@@ -37,6 +38,8 @@
     --mageforge-toolbar-burger-active-border: #10b981;
     --mageforge-toggle-bg-off: rgba(255, 255, 255, 0.15);
     --mageforge-toggle-bg-off-light: rgba(0, 0, 0, 0.15);
+    --gradient-brand: linear-gradient(43deg, #3b82f6 0%, #C850C0 50%, #edb04d 100%);
+    --gradient-brand-hover: linear-gradient(43deg, #3b82f6 0%, #C850C0 70%, #edb04d 100%);
 }
 
 .mageforge-toolbar *,
@@ -71,7 +74,6 @@
     padding: 0 10px 0 8px;
     background: var(--mageforge-burger-bg);
     color: var(--mageforge-color-white);
-    border: 1px solid var(--mageforge-border-glass);
     border-radius: 5px;
     cursor: pointer;
     display: flex;
@@ -79,16 +81,18 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    backdrop-filter: blur(8px);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 12px var(--mageforge-shadow-md), 0 2px 4px var(--mageforge-shadow-sm);
     flex-shrink: 0;
+    background-image: var(--gradient-brand);
 }
 
 .mageforge-toolbar-burger:hover {
     background: var(--mageforge-burger-bg-hover);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px var(--mageforge-shadow-lg), 0 4px 8px var(--mageforge-shadow-md);
+    background-image: var(--gradient-brand-hover);
+    cursor: pointer;
 }
 
 .mageforge-toolbar-burger:active {
@@ -147,25 +151,28 @@
     animation: mageforge-toolbar-slide-up 0.15s ease-out;
 }
 
+
 .mageforge-toolbar-menu-title {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 10px 6px;
+    padding: 4px 8px 2px;
     border-bottom: 1px solid var(--mageforge-border-color);
     margin-bottom: 4px;
 }
 
 .mageforge-toolbar-menu-title-text {
     font-family: var(--mageforge-font-family);
-    font-size: 1rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 700;
     letter-spacing: 0.08em;
-    background: linear-gradient(90deg, var(--mageforge-color-blue), var(--mageforge-color-white));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    padding-bottom: 0.5rem;
     color: transparent;
+    background-color: #4158D0;
+    text-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+    background-image: var(--gradient-brand);
+    background-clip: text;
+    -webkit-background-clip: text;
 }
 
 .mageforge-toolbar-menu-close {
@@ -351,12 +358,13 @@
 
 .mageforge-toolbar-menu-group-label {
     font-family: var(--mageforge-font-family);
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--mageforge-color-slate-400);
     transition: color 0.15s ease;
+    letter-spacing: 0.08em;
+    color: var(--mageforge-color-orange);
 }
 
 .mageforge-toolbar-menu-group-chevron {
