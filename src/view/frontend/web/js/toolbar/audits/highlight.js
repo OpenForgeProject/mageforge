@@ -22,6 +22,10 @@ function createImgOverlay(img) {
     document.body.appendChild(overlay);
 
     function update() {
+        if (!img.isConnected) {
+            cleanup();
+            return;
+        }
         const rect = img.getBoundingClientRect();
         overlay.style.top    = `${rect.top}px`;
         overlay.style.left   = `${rect.left}px`;
@@ -38,11 +42,17 @@ function createImgOverlay(img) {
     // capture: true catches scroll events from any scrollable container
     window.addEventListener('scroll', update, { passive: true, capture: true });
 
-    return () => {
+    // Named function so update() can reference it via hoisting.
+    // ro is always assigned before cleanup() is ever invoked (the initial
+    // update() call only triggers cleanup() when img.isConnected is false,
+    // which cannot happen at construction time).
+    function cleanup() {
         ro.disconnect();
         window.removeEventListener('scroll', update, { capture: true });
         overlay.remove();
-    };
+    }
+
+    return cleanup;
 }
 
 /**

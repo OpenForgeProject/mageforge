@@ -413,7 +413,7 @@
     background-color: rgba(239, 68, 68, 0.5);
     outline: 3px solid var(--mageforge-color-red);
     outline-offset: 0;
-    z-index: 99998;
+    z-index: 9999997;
 }
 
 /* Non-image elements (inputs, text) get a colour filter for visibility */
