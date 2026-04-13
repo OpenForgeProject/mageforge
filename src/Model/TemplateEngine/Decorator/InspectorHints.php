@@ -29,6 +29,7 @@ class InspectorHints implements TemplateEngineInterface
      * @param Random $random
      * @param BlockCacheCollector $cacheCollector
      * @param File $fileDriver
+     * @param string[] $excludedClassPrefixes Block class prefixes to skip inspector wrapping for
      */
     public function __construct(
         private readonly TemplateEngineInterface $subject,
@@ -36,6 +37,7 @@ class InspectorHints implements TemplateEngineInterface
         private readonly Random $random,
         private readonly BlockCacheCollector $cacheCollector,
         private readonly File $fileDriver,
+        private readonly array $excludedClassPrefixes = [],
     ) {
         $this->magentoRoot = $this->resolveMagentoRoot();
     }
@@ -59,6 +61,23 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
+     * Check if a block class should be excluded from inspector wrapping
+     *
+     * @param string $blockClass
+     * @return bool
+     */
+    private function isExcluded(string $blockClass): bool
+    {
+        foreach ($this->excludedClassPrefixes as $prefix) {
+            if (str_starts_with($blockClass, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Insert inspector data attributes into the rendered block contents
      *
      * @param BlockInterface $block
@@ -75,6 +94,11 @@ class InspectorHints implements TemplateEngineInterface
         $endTime = hrtime(true);
 
         if (!$this->showBlockHints) {
+            return $result;
+        }
+
+        // Skip inspector wrapping for excluded block classes (e.g. Magewire components)
+        if ($this->isExcluded(get_class($block))) {
             return $result;
         }
 
