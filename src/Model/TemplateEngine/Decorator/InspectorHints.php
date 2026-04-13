@@ -78,6 +78,20 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
+     * Check if rendered HTML contains wire attributes (Magewire/Livewire components)
+     *
+     * Wrapping these in HTML comments breaks wire:id injection which relies on
+     * finding the first root element via regex.
+     *
+     * @param string $html
+     * @return bool
+     */
+    private function containsWireAttributes(string $html): bool
+    {
+        return str_contains($html, 'wire:id=') || str_contains($html, 'wire:initial-data=');
+    }
+
+    /**
      * Insert inspector data attributes into the rendered block contents
      *
      * @param BlockInterface $block
@@ -99,6 +113,11 @@ class InspectorHints implements TemplateEngineInterface
 
         // Skip inspector wrapping for excluded block classes (e.g. Magewire components)
         if ($this->isExcluded(get_class($block))) {
+            return $result;
+        }
+
+        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire)
+        if ($this->containsWireAttributes($result)) {
             return $result;
         }
 
