@@ -15,8 +15,10 @@ export const draggableMethods = {
         this.dragStartHandler = (e) => this.handleDragStart(e);
         this.dragHandler = (e) => this.handleDrag(e);
         this.dragEndHandler = (e) => this.handleDragEnd(e);
+        this.dragBlurHandler = () => this.handleDragEnd();
 
         this.infoBadge.addEventListener('mousedown', this.dragStartHandler);
+        window.addEventListener('blur', this.dragBlurHandler);
     },
 
     /**
@@ -29,6 +31,7 @@ export const draggableMethods = {
         this.infoBadge.removeEventListener('mousedown', this.dragStartHandler);
         document.removeEventListener('mousemove', this.dragHandler);
         document.removeEventListener('mouseup', this.dragEndHandler);
+        window.removeEventListener('blur', this.dragBlurHandler);
 
         this.removeConnector();
     },
