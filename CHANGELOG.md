@@ -17,6 +17,26 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.19.0](https://github.com/OpenForgeProject/mageforge/compare/0.18.0...0.19.0) (2026-04-13)
+
+
+### Added
+
+* defer page timing caching until load event and add global metrics ([6721e60](https://github.com/OpenForgeProject/mageforge/commit/6721e60a7ac25118154f3a79ee1704f39ee2bd51))
+
+
+### Fixed
+
+* clamp badge dragging within viewport boundaries ([03aee99](https://github.com/OpenForgeProject/mageforge/commit/03aee99cc88b178caf97573c4bdccb7e3f1cbc4b))
+* ensure drag end handler is removed on draggable removal ([8957129](https://github.com/OpenForgeProject/mageforge/commit/8957129173c01ccc506507f90e7cdbab1e9f141d))
+
+
+### Changed
+
+* enhance toolbar menu display logic with CSS transitions ([e150700](https://github.com/OpenForgeProject/mageforge/commit/e1507005803446c859a9dfa21ba25f40ee95ba63))
+* simplify connector management in draggable methods ([c995694](https://github.com/OpenForgeProject/mageforge/commit/c99569479244263108368d19f63a3fca155996bc))
+* update audit overlay styles and improve highlight logic ([27f1588](https://github.com/OpenForgeProject/mageforge/commit/27f15881db9d30c18e5eb78ea480d86bb0bef15e))
+
 ## [0.18.0](https://github.com/OpenForgeProject/mageforge/compare/0.17.0...0.18.0) (2026-04-13)
 
 
