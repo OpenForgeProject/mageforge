@@ -123,6 +123,8 @@ export const draggableMethods = {
 
         document.body.appendChild(svg);
         this.connectorSvg = svg;
+        this.connectorLine = line;
+        this.connectorDot = dot;
 
         // Update line on scroll (SVG is fixed, coordinates are viewport-relative)
         this.connectorScrollHandler = () => this.updateConnector();
@@ -142,6 +144,8 @@ export const draggableMethods = {
         if (this.connectorSvg) {
             this.connectorSvg.remove();
             this.connectorSvg = null;
+            this.connectorLine = null;
+            this.connectorDot = null;
         }
         // Restore static arrow if it exists (for next time)
         if (this.infoBadge) {
@@ -173,15 +177,13 @@ export const draggableMethods = {
         const targetY = targetRect.top + targetRect.height / 2;
 
         // Update line
-        const line = this.connectorSvg.querySelector('line');
-        line.setAttribute('x1', badgeX);
-        line.setAttribute('y1', badgeY);
-        line.setAttribute('x2', targetX);
-        line.setAttribute('y2', targetY);
+        this.connectorLine.setAttribute('x1', badgeX);
+        this.connectorLine.setAttribute('y1', badgeY);
+        this.connectorLine.setAttribute('x2', targetX);
+        this.connectorLine.setAttribute('y2', targetY);
 
         // Update dot
-        const dot = this.connectorSvg.querySelector('circle');
-        dot.setAttribute('cx', targetX);
-        dot.setAttribute('cy', targetY);
+        this.connectorDot.setAttribute('cx', targetX);
+        this.connectorDot.setAttribute('cy', targetY);
     },
 };
