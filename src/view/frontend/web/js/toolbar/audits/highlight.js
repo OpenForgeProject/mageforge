@@ -9,6 +9,16 @@
 const OVERLAY_CLASS = 'mageforge-audit-img-overlay';
 
 /**
+ * Module-level registry: tracks one overlay cleanup function per <img>
+ * element and the set of audit keys currently relying on that overlay.
+ * Using a WeakMap means entries are automatically eligible for GC once
+ * the image node itself is collected.
+ *
+ * @type {WeakMap<HTMLImageElement, { cleanup: function, keys: Set<string> }>}
+ */
+const imgOverlayRegistry = new WeakMap();
+
+/**
  * Creates a fixed-position overlay <span> that tracks an <img> element's
  * position in the viewport. Updates on scroll (all containers) and resize.
  * Returns a cleanup function that removes the overlay and all listeners.
@@ -24,6 +34,7 @@ function createImgOverlay(img) {
     function update() {
         if (!img.isConnected) {
             cleanup();
+            imgOverlayRegistry.delete(img);
             return;
         }
         const rect = img.getBoundingClientRect();
@@ -65,9 +76,15 @@ export function clearHighlight(key) {
     const cls = `mageforge-audit-${key}`;
     document.querySelectorAll(`.${cls}`).forEach(el => {
         el.classList.remove(cls);
-        if (el.tagName === 'IMG' && el._mfOverlayCleanup) {
-            el._mfOverlayCleanup();
-            delete el._mfOverlayCleanup;
+        if (el.tagName === 'IMG') {
+            const entry = imgOverlayRegistry.get(el);
+            if (entry) {
+                entry.keys.delete(key);
+                if (entry.keys.size === 0) {
+                    entry.cleanup();
+                    imgOverlayRegistry.delete(el);
+                }
+            }
         }
     });
 }
@@ -92,7 +109,15 @@ export function applyHighlight(elements, key, context) {
     elements.forEach(el => {
         el.classList.add(cls);
         if (el.tagName === 'IMG') {
-            el._mfOverlayCleanup = createImgOverlay(el);
+            const existing = imgOverlayRegistry.get(el);
+            if (existing) {
+                existing.keys.add(key);
+            } else {
+                imgOverlayRegistry.set(el, {
+                    cleanup: createImgOverlay(el),
+                    keys: new Set([key]),
+                });
+            }
         }
     });
     elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
