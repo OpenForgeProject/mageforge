@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.18.0](https://github.com/OpenForgeProject/mageforge/compare/0.17.0...0.18.0) (2026-04-13)
+
+
+### Added
+
+* toolbar audit highlighting ([4fcfc7d](https://github.com/OpenForgeProject/mageforge/commit/4fcfc7d5cda0c813906dadb2060e1496e90d4504))
+
 ## [0.17.0](https://github.com/OpenForgeProject/mageforge/compare/0.16.0...0.17.0) (2026-04-12)
 
 
