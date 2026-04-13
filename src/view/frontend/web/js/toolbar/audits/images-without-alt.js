@@ -2,7 +2,7 @@
  * MageForge Toolbar Audit – Images without ALT
  */
 
-const HIGHLIGHT_CLASS = 'mageforge-audit-images-without-alt';
+import { applyHighlight, clearHighlight } from './highlight.js';
 
 /** @type {import('./index.js').AuditDefinition} */
 export default {
@@ -17,7 +17,7 @@ export default {
      */
     run(context, active) {
         if (!active) {
-            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+            clearHighlight(this.key);
             return;
         }
 
@@ -28,13 +28,6 @@ export default {
             return !img.hasAttribute('alt') || img.getAttribute('alt').trim() === '';
         });
 
-        if (images.length === 0) {
-            context.setAuditCounterBadge('images-without-alt', '0', 'success');
-            return;
-        }
-
-        images.forEach(img => img.classList.add(HIGHLIGHT_CLASS));
-        images[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        context.setAuditCounterBadge('images-without-alt', `${images.length}`, 'error');
+        applyHighlight(images, this.key, context);
     },
 };

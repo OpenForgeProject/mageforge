@@ -403,6 +403,23 @@
 .mageforge-audit-low-contrast {
     outline: 3px solid var(--mageforge-color-red) !important;
     outline-offset: 2px;
+    box-shadow: inset 0 0 0 3px var(--mageforge-color-red) !important;
+}
+
+/* Fixed-position overlay injected over highlighted <img> elements */
+.mageforge-audit-img-overlay {
+    position: fixed;
+    pointer-events: none;
+    background-color: rgba(239, 68, 68, 0.5);
+    outline: 3px solid var(--mageforge-color-red);
+    outline-offset: 0;
+    z-index: 9999997;
+}
+
+/* Non-image elements (inputs, text) get a colour filter for visibility */
+.mageforge-audit-inputs-without-label,
+.mageforge-audit-low-contrast {
+    filter: brightness(0.5) sepia(1) saturate(12) hue-rotate(330deg) !important;
 }
 
 /* ============================================================================

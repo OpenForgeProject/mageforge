@@ -5,7 +5,7 @@
  * to screen reader users.
  */
 
-const HIGHLIGHT_CLASS = 'mageforge-audit-inputs-without-label';
+import { applyHighlight, clearHighlight } from './highlight.js';
 
 /** @type {import('./index.js').AuditDefinition} */
 export default {
@@ -20,7 +20,7 @@ export default {
      */
     run(context, active) {
         if (!active) {
-            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+            clearHighlight(this.key);
             return;
         }
 
@@ -39,13 +39,6 @@ export default {
             return true;
         });
 
-        if (inputs.length === 0) {
-            context.setAuditCounterBadge('inputs-without-label', '0', 'success');
-            return;
-        }
-
-        inputs.forEach(el => el.classList.add(HIGHLIGHT_CLASS));
-        inputs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        context.setAuditCounterBadge('inputs-without-label', `${inputs.length}`, 'error');
+        applyHighlight(inputs, this.key, context);
     },
 };
