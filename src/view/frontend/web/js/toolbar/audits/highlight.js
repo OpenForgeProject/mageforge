@@ -1,22 +1,23 @@
 /**
  * MageForge Toolbar – Shared highlight helpers
  *
- * Audits that mark elements by adding a CSS class use these two helpers
- * instead of duplicating the same logic. The CSS class is derived from the
- * audit key: `mageforge-audit-<key>`.
+ * Audits use applyHighlight() / clearHighlight() to mark any DOM element.
+ * Every element gets a fixed-position overlay span that tracks its viewport
+ * position, so the highlight works regardless of element type, parent
+ * overflow, or border-radius. The audit CSS class (mageforge-audit-<key>)
+ * is kept on the element purely as a selector marker for clearHighlight().
  */
 
-const OVERLAY_CLASS = 'mageforge-audit-img-overlay';
+const AUDIT_OVERLAY_CLASS = 'mageforge-audit-overlay';
 
 /**
- * Module-level registry: tracks one overlay cleanup function per <img>
- * element and the set of audit keys currently relying on that overlay.
- * Using a WeakMap means entries are automatically eligible for GC once
- * the image node itself is collected.
+ * Module-level registry: tracks one overlay per element and the set of
+ * audit keys currently relying on it. WeakMap entries are automatically
+ * eligible for GC when the element is collected.
  *
- * @type {WeakMap<HTMLImageElement, { cleanup: function, keys: Set<string> }>}
+ * @type {WeakMap<Element, { cleanup: function, keys: Set<string> }>}
  */
-const imgOverlayRegistry = new WeakMap();
+const overlayRegistry = new WeakMap();
 
 /**
  * Shared update machinery – a single ResizeObserver and capturing scroll
@@ -43,26 +44,26 @@ function scheduleUpdate() {
 }
 
 /**
- * Creates a fixed-position overlay <span> that tracks an <img> element's
- * position in the viewport. Shares a single RAF-throttled scroll/resize
- * handler across all active overlays instead of creating one per image.
+ * Creates a fixed-position overlay <span> that tracks any element's
+ * bounding box in the viewport. Shares a single RAF-throttled scroll/resize
+ * handler across all active overlays instead of creating one per element.
  * Returns a cleanup function that removes the overlay and deregisters it.
  *
- * @param {HTMLImageElement} img
+ * @param {Element} el
  * @returns {function} cleanup
  */
-function createImgOverlay(img) {
+function createOverlay(el) {
     const overlay = document.createElement('span');
-    overlay.className = OVERLAY_CLASS;
+    overlay.className = AUDIT_OVERLAY_CLASS;
     document.body.appendChild(overlay);
 
     function update() {
-        if (!img.isConnected) {
+        if (!el.isConnected) {
             cleanup();
-            imgOverlayRegistry.delete(img);
+
             return;
         }
-        const rect = img.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
         overlay.style.top    = `${rect.top}px`;
         overlay.style.left   = `${rect.left}px`;
         overlay.style.width  = `${rect.width}px`;
@@ -97,7 +98,7 @@ function createImgOverlay(img) {
 
 /**
  * Removes the highlight class from all previously marked elements and
- * destroys any associated image overlays.
+ * destroys their overlays once no audit keys remain.
  *
  * @param {string} key - Audit key (e.g. 'images-without-alt')
  */
@@ -105,25 +106,21 @@ export function clearHighlight(key) {
     const cls = `mageforge-audit-${key}`;
     document.querySelectorAll(`.${cls}`).forEach(el => {
         el.classList.remove(cls);
-        if (el.tagName === 'IMG') {
-            const entry = imgOverlayRegistry.get(el);
-            if (entry) {
-                entry.keys.delete(key);
-                if (entry.keys.size === 0) {
-                    entry.cleanup();
-                    imgOverlayRegistry.delete(el);
-                }
+        const entry = overlayRegistry.get(el);
+        if (entry) {
+            entry.keys.delete(key);
+            if (entry.keys.size === 0) {
+                entry.cleanup();
+                overlayRegistry.delete(el);
             }
         }
     });
 }
 
 /**
- * Highlights a set of elements by adding the audit CSS class, scrolls to the
- * first result, and updates the counter badge on the toolbar menu item.
- *
- * For <img> elements a fixed-position overlay is injected so the red
- * background is visible regardless of parent overflow or border-radius.
+ * Highlights a set of elements by injecting a positioned overlay, scrolls to
+ * the first result, and updates the counter badge on the toolbar menu item.
+ * Works for any element type – no special casing required in audit code.
  *
  * @param {Element[]}  elements - Elements to mark
  * @param {string}     key      - Audit key (e.g. 'images-without-alt')
@@ -137,16 +134,14 @@ export function applyHighlight(elements, key, context) {
     const cls = `mageforge-audit-${key}`;
     elements.forEach(el => {
         el.classList.add(cls);
-        if (el.tagName === 'IMG') {
-            const existing = imgOverlayRegistry.get(el);
-            if (existing) {
-                existing.keys.add(key);
-            } else {
-                imgOverlayRegistry.set(el, {
-                    cleanup: createImgOverlay(el),
-                    keys: new Set([key]),
-                });
-            }
+        const existing = overlayRegistry.get(el);
+        if (existing) {
+            existing.keys.add(key);
+        } else {
+            overlayRegistry.set(el, {
+                cleanup: createOverlay(el),
+                keys: new Set([key]),
+            });
         }
     });
     elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
