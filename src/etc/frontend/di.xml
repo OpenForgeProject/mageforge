@@ -12,6 +12,14 @@
       <type name="OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints">
             <arguments>
                   <argument name="cacheCollector" xsi:type="object">OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector</argument>
+                  <!-- Block class prefixes excluded from inspector wrapping (e.g. Magewire injects wire:id after render) -->
+                  <argument name="excludedClassPrefixes" xsi:type="array">
+                        <item name="magewire" xsi:type="string">Magewirephp\Magewire\</item>
+                  </argument>
+                  <!-- Template path substrings excluded from inspector wrapping (case-insensitive) -->
+                  <argument name="excludedTemplatePaths" xsi:type="array">
+                        <item name="magewire" xsi:type="string">magewire/</item>
+                  </argument>
             </arguments>
       </type>
 

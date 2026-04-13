@@ -124,6 +124,8 @@ To disable the inspector:
 bin/magento mageforge:theme:inspector disable
 ```
 
+> **Note:** The Inspector is currently not compatible with **Magewire** components. Magewire blocks are automatically excluded from inspection to prevent rendering errors.
+
 
 
 ---

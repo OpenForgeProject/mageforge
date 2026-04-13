@@ -29,6 +29,8 @@ class InspectorHints implements TemplateEngineInterface
      * @param Random $random
      * @param BlockCacheCollector $cacheCollector
      * @param File $fileDriver
+     * @param string[] $excludedClassPrefixes Block class prefixes to skip inspector wrapping for
+     * @param string[] $excludedTemplatePaths Template path substrings to skip inspector wrapping for
      */
     public function __construct(
         private readonly TemplateEngineInterface $subject,
@@ -36,6 +38,8 @@ class InspectorHints implements TemplateEngineInterface
         private readonly Random $random,
         private readonly BlockCacheCollector $cacheCollector,
         private readonly File $fileDriver,
+        private readonly array $excludedClassPrefixes = [],
+        private readonly array $excludedTemplatePaths = [],
     ) {
         $this->magentoRoot = $this->resolveMagentoRoot();
     }
@@ -59,6 +63,55 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
+     * Check if a block class should be excluded from inspector wrapping
+     *
+     * @param string $blockClass
+     * @return bool
+     */
+    private function isExcluded(string $blockClass): bool
+    {
+        foreach ($this->excludedClassPrefixes as $prefix) {
+            if (str_starts_with($blockClass, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a template path should be excluded from inspector wrapping
+     *
+     * @param string $templateFile
+     * @return bool
+     */
+    private function isExcludedTemplate(string $templateFile): bool
+    {
+        $normalized = str_replace('\\', '/', strtolower($templateFile));
+        foreach ($this->excludedTemplatePaths as $path) {
+            if (str_contains($normalized, str_replace('\\', '/', strtolower(trim($path))))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if rendered HTML contains wire attributes (Magewire/Livewire components)
+     *
+     * Wrapping these in HTML comments breaks wire:id injection which relies on
+     * finding the first root element via regex.
+     *
+     * @param string $html
+     * @return bool
+     */
+    private function containsWireAttributes(string $html): bool
+    {
+        return str_contains($html, 'wire:id=') || str_contains($html, 'wire:initial-data=');
+    }
+
+    /**
      * Insert inspector data attributes into the rendered block contents
      *
      * @param BlockInterface $block
@@ -75,6 +128,33 @@ class InspectorHints implements TemplateEngineInterface
         $endTime = hrtime(true);
 
         if (!$this->showBlockHints) {
+            return $result;
+        }
+
+        // Skip inspector wrapping for excluded block classes (e.g. Magewire components)
+        if ($this->isExcluded(get_class($block))) {
+            return $result;
+        }
+
+        // Skip inspector wrapping for templates in excluded paths (e.g. /magewire/ directories).
+        // Magewire injects wire:id AFTER the template engine returns via regex on the root element.
+        // Wrapping the output in HTML comments before that element breaks the injection.
+        if ($this->isExcludedTemplate($templateFile)) {
+            return $result;
+        }
+
+        // Skip inspector wrapping for Magewire component blocks.
+        // Magewire sets a 'magewire' data key on the block before rendering and injects wire:id
+        // via regex AFTER the template engine returns. Wrapping the output in HTML comments
+        // shifts the offset used by insertAttributesIntoHtmlRoot(), causing broken components.
+        // Soft dependency: hasData() is a Magento DataObject method, not a Magewire class.
+        if (method_exists($block, 'hasData') && $block->hasData('magewire')) {
+            return $result;
+        }
+
+        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire).
+        // This catches container blocks whose children have already been rendered with wire attributes.
+        if ($this->containsWireAttributes($result)) {
             return $result;
         }
 
