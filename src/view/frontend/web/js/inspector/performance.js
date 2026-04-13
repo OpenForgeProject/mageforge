@@ -114,6 +114,37 @@ export const performanceMethods = {
         if (!hasMetrics) {
             this.renderNoBrowserMetrics(container);
         }
+
+        this.renderPageTimingsSection(container);
+    },
+
+    /**
+     * Render page-level timing metrics (not element-specific)
+     *
+     * @param {HTMLElement} container
+     */
+    renderPageTimingsSection(container) {
+        // Re-read if not yet cached or still 0 (init ran before load event)
+        if (!this.pageTimings || this.pageTimings.domContentLoaded === 0) {
+            this.cachePageTimings();
+        }
+
+        if (!this.pageTimings || this.pageTimings.domContentLoaded === 0) {
+            return;
+        }
+
+        const divider = document.createElement('div');
+        divider.style.cssText = 'border-top: 1px solid rgba(255,255,255,0.1); margin: 12px 0 8px; padding-top: 8px; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;';
+        divider.textContent = 'Global Page-Metrics';
+        container.appendChild(divider);
+
+        const dclColor = this.pageTimings.domContentLoaded < 1500 ? '#34d399' : (this.pageTimings.domContentLoaded < 3000 ? '#f59e0b' : '#ef4444');
+        container.appendChild(this.createInfoSection('DOM Content Loaded', `${this.pageTimings.domContentLoaded} ms`, dclColor));
+
+        if (this.pageTimings.loadComplete > 0) {
+            const loadColor = this.pageTimings.loadComplete < 2500 ? '#34d399' : (this.pageTimings.loadComplete < 5000 ? '#f59e0b' : '#ef4444');
+            container.appendChild(this.createInfoSection('Page Load Complete', `${this.pageTimings.loadComplete} ms`, loadColor));
+        }
     },
 
     renderRenderTimeMetric(container, element) {

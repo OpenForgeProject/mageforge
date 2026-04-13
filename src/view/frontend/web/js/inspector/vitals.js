@@ -97,7 +97,7 @@ export const vitalsMethods = {
         if (navEntries && navEntries.length > 0) {
             const nav = navEntries[0];
             this.pageTimings = {
-                domContentLoaded: Math.round(nav.domContentLoadedEventEnd - nav.domContentLoadedEventStart),
+                domContentLoaded: Math.round(nav.domContentLoadedEventEnd - nav.startTime),
                 loadComplete: Math.round(nav.loadEventEnd - nav.fetchStart)
             };
         } else if (performance.timing) {
@@ -125,7 +125,7 @@ export const vitalsMethods = {
         this.webVitals.cls.forEach(shift => {
             if (shift.sources) {
                 shift.sources.forEach(source => {
-                    if (source.node === element || element.contains(source.node) || source.node.contains(element)) {
+                    if (source.node && (source.node === element || element.contains(source.node) || source.node.contains(element))) {
                         totalCLS += shift.value;
                     }
                 });
@@ -220,96 +220,6 @@ export const vitalsMethods = {
                 else result.byType.other++;
             }
         });
-
-        return result;
-    },
-
-    /**
-     * Calculate DOM complexity metrics
-     *
-     * @param {HTMLElement} element - The element to analyze
-     * @return {{childCount: number, depth: number, totalNodes: number}}
-     */
-    calculateDOMComplexity(element) {
-        if (!element || !(element instanceof HTMLElement)) {
-            return { childCount: 0, depth: 0, totalNodes: 0 };
-        }
-
-        const childCount = element.childElementCount;
-        const totalNodes = element.querySelectorAll('*').length;
-        const depth = this.getMaxDepth(element);
-
-        return { childCount, depth, totalNodes };
-    },
-
-    /**
-     * Get maximum depth of element tree
-     *
-     * @param {HTMLElement} element
-     * @param {number} currentDepth
-     * @return {number}
-     */
-    getMaxDepth(element, currentDepth = 0) {
-        if (!element.children.length) {
-            return currentDepth;
-        }
-
-        let maxChildDepth = currentDepth;
-        for (const child of element.children) {
-            const depth = this.getMaxDepth(child, currentDepth + 1);
-            maxChildDepth = Math.max(maxChildDepth, depth);
-        }
-
-        return maxChildDepth;
-    },
-
-    /**
-     * Get complexity rating based on total nodes
-     *
-     * @param {{childCount: number, depth: number, totalNodes: number}} complexity
-     * @return {string} 'low' | 'medium' | 'high'
-     */
-    getComplexityRating(complexity) {
-        if (complexity.totalNodes < this.PERF_DOM_COMPLEXITY_LOW) {
-            return 'low';
-        } else if (complexity.totalNodes < this.PERF_DOM_COMPLEXITY_HIGH) {
-            return 'medium';
-        } else {
-            return 'high';
-        }
-    },
-
-    /**
-     * Get Web Vitals information for specific element
-     *
-     * @param {HTMLElement} element
-     * @return {{isLCP: boolean, contributesCLS: number, isInteractive: boolean}}
-     */
-    getWebVitalsForElement(element) {
-        const result = {
-            isLCP: false,
-            contributesCLS: 0,
-            isInteractive: false
-        };
-
-        // Check if element is LCP candidate
-        if (this.webVitals.lcp && this.webVitals.lcp.element) {
-            result.isLCP = this.webVitals.lcp.element === element ||
-                           element.contains(this.webVitals.lcp.element);
-        }
-
-        // Calculate CLS contribution
-        if (this.webVitals.cls && this.webVitals.cls.length > 0) {
-            this.webVitals.cls.forEach(shift => {
-                if (shift.sources) {
-                    shift.sources.forEach(source => {
-                        if (source.node === element || element.contains(source.node)) {
-                            result.contributesCLS += shift.value;
-                        }
-                    });
-                }
-            });
-        }
 
         return result;
     },

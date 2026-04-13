@@ -96,7 +96,14 @@ function _registerMageforgeInspector() {
             this.createHighlightBox();
             this.createInfoBadge();
             this.initWebVitalsTracking();
-            this.cachePageTimings();
+
+            // Defer page timings until the load event so that loadEventEnd and
+            // domContentLoadedEventEnd are actually populated by the browser.
+            if (document.readyState === 'complete') {
+                setTimeout(() => this.cachePageTimings(), 0);
+            } else {
+                window.addEventListener('load', () => setTimeout(() => this.cachePageTimings(), 0), { once: true });
+            }
 
             // Listen for inspector-state sync from toolbar
             this._inspectorStateHandler = (e) => {
