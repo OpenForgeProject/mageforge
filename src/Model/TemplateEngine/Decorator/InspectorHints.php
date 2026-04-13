@@ -89,7 +89,7 @@ class InspectorHints implements TemplateEngineInterface
     {
         $normalized = str_replace('\\', '/', strtolower($templateFile));
         foreach ($this->excludedTemplatePaths as $path) {
-            if (str_contains($normalized, strtolower($path))) {
+            if (str_contains($normalized, str_replace('\\', '/', strtolower(trim($path))))) {
                 return true;
             }
         }
