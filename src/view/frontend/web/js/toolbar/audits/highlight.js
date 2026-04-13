@@ -19,9 +19,34 @@ const OVERLAY_CLASS = 'mageforge-audit-img-overlay';
 const imgOverlayRegistry = new WeakMap();
 
 /**
+ * Shared update machinery – a single ResizeObserver and capturing scroll
+ * listener serve all active overlays, throttled via requestAnimationFrame.
+ * Attached on the first overlay, torn down when the last one is removed.
+ *
+ * @type {Map<HTMLSpanElement, function>}
+ */
+const activeOverlays = new Map();
+let rafPending = false;
+let sharedRo = null;
+
+function scheduleUpdate() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+        rafPending = false;
+        // Snapshot before iterating: update() calls may delete entries
+        // (image disconnected → cleanup) while we are looping.
+        for (const updateFn of [...activeOverlays.values()]) {
+            updateFn();
+        }
+    });
+}
+
+/**
  * Creates a fixed-position overlay <span> that tracks an <img> element's
- * position in the viewport. Updates on scroll (all containers) and resize.
- * Returns a cleanup function that removes the overlay and all listeners.
+ * position in the viewport. Shares a single RAF-throttled scroll/resize
+ * handler across all active overlays instead of creating one per image.
+ * Returns a cleanup function that removes the overlay and deregisters it.
  *
  * @param {HTMLImageElement} img
  * @returns {function} cleanup
@@ -46,20 +71,24 @@ function createImgOverlay(img) {
 
     update();
 
-    // ResizeObserver on <html> catches both window resize and layout shifts
-    const ro = new ResizeObserver(update);
-    ro.observe(document.documentElement);
+    activeOverlays.set(overlay, update);
 
-    // capture: true catches scroll events from any scrollable container
-    window.addEventListener('scroll', update, { passive: true, capture: true });
+    // Attach shared listeners only when the first overlay is created.
+    if (activeOverlays.size === 1) {
+        sharedRo = new ResizeObserver(scheduleUpdate);
+        sharedRo.observe(document.documentElement);
+        window.addEventListener('scroll', scheduleUpdate, { passive: true, capture: true });
+    }
 
-    // Named function so update() can reference it via hoisting.
-    // ro is always assigned before cleanup() is ever invoked (the initial
-    // update() call only triggers cleanup() when img.isConnected is false,
-    // which cannot happen at construction time).
+    // Named so update() can reference it before its var declaration (hoisting).
     function cleanup() {
-        ro.disconnect();
-        window.removeEventListener('scroll', update, { capture: true });
+        activeOverlays.delete(overlay);
+        // Tear down shared listeners once no overlays remain.
+        if (activeOverlays.size === 0) {
+            sharedRo?.disconnect();
+            sharedRo = null;
+            window.removeEventListener('scroll', scheduleUpdate, { capture: true });
+        }
         overlay.remove();
     }
 
