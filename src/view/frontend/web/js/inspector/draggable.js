@@ -71,8 +71,15 @@ export const draggableMethods = {
         const deltaX = e.clientX - this.dragStartX;
         const deltaY = e.clientY - this.dragStartY;
 
-        const newX = this.initialBadgeX + deltaX;
-        const newY = this.initialBadgeY + deltaY;
+        let newX = this.initialBadgeX + deltaX;
+        let newY = this.initialBadgeY + deltaY;
+
+        // Clamp within viewport so the badge cannot be dragged out of reach
+        const margin = 10;
+        const badgeWidth = this.infoBadge.offsetWidth;
+        const badgeHeight = this.infoBadge.offsetHeight;
+        newX = Math.max(window.scrollX + margin, Math.min(newX, window.scrollX + window.innerWidth - badgeWidth - margin));
+        newY = Math.max(window.scrollY + margin, Math.min(newY, window.scrollY + window.innerHeight - badgeHeight - margin));
 
         this.infoBadge.style.left = `${newX}px`;
         this.infoBadge.style.top = `${newY}px`;
