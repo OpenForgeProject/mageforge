@@ -406,16 +406,14 @@
     box-shadow: inset 0 0 0 3px var(--mageforge-color-red) !important;
 }
 
-/* Image elements: semi-transparent so the red parent background shines through */
-img.mageforge-audit-images-without-alt,
-img.mageforge-audit-images-without-dimensions,
-img.mageforge-audit-images-without-lazy-load {
-    opacity: 0.5 !important;
-}
-
-/* Parent container of a highlighted image gets a red background */
-.mageforge-audit-img-parent {
-    background-color: var(--mageforge-color-red) !important;
+/* Fixed-position overlay injected over highlighted <img> elements */
+.mageforge-audit-img-overlay {
+    position: fixed;
+    pointer-events: none;
+    background-color: rgba(239, 68, 68, 0.5);
+    outline: 3px solid var(--mageforge-color-red);
+    outline-offset: 0;
+    z-index: 99998;
 }
 
 /* Non-image elements (inputs, text) get a colour filter for visibility */
