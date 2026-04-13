@@ -30,6 +30,7 @@ class InspectorHints implements TemplateEngineInterface
      * @param BlockCacheCollector $cacheCollector
      * @param File $fileDriver
      * @param string[] $excludedClassPrefixes Block class prefixes to skip inspector wrapping for
+     * @param string[] $excludedTemplatePaths Template path substrings to skip inspector wrapping for
      */
     public function __construct(
         private readonly TemplateEngineInterface $subject,
@@ -38,6 +39,7 @@ class InspectorHints implements TemplateEngineInterface
         private readonly BlockCacheCollector $cacheCollector,
         private readonly File $fileDriver,
         private readonly array $excludedClassPrefixes = [],
+        private readonly array $excludedTemplatePaths = [],
     ) {
         $this->magentoRoot = $this->resolveMagentoRoot();
     }
@@ -70,6 +72,24 @@ class InspectorHints implements TemplateEngineInterface
     {
         foreach ($this->excludedClassPrefixes as $prefix) {
             if (str_starts_with($blockClass, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a template path should be excluded from inspector wrapping
+     *
+     * @param string $templateFile
+     * @return bool
+     */
+    private function isExcludedTemplate(string $templateFile): bool
+    {
+        $normalized = str_replace('\\', '/', strtolower($templateFile));
+        foreach ($this->excludedTemplatePaths as $path) {
+            if (str_contains($normalized, strtolower($path))) {
                 return true;
             }
         }
@@ -113,6 +133,13 @@ class InspectorHints implements TemplateEngineInterface
 
         // Skip inspector wrapping for excluded block classes (e.g. Magewire components)
         if ($this->isExcluded(get_class($block))) {
+            return $result;
+        }
+
+        // Skip inspector wrapping for templates in excluded paths (e.g. /magewire/ directories).
+        // Magewire injects wire:id AFTER the template engine returns via regex on the root element.
+        // Wrapping the output in HTML comments before that element breaks the injection.
+        if ($this->isExcludedTemplate($templateFile)) {
             return $result;
         }
 

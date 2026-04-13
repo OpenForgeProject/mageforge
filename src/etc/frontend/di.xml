@@ -16,6 +16,10 @@
                   <argument name="excludedClassPrefixes" xsi:type="array">
                         <item name="magewire" xsi:type="string">Magewirephp\Magewire\</item>
                   </argument>
+                  <!-- Template path substrings excluded from inspector wrapping (case-insensitive) -->
+                  <argument name="excludedTemplatePaths" xsi:type="array">
+                        <item name="magewire" xsi:type="string">magewire/</item>
+                  </argument>
             </arguments>
       </type>
 
