@@ -116,7 +116,17 @@ class InspectorHints implements TemplateEngineInterface
             return $result;
         }
 
-        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire)
+        // Skip inspector wrapping for Magewire component blocks.
+        // Magewire sets a 'magewire' data key on the block before rendering and injects wire:id
+        // via regex AFTER the template engine returns. Wrapping the output in HTML comments
+        // shifts the offset used by insertAttributesIntoHtmlRoot(), causing broken components.
+        // Soft dependency: hasData() is a Magento DataObject method, not a Magewire class.
+        if (method_exists($block, 'hasData') && $block->hasData('magewire')) {
+            return $result;
+        }
+
+        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire).
+        // This catches container blocks whose children have already been rendered with wire attributes.
         if ($this->containsWireAttributes($result)) {
             return $result;
         }
