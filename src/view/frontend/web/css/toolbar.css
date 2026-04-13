@@ -141,6 +141,11 @@
    Audit Menu
    ========================================================================== */
 
+/*
+ * Menu is hidden by default via display:none and animated open/close with
+ * @starting-style + transition-behavior:allow-discrete (Chrome 117+, Safari 17.5+).
+ * Older browsers get an instant show/hide without animation (graceful degradation).
+ */
 .mageforge-toolbar-menu {
     position: absolute;
     bottom: calc(100% + 8px);
@@ -153,7 +158,26 @@
     padding: 6px;
     min-width: 350px;
     font-family: var(--mageforge-font-family);
-    animation: mageforge-toolbar-slide-up 0.15s ease-out;
+    display: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+        opacity 0.15s ease-out,
+        transform 0.15s ease-out,
+        display 0.15s allow-discrete;
+}
+
+.mageforge-toolbar-menu.mageforge-menu-open {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@starting-style {
+    .mageforge-toolbar-menu.mageforge-menu-open {
+        opacity: 0;
+        transform: translateY(8px);
+    }
 }
 
 
@@ -441,6 +465,7 @@
    Animations
    ========================================================================== */
 
+/* mageforge-toolbar-slide-up is still used by the feedback toast */
 @keyframes mageforge-toolbar-slide-up {
     from {
         opacity: 0;

@@ -18,7 +18,6 @@ export const uiMethods = {
         // Menu popup (before buttons so it sits correctly in stacking context)
         this.menu = document.createElement('div');
         this.menu.className = 'mageforge-toolbar-menu';
-        this.menu.style.display = 'none';
 
         const menuTitle = document.createElement('div');
         menuTitle.className = 'mageforge-toolbar-menu-title';
@@ -264,13 +263,13 @@ export const uiMethods = {
 
     openMenu() {
         this.menuOpen = true;
-        this.menu.style.display = 'block';
+        this.menu.classList.add('mageforge-menu-open');
         this.burgerButton.classList.add('mageforge-active');
     },
 
     closeMenu() {
         this.menuOpen = false;
-        this.menu.style.display = 'none';
+        this.menu.classList.remove('mageforge-menu-open');
         this.burgerButton.classList.remove('mageforge-active');
     },
 
