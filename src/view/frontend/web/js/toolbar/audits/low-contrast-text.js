@@ -6,7 +6,7 @@
  * - 3:1 for large text (>=18pt or >=14pt bold)
  */
 
-const HIGHLIGHT_CLASS = 'mageforge-audit-low-contrast';
+import { applyHighlight, clearHighlight } from './highlight.js';
 
 const _colorCanvas = document.createElement('canvas');
 _colorCanvas.width = _colorCanvas.height = 1;
@@ -164,7 +164,7 @@ export default {
      */
     run(context, active) {
         if (!active) {
-            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+            clearHighlight(this.key);
             return;
         }
 
@@ -189,13 +189,6 @@ export default {
             return ratio < threshold;
         });
 
-        if (failing.length === 0) {
-            context.setAuditCounterBadge('low-contrast-text', '0', 'success');
-            return;
-        }
-
-        failing.forEach(el => el.classList.add(HIGHLIGHT_CLASS));
-        failing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        context.setAuditCounterBadge('low-contrast-text', `${failing.length}`, 'error');
+        applyHighlight(failing, this.key, context);
     },
 };

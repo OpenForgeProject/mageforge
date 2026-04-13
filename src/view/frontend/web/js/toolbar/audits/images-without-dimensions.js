@@ -4,7 +4,7 @@
  * Images missing explicit width and height attributes cause Cumulative Layout Shift (CLS).
  */
 
-const HIGHLIGHT_CLASS = 'mageforge-audit-images-without-dimensions';
+import { applyHighlight, clearHighlight } from './highlight.js';
 
 /** @type {import('./index.js').AuditDefinition} */
 export default {
@@ -19,7 +19,7 @@ export default {
      */
     run(context, active) {
         if (!active) {
-            document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(el => el.classList.remove(HIGHLIGHT_CLASS));
+            clearHighlight(this.key);
             return;
         }
 
@@ -30,13 +30,6 @@ export default {
             return !img.hasAttribute('width') || !img.hasAttribute('height');
         });
 
-        if (images.length === 0) {
-            context.setAuditCounterBadge('images-without-dimensions', '0', 'success');
-            return;
-        }
-
-        images.forEach(img => img.classList.add(HIGHLIGHT_CLASS));
-        images[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        context.setAuditCounterBadge('images-without-dimensions', `${images.length}`, 'error');
+        applyHighlight(images, this.key, context);
     },
 };
