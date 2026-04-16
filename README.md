@@ -2,10 +2,24 @@
 
 ![Mageforge Hero](./.github/assets/mageforge-hero.jpg)
 
-[![Release](https://img.shields.io/github/v/release/OpenForgeProject/mageforge)](https://github.com/OpenForgeProject/mageforge/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE) [![CodeFactor](https://www.codefactor.io/repository/github/openforgeproject/mageforge/badge)](https://www.codefactor.io/repository/github/openforgeproject/mageforge) [![Magento Compatibility Test](https://github.com/OpenForgeProject/mageforge/actions/workflows/magento-compatibility.yml/badge.svg)](https://github.com/OpenForgeProject/mageforge/actions/workflows/magento-compatibility.yml) [![Magento Functional Tests](https://github.com/OpenForgeProject/mageforge/actions/workflows/functional-tests.yml/badge.svg)](https://github.com/OpenForgeProject/mageforge/actions/workflows/functional-tests.yml)
+[![Release](https://img.shields.io/github/v/release/OpenForgeProject/mageforge)](https://github.com/OpenForgeProject/mageforge/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
+MageForge is a powerful CLI front-end development toolkit for Magento 2 that simplifies theme development workflows. It provides tools for many types of Magento themes and can be easily extended for custom themes.
 
-MageForge is a powerful CLI front-end development toolkit for Magento 2 that simplifies theme development workflows. It provides tools for many types of Magento themes and can be easily extended for your custom theme. With MageForge, themes can be built lightning fast, without your developers having to worry about the details. MageForge eliminates complex configuration requirements and significantly reduces setup time, allowing Magento developers to focus on creative aspects instead of struggling with build processes.
+## Table of Contents
+
+- [Supported Magento Versions](#supported-magento-versions)
+- [Features](#features)
+  - [Supported Theme-Types](#supported-theme-types-)
+  - [Available Commands](#available-commands)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Quick Start Guide](#quick-start-guide)
+  - [Frontend Inspector](#frontend-inspector-️)
+- [Additional Documentation](#additional-documentation)
+- [Support](#support)
+- [Project Information](#project-information)
+- [Credits](#credits)
 
 ## Supported Magento Versions
 
@@ -111,7 +125,6 @@ The **MageForge Inspector** is a powerful developer tool that allows you to insp
    ```
    *(Note: Requires Magento Developer Mode)*
 
-
 2. **Enable the Inspector in Magento Admin Settings**
 You can activate the Inspector in Magento Admin under `Stores > Configuration > MageForge > Frontend Inspector`.
 
@@ -125,8 +138,6 @@ bin/magento mageforge:theme:inspector disable
 ```
 
 > **Note:** The Inspector is currently not compatible with **Magewire** components. Magewire blocks are automatically excluded from inspection to prevent rendering errors.
-
-
 
 ---
 
