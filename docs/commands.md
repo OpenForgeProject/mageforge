@@ -54,6 +54,10 @@ bin/magento mageforge:theme:list
 bin/magento mageforge:theme:build [<themeCodes>...]
 ```
 
+**Aliases**:
+
+- `frontend:build`
+
 **Implementation Details**:
 
 - `themeCodes` accepts single themes (`Vendor/theme`) or just the vendor name (`Vendor`) to target all themes of a specific vendor.
@@ -63,7 +67,6 @@ bin/magento mageforge:theme:build [<themeCodes>...]
   2. Determines the appropriate builder for the theme type
   3. Executes the build process
 - Displays a summary of built themes and execution time
-- Has an alias: `frontend:build`
 
 ---
 
@@ -85,13 +88,20 @@ bin/magento mageforge:theme:build [<themeCodes>...]
 bin/magento mageforge:theme:watch [--theme=THEME]
 ```
 
+**Aliases**:
+
+- `frontend:watch`
+
+**Options**:
+
+- `--theme=THEME` - Theme code in format `Vendor/theme` to watch
+
 **Implementation Details**:
 
 - If no theme code is provided, displays an interactive prompt to select a theme
 - Resolves the theme path
 - Determines the appropriate builder for the theme type
 - Starts a watch process that monitors for file changes
-- Has an alias: `frontend:watch`
 
 ---
 
@@ -163,7 +173,7 @@ bin/magento mageforge:system:check
 
 ---
 
-### 5. VersionCommand (`mageforge:version`)
+### 6. VersionCommand (`mageforge:version`)
 
 **Purpose**: Displays the current and latest version of the MageForge module.
 
@@ -185,9 +195,11 @@ bin/magento mageforge:version
 - Fetches the latest version from GitHub API
 - Displays both versions for comparison
 
+> **Note**: This command requires a `composer.lock` file to be present in the Magento root directory. If `composer.lock` is absent (e.g., gitignored or not yet generated), the current version cannot be determined.
+
 ---
 
-### 6. CompatibilityCheckCommand (`mageforge:hyva:compatibility:check`)
+### 7. CompatibilityCheckCommand (`mageforge:hyva:compatibility:check`)
 
 **Purpose**: Scans all Magento modules for Hyvä theme compatibility issues such as RequireJS, Knockout.js, jQuery, and UI Components usage.
 
@@ -211,7 +223,6 @@ bin/magento mageforge:hyva:compatibility:check [options]
 **Options**:
 
 - `--show-all` / `-a` - Show all modules including compatible ones
-- `--third-party-only` / `-t` - Check only third-party modules (exclude Magento\_\* modules)
 - `--include-vendor` - Include Magento core modules in scan (default: third-party only)
 - `--detailed` / `-d` - Show detailed file-level issues for incompatible modules
 
@@ -314,7 +325,7 @@ _PHTML Files (.phtml)_:
 
 ---
 
-### 7. TokensCommand (`mageforge:hyva:tokens`)
+### 8. TokensCommand (`mageforge:hyva:tokens`)
 
 **Purpose**: Generates Hyvä design tokens from design.tokens.json or hyva.config.json configuration files.
 
@@ -388,7 +399,7 @@ bin/magento mageforge:hyva:tokens Hyva/default
 
 ---
 
-### 8. InspectorCommand (`mageforge:theme:inspector`)
+### 9. InspectorCommand (`mageforge:theme:inspector`)
 
 **Purpose**: Enable, disable, or check status of the MageForge Frontend Inspector - an interactive element inspector for debugging templates, blocks, and modules in the frontend.
 
