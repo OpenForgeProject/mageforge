@@ -17,6 +17,18 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.19.1](https://github.com/OpenForgeProject/mageforge/compare/0.19.0...0.19.1) (2026-04-22)
+
+
+### Fixed
+
+* remove cacheable attribute from inspector block ([#174](https://github.com/OpenForgeProject/mageforge/issues/174)) ([e12e44e](https://github.com/OpenForgeProject/mageforge/commit/e12e44ecaf5b1372705fe90ef01f476e554e1639))
+
+
+### Documentation
+
+* Fix commands.md numbering, missing sections, and flag inconsistencies ([#172](https://github.com/OpenForgeProject/mageforge/issues/172)) ([ba5498f](https://github.com/OpenForgeProject/mageforge/commit/ba5498fe8d5741d03da2fb5350003c2f5085d07f))
+
 ## [0.19.0](https://github.com/OpenForgeProject/mageforge/compare/0.18.0...0.19.0) (2026-04-13)
 
 
