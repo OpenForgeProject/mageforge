@@ -281,5 +281,6 @@ export const uiMethods = {
         if (this.container && this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
         }
+        this.container = null;
     },
 };

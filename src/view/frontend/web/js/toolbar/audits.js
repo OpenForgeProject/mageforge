@@ -51,7 +51,6 @@ export const auditMethods = {
             if (audit) audit.run(this, false);
             this.setAuditActive(key, false);
         });
-        this.activeAudits.clear();
         this.updateToggleAllButton();
     },
 
