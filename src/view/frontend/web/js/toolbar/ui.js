@@ -132,6 +132,7 @@ export const uiMethods = {
         const header = document.createElement('button');
         header.type = 'button';
         header.className = 'mageforge-toolbar-menu-group-header';
+        header.setAttribute('aria-expanded', String(!this.collapsedGroups.has(key)));
         header.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
