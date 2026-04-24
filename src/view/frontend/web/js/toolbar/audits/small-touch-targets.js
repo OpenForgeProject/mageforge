@@ -1,8 +1,8 @@
 /**
  * MageForge Toolbar Audit – Small Touch Targets
  *
- * Interactive elements smaller than 44×44 CSS pixels are hard to tap on
- * touch devices (WCAG 2.5.5 Target Size, Level AAA; WCAG 2.5.8 Level AA).
+ * Interactive elements smaller than 24×24 CSS pixels fail the minimum touch
+ * target size for touch devices (WCAG 2.5.8 Target Size Minimum, Level AA).
  *
  * Icon source: Tabler Icons (MIT)
  */
