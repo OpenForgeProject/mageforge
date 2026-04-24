@@ -127,6 +127,9 @@ export function clearHighlight(key) {
  * @param {object}     context  - Alpine toolbar component instance
  */
 export function applyHighlight(elements, key, context) {
+    // Never flag elements that are part of the MageForge Toolbar itself
+    elements = elements.filter(el => !el.closest('.mageforge-toolbar'));
+
     if (elements.length === 0) {
         context.setAuditCounterBadge(key, '0', 'success');
         return;
