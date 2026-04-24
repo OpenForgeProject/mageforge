@@ -23,6 +23,8 @@
     --mageforge-color-orange: #fb923c;
     --mageforge-color-pink: #C850C0;
     --mageforge-color-amber: #edb04d;
+    --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
+    --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
     --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
     --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
     --mageforge-border-color: rgba(148, 163, 184, 0.15);
@@ -146,12 +148,14 @@
     bottom: calc(100% + 8px);
     left: 0;
     background: linear-gradient(135deg, var(--mageforge-bg-dark) 0%, var(--mageforge-bg-dark-alt) 100%);
-    backdrop-filter: blur(12px);
     border: 1px solid var(--mageforge-border-color);
     border-radius: 10px;
-    box-shadow: 0 -8px 24px var(--mageforge-shadow-lg), 0 4px 8px var(--mageforge-shadow-sm);
-    padding: 6px;
+    box-shadow: 0 -8px 24px var(--mageforge-shadow-lg), 0 6px 10px var(--mageforge-shadow-sm);
+    padding: 0 6px 6px;
     min-width: 350px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     font-family: var(--mageforge-font-family);
     display: none;
     opacity: 0;
@@ -177,11 +181,16 @@
 
 .mageforge-toolbar-menu-title {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 8px 2px;
+    padding: 10px 8px 2px;
     border-bottom: 1px solid var(--mageforge-border-color);
     margin-bottom: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, var(--mageforge-bg-dark) 0%, var(--mageforge-bg-dark-alt) 100%);
 }
 
 .mageforge-toolbar-menu-title-text {
@@ -194,11 +203,12 @@
     background-image: var(--gradient-brand);
     background-clip: text;
     -webkit-background-clip: text;
+    display: block;
 }
 
 .mageforge-toolbar-menu-close {
     background: none;
-    border: none;
+    border: 1px solid var(--mageforge-border-color);
     cursor: pointer;
     color: var(--mageforge-color-slate-400);
     padding: 6px;
@@ -252,6 +262,15 @@
 
 .mageforge-toolbar-menu-item.mageforge-active--error .mageforge-toolbar-menu-label {
     color: var(--mageforge-color-red);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--warning {
+    background: var(--mageforge-color-amber-alpha-15);
+    border-color: var(--mageforge-color-amber-alpha-35);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--warning .mageforge-toolbar-menu-label {
+    color: var(--mageforge-color-amber);
 }
 
 .mageforge-toolbar-menu-icon {
@@ -309,9 +328,17 @@
 }
 
 .mageforge-toolbar-menu-desc {
-    font-size: 10px;
     color: var(--mageforge-color-slate-400);
+    font-size: 11px;
     line-height: 1.3;
+    user-select: text;
+    cursor: text;
+}
+
+.mageforge-toolbar-menu-desc.mageforge-active {
+    color: var(--mageforge-color-orange);
+    font-size: 12px;
+    user-select: text;
 }
 
 .mageforge-toolbar-menu-label-row {
@@ -349,6 +376,12 @@
     color: var(--mageforge-color-red);
     background: var(--mageforge-color-red-alpha-15);
     border: 1px solid var(--mageforge-color-red-alpha-35);
+}
+
+.mageforge-toolbar-menu-status--warning {
+    color: var(--mageforge-color-amber);
+    background: var(--mageforge-color-amber-alpha-15);
+    border: 1px solid var(--mageforge-color-amber-alpha-35);
 }
 
 /* ============================================================================
@@ -419,6 +452,12 @@
     outline: 3px solid var(--mageforge-color-red);
     outline-offset: 0;
     z-index: 9999997;
+}
+
+.mageforge-audit-overlay--warning {
+    background-color: var(--mageforge-color-amber-alpha-35);
+    outline-color: var(--mageforge-color-amber);
+    outline-style: dashed;
 }
 
 /* ============================================================================

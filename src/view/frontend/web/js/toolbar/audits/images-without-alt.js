@@ -21,13 +21,35 @@ export default {
             return;
         }
 
-        const images = Array.from(document.querySelectorAll('img')).filter(img => {
+        const visible = Array.from(document.querySelectorAll('img')).filter(img => {
             if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
             const style = getComputedStyle(img);
-            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
-            return !img.hasAttribute('alt') || img.getAttribute('alt').trim() === '';
+            return style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
         });
 
-        applyHighlight(images, this.key, context);
+        // Errors: missing alt attribute or whitespace-only alt (e.g. alt="  ")
+        const errors = visible.filter(img => {
+            if (!img.hasAttribute('alt')) return true;
+            const val = img.getAttribute('alt');
+            return val.length > 0 && val.trim() === '';
+        });
+
+        // Warnings: explicit alt="" – intentionally decorative, but flagged for review
+        const warnings = visible.filter(img => img.getAttribute('alt') === '');
+
+        const total = errors.length + warnings.length;
+        if (total === 0) {
+            context.setAuditCounterBadge(this.key, '0', 'success');
+            return;
+        }
+
+        applyHighlight(errors,   this.key, context, { skipBadge: true });
+        applyHighlight(warnings, this.key, context, { severity: 'warning', skipBadge: true });
+
+        // Scroll to first issue (errors take priority)
+        const first = errors[0] ?? warnings[0];
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        context.setAuditCounterBadge(this.key, `${total}`, errors.length > 0 ? 'error' : 'warning');
     },
 };

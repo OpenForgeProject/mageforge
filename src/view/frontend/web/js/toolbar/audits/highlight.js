@@ -50,11 +50,13 @@ function scheduleUpdate() {
  * Returns a cleanup function that removes the overlay and deregisters it.
  *
  * @param {Element} el
+ * @param {'error'|'warning'} [severity='error']
  * @returns {function} cleanup
  */
-function createOverlay(el) {
+function createOverlay(el, severity = 'error') {
     const overlay = document.createElement('span');
     overlay.className = AUDIT_OVERLAY_CLASS;
+    if (severity === 'warning') overlay.classList.add('mageforge-audit-overlay--warning');
     document.body.appendChild(overlay);
 
     function update() {
@@ -122,13 +124,22 @@ export function clearHighlight(key) {
  * the first result, and updates the counter badge on the toolbar menu item.
  * Works for any element type – no special casing required in audit code.
  *
- * @param {Element[]}  elements - Elements to mark
- * @param {string}     key      - Audit key (e.g. 'images-without-alt')
- * @param {object}     context  - Alpine toolbar component instance
+ * @param {Element[]}  elements        - Elements to mark
+ * @param {string}     key             - Audit key (e.g. 'images-without-alt')
+ * @param {object}     context         - Alpine toolbar component instance
+ * @param {object}     [options={}]    - Options
+ * @param {'error'|'warning'} [options.severity='error'] - Visual severity level
+ * @param {boolean}    [options.skipBadge=false]  - Skip badge + scroll update
  */
-export function applyHighlight(elements, key, context) {
+export function applyHighlight(elements, key, context, options = {}) {
+    const severity = options.severity ?? 'error';
+    const skipBadge = options.skipBadge ?? false;
+
+    // Never flag elements that are part of the MageForge Toolbar itself
+    elements = elements.filter(el => !el.closest('.mageforge-toolbar'));
+
     if (elements.length === 0) {
-        context.setAuditCounterBadge(key, '0', 'success');
+        if (!skipBadge) context.setAuditCounterBadge(key, '0', 'success');
         return;
     }
     const cls = `mageforge-audit-${key}`;
@@ -139,11 +150,13 @@ export function applyHighlight(elements, key, context) {
             existing.keys.add(key);
         } else {
             overlayRegistry.set(el, {
-                cleanup: createOverlay(el),
+                cleanup: createOverlay(el, severity),
                 keys: new Set([key]),
             });
         }
     });
-    elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    context.setAuditCounterBadge(key, `${elements.length}`, 'error');
+    if (!skipBadge) {
+        elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        context.setAuditCounterBadge(key, `${elements.length}`, severity);
+    }
 }
