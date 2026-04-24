@@ -594,6 +594,11 @@
         bottom: 10px;
         left: 10px;
     }
+    .mageforge-toolbar-menu {
+        min-width: 300px;
+        max-height: calc(100vh - 60px);
+        overflow: auto;
+    }
     .mageforge-toolbar-burger-label {
         display: none;
     }
