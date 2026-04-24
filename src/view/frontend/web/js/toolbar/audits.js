@@ -51,7 +51,6 @@ export const auditMethods = {
             if (audit) audit.run(this, false);
             this.setAuditActive(key, false);
         });
-        this.activeAudits.clear();
         this.updateToggleAllButton();
     },
 
@@ -88,7 +87,10 @@ export const auditMethods = {
         if (!this.menu) return;
         const group = this.menu.querySelector(`[data-group-key="${key}"]`);
         if (group) {
-            group.classList.toggle('mageforge-toolbar-menu-group--collapsed', this.collapsedGroups.has(key));
+            const isCollapsed = this.collapsedGroups.has(key);
+            group.classList.toggle('mageforge-toolbar-menu-group--collapsed', isCollapsed);
+            const header = group.querySelector('.mageforge-toolbar-menu-group-header');
+            if (header) header.setAttribute('aria-expanded', String(!isCollapsed));
         }
     },
 

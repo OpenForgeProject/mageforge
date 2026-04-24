@@ -86,6 +86,8 @@ export const uiMethods = {
         this.burgerButton.className = 'mageforge-toolbar-burger';
         this.burgerButton.type = 'button';
         this.burgerButton.title = 'Audit tools';
+        this.burgerButton.setAttribute('aria-label', 'MageForge Toolbar');
+        this.burgerButton.setAttribute('aria-expanded', 'false');
         this.burgerButton.innerHTML = `
             <span class="mageforge-toolbar-burger-icon">
                 <span class="mageforge-toolbar-burger-bar"></span>
@@ -131,6 +133,7 @@ export const uiMethods = {
         const header = document.createElement('button');
         header.type = 'button';
         header.className = 'mageforge-toolbar-menu-group-header';
+        header.setAttribute('aria-expanded', String(!this.collapsedGroups.has(key)));
         header.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -265,12 +268,14 @@ export const uiMethods = {
         this.menuOpen = true;
         this.menu.classList.add('mageforge-menu-open');
         this.burgerButton.classList.add('mageforge-active');
+        this.burgerButton.setAttribute('aria-expanded', 'true');
     },
 
     closeMenu() {
         this.menuOpen = false;
         this.menu.classList.remove('mageforge-menu-open');
         this.burgerButton.classList.remove('mageforge-active');
+        this.burgerButton.setAttribute('aria-expanded', 'false');
     },
 
     destroyToolbar() {
@@ -281,5 +286,10 @@ export const uiMethods = {
         if (this.container && this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
         }
+        this.container = null;
+        this.menu = null;
+        this.burgerButton = null;
+        this.toggleAllButton = null;
+        this.menuOpen = false;
     },
 };
