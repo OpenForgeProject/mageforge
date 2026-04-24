@@ -9,14 +9,14 @@
 
 import { applyHighlight, clearHighlight } from './highlight.js';
 
-const MIN_SIZE = 44;
+const MIN_SIZE = 24;
 
 /** @type {import('./index.js').AuditDefinition} */
 export default {
     key: 'small-touch-targets',
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path><path d="M12 7a5 5 0 1 0 5 5"></path><path d="M15 3l0 4l4 0"></path><path d="M15 7l5 -5"></path></svg>',
     label: 'Small Touch Targets',
-    description: `Highlight interactive elements smaller than ${MIN_SIZE}×${MIN_SIZE} px (WCAG 2.5.5)`,
+    description: `Highlight interactive elements smaller than ${MIN_SIZE}×${MIN_SIZE} px (WCAG 2.5.8 AA)`,
 
     /**
      * @param {object} context - Alpine toolbar component instance
