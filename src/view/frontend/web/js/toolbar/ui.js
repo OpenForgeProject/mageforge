@@ -287,5 +287,9 @@ export const uiMethods = {
             this.container.parentNode.removeChild(this.container);
         }
         this.container = null;
+        this.menu = null;
+        this.burgerButton = null;
+        this.toggleAllButton = null;
+        this.menuOpen = false;
     },
 };
