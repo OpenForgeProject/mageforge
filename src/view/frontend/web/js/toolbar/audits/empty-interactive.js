@@ -24,7 +24,7 @@ export default {
             return;
         }
 
-        const elements = Array.from(document.querySelectorAll('a, button')).filter(el => {
+        const elements = Array.from(document.querySelectorAll('a[href], button')).filter(el => {
             // Visibility check
             if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') return false;
             const style = getComputedStyle(el);

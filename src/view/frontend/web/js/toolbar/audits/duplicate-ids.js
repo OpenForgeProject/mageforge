@@ -24,7 +24,7 @@ export default {
     run(context, active) {
         if (!active) {
             clearHighlight(this.key);
-            context.setAuditDescription(this.key, 'Highlight elements sharing an ID with at least one other element');
+            context.setAuditDescription(this.key, this.description);
             return;
         }
 

@@ -29,19 +29,20 @@ export default {
         }
 
         const selector = [
-            'a[href]',
-            'button',
-            '[role="button"]',
-            '[role="link"]',
-            '[role="checkbox"]',
-            '[role="radio"]',
-            '[role="switch"]',
-            'input:not([type="hidden"])',
-            'select',
-            'textarea',
+            'a[href]:not([aria-disabled="true"])',
+            'button:not([disabled]):not([aria-disabled="true"])',
+            '[role="button"]:not([aria-disabled="true"])',
+            '[role="link"]:not([aria-disabled="true"])',
+            '[role="checkbox"]:not([aria-disabled="true"])',
+            '[role="radio"]:not([aria-disabled="true"])',
+            '[role="switch"]:not([aria-disabled="true"])',
+            'input:not([type="hidden"]):not([disabled]):not([aria-disabled="true"])',
+            'select:not([disabled]):not([aria-disabled="true"])',
+            'textarea:not([disabled]):not([aria-disabled="true"])',
         ].join(', ');
 
         const elements = Array.from(document.querySelectorAll(selector)).filter(el => {
+            if (el.matches('[disabled], [aria-disabled="true"]')) return false;
             if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') return false;
             const style = getComputedStyle(el);
             if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
