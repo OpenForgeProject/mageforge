@@ -86,6 +86,7 @@ export const uiMethods = {
         this.burgerButton.className = 'mageforge-toolbar-burger';
         this.burgerButton.type = 'button';
         this.burgerButton.title = 'Audit tools';
+        this.burgerButton.setAttribute('aria-expanded', 'false');
         this.burgerButton.innerHTML = `
             <span class="mageforge-toolbar-burger-icon">
                 <span class="mageforge-toolbar-burger-bar"></span>
@@ -265,12 +266,14 @@ export const uiMethods = {
         this.menuOpen = true;
         this.menu.classList.add('mageforge-menu-open');
         this.burgerButton.classList.add('mageforge-active');
+        this.burgerButton.setAttribute('aria-expanded', 'true');
     },
 
     closeMenu() {
         this.menuOpen = false;
         this.menu.classList.remove('mageforge-menu-open');
         this.burgerButton.classList.remove('mageforge-active');
+        this.burgerButton.setAttribute('aria-expanded', 'false');
     },
 
     destroyToolbar() {
