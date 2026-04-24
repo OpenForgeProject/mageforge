@@ -23,6 +23,8 @@
     --mageforge-color-orange: #fb923c;
     --mageforge-color-pink: #C850C0;
     --mageforge-color-amber: #edb04d;
+    --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
+    --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
     --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
     --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
     --mageforge-border-color: rgba(148, 163, 184, 0.15);
@@ -262,6 +264,15 @@
     color: var(--mageforge-color-red);
 }
 
+.mageforge-toolbar-menu-item.mageforge-active--warning {
+    background: var(--mageforge-color-amber-alpha-15);
+    border-color: var(--mageforge-color-amber-alpha-35);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--warning .mageforge-toolbar-menu-label {
+    color: var(--mageforge-color-amber);
+}
+
 .mageforge-toolbar-menu-icon {
     font-size: 16px;
     flex-shrink: 0;
@@ -367,6 +378,12 @@
     border: 1px solid var(--mageforge-color-red-alpha-35);
 }
 
+.mageforge-toolbar-menu-status--warning {
+    color: var(--mageforge-color-amber);
+    background: var(--mageforge-color-amber-alpha-15);
+    border: 1px solid var(--mageforge-color-amber-alpha-35);
+}
+
 /* ============================================================================
    Menu Groups
    ========================================================================== */
@@ -435,6 +452,12 @@
     outline: 3px solid var(--mageforge-color-red);
     outline-offset: 0;
     z-index: 9999997;
+}
+
+.mageforge-audit-overlay--warning {
+    background-color: var(--mageforge-color-amber-alpha-35);
+    outline-color: var(--mageforge-color-amber);
+    outline-style: dashed;
 }
 
 /* ============================================================================

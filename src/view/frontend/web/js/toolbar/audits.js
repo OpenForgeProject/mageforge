@@ -129,7 +129,8 @@ export const auditMethods = {
         if (!status) return;
         status.textContent = message;
         status.className = `mageforge-toolbar-menu-status mageforge-toolbar-menu-status--${type}`;
-        // Reflect error/success on the active item background
+        // Reflect error/warning/success on the active item background
         item.classList.toggle('mageforge-active--error', type === 'error');
+        item.classList.toggle('mageforge-active--warning', type === 'warning');
     },
 };

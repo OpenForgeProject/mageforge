@@ -38,8 +38,8 @@ export default {
             // Text content (excluding whitespace-only)
             if (el.textContent.trim()) return false;
 
-            // Child <img> with non-empty alt
-            if (el.querySelector('img[alt]:not([alt=""])')) return false;
+            // Child <img> with non-empty alt (trimmed)
+            if (Array.from(el.querySelectorAll('img[alt]')).some(img => img.getAttribute('alt')?.trim())) return false;
 
             // Child <svg> with a <title> element
             if (el.querySelector('svg title')?.textContent.trim()) return false;

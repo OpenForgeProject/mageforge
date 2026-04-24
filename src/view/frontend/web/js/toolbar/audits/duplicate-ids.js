@@ -56,6 +56,8 @@ export default {
                 this.key,
                 `Duplicate: ${duplicateIdNames.join(', ')}`
             );
+        } else {
+            context.setAuditDescription(this.key, this.description);
         }
 
         applyHighlight(duplicates, this.key, context);
