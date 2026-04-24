@@ -34,6 +34,7 @@ export default {
         document.querySelectorAll('[id]').forEach(el => {
             const id = el.id;
             if (!id) return;
+            if (el.closest('.mageforge-toolbar')) return;
             if (!idMap.has(id)) {
                 idMap.set(id, []);
             }
