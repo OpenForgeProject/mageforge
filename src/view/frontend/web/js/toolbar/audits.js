@@ -95,6 +95,26 @@ export const auditMethods = {
     },
 
     /**
+     * Update the description text of an audit menu item.
+     * Useful for audits that want to surface detail (e.g. which IDs are duplicated).
+     *
+     * @param {string} key
+     * @param {string} text
+     */
+    setAuditDescription(key, text) {
+        if (!this.menu) return;
+        const item = this.menu.querySelector(`[data-audit-key="${key}"]`);
+        if (!item) return;
+        const desc = item.querySelector('.mageforge-toolbar-menu-desc');
+        if (!desc) return;
+        const originalText = desc.dataset.originalText ?? desc.textContent;
+        if (!desc.dataset.originalText) desc.dataset.originalText = originalText;
+        const isChanged = text !== originalText;
+        desc.textContent = text;
+        desc.classList.toggle('mageforge-active', isChanged);
+    },
+
+    /**
      * Set the inline counter badge of an audit menu item.
      *
      * @param {string} key

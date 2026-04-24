@@ -207,7 +207,12 @@ export const uiMethods = {
         const descEl = document.createElement('span');
         descEl.className = 'mageforge-toolbar-menu-desc';
         descEl.textContent = description;
-
+        descEl.addEventListener('click', e => {
+            if (descEl.classList.contains('mageforge-active')) e.stopPropagation();
+        });
+        descEl.addEventListener('mousedown', e => {
+            if (descEl.classList.contains('mageforge-active')) e.stopPropagation();
+        });
         const textEl = document.createElement('span');
         textEl.className = 'mageforge-toolbar-menu-text';
         textEl.appendChild(labelRowEl);
