@@ -45,6 +45,7 @@ function _registerMageforgeToolbar() {
         },
 
         destroy() {
+            this.deactivateAllAudits();
             if (this._outsideClickHandler) {
                 document.removeEventListener('click', this._outsideClickHandler);
                 this._outsideClickHandler = null;
