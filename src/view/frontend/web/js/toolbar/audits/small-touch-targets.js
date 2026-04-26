@@ -45,7 +45,7 @@ export default {
             if (el.matches('[disabled], [aria-disabled="true"]')) return false;
             if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') return false;
             const style = getComputedStyle(el);
-            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            if (style.visibility === 'hidden' || style.display === 'none' || parseFloat(style.opacity) === 0) return false;
 
             const rect = el.getBoundingClientRect();
             return rect.width < MIN_SIZE || rect.height < MIN_SIZE;

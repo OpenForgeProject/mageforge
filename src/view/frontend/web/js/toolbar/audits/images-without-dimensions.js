@@ -26,7 +26,7 @@ export default {
         const images = Array.from(document.querySelectorAll('img')).filter(img => {
             if (!img.offsetParent && getComputedStyle(img).position !== 'fixed') return false;
             const style = getComputedStyle(img);
-            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            if (style.visibility === 'hidden' || style.display === 'none' || parseFloat(style.opacity) === 0) return false;
             return !img.hasAttribute('width') || !img.hasAttribute('height');
         });
 

@@ -30,7 +30,7 @@ export default {
             if (type !== null && type.trim() !== '') return false;
             if (!btn.offsetParent && getComputedStyle(btn).position !== 'fixed') return false;
             const style = getComputedStyle(btn);
-            if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') return false;
+            if (style.visibility === 'hidden' || style.display === 'none' || parseFloat(style.opacity) === 0) return false;
             return true;
         });
 
