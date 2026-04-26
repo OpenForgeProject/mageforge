@@ -17,6 +17,44 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.20.0](https://github.com/OpenForgeProject/mageforge/compare/0.19.1...0.20.0) (2026-04-26)
+
+
+### Added
+
+* add additional audits for accessibility and usability checks ([2dfea0d](https://github.com/OpenForgeProject/mageforge/commit/2dfea0de47b1e9b59f92260448ff5c679bdc2577))
+* add additional audits for accessibility and usability checks ([ad30fe9](https://github.com/OpenForgeProject/mageforge/commit/ad30fe9461e8f31b7258e877ae7771829f530eb3))
+* add additional check for elements within the toolbar ([877edcd](https://github.com/OpenForgeProject/mageforge/commit/877edcd5269bdee8eb04429d1b493479113722b5))
+* add warning styles and enhance audit checks for toolbar elements ([cfab08a](https://github.com/OpenForgeProject/mageforge/commit/cfab08ac520451ddefac021f4594f433917bdf2f))
+* clarify description for unsafe target="_blank" audit ([2df5ff2](https://github.com/OpenForgeProject/mageforge/commit/2df5ff2f5ce91adbd48ed8d094da5ecfc5f8036a))
+* enhance audits for duplicate IDs and interactive elements ([002d30f](https://github.com/OpenForgeProject/mageforge/commit/002d30fda814240cbb1122f2823521eb12c64607))
+* exclude toolbar elements from highlight application ([bfdcc29](https://github.com/OpenForgeProject/mageforge/commit/bfdcc29a6362cb0b8a2085f66228b30aaa9d9236))
+* update minimum size for small touch targets audit ([d492c1e](https://github.com/OpenForgeProject/mageforge/commit/d492c1edcb7dc99389f3fadfb59fe8aa5cc6827c))
+* update touch target size description for accessibility audit ([81ae5e4](https://github.com/OpenForgeProject/mageforge/commit/81ae5e42b782c2a619503a6ee9c0e8dc598af7ea))
+
+
+### Fixed
+
+* add aria-expanded attribute for burger button accessibility ([363403b](https://github.com/OpenForgeProject/mageforge/commit/363403b0252c79db27d8d3e6367cae13cd8ecac9))
+* cast show labels to integer for consistent data attribute ([37658fb](https://github.com/OpenForgeProject/mageforge/commit/37658fb5e1c3e98dd800722f2c95761da4612d42))
+* disable inspector in config and update layout reference ([#175](https://github.com/OpenForgeProject/mageforge/issues/175)) ([99c71a9](https://github.com/OpenForgeProject/mageforge/commit/99c71a9d4566bf90782e7e26a72edc3ff3ab5486))
+* enhance constructor PHPDoc for Inspector and ThemeSuggester classes ([ad2eb35](https://github.com/OpenForgeProject/mageforge/commit/ad2eb35a77dfef3a93689cd0b26d5ad4cfa8e201))
+* ensure audits are deactivated on toolbar destruction ([b1a16fd](https://github.com/OpenForgeProject/mageforge/commit/b1a16fd2770b62e7524da5139f30ab85148e31f5))
+* improve type safety and clean up PHPDoc in Inspector block ([0c63ac3](https://github.com/OpenForgeProject/mageforge/commit/0c63ac316f32e8f8b74892f8b53f85988eefe883))
+* normalise opacity visibility check across all toolbar audits ([0fb1642](https://github.com/OpenForgeProject/mageforge/commit/0fb16422ef56c406c3d053a6145c2ebadda417ec))
+* refine theme path matching and enhance theme suggestion logic ([3484f34](https://github.com/OpenForgeProject/mageforge/commit/3484f349bf7ab660b9f5574811d675de2ca75f3f))
+* refine theme path matching and enhance theme suggestion logic ([fc1747b](https://github.com/OpenForgeProject/mageforge/commit/fc1747b90cba6a28176225aee7631a1d1744df70))
+* streamline toolbar destruction process and clean up references ([65221fe](https://github.com/OpenForgeProject/mageforge/commit/65221fe830848b823b63c3d0806864e28309f2d0))
+* toolbar fixes ([#177](https://github.com/OpenForgeProject/mageforge/issues/177)) ([f4382b5](https://github.com/OpenForgeProject/mageforge/commit/f4382b52420954e039820b96cc55fa5c8bbecf29))
+* update aria-expanded attribute for collapsible menu groups ([96ac5e1](https://github.com/OpenForgeProject/mageforge/commit/96ac5e17591ce181484d0bbbb8f3237adb21accd))
+
+
+### Styling
+
+* adjust toolbar dimensions for better usability on small devices ([d41c6e2](https://github.com/OpenForgeProject/mageforge/commit/d41c6e2bfb8eb1659d9dd23a37e40aaf79b9f278))
+* update toolbar CSS for improved visibility ([84f80de](https://github.com/OpenForgeProject/mageforge/commit/84f80de1ab7884fe057e27d7356d4e9c31b815a5))
+* update toolbar for improved design ([4871193](https://github.com/OpenForgeProject/mageforge/commit/48711932074ec8867cfb63bd97addccf389b4783))
+
 ## [0.19.1](https://github.com/OpenForgeProject/mageforge/compare/0.19.0...0.19.1) (2026-04-22)
 
 
