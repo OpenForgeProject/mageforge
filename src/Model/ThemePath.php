@@ -27,7 +27,7 @@ class ThemePath
     {
         $registeredThemes = $this->componentRegistrar->getPaths(ComponentRegistrar::THEME);
         foreach ($registeredThemes as $code => $path) {
-            if (str_contains($code, $themeCode)) {
+            if ($code === 'frontend/' . $themeCode || $code === 'adminhtml/' . $themeCode) {
                 return $path;
             }
         }

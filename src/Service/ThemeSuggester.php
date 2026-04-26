@@ -18,11 +18,6 @@ class ThemeSuggester
      */
     private const MAX_SUGGESTIONS = 3;
 
-    /**
-     * Constructor
-     *
-     * @param ThemeList $themeList
-     */
     public function __construct(
         private readonly ThemeList $themeList,
     ) {
@@ -41,13 +36,17 @@ class ThemeSuggester
      */
     public function findSimilarThemes(string $invalidTheme): array
     {
+        if ($invalidTheme === '') {
+            return [];
+        }
+
         $themes = $this->themeList->getAllThemes();
         $threshold = (int) (strlen($invalidTheme) / 3);
         $suggestions = [];
 
         foreach ($themes as $theme) {
             $themeCode = $theme->getCode();
-            $distance = levenshtein($invalidTheme, $themeCode);
+            $distance = levenshtein(strtolower($invalidTheme), strtolower($themeCode));
 
             // Accept if: distance ≤ 1/3 of input length OR substring match (case-insensitive)
             if ($distance <= $threshold || str_contains(strtolower($themeCode), strtolower($invalidTheme))) {
@@ -55,10 +54,8 @@ class ThemeSuggester
             }
         }
 
-        // Sort by distance (best matches first)
         asort($suggestions);
 
-        // Return max 3 suggestions
         return array_slice(array_keys($suggestions), 0, self::MAX_SUGGESTIONS);
     }
 }
