@@ -20,7 +20,14 @@ class Inspector extends Template
     private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
     private const XML_PATH_SHOW_BUTTON_LABELS = 'mageforge/inspector/show_button_labels';
 
-    /** @phpstan-param array<string, mixed> $data */
+    /**
+     * @param Context $context
+     * @param State $state
+     * @param ScopeConfigInterface $scopeConfig
+     * @param DevHelper $devHelper
+     * @param array $data
+     * @phpstan-param array<string, mixed> $data
+     */
     public function __construct(
         Context $context,
         private readonly State $state,

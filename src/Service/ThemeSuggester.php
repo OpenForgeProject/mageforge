@@ -18,6 +18,9 @@ class ThemeSuggester
      */
     private const MAX_SUGGESTIONS = 3;
 
+    /**
+     * @param ThemeList $themeList
+     */
     public function __construct(
         private readonly ThemeList $themeList,
     ) {
