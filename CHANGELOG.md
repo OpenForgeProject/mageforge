@@ -17,6 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.20.1](https://github.com/OpenForgeProject/mageforge/compare/0.20.0...0.20.1) (2026-04-30)
+
+
+### Fixed
+
+* exclude toolbar elements from tab-order & mark overflow-clipped focusables as unreachable ([1484347](https://github.com/OpenForgeProject/mageforge/commit/1484347108235591ae5e1798e232fa7af7ee6c11))
+
 ## [0.20.0](https://github.com/OpenForgeProject/mageforge/compare/0.19.1...0.20.0) (2026-04-26)
 
 
