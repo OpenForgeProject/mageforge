@@ -58,3 +58,12 @@
 .mageforge-tab-order-badge--negative {
     background: var(--mageforge-color-red);
 }
+
+/* Element is focusable but clipped by an overflow:hidden ancestor (e.g. off-canvas slider item) */
+.mageforge-tab-order-badge--clipped {
+    background: var(--mageforge-color-orange);
+}
+
+.mageforge-tab-order-line--clipped {
+    stroke: var(--mageforge-color-orange);
+}
