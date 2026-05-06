@@ -569,6 +569,46 @@
 }
 
 /* ============================================================================
+   Position Variants
+   ========================================================================== */
+
+.mageforge-toolbar[data-position="bottom-right"] {
+    bottom: 16px;
+    left: auto;
+    right: 16px;
+}
+
+.mageforge-toolbar[data-position="top-left"] {
+    bottom: auto;
+    top: 16px;
+    left: 16px;
+}
+
+.mageforge-toolbar[data-position="top-right"] {
+    bottom: auto;
+    top: 16px;
+    left: auto;
+    right: 16px;
+}
+
+/* Menu opens downward for top positions */
+.mageforge-toolbar[data-position^="top"] .mageforge-toolbar-menu {
+    bottom: auto;
+    top: calc(100% + 8px);
+    transform: translateY(-8px);
+}
+
+.mageforge-toolbar[data-position^="top"] .mageforge-toolbar-menu.mageforge-menu-open {
+    transform: translateY(0);
+}
+
+/* Menu anchors to right edge for right positions */
+.mageforge-toolbar[data-position$="right"] .mageforge-toolbar-menu {
+    left: auto;
+    right: 0;
+}
+
+/* ============================================================================
    Theme Overrides
    ========================================================================== */
 
@@ -624,6 +664,21 @@
     .mageforge-toolbar {
         bottom: 10px;
         left: 10px;
+    }
+    .mageforge-toolbar[data-position="bottom-right"] {
+        left: auto;
+        right: 10px;
+    }
+    .mageforge-toolbar[data-position="top-left"] {
+        bottom: auto;
+        left: 10px;
+        top: 10px;
+    }
+    .mageforge-toolbar[data-position="top-right"] {
+        bottom: auto;
+        left: auto;
+        right: 10px;
+        top: 10px;
     }
     .mageforge-toolbar-menu {
         min-width: 300px;

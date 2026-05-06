@@ -11,6 +11,10 @@ export const uiMethods = {
             this.container.setAttribute('data-theme', this.$el.getAttribute('data-theme'));
         }
 
+        if (this.$el && this.$el.hasAttribute('data-position')) {
+            this.container.setAttribute('data-position', this.$el.getAttribute('data-position'));
+        }
+
         if (this.$el && this.$el.getAttribute('data-show-labels') === '0') {
             this.container.classList.add('mageforge-toolbar--no-labels');
         }

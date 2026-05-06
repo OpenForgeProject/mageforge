@@ -11,6 +11,7 @@
                 <inspector>
                     <theme>dark</theme>
                     <show_button_labels>1</show_button_labels>
+                    <position>bottom-left</position>
                 </inspector>
             </mageforge>
       </default>

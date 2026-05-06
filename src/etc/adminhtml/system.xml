@@ -28,6 +28,12 @@
                     <config_path>mageforge/inspector/show_button_labels</config_path>
                     <comment>Show text labels on the Toolbar and Inspector buttons. Default: Yes.</comment>
                 </field>
+                <field id="position" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Toolbar Position</label>
+                    <source_model>OpenForgeProject\MageForge\Model\Config\Source\ToolbarPosition</source_model>
+                    <config_path>mageforge/inspector/position</config_path>
+                    <comment>Position of the MageForge Toolbar on the page. Default: Bottom Left.</comment>
+                </field>
             </group>
         </section>
     </system>
