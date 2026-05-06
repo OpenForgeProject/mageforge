@@ -10,11 +10,11 @@
             <resource>OpenForgeProject_MageForge::config_inspector</resource>
             <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Toolbar Settings</label>
-                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Show Toolbar</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <config_path>dev/mageforge_inspector/enabled</config_path>
-                    <comment>Enable or disable the MageForge Toolbar. Default: Yes.</comment>
+                    <comment>Enable or disable the MageForge Toolbar. Default: No.</comment>
                 </field>
                 <field id="theme" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Theme</label>
