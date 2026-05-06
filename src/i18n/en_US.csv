@@ -6,7 +6,7 @@
 "Theme","Theme"
 "Choose between Dark, Light, or Auto (System Preference) theme.","Choose between Dark, Light, or Auto (System Preference) theme."
 "Show Button Labels","Show Button Labels"
-"Show text labels on the Toolbar and Inspector buttons. Default: No.","Show text labels on the Toolbar and Inspector buttons. Default: No."
+"Show text labels on the Toolbar and Inspector buttons. Default: Yes.","Show text labels on the Toolbar and Inspector buttons. Default: Yes."
 "Toolbar Position","Toolbar Position"
 "Position of the MageForge Toolbar on the page. Default: Bottom Left.","Position of the MageForge Toolbar on the page. Default: Bottom Left."
 "Dark","Dark"
