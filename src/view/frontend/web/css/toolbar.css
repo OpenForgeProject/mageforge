@@ -600,6 +600,10 @@
 
 .mageforge-toolbar[data-position^="top"] .mageforge-toolbar-menu.mageforge-menu-open {
     transform: translateY(0);
+
+    @starting-style {
+        transform: translateY(-8px);
+    }
 }
 
 /* Menu anchors to right edge for right positions */
