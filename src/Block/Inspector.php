@@ -9,6 +9,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
+use Magento\Store\Model\ScopeInterface;
+use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 
 /**
  * Block for MageForge Inspector
@@ -17,9 +19,6 @@ use Magento\Framework\View\Element\Template\Context;
  */
 class Inspector extends Template
 {
-    private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
-    private const XML_PATH_SHOW_BUTTON_LABELS = 'mageforge/inspector/show_button_labels';
-
     /**
      * @param Context $context
      * @param State $state
@@ -51,7 +50,7 @@ class Inspector extends Template
         }
 
         // Check if inspector is enabled in configuration
-        if (!$this->scopeConfig->isSetFlag(self::XML_PATH_INSPECTOR_ENABLED)) {
+        if (!$this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, ScopeInterface::SCOPE_STORE)) {
             return false;
         }
 
@@ -110,7 +109,10 @@ class Inspector extends Template
      */
     public function getShowButtonLabels(): bool
     {
-        $value = $this->scopeConfig->getValue(self::XML_PATH_SHOW_BUTTON_LABELS);
+        $value = $this->scopeConfig->getValue(
+            InspectorConfig::XML_PATH_SHOW_BUTTON_LABELS,
+            ScopeInterface::SCOPE_STORE
+        );
         // Default to true when not explicitly set to '0'
         return !is_string($value) || $value !== '0';
     }
@@ -122,8 +124,19 @@ class Inspector extends Template
      */
     public function getTheme(): string
     {
-        $value = $this->scopeConfig->getValue('mageforge/inspector/theme');
-        return is_string($value) && $value !== '' ? $value : 'dark';
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_THEME, ScopeInterface::SCOPE_STORE);
+        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_THEME;
+    }
+
+    /**
+     * Get configured toolbar position
+     *
+     * @return string
+     */
+    public function getPosition(): string
+    {
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_POSITION, ScopeInterface::SCOPE_STORE);
+        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_POSITION;
     }
 
     /**

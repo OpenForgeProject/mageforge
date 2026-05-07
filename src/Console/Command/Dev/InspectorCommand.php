@@ -10,6 +10,7 @@ use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
+use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,7 +20,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class InspectorCommand extends AbstractCommand
 {
-    private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
     private const ARGUMENT_ACTION = 'action';
 
     /**
@@ -106,7 +106,7 @@ class InspectorCommand extends AbstractCommand
         return match ($action) {
             'enable' => $this->enableInspector(),
             'disable' => $this->disableInspector(),
-            'status' => $this->showStatus(),
+            default => $this->showStatus(),
         };
     }
 
@@ -117,7 +117,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function enableInspector(): int
     {
-        $this->configWriter->save(self::XML_PATH_INSPECTOR_ENABLED, '1');
+        $this->configWriter->save(InspectorConfig::XML_PATH_ENABLED, '1');
         $this->cleanCache();
 
         $this->io->success('MageForge Inspector has been enabled!');
@@ -142,7 +142,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function disableInspector(): int
     {
-        $this->configWriter->save(self::XML_PATH_INSPECTOR_ENABLED, '0');
+        $this->configWriter->save(InspectorConfig::XML_PATH_ENABLED, '0');
         $this->cleanCache();
 
         $this->io->success('MageForge Inspector has been disabled.');
@@ -193,11 +193,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function isDeveloperMode(): bool
     {
-        try {
-            return $this->state->getMode() === State::MODE_DEVELOPER;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->state->getMode() === State::MODE_DEVELOPER;
     }
 
     /**
@@ -207,11 +203,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function isInspectorEnabled(): bool
     {
-        try {
-            return $this->scopeConfig->isSetFlag(self::XML_PATH_INSPECTOR_ENABLED);
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED);
     }
 
     /**

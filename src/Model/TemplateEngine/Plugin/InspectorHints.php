@@ -11,6 +11,7 @@ use Magento\Framework\View\TemplateEngineFactory;
 use Magento\Framework\View\TemplateEngineInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHintsFactory;
 
 /**
@@ -20,8 +21,6 @@ use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHintsFact
  */
 class InspectorHints
 {
-    private const XML_PATH_INSPECTOR_ENABLED = 'dev/mageforge_inspector/enabled';
-
     /**
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
@@ -57,7 +56,12 @@ class InspectorHints
 
         // Check if inspector is enabled in configuration
         $storeCode = $this->storeManager->getStore()->getCode();
-        if (!$this->scopeConfig->isSetFlag(self::XML_PATH_INSPECTOR_ENABLED, ScopeInterface::SCOPE_STORE, $storeCode)) {
+        $isEnabled = $this->scopeConfig->isSetFlag(
+            InspectorConfig::XML_PATH_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $storeCode
+        );
+        if (!$isEnabled) {
             return $invocationResult;
         }
 
