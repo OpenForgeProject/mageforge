@@ -10,7 +10,8 @@ use Magento\Framework\App\State;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\ScopeInterface;
-use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
+use OpenForgeProject\MageForge\Enum\Inspector\DefaultValue;
+use OpenForgeProject\MageForge\Enum\Inspector\XmlPath;
 
 /**
  * Block for MageForge Inspector
@@ -50,7 +51,7 @@ class Inspector extends Template
         }
 
         // Check if inspector is enabled in configuration
-        if (!$this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, ScopeInterface::SCOPE_STORE)) {
+        if (!$this->scopeConfig->isSetFlag(XmlPath::Enabled->value, ScopeInterface::SCOPE_STORE)) {
             return false;
         }
 
@@ -110,7 +111,7 @@ class Inspector extends Template
     public function getShowButtonLabels(): bool
     {
         $value = $this->scopeConfig->getValue(
-            InspectorConfig::XML_PATH_SHOW_BUTTON_LABELS,
+            XmlPath::ShowButtonLabels->value,
             ScopeInterface::SCOPE_STORE
         );
         // Default to true when not explicitly set to '0'
@@ -124,8 +125,8 @@ class Inspector extends Template
      */
     public function getTheme(): string
     {
-        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_THEME, ScopeInterface::SCOPE_STORE);
-        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_THEME;
+        $value = $this->scopeConfig->getValue(XmlPath::Theme->value, ScopeInterface::SCOPE_STORE);
+        return is_string($value) && $value !== '' ? $value : DefaultValue::Theme->value;
     }
 
     /**
@@ -135,8 +136,8 @@ class Inspector extends Template
      */
     public function getPosition(): string
     {
-        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_POSITION, ScopeInterface::SCOPE_STORE);
-        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_POSITION;
+        $value = $this->scopeConfig->getValue(XmlPath::Position->value, ScopeInterface::SCOPE_STORE);
+        return is_string($value) && $value !== '' ? $value : DefaultValue::Position->value;
     }
 
     /**

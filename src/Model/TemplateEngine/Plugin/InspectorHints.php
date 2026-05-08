@@ -11,7 +11,7 @@ use Magento\Framework\View\TemplateEngineFactory;
 use Magento\Framework\View\TemplateEngineInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
+use OpenForgeProject\MageForge\Enum\Inspector\XmlPath;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHintsFactory;
 
 /**
@@ -57,7 +57,7 @@ class InspectorHints
         // Check if inspector is enabled in configuration
         $storeCode = $this->storeManager->getStore()->getCode();
         $isEnabled = $this->scopeConfig->isSetFlag(
-            InspectorConfig::XML_PATH_ENABLED,
+            XmlPath::Enabled->value,
             ScopeInterface::SCOPE_STORE,
             $storeCode
         );

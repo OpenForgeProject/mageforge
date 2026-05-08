@@ -10,7 +10,7 @@ use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
-use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
+use OpenForgeProject\MageForge\Enum\Inspector\XmlPath;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -117,7 +117,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function enableInspector(): int
     {
-        $this->configWriter->save(InspectorConfig::XML_PATH_ENABLED, '1');
+        $this->configWriter->save(XmlPath::Enabled->value, '1');
         $this->cleanCache();
 
         $this->io->success('MageForge Inspector has been enabled!');
@@ -142,7 +142,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function disableInspector(): int
     {
-        $this->configWriter->save(InspectorConfig::XML_PATH_ENABLED, '0');
+        $this->configWriter->save(XmlPath::Enabled->value, '0');
         $this->cleanCache();
 
         $this->io->success('MageForge Inspector has been disabled.');
@@ -203,7 +203,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function isInspectorEnabled(): bool
     {
-        return $this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED);
+        return $this->scopeConfig->isSetFlag(XmlPath::Enabled->value);
     }
 
     /**
