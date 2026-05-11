@@ -132,7 +132,8 @@ export const uiMethods = {
             this.resetButton = document.createElement('button');
             this.resetButton.type = 'button';
             this.resetButton.className = 'mageforge-toolbar-menu-reset';
-            this.resetButton.title = 'Reset';
+            this.resetButton.title = 'Reset score and deactivate all audits';
+            this.resetButton.setAttribute('aria-label', 'Reset score and deactivate all audits');
             this.resetButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
             this.resetButton.onclick = (e) => {
                 e.stopPropagation();
@@ -142,19 +143,36 @@ export const uiMethods = {
 
             menuFooter.appendChild(buttonRow);
         } else {
-            // No health score – show a standalone reset button to deactivate all audits
+            // No health score – button row with Run All + Reset
+            const buttonRow = document.createElement('div');
+            buttonRow.className = 'mageforge-toolbar-menu-button-row';
+
+            this.runAllButton = document.createElement('button');
+            this.runAllButton.type = 'button';
+            this.runAllButton.className = 'mageforge-toolbar-menu-run-all';
+            this.runAllButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+                RUN ALL TESTS
+            `;
+            this.runAllButton.onclick = (e) => {
+                e.stopPropagation();
+                this.runAllAuditsForScore();
+            };
+            buttonRow.appendChild(this.runAllButton);
+
             this.resetButton = document.createElement('button');
             this.resetButton.type = 'button';
-            this.resetButton.className = 'mageforge-toolbar-menu-run-all mageforge-toolbar-menu-run-all--reset';
-            this.resetButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                Reset All Audits
-            `;
+            this.resetButton.className = 'mageforge-toolbar-menu-reset';
+            this.resetButton.title = 'Deactivate all audits';
+            this.resetButton.setAttribute('aria-label', 'Deactivate all audits');
+            this.resetButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
             this.resetButton.onclick = (e) => {
                 e.stopPropagation();
                 this.resetScore();
             };
-            menuFooter.appendChild(this.resetButton);
+            buttonRow.appendChild(this.resetButton);
+
+            menuFooter.appendChild(buttonRow);
         }
 
         const credit = document.createElement('div');
