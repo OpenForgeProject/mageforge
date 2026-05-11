@@ -333,6 +333,20 @@ The menu is built automatically from the registry – no further changes require
 - **Communication with Inspector**: Custom events on `window` (`mageforge:toolbar:toggle-inspector`, `mageforge:toolbar:inspector-state`)
 - **CSS variables**: All colours and shadows are defined as `--mageforge-*` custom properties in `toolbar.css :root`; never use hardcoded `rgba()` values
 
+## Admin Settings (system.xml)
+
+When adding a new admin configuration field:
+
+1. **`etc/adminhtml/system.xml`** – add the `<field>` with `translate="label comment"`
+2. **`etc/config.xml`** – add the default value under the matching path
+3. **`Model/Config/Inspector.php`** (or relevant config model) – add a `XML_PATH_*` constant
+4. **`Block/Inspector.php`** (or relevant block) – add a getter that reads the value via `ScopeConfigInterface`
+5. **Template (`.phtml`)** – pass the value as a `data-*` attribute on the Alpine element
+6. **JavaScript** – read `this.$el?.getAttribute('data-...')` in the Alpine component
+7. **i18n** – add **both** the label string and the comment string to **all** CSV files under `src/i18n/` (e.g. `de_DE.csv`, `en_US.csv`)
+
+> **CRITICAL**: Steps 1–7 must all be done together. Never add a new setting without updating the i18n files.
+
 ## Common Pitfalls
 
 - **Shell commands in builders**: Use `Shell` service (DI), not `exec()` directly
@@ -340,6 +354,7 @@ The menu is built automatically from the registry – no further changes require
 - **Builder order**: BuilderPool selects first matching builder - `detect()` must be unique
 - **Watch mode**: Blocks terminal - user must exit with Ctrl+C
 - **Node/npm**: Runs in DDEV container, not on host
+- **Admin settings without i18n**: Always update `src/i18n/*.csv` when adding labels or comments to `system.xml`
 
 ## Documentation
 
