@@ -36,7 +36,12 @@ jobs:
           MYSQL_DATABASE: magento
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pmagento --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
 
       opensearch:
         image: opensearchproject/opensearch:2.11.0
