@@ -58,7 +58,7 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
 
 ## Frontend Toolbar with Inspector and Performance Metrics
-![Mageforge Toolbar](./.github/assets/toolbar.png)
+![Mageforge Toolbar](./.github/assets/toolbar.jpeg)
 
 ## Getting Started
 
