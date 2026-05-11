@@ -17,6 +17,30 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.21.0](https://github.com/OpenForgeProject/mageforge/compare/0.20.0...0.21.0) (2026-05-11)
+
+
+### Added
+
+* add toolbar position configuration and implement in UI ([3f331bf](https://github.com/OpenForgeProject/mageforge/commit/3f331bf0f0cdd8e9b3fd5be6e9d41506dc281db5))
+* health scoring ([#182](https://github.com/OpenForgeProject/mageforge/issues/182)) ([89bba7c](https://github.com/OpenForgeProject/mageforge/commit/89bba7c62b3755729d1ec169026c72aa18691f7b))
+
+
+### Fixed
+
+* exclude toolbar elements from tab-order & mark overflow-clipped focusables as unreachable ([1484347](https://github.com/OpenForgeProject/mageforge/commit/1484347108235591ae5e1798e232fa7af7ee6c11))
+
+
+### Changed
+
+* centralize inspector configuration constants in Inspector class ([b7c9027](https://github.com/OpenForgeProject/mageforge/commit/b7c9027c242ba23dcf2c69214ce52a41f7dbcfa3))
+
+
+### Documentation
+
+* add frontend toolbar section and image to README ([1a2fb75](https://github.com/OpenForgeProject/mageforge/commit/1a2fb756ecbd0003704e0d5a6fa62bc267624f5e))
+* update toolbar image from PNG to JPEG format ([1e1bafd](https://github.com/OpenForgeProject/mageforge/commit/1e1bafd824e62ce1ac4603346d5738684997b95b))
+
 ## [0.20.0](https://github.com/OpenForgeProject/mageforge/compare/0.19.1...0.20.0) (2026-04-26)
 
 
