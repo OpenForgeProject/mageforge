@@ -57,6 +57,9 @@ Please ensure that your Magento installation meets this requirement before insta
 | `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |
 | `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
 
+## Frontend Toolbar with Inspector and Performance Metrics
+![Mageforge Toolbar](./.github/assets/toolbar.png)
+
 ## Getting Started
 
 ### Installation
