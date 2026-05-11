@@ -67,21 +67,99 @@ export const uiMethods = {
             ));
         });
 
-        // Footer – Toggle All
+        // Footer – Health Score Gauge + Run All Tests
         const menuFooter = document.createElement('div');
         menuFooter.className = 'mageforge-toolbar-menu-footer';
-        this.toggleAllButton = document.createElement('button');
-        this.toggleAllButton.type = 'button';
-        this.toggleAllButton.className = 'mageforge-toolbar-menu-toggle-all';
-        this.toggleAllButton.textContent = 'Activate All';
-        this.toggleAllButton.onclick = (e) => {
-            e.stopPropagation();
-            this.toggleAllAudits();
-        };
-        menuFooter.appendChild(this.toggleAllButton);
+
+        const showHealthScore = this.$el?.getAttribute('data-show-health-score') !== '0';
+
+        if (showHealthScore) {
+            const ARC_LENGTH = 157.08;
+            const healthWrapper = document.createElement('div');
+            healthWrapper.className = 'mageforge-toolbar-health-wrapper';
+
+            const gaugeSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            gaugeSvg.setAttribute('viewBox', '0 0 120 70');
+            gaugeSvg.setAttribute('class', 'mageforge-toolbar-health-gauge');
+            gaugeSvg.setAttribute('aria-hidden', 'true');
+            gaugeSvg.innerHTML = `
+                <defs>
+                    <linearGradient id="mf-gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#ef4444"/>
+                        <stop offset="50%" stop-color="#edb04d"/>
+                        <stop offset="100%" stop-color="#10b981"/>
+                    </linearGradient>
+                </defs>
+                <path d="M 10 65 A 50 50 0 0 1 110 65"
+                      fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M 10 65 A 50 50 0 0 1 110 65"
+                      fill="none" stroke="url(#mf-gauge-grad)" stroke-width="10" stroke-linecap="round"
+                      stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"/>
+                <line class="mageforge-health-gauge-needle" x1="60" y1="65" x2="60" y2="20"
+                      stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"/>
+                <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"/>
+            `;
+            healthWrapper.appendChild(gaugeSvg);
+
+            const scoreTextWrapper = document.createElement('div');
+            scoreTextWrapper.className = 'mageforge-toolbar-health-score-text';
+            scoreTextWrapper.innerHTML = `
+                <div class="mageforge-toolbar-health-score-value">
+                    <span class="mageforge-toolbar-health-score-number">--</span><span class="mageforge-toolbar-health-score-max">/100</span>
+                </div>
+                <div class="mageforge-toolbar-health-score-label">Overall Health Score</div>
+            `;
+            healthWrapper.appendChild(scoreTextWrapper);
+            menuFooter.appendChild(healthWrapper);
+
+            // Run All Tests + Reset button row (with score)
+            const buttonRow = document.createElement('div');
+            buttonRow.className = 'mageforge-toolbar-menu-button-row';
+
+            this.runAllButton = document.createElement('button');
+            this.runAllButton.type = 'button';
+            this.runAllButton.className = 'mageforge-toolbar-menu-run-all';
+            this.runAllButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                RUN ALL TESTS
+            `;
+            this.runAllButton.onclick = (e) => {
+                e.stopPropagation();
+                this.runAllAuditsForScore();
+            };
+            buttonRow.appendChild(this.runAllButton);
+
+            this.resetButton = document.createElement('button');
+            this.resetButton.type = 'button';
+            this.resetButton.className = 'mageforge-toolbar-menu-reset';
+            this.resetButton.title = 'Reset';
+            this.resetButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+            this.resetButton.onclick = (e) => {
+                e.stopPropagation();
+                this.resetScore();
+            };
+            buttonRow.appendChild(this.resetButton);
+
+            menuFooter.appendChild(buttonRow);
+        } else {
+            // No health score – show a standalone reset button to deactivate all audits
+            this.resetButton = document.createElement('button');
+            this.resetButton.type = 'button';
+            this.resetButton.className = 'mageforge-toolbar-menu-run-all mageforge-toolbar-menu-run-all--reset';
+            this.resetButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset All Audits
+            `;
+            this.resetButton.onclick = (e) => {
+                e.stopPropagation();
+                this.resetScore();
+            };
+            menuFooter.appendChild(this.resetButton);
+        }
+
         const credit = document.createElement('div');
         credit.className = 'mageforge-toolbar-menu-credit';
-        credit.innerHTML = `Built with ♥ by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>`;
+        credit.innerHTML = `Built with <span class="mageforge-toolbar-menu-credit-heart">❤</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>`;
         menuFooter.appendChild(credit);
         this.menu.appendChild(menuFooter);
 
@@ -261,12 +339,50 @@ export const uiMethods = {
     },
 
     /**
-     * Sync the Toggle All button label to current active state.
+     * No-op – retained for compatibility; the Run All Tests button has no dynamic label.
      */
-    updateToggleAllButton() {
-        if (!this.toggleAllButton) return;
-        const allActive = this.activeAudits.size === this.getAudits().length;
-        this.toggleAllButton.textContent = allActive ? 'Deactivate All' : 'Activate All';
+    updateToggleAllButton() {},
+
+    /**
+     * Reset the health score gauge and deactivate all audits.
+     */
+    resetScore() {
+        this.deactivateAllAudits();
+        if (!this.menu) return;
+        const ARC_LENGTH = 157.08;
+        const progress = this.menu.querySelector('.mageforge-health-gauge-progress');
+        const needle   = this.menu.querySelector('.mageforge-health-gauge-needle');
+        const numberEl = this.menu.querySelector('.mageforge-toolbar-health-score-number');
+        if (numberEl) numberEl.textContent = '--';
+        if (progress) progress.setAttribute('stroke-dasharray', `0 ${ARC_LENGTH}`);
+        if (needle)   needle.setAttribute('opacity', '0');
+    },
+
+    /**
+     * Update the health score gauge and numeric display (0–100).
+     *
+     * @param {number} score
+     */
+    updateHealthScore(score) {
+        if (!this.menu) return;
+        const ARC_LENGTH = 157.08;
+        const progress = this.menu.querySelector('.mageforge-health-gauge-progress');
+        const needle   = this.menu.querySelector('.mageforge-health-gauge-needle');
+        const numberEl = this.menu.querySelector('.mageforge-toolbar-health-score-number');
+
+        if (numberEl) numberEl.textContent = score;
+
+        if (progress) {
+            const dash = ((score / 100) * ARC_LENGTH).toFixed(2);
+            progress.setAttribute('stroke-dasharray', `${dash} ${ARC_LENGTH}`);
+        }
+
+        if (needle) {
+            const rad = (1 - score / 100) * Math.PI;
+            needle.setAttribute('x2', (60 + 45 * Math.cos(rad)).toFixed(1));
+            needle.setAttribute('y2', (65 - 45 * Math.sin(rad)).toFixed(1));
+            needle.setAttribute('opacity', '1');
+        }
     },
 
     toggleMenu() {
@@ -298,7 +414,8 @@ export const uiMethods = {
         this.container = null;
         this.menu = null;
         this.burgerButton = null;
-        this.toggleAllButton = null;
+        this.runAllButton = null;
+        this.resetButton = null;
         this.menuOpen = false;
     },
 };

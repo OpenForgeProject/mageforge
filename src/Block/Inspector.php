@@ -140,6 +140,20 @@ class Inspector extends Template
     }
 
     /**
+     * Whether the health score gauge should be shown in the toolbar footer
+     *
+     * @return bool
+     */
+    public function getShowHealthScore(): bool
+    {
+        $value = $this->scopeConfig->getValue(
+            InspectorConfig::XML_PATH_SHOW_HEALTH_SCORE,
+            ScopeInterface::SCOPE_STORE
+        );
+        return !is_string($value) || $value !== '0';
+    }
+
+    /**
      * Render block HTML
      *
      * @return string

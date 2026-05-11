@@ -41,6 +41,50 @@ export const auditMethods = {
     },
 
     /**
+     * Run every audit, wait for the DOM to settle, then compute and display
+     * an overall health score (0–100) in the footer gauge.
+     */
+    async runAllAuditsForScore() {
+        if (!this.runAllButton) return;
+        this.runAllButton.disabled = true;
+        this.runAllButton.classList.add('mageforge-running');
+
+        this.deactivateAllAudits();
+
+        audits.forEach(audit => {
+            if (!this.activeAudits.has(audit.key)) {
+                this.runAudit(audit.key);
+            }
+        });
+
+        // Allow async DOM mutations to settle
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        let totalPoints = 0;
+        let maxPoints = 0;
+        audits.forEach(audit => {
+            const item = this.menu?.querySelector(`[data-audit-key="${audit.key}"]`);
+            if (!item) return;
+            maxPoints += 100;
+            const status = item.querySelector('.mageforge-toolbar-menu-status');
+            if (!status || !status.textContent.trim()) {
+                totalPoints += 100;
+            } else if (status.classList.contains('mageforge-toolbar-menu-status--success')) {
+                totalPoints += 100;
+            } else if (status.classList.contains('mageforge-toolbar-menu-status--warning')) {
+                totalPoints += 50;
+            }
+            // error = 0 points (default)
+        });
+
+        const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
+        this.updateHealthScore(score);
+
+        this.runAllButton.disabled = false;
+        this.runAllButton.classList.remove('mageforge-running');
+    },
+
+    /**
      * Deactivates all currently active audits (called when closing the toolbar).
      */
     deactivateAllAudits() {
