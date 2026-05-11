@@ -51,6 +51,7 @@ export const auditMethods = {
         btn.classList.add('mageforge-running');
 
         try {
+            this._batchRunning = true;
             this.deactivateAllAudits();
 
             audits.forEach(audit => {
@@ -82,6 +83,7 @@ export const auditMethods = {
             const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
             this.updateHealthScore(score);
         } finally {
+            this._batchRunning = false;
             btn.disabled = false;
             btn.classList.remove('mageforge-running');
         }

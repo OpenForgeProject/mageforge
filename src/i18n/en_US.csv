@@ -10,7 +10,7 @@
 "Toolbar Position","Toolbar Position"
 "Position of the MageForge Toolbar on the page. Default: Bottom Left.","Position of the MageForge Toolbar on the page. Default: Bottom Left."
 "Show Health Score","Show Health Score"
-"Show the Overall Health Score gauge and Run All Tests button in the toolbar footer. Default: Yes.","Show the Overall Health Score gauge and Run All Tests button in the toolbar footer. Default: Yes."
+"Show the Overall Health Score gauge in the toolbar footer. The Run All Tests and Reset buttons remain visible regardless. Default: Yes.","Show the Overall Health Score gauge in the toolbar footer. The Run All Tests and Reset buttons remain visible regardless. Default: Yes."
 "Dark","Dark"
 "Light","Light"
 "Auto (System Preference)","Auto (System Preference)"

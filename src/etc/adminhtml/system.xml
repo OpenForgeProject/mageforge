@@ -38,7 +38,7 @@
                     <label>Show Health Score</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <config_path>mageforge/inspector/show_health_score</config_path>
-                    <comment>Show the Overall Health Score gauge and Run All Tests button in the toolbar footer. Default: Yes.</comment>
+                    <comment>Show the Overall Health Score gauge in the toolbar footer. The Run All Tests and Reset buttons remain visible regardless. Default: Yes.</comment>
                 </field>
             </group>
         </section>

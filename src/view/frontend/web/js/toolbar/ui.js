@@ -75,6 +75,7 @@ export const uiMethods = {
 
         if (showHealthScore) {
             const ARC_LENGTH = 157.08;
+            const gradId = `mf-gauge-grad-${Math.random().toString(36).slice(2, 8)}`;
             const healthWrapper = document.createElement('div');
             healthWrapper.className = 'mageforge-toolbar-health-wrapper';
 
@@ -84,7 +85,7 @@ export const uiMethods = {
             gaugeSvg.setAttribute('aria-hidden', 'true');
             gaugeSvg.innerHTML = `
                 <defs>
-                    <linearGradient id="mf-gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stop-color="#ef4444"></stop>
                         <stop offset="50%" stop-color="#edb04d"></stop>
                         <stop offset="100%" stop-color="#10b981"></stop>
@@ -93,7 +94,7 @@ export const uiMethods = {
                 <path d="M 10 65 A 50 50 0 0 1 110 65"
                       fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"></path>
                 <path d="M 10 65 A 50 50 0 0 1 110 65"
-                      fill="none" stroke="url(#mf-gauge-grad)" stroke-width="10" stroke-linecap="round"
+                      fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
                       stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
                 <line class="mageforge-health-gauge-needle" x1="60" y1="65" x2="60" y2="20"
                       stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>

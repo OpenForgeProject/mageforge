@@ -10,7 +10,7 @@
 "Toolbar Position","Toolbar-Position"
 "Position of the MageForge Toolbar on the page. Default: Bottom Left.","Position der MageForge Toolbar auf der Seite. Standard: Unten links."
 "Show Health Score","Health-Score anzeigen"
-"Show the Overall Health Score gauge and Run All Tests button in the toolbar footer. Default: Yes.","Gesamten Health-Score-Tachometer und Schaltfläche \"Alle Tests ausführen\" im Toolbar-Footer anzeigen. Standard: Ja."
+"Show the Overall Health Score gauge in the toolbar footer. The Run All Tests and Reset buttons remain visible regardless. Default: Yes.","Health-Score-Tachometer im Toolbar-Footer anzeigen. Die Aktions-Schaltflächen bleiben stets sichtbar. Standard: Ja."
 "Dark","Dunkel"
 "Light","Hell"
 "Auto (System Preference)","Auto (Systemeinstellung)"

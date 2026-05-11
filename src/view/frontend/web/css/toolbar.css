@@ -632,22 +632,6 @@
     transform: none;
 }
 
-.mageforge-toolbar-menu-run-all--reset {
-    background: none;
-    background-image: none;
-    border: 1px solid var(--mageforge-border-color);
-    color: var(--mageforge-color-slate-400);
-    box-shadow: none;
-}
-
-.mageforge-toolbar-menu-run-all--reset:hover {
-    background: var(--mageforge-surface-glass-hover);
-    background-image: none;
-    border-color: var(--mageforge-border-glass);
-    color: var(--mageforge-color-white);
-    box-shadow: none;
-}
-
 .mageforge-toolbar-menu-reset {
     display: flex;
     align-items: center;
