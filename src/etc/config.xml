@@ -12,6 +12,7 @@
                     <theme>dark</theme>
                     <show_button_labels>1</show_button_labels>
                     <position>bottom-left</position>
+                    <show_health_score>1</show_health_score>
                 </inspector>
             </mageforge>
       </default>

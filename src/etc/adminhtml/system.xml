@@ -34,6 +34,12 @@
                     <config_path>mageforge/inspector/position</config_path>
                     <comment>Position of the MageForge Toolbar on the page. Default: Bottom Left.</comment>
                 </field>
+                <field id="show_health_score" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Health Score</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/inspector/show_health_score</config_path>
+                    <comment>Show the Overall Health Score gauge in the toolbar footer. The Run All Tests and Reset buttons remain visible regardless. Default: Yes.</comment>
+                </field>
             </group>
         </section>
     </system>

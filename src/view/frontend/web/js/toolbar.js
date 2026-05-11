@@ -28,7 +28,10 @@ function _registerMageforgeToolbar() {
         menu: null,
 
         /** @type {HTMLButtonElement|null} */
-        toggleAllButton: null,
+        runAllButton: null,
+
+        /** @type {HTMLButtonElement|null} */
+        resetButton: null,
 
         // ====================================================================
         // Lifecycle

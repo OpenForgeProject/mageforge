@@ -156,7 +156,9 @@ export function applyHighlight(elements, key, context, options = {}) {
         }
     });
     if (!skipBadge) {
-        elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (!context._batchRunning) {
+            elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         context.setAuditCounterBadge(key, `${elements.length}`, severity);
     }
 }

@@ -48,7 +48,7 @@ export default {
 
         // Scroll to first issue (errors take priority)
         const first = errors[0] ?? warnings[0];
-        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (first && !context._batchRunning) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         context.setAuditCounterBadge(this.key, `${total}`, errors.length > 0 ? 'error' : 'warning');
     },
