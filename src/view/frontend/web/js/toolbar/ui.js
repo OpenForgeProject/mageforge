@@ -85,19 +85,19 @@ export const uiMethods = {
             gaugeSvg.innerHTML = `
                 <defs>
                     <linearGradient id="mf-gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#ef4444"/>
-                        <stop offset="50%" stop-color="#edb04d"/>
-                        <stop offset="100%" stop-color="#10b981"/>
+                        <stop offset="0%" stop-color="#ef4444"></stop>
+                        <stop offset="50%" stop-color="#edb04d"></stop>
+                        <stop offset="100%" stop-color="#10b981"></stop>
                     </linearGradient>
                 </defs>
                 <path d="M 10 65 A 50 50 0 0 1 110 65"
-                      fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"/>
+                      fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"></path>
                 <path d="M 10 65 A 50 50 0 0 1 110 65"
                       fill="none" stroke="url(#mf-gauge-grad)" stroke-width="10" stroke-linecap="round"
-                      stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"/>
+                      stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
                 <line class="mageforge-health-gauge-needle" x1="60" y1="65" x2="60" y2="20"
-                      stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"/>
-                <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"/>
+                      stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>
+                <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"></circle>
             `;
             healthWrapper.appendChild(gaugeSvg);
 
@@ -120,7 +120,7 @@ export const uiMethods = {
             this.runAllButton.type = 'button';
             this.runAllButton.className = 'mageforge-toolbar-menu-run-all';
             this.runAllButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
                 RUN ALL TESTS
             `;
             this.runAllButton.onclick = (e) => {
@@ -133,7 +133,7 @@ export const uiMethods = {
             this.resetButton.type = 'button';
             this.resetButton.className = 'mageforge-toolbar-menu-reset';
             this.resetButton.title = 'Reset';
-            this.resetButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+            this.resetButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
             this.resetButton.onclick = (e) => {
                 e.stopPropagation();
                 this.resetScore();
@@ -147,7 +147,7 @@ export const uiMethods = {
             this.resetButton.type = 'button';
             this.resetButton.className = 'mageforge-toolbar-menu-run-all mageforge-toolbar-menu-run-all--reset';
             this.resetButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                 Reset All Audits
             `;
             this.resetButton.onclick = (e) => {
