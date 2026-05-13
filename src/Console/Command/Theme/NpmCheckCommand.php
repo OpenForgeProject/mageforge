@@ -11,7 +11,6 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
-use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -30,7 +29,6 @@ class NpmCheckCommand extends AbstractCommand
      * @param ThemeList $themeList
      * @param BuilderPool $builderPool
      * @param NodePackageManager $nodePackageManager
-     * @param ThemeSuggester $themeSuggester
      * @param FileDriver $fileDriver
      */
     public function __construct(
@@ -38,7 +36,6 @@ class NpmCheckCommand extends AbstractCommand
         private readonly ThemeList $themeList,
         private readonly BuilderPool $builderPool,
         private readonly NodePackageManager $nodePackageManager,
-        private readonly ThemeSuggester $themeSuggester,
         private readonly FileDriver $fileDriver,
     ) {
         parent::__construct();
@@ -123,6 +120,7 @@ class NpmCheckCommand extends AbstractCommand
 
         $checkedPaths = [];
 
+        /** @var array<string> $themeCodes */
         foreach ($themeCodes as $themeCode) {
             $this->processThemeNpmCheck($themeCode, $checkedPaths, $output, $isVerbose);
         }
@@ -161,7 +159,8 @@ class NpmCheckCommand extends AbstractCommand
 
         // Deduplication: skip if this npm path was already processed
         // (relevant when multiple MagentoStandard themes share the Magento root npm)
-        $canonicalPath = realpath($npmPath) ?? $npmPath;
+        $rawPath = $this->fileDriver->getRealPath($npmPath);
+        $canonicalPath = is_string($rawPath) ? $rawPath : $npmPath;
         if (in_array($canonicalPath, $checkedPaths, true)) {
             $this->io->note(sprintf(
                 'npm path "%s" was already checked (shared with another theme). Skipping "%s".',
@@ -219,13 +218,12 @@ class NpmCheckCommand extends AbstractCommand
         $table = new Table($output);
         $table->setHeaders(['Package', 'Current', 'Wanted', 'Latest']);
 
-        foreach ($outdated as $name => $info) {
-            $table->addRow([
-                $name,
-                $info['current'] ?? '—',
-                $info['wanted'] ?? '—',
-                $info['latest'] ?? '—',
-            ]);
+        foreach ($outdated as $packageName => $info) {
+            $packageInfo = is_array($info) ? $info : [];
+            $current = is_string($packageInfo['current'] ?? null) ? $packageInfo['current'] : '—';
+            $wanted  = is_string($packageInfo['wanted'] ?? null) ? $packageInfo['wanted'] : '—';
+            $latest  = is_string($packageInfo['latest'] ?? null) ? $packageInfo['latest'] : '—';
+            $table->addRow([(string) $packageName, $current, $wanted, $latest]);
         }
 
         $table->render();
@@ -268,7 +266,8 @@ class NpmCheckCommand extends AbstractCommand
         }
 
         $audit = $this->nodePackageManager->getAuditResults($npmPath);
-        $total = $audit['total'] ?? 0;
+        $rawTotal = $audit['total'] ?? 0;
+        $total = is_int($rawTotal) ? $rawTotal : 0;
 
         if ($total === 0) {
             $this->io->success('No vulnerabilities found.');
@@ -281,7 +280,8 @@ class NpmCheckCommand extends AbstractCommand
         $table->setHeaders(['Severity', 'Count']);
 
         foreach (['critical', 'high', 'moderate', 'low', 'info'] as $severity) {
-            $count = $audit[$severity] ?? 0;
+            $rawCount = $audit[$severity] ?? 0;
+            $count = is_int($rawCount) ? $rawCount : 0;
             if ($count > 0) {
                 $table->addRow([ucfirst($severity), $count]);
             }

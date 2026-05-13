@@ -120,7 +120,7 @@ class NodePackageManager
      * Uses "|| true" to suppress the non-zero exit code npm emits when packages are outdated.
      *
      * @param string $path
-     * @return array<string, array{current: string, wanted: string, latest: string}>
+     * @return array<string, mixed>
      */
     public function getOutdatedPackages(string $path): array
     {
@@ -165,7 +165,7 @@ class NodePackageManager
      * Uses "|| true" to suppress the non-zero exit code npm emits when vulnerabilities exist.
      *
      * @param string $path
-     * @return array<string, int>
+     * @return array<string, mixed>
      */
     public function getAuditResults(string $path): array
     {
@@ -178,7 +178,12 @@ class NodePackageManager
             if (!is_array($data)) {
                 return [];
             }
-            return $data['metadata']['vulnerabilities'] ?? [];
+            $metadata = $data['metadata'] ?? null;
+            if (!is_array($metadata)) {
+                return [];
+            }
+            $vulnerabilities = $metadata['vulnerabilities'] ?? null;
+            return is_array($vulnerabilities) ? $vulnerabilities : [];
         } catch (\Exception) {
             return [];
         }
