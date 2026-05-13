@@ -113,4 +113,101 @@ class NodePackageManager
             }
         }
     }
+
+    /**
+     * Return outdated packages as a parsed array.
+     *
+     * Uses "|| true" to suppress the non-zero exit code npm emits when packages are outdated.
+     *
+     * @param string $path
+     * @return array<string, mixed>
+     */
+    public function getOutdatedPackages(string $path): array
+    {
+        try {
+            $output = $this->shell->execute('cd %s && npm outdated --json || true', [$path]);
+            if (trim($output) === '' || trim($output) === '{}') {
+                return [];
+            }
+            $data = json_decode($output, true);
+            return is_array($data) ? $data : [];
+        } catch (\Exception) {
+            return [];
+        }
+    }
+
+    /**
+     * Run "npm update --latest" in the given directory.
+     *
+     * @param string $path
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
+    public function runNpmUpdate(string $path, SymfonyStyle $io, bool $isVerbose): bool
+    {
+        try {
+            $this->shell->execute('cd %s && npm update --latest', [$path]);
+            if ($isVerbose) {
+                $io->success('npm update --latest completed successfully.');
+            }
+            return true;
+        } catch (\Exception $e) {
+            $io->error('npm update failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Return npm audit vulnerability counts as a flat array.
+     *
+     * Keys: total, critical, high, moderate, low, info.
+     * Uses "|| true" to suppress the non-zero exit code npm emits when vulnerabilities exist.
+     *
+     * @param string $path
+     * @return array<string, mixed>
+     */
+    public function getAuditResults(string $path): array
+    {
+        try {
+            $output = $this->shell->execute('cd %s && npm audit --json || true', [$path]);
+            if (trim($output) === '') {
+                return [];
+            }
+            $data = json_decode($output, true);
+            if (!is_array($data)) {
+                return [];
+            }
+            $metadata = $data['metadata'] ?? null;
+            if (!is_array($metadata)) {
+                return [];
+            }
+            $vulnerabilities = $metadata['vulnerabilities'] ?? null;
+            return is_array($vulnerabilities) ? $vulnerabilities : [];
+        } catch (\Exception) {
+            return [];
+        }
+    }
+
+    /**
+     * Run "npm audit fix" in the given directory.
+     *
+     * @param string $path
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return bool
+     */
+    public function runAuditFix(string $path, SymfonyStyle $io, bool $isVerbose): bool
+    {
+        try {
+            $this->shell->execute('cd %s && npm audit fix', [$path]);
+            if ($isVerbose) {
+                $io->success('npm audit fix completed successfully.');
+            }
+            return true;
+        } catch (\Exception $e) {
+            $io->error('npm audit fix failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

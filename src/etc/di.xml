@@ -25,6 +25,8 @@
                               OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
                         <item name="mageforge_dev_inspector" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand</item>
+                        <item name="mageforge_theme_npm_check" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Theme\NpmCheckCommand</item>
                   </argument>
             </arguments>
       </type>

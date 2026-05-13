@@ -15,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - magento-version: "2.4.7-p9"
+          - magento-version: "2.4.7-p10"
             php-version: "8.3"
             search-engine-name: "opensearch"
-          - magento-version: "2.4.8-p4"
+          - magento-version: "2.4.8-p5"
             php-version: "8.4"
             search-engine-name: "opensearch"
           - magento-version: "2.4.9-beta1"
@@ -147,6 +147,7 @@ jobs:
           bin/magento mageforge:theme:inspector --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
+          bin/magento mageforge:theme:npm-check --help
 
           echo "Verify command aliases work:"
           bin/magento m:s:v --help
@@ -156,10 +157,12 @@ jobs:
           bin/magento m:t:w --help
           bin/magento m:t:c --help
           bin/magento m:h:c:c --help
+          bin/magento m:t:nc --help
           bin/magento frontend:list --help
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
           bin/magento frontend:clean --help
+          bin/magento frontend:npm-check --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
 
