@@ -23,7 +23,12 @@ jobs:
           MYSQL_DATABASE: magento
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pmagento --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
 
       opensearch:
         image: opensearchproject/opensearch:2.11.0
@@ -42,7 +47,7 @@ jobs:
           path: mageforge
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f
         with:
           php-version: "8.4"
           extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
