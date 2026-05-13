@@ -24,10 +24,7 @@ jobs:
           - magento-version: "2.4.8-p5"
             php-version: "8.4"
             search-engine-name: "opensearch"
-          - magento-version: "2.4.9-beta1"
-            php-version: "8.4"
-            search-engine-name: "opensearch"
-          - magento-version: "2.4.9-beta1"
+          - magento-version: "2.4.9"
             php-version: "8.5"
             search-engine-name: "opensearch"
 
