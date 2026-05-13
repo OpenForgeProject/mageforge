@@ -15,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - magento-version: "2.4.7-p9"
+          - magento-version: "2.4.7-p10"
             php-version: "8.3"
             search-engine-name: "opensearch"
-          - magento-version: "2.4.8-p4"
+          - magento-version: "2.4.8-p5"
             php-version: "8.4"
             search-engine-name: "opensearch"
           - magento-version: "2.4.9-beta1"
