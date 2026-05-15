@@ -124,7 +124,7 @@ class InspectorHints implements TemplateEngineInterface
     {
         // Measure render time
         $startTime = hrtime(true);
-        $result = $this->subject->render($block, $templateFile, $dictionary);
+        $result = (string) $this->subject->render($block, $templateFile, $dictionary);
         $endTime = hrtime(true);
 
         if (!$this->showBlockHints) {
