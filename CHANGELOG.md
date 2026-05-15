@@ -17,6 +17,14 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.21.1](https://github.com/OpenForgeProject/mageforge/compare/0.21.0...0.21.1) (2026-05-15)
+
+
+### Fixed
+
+* cast render result to string in InspectorHints ([#187](https://github.com/OpenForgeProject/mageforge/issues/187)) ([c857129](https://github.com/OpenForgeProject/mageforge/commit/c8571298a7958aaa4e8d921d5a999897d1a08cb0))
+* update shas and update to node24 workflows ([36bd346](https://github.com/OpenForgeProject/mageforge/commit/36bd346ad8fc7944de19505796fafc890016b0e3))
+
 ## [0.21.0](https://github.com/OpenForgeProject/mageforge/compare/0.20.0...0.21.0) (2026-05-11)
 
 
