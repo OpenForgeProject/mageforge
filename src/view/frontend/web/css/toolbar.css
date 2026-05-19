@@ -343,7 +343,6 @@
     color: var(--mageforge-color-orange);
     font-size: 12px;
     user-select: text;
-    cursor: default;
 }
 
 .mageforge-toolbar-menu-label-row {
