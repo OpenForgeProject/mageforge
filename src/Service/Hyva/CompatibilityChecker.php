@@ -203,7 +203,7 @@ class CompatibilityChecker
             return '<fg=green>✓ Compatible</>';
         }
 
-        if ($moduleData['compatible'] && $moduleData['hasWarnings']) {
+        if ($moduleData['compatible']) {
             return '<fg=yellow>⚠ Warnings</>';
         }
 
