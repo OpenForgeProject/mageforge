@@ -264,7 +264,8 @@ export const uiMethods = {
                 audit.icon,
                 audit.label,
                 audit.description,
-                () => this.runAudit(audit.key)
+                () => this.runAudit(audit.key),
+                key
             ));
         });
 
@@ -282,11 +283,12 @@ export const uiMethods = {
      * @param {Function} callback
      * @return {HTMLButtonElement}
      */
-    createMenuItem(key, icon, label, description, callback) {
+    createMenuItem(key, icon, label, description, callback, groupKey = null) {
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'mageforge-toolbar-menu-item';
         item.dataset.auditKey = key;
+        if (groupKey) item.dataset.group = groupKey;
         item.setAttribute('aria-pressed', 'false');
 
         const iconEl = document.createElement('span');

@@ -22,7 +22,11 @@
     --mageforge-color-slate-400: #94a3b8;
     --mageforge-color-orange: #fb923c;
     --mageforge-color-pink: #C850C0;
+    --mageforge-color-purple: #a855f7;
     --mageforge-color-amber: #edb04d;
+    --mageforge-group-color-wcag: var(--mageforge-color-purple);
+    --mageforge-group-color-html-quality: var(--mageforge-color-blue);
+    --mageforge-group-color-performance: var(--mageforge-color-orange);
     --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
     --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
     --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
@@ -332,13 +336,14 @@
     font-size: 11px;
     line-height: 1.3;
     user-select: text;
-    cursor: text;
+    cursor: default;
 }
 
 .mageforge-toolbar-menu-desc.mageforge-active {
     color: var(--mageforge-color-orange);
     font-size: 12px;
     user-select: text;
+    cursor: default;
 }
 
 .mageforge-toolbar-menu-label-row {
@@ -417,7 +422,31 @@
     text-transform: uppercase;
     transition: color 0.15s ease;
     letter-spacing: 0.08em;
-    color: var(--mageforge-color-orange);
+    color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="wcag"] .mageforge-toolbar-menu-group-label {
+    color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="html-quality"] .mageforge-toolbar-menu-group-label {
+    color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="performance"] .mageforge-toolbar-menu-group-label {
+    color: var(--mageforge-group-color-performance);
+}
+
+.mageforge-toolbar-menu-item[data-group="wcag"] .mageforge-toolbar-menu-icon {
+    color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-menu-item[data-group="html-quality"] .mageforge-toolbar-menu-icon {
+    color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-menu-item[data-group="performance"] .mageforge-toolbar-menu-icon {
+    color: var(--mageforge-group-color-performance);
 }
 
 .mageforge-toolbar-menu-group-chevron {
