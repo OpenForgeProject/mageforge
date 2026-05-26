@@ -289,7 +289,7 @@ export const uiMethods = {
         item.type = 'button';
         item.className = 'mageforge-toolbar-menu-item';
         item.dataset.auditKey = key;
-        if (groupKey) item.dataset.group = groupKey;
+        if (groupKey) item.dataset.groupKey = groupKey;
         item.setAttribute('aria-pressed', 'false');
 
         const iconEl = document.createElement('span');

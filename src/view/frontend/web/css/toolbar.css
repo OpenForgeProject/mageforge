@@ -22,9 +22,9 @@
     --mageforge-color-slate-400: #94a3b8;
     --mageforge-color-orange: #fb923c;
     --mageforge-color-pink: #C850C0;
-    --mageforge-toolbar-purple: #a855f7;
+    --mageforge-color-purple: #a855f7;
     --mageforge-color-amber: #edb04d;
-    --mageforge-group-color-wcag: var(--mageforge-toolbar-purple);
+    --mageforge-group-color-wcag: var(--mageforge-color-purple);
     --mageforge-group-color-html-quality: var(--mageforge-color-blue);
     --mageforge-group-color-performance: var(--mageforge-color-orange);
     --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
@@ -436,15 +436,15 @@
     color: var(--mageforge-group-color-performance);
 }
 
-.mageforge-toolbar-menu-item[data-group="wcag"] .mageforge-toolbar-menu-icon {
+.mageforge-toolbar-menu-item[data-group-key="wcag"] .mageforge-toolbar-menu-icon {
     color: var(--mageforge-group-color-wcag);
 }
 
-.mageforge-toolbar-menu-item[data-group="html-quality"] .mageforge-toolbar-menu-icon {
+.mageforge-toolbar-menu-item[data-group-key="html-quality"] .mageforge-toolbar-menu-icon {
     color: var(--mageforge-group-color-html-quality);
 }
 
-.mageforge-toolbar-menu-item[data-group="performance"] .mageforge-toolbar-menu-icon {
+.mageforge-toolbar-menu-item[data-group-key="performance"] .mageforge-toolbar-menu-icon {
     color: var(--mageforge-group-color-performance);
 }
 
