@@ -50,16 +50,63 @@ export const domMethods = {
     /**
      * Find the MageForge block that contains a given element.
      *
-     * Walks up the DOM via closest() to find the nearest ancestor (or self)
-     * that carries a data-mageforge-id attribute.
+     * Primary: walks up via closest() for the nearest [data-mageforge-id] ancestor.
+     * Fallback: for PageBuilder content with multiple root elements (rows), only the
+     * first root gets data-mageforge-id injected. Walk up to the root [data-content-type]
+     * element and search siblings for the nearest [data-mageforge-id].
      *
      * @param {Element} element
      * @returns {{ data: Object, elements: Element[] }|null}
      */
     findBlockForElement(element) {
         const blockEl = element.closest('[data-mageforge-id]');
-        if (!blockEl) return null;
+        if (blockEl) return this._parseBlockElement(blockEl);
 
-        return this._parseBlockElement(blockEl);
+        // PageBuilder fallback: multi-root CMS blocks (e.g. multiple rows)
+        const rootPb = this._findRootPageBuilderElement(element);
+        if (rootPb) {
+            const sibling = this._findNearestMageForgeBlock(rootPb);
+            if (sibling) return this._parseBlockElement(sibling);
+        }
+
+        return null;
+    },
+
+    /**
+     * Walk up the DOM to find the topmost [data-content-type] element (PageBuilder root).
+     *
+     * @param {Element} element
+     * @returns {Element|null}
+     */
+    _findRootPageBuilderElement(element) {
+        let current = element;
+        let rootPb = null;
+        while (current && current !== document.body) {
+            if (current.hasAttribute('data-content-type')) {
+                rootPb = current;
+            }
+            current = current.parentElement;
+        }
+        return rootPb;
+    },
+
+    /**
+     * Search preceding and following siblings for the nearest [data-mageforge-id] element.
+     *
+     * @param {Element} element
+     * @returns {Element|null}
+     */
+    _findNearestMageForgeBlock(element) {
+        let sibling = element.previousElementSibling;
+        while (sibling) {
+            if (sibling.hasAttribute('data-mageforge-id')) return sibling;
+            sibling = sibling.previousElementSibling;
+        }
+        sibling = element.nextElementSibling;
+        while (sibling) {
+            if (sibling.hasAttribute('data-mageforge-id')) return sibling;
+            sibling = sibling.nextElementSibling;
+        }
+        return null;
     },
 };
