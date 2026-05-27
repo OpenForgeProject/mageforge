@@ -98,20 +98,6 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
-     * Check if rendered HTML contains wire attributes (Magewire/Livewire components)
-     *
-     * Wrapping these in HTML comments breaks wire:id injection which relies on
-     * finding the first root element via regex.
-     *
-     * @param string $html
-     * @return bool
-     */
-    private function containsWireAttributes(string $html): bool
-    {
-        return str_contains($html, 'wire:id=') || str_contains($html, 'wire:initial-data=');
-    }
-
-    /**
      * Insert inspector data attributes into the rendered block contents
      *
      * @param BlockInterface $block
@@ -137,24 +123,7 @@ class InspectorHints implements TemplateEngineInterface
         }
 
         // Skip inspector wrapping for templates in excluded paths (e.g. /magewire/ directories).
-        // Magewire injects wire:id AFTER the template engine returns via regex on the root element.
-        // Wrapping the output in HTML comments before that element breaks the injection.
         if ($this->isExcludedTemplate($templateFile)) {
-            return $result;
-        }
-
-        // Skip inspector wrapping for Magewire component blocks.
-        // Magewire sets a 'magewire' data key on the block before rendering and injects wire:id
-        // via regex AFTER the template engine returns. Wrapping the output in HTML comments
-        // shifts the offset used by insertAttributesIntoHtmlRoot(), causing broken components.
-        // Soft dependency: hasData() is a Magento DataObject method, not a Magewire class.
-        if (method_exists($block, 'hasData') && $block->hasData('magewire')) {
-            return $result;
-        }
-
-        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire).
-        // This catches container blocks whose children have already been rendered with wire attributes.
-        if ($this->containsWireAttributes($result)) {
             return $result;
         }
 
