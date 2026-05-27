@@ -219,6 +219,9 @@ class InspectorHints implements TemplateEngineInterface
         $cacheMetrics = $this->cacheCollector->getCacheInfo($block);
         $formattedMetrics = $this->cacheCollector->formatMetricsForJson($renderMetrics, $cacheMetrics);
 
+        // Detect CMS block identifier (e.g. for PageBuilder blocks rendered via Magento\Cms\Block\Block)
+        $cmsBlockId = method_exists($block, 'getBlockId') ? (string) $block->getBlockId() : '';
+
         // Build metadata as JSON
         $metadata = [
             'id' => $wrapperId,
@@ -229,6 +232,7 @@ class InspectorHints implements TemplateEngineInterface
             'parent' => $parentBlock,
             'alias' => $blockAlias,
             'override' => $isOverride,
+            'cmsBlockId' => $cmsBlockId,
             'performance' => $formattedMetrics['performance'],
             'cache' => $formattedMetrics['cache'],
         ];
