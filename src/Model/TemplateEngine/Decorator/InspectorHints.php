@@ -177,7 +177,13 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
-     * Inject MageForge inspector comment markers into HTML
+     * Inject MageForge inspector data attributes into the first root HTML element
+     *
+     * Injects data-mageforge-id and data-mageforge-block on the opening tag of the
+     * first HTML element in the output. If the content does not start with an HTML
+     * element (e.g. a plain URL or text fragment used inside an href attribute by a
+     * parent PageBuilder template), injection is skipped entirely to avoid corrupting
+     * the surrounding markup.
      *
      * @param string $html
      * @param BlockInterface $block
@@ -227,25 +233,40 @@ class InspectorHints implements TemplateEngineInterface
             'cache' => $formattedMetrics['cache'],
         ];
 
-        // JSON encode with proper escaping for HTML comments
         $jsonMetadata = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         if ($jsonMetadata === false) {
             return $html;
         }
 
-        // Escape any comment terminators in JSON to prevent breaking out of comment
-        $jsonMetadata = str_replace('-->', '--&gt;', $jsonMetadata);
+        // Escape single quotes so JSON can be safely embedded in a single-quoted HTML attribute.
+        // The browser automatically decodes HTML entities when getAttribute() is called,
+        // so JSON.parse() on the JS side will receive the correct string.
+        $safeJson = str_replace("'", '&#39;', $jsonMetadata);
 
-        // Wrap content with comment markers
-        $wrappedHtml = sprintf(
-            "<!-- MAGEFORGE_START %s -->\n%s\n<!-- MAGEFORGE_END %s -->",
-            $jsonMetadata,
+        // Inject data-mageforge-* attributes on the first root HTML element.
+        // This avoids HTML comment nodes which corrupt markup when block output is
+        // embedded inside HTML attribute values (e.g. PageBuilder URL blocks in href="...").
+        $replaced = false;
+        $result = preg_replace_callback(
+            '/^(\s*<[a-zA-Z][a-zA-Z0-9]*)/s',
+            function (array $matches) use ($wrapperId, $safeJson, &$replaced): string {
+                $replaced = true;
+                return $matches[0]
+                    . ' data-mageforge-id="' . $wrapperId . '"'
+                    . ' data-mageforge-block=\'' . $safeJson . "'";
+            },
             $html,
-            $wrapperId,
+            1,
         );
 
-        return $wrappedHtml;
+        // If content doesn't start with an HTML element (e.g. plain text, URLs),
+        // skip injection to avoid corrupting attribute values in parent templates.
+        if (!$replaced || $result === null) {
+            return $html;
+        }
+
+        return $result;
     }
 
     /**
