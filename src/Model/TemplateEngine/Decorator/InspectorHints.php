@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
+use Magento\Framework\Escaper;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
@@ -29,6 +30,7 @@ class InspectorHints implements TemplateEngineInterface
      * @param Random $random
      * @param BlockCacheCollector $cacheCollector
      * @param File $fileDriver
+     * @param Escaper $escaper
      * @param string[] $excludedClassPrefixes Block class prefixes to skip inspector wrapping for
      * @param string[] $excludedTemplatePaths Template path substrings to skip inspector wrapping for
      */
@@ -38,6 +40,7 @@ class InspectorHints implements TemplateEngineInterface
         private readonly Random $random,
         private readonly BlockCacheCollector $cacheCollector,
         private readonly File $fileDriver,
+        private readonly Escaper $escaper,
         private readonly array $excludedClassPrefixes = [],
         private readonly array $excludedTemplatePaths = [],
     ) {
@@ -212,10 +215,11 @@ class InspectorHints implements TemplateEngineInterface
             return $html;
         }
 
-        // Escape single quotes so JSON can be safely embedded in a single-quoted HTML attribute.
+        // Escape all characters that need HTML-encoding so the JSON can be safely
+        // embedded in an HTML attribute. escapeHtml handles &, <, > and quotes.
         // The browser automatically decodes HTML entities when getAttribute() is called,
         // so JSON.parse() on the JS side will receive the correct string.
-        $safeJson = str_replace("'", '&#39;', $jsonMetadata);
+        $safeJson = $this->escaper->escapeHtml($jsonMetadata);
 
         // Inject data-mageforge-* attributes on the first root HTML element.
         // This avoids HTML comment nodes which corrupt markup when block output is
@@ -227,7 +231,7 @@ class InspectorHints implements TemplateEngineInterface
                 $replaced = true;
                 return $matches[0]
                     . ' data-mageforge-id="' . $wrapperId . '"'
-                    . ' data-mageforge-block=\'' . $safeJson . "'";
+                    . ' data-mageforge-block="' . $safeJson . '"';
             },
             $html,
             1,
