@@ -1,0 +1,14 @@
+/.agents/                         export-ignore
+/.ddev/                           export-ignore
+/.github/                         export-ignore
+/.trunk/                          export-ignore
+/.vscode/                         export-ignore
+/docs/                            export-ignore
+/phpstan.neon                     export-ignore
+/mago.toml                        export-ignore
+/CONTRIBUTING.md                  export-ignore
+/context7.json                    export-ignore
+/release-please-config.json       export-ignore
+/.release-please-manifest.json    export-ignore
+/skills-lock.json                 export-ignore
+/.trunkignore                     export-ignore

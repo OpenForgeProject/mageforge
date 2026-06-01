@@ -2,6 +2,8 @@
 
 We appreciate your interest in contributing to MageForge! Please follow the guidelines below to ensure a smooth and effective contribution process.
 
+> **New here?** Start with the [Development Guide](./docs/development.md) to set up your local DDEV environment before making any changes.
+
 ## Submitting a Pull Request
 
 1. **Create an Issue**: Start by [creating an issue](https://github.com/OpenForgeProject/mageforge/issues) to describe your feature request or bug report. Be sure to include all relevant details.

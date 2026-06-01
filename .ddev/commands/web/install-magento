@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+## Description: Install magento and mageforge module
+## Usage: install-magento
+## Example: ddev install-magento
+
+# Ensure we are always in the DDEV project root inside the container
+cd /var/www/html || exit 1
+
+# global config
+MAGENTO_FOLDER="magento"
+
+# check if Magento is already installed
+if [[ -f "${MAGENTO_FOLDER}/bin/magento" ]]; then
+		echo "Magento is already installed. Skipping install-magento."
+		exit 0
+fi
+
+# download magento
+composer create-project \
+	--repository-url=https://mirror.mage-os.org/ \
+	magento/project-community-edition \
+	magento-temp
+
+# Create Magento Folder if not exist
+if [[ ! -d "${MAGENTO_FOLDER}" ]]; then
+	mkdir -p "${MAGENTO_FOLDER}"
+fi
+
+# copy everything from magento-temp into magento folder
+cp -a magento-temp/. "${MAGENTO_FOLDER}/"
+
+# remove magento-temp
+rm -rf magento-temp
+
+# change to magento directory
+cd "${MAGENTO_FOLDER}" || exit 1
+
+# Remove *.sample extension
+find . -name "*.sample" -type f -exec sh -c 'mv "$1" "${1%.sample}"' _ {} \;
+rm -f package-lock.json # remove basic package-lock.json to avoid conflicts
+
+# create missing local-themes.js file for grunt tasks
+echo 'module.exports = {};' >dev/tools/grunt/configs/local-themes.js
+
+# install magento
+bin/magento setup:install \
+	--admin-email=admin@mageforge.ddev.site \
+	--admin-firstname=Mage \
+	--admin-lastname=Forge \
+	--admin-password=admin123 \
+	--admin-user=admin \
+	--backend-frontname=admin \
+	--db-host=db \
+	--db-name=db \
+	--db-password=db \
+	--db-user=db \
+	--search-engine=opensearch \
+	--opensearch-host=opensearch \
+	--opensearch-port=9200 \
+	--base-url=https://mageforge.ddev.site/ \
+	--language=en_US
+
+# set developer mode
+bin/magento deploy:mode:set developer
+
+# disable 2FA
+bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
+
+# install sample data
+bin/magento sampledata:deploy
+
+# add path repository pointing to the module at the repo root
+composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":true}}'
+
+# require module from path repo
+composer require 'openforgeproject/mageforge:*'
+
+# enable module
+bin/magento setup:upgrade
