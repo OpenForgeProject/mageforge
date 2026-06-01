@@ -17,6 +17,30 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.22.0](https://github.com/OpenForgeProject/mageforge/compare/0.21.1...0.22.0) (2026-06-01)
+
+
+### Added
+
+* add CMS block identifier support in InspectorHints and tabs ([dcce46d](https://github.com/OpenForgeProject/mageforge/commit/dcce46d48b9b9deedb02ee82014719da70468561))
+* add Escaper dependency and improve JSON escaping in InspectorHints ([adaa5db](https://github.com/OpenForgeProject/mageforge/commit/adaa5db94326136ebaa9269ffde1a9b58a0ca3f9))
+* add magewire support for Inspector Hints ([f47d497](https://github.com/OpenForgeProject/mageforge/commit/f47d4976315c0be2e9b5a23b08da4ad1fc679b66))
+* add new color group styles to toolbar ([#188](https://github.com/OpenForgeProject/mageforge/issues/188)) ([fc4b7ee](https://github.com/OpenForgeProject/mageforge/commit/fc4b7ee8f6ae90a0d9d560c727339b6f56b83db8))
+* add new color group styles to toolbar ([#188](https://github.com/OpenForgeProject/mageforge/issues/188)) ([3cf6803](https://github.com/OpenForgeProject/mageforge/commit/3cf68032c635820abfa04912116b90a6999f23ab))
+* data-mageforge attribute handling ([35975ac](https://github.com/OpenForgeProject/mageforge/commit/35975ac997b7e107d774e666ee3f7f1e78f19ef6))
+* enable phpcs annotations for method arguments in InspectorHintsFactory ([e8c2ee3](https://github.com/OpenForgeProject/mageforge/commit/e8c2ee3d3d4efd98af21b2b85be1c465cd340b4a))
+* enhance block detection for PageBuilder elements in inspector ([0121ec8](https://github.com/OpenForgeProject/mageforge/commit/0121ec8174e1e98d09e85832216b91ed1ef499b6))
+* enhance InspectorHints to inject data attributes into root HTML elements ([0a9cf42](https://github.com/OpenForgeProject/mageforge/commit/0a9cf42980a7f95627ce3cf0a5a9a18b128624a4))
+* implement InspectorHintsFactory for creating InspectorHints instances ([3a27262](https://github.com/OpenForgeProject/mageforge/commit/3a2726230749ba25c56c13d102c763e42ff68c4d))
+* improve accessibility and functionality of inspector and toolbar components ([2873970](https://github.com/OpenForgeProject/mageforge/commit/287397062c19afa157f8e7b486319db7fca62e39))
+* improve accessibility and styling for inspector and toolbar buttons ([68b6bea](https://github.com/OpenForgeProject/mageforge/commit/68b6beacdf6743f2bd26addbdfc108a21d4a8ff4))
+* update CompatibilityCheckCommand to handle summary directly ([57a0263](https://github.com/OpenForgeProject/mageforge/commit/57a0263144329bd8e29f61ce8e2d894d534ec94e))
+
+
+### Fixed
+
+* simplify warning display logic in CompatibilityChecker ([41a895f](https://github.com/OpenForgeProject/mageforge/commit/41a895f44097e0d8122201f72155dfe16485819f))
+
 ## [0.21.1](https://github.com/OpenForgeProject/mageforge/compare/0.21.0...0.21.1) (2026-05-15)
 
 
