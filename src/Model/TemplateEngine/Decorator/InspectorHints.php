@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
+use Magento\Framework\Escaper;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Math\Random;
 use Magento\Framework\View\Element\AbstractBlock;
@@ -29,6 +30,7 @@ class InspectorHints implements TemplateEngineInterface
      * @param Random $random
      * @param BlockCacheCollector $cacheCollector
      * @param File $fileDriver
+     * @param Escaper $escaper
      * @param string[] $excludedClassPrefixes Block class prefixes to skip inspector wrapping for
      * @param string[] $excludedTemplatePaths Template path substrings to skip inspector wrapping for
      */
@@ -38,6 +40,7 @@ class InspectorHints implements TemplateEngineInterface
         private readonly Random $random,
         private readonly BlockCacheCollector $cacheCollector,
         private readonly File $fileDriver,
+        private readonly Escaper $escaper,
         private readonly array $excludedClassPrefixes = [],
         private readonly array $excludedTemplatePaths = [],
     ) {
@@ -98,20 +101,6 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
-     * Check if rendered HTML contains wire attributes (Magewire/Livewire components)
-     *
-     * Wrapping these in HTML comments breaks wire:id injection which relies on
-     * finding the first root element via regex.
-     *
-     * @param string $html
-     * @return bool
-     */
-    private function containsWireAttributes(string $html): bool
-    {
-        return str_contains($html, 'wire:id=') || str_contains($html, 'wire:initial-data=');
-    }
-
-    /**
      * Insert inspector data attributes into the rendered block contents
      *
      * @param BlockInterface $block
@@ -137,24 +126,7 @@ class InspectorHints implements TemplateEngineInterface
         }
 
         // Skip inspector wrapping for templates in excluded paths (e.g. /magewire/ directories).
-        // Magewire injects wire:id AFTER the template engine returns via regex on the root element.
-        // Wrapping the output in HTML comments before that element breaks the injection.
         if ($this->isExcludedTemplate($templateFile)) {
-            return $result;
-        }
-
-        // Skip inspector wrapping for Magewire component blocks.
-        // Magewire sets a 'magewire' data key on the block before rendering and injects wire:id
-        // via regex AFTER the template engine returns. Wrapping the output in HTML comments
-        // shifts the offset used by insertAttributesIntoHtmlRoot(), causing broken components.
-        // Soft dependency: hasData() is a Magento DataObject method, not a Magewire class.
-        if (method_exists($block, 'hasData') && $block->hasData('magewire')) {
-            return $result;
-        }
-
-        // Skip inspector wrapping if the rendered HTML contains wire attributes (Magewire/Livewire).
-        // This catches container blocks whose children have already been rendered with wire attributes.
-        if ($this->containsWireAttributes($result)) {
             return $result;
         }
 
@@ -177,7 +149,13 @@ class InspectorHints implements TemplateEngineInterface
     }
 
     /**
-     * Inject MageForge inspector comment markers into HTML
+     * Inject MageForge inspector data attributes into the first root HTML element
+     *
+     * Injects data-mageforge-id and data-mageforge-block on the opening tag of the
+     * first HTML element in the output. If the content does not start with an HTML
+     * element (e.g. a plain URL or text fragment used inside an href attribute by a
+     * parent PageBuilder template), injection is skipped entirely to avoid corrupting
+     * the surrounding markup.
      *
      * @param string $html
      * @param BlockInterface $block
@@ -213,6 +191,9 @@ class InspectorHints implements TemplateEngineInterface
         $cacheMetrics = $this->cacheCollector->getCacheInfo($block);
         $formattedMetrics = $this->cacheCollector->formatMetricsForJson($renderMetrics, $cacheMetrics);
 
+        // Detect CMS block identifier (e.g. for PageBuilder blocks rendered via Magento\Cms\Block\Block)
+        $cmsBlockId = method_exists($block, 'getBlockId') ? (string) $block->getBlockId() : '';
+
         // Build metadata as JSON
         $metadata = [
             'id' => $wrapperId,
@@ -223,29 +204,46 @@ class InspectorHints implements TemplateEngineInterface
             'parent' => $parentBlock,
             'alias' => $blockAlias,
             'override' => $isOverride,
+            'cmsBlockId' => $cmsBlockId,
             'performance' => $formattedMetrics['performance'],
             'cache' => $formattedMetrics['cache'],
         ];
 
-        // JSON encode with proper escaping for HTML comments
         $jsonMetadata = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         if ($jsonMetadata === false) {
             return $html;
         }
 
-        // Escape any comment terminators in JSON to prevent breaking out of comment
-        $jsonMetadata = str_replace('-->', '--&gt;', $jsonMetadata);
+        // Escape all characters that need HTML-encoding so the JSON can be safely
+        // embedded in an HTML attribute. escapeHtml handles &, <, > and quotes.
+        // The browser automatically decodes HTML entities when getAttribute() is called,
+        // so JSON.parse() on the JS side will receive the correct string.
+        $safeJson = $this->escaper->escapeHtml($jsonMetadata);
 
-        // Wrap content with comment markers
-        $wrappedHtml = sprintf(
-            "<!-- MAGEFORGE_START %s -->\n%s\n<!-- MAGEFORGE_END %s -->",
-            $jsonMetadata,
+        // Inject data-mageforge-* attributes on the first root HTML element.
+        // This avoids HTML comment nodes which corrupt markup when block output is
+        // embedded inside HTML attribute values (e.g. PageBuilder URL blocks in href="...").
+        $replaced = false;
+        $result = preg_replace_callback(
+            '/^(\s*<[a-zA-Z][a-zA-Z0-9-]*)/s',
+            function (array $matches) use ($wrapperId, $safeJson, &$replaced): string {
+                $replaced = true;
+                return $matches[0]
+                    . ' data-mageforge-id="' . $wrapperId . '"'
+                    . ' data-mageforge-block="' . $safeJson . '"';
+            },
             $html,
-            $wrapperId,
+            1,
         );
 
-        return $wrappedHtml;
+        // If content doesn't start with an HTML element (e.g. plain text, URLs),
+        // skip injection to avoid corrupting attribute values in parent templates.
+        if (!$replaced || $result === null) {
+            return $html;
+        }
+
+        return $result;
     }
 
     /**
