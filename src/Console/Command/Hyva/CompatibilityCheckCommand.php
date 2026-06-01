@@ -257,7 +257,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         }
 
         // Display summary
-        $this->displaySummary($results);
+        $this->displaySummary($results['summary']);
 
         // Display recommendations if there are issues
         if ($results['hasIncompatibilities']) {
@@ -336,13 +336,11 @@ class CompatibilityCheckCommand extends AbstractCommand
     /**
      * Display summary statistics
      *
-     * @param array $results
-     * @phpstan-param array{summary: CheckSummary} $results
+     * @param array $summary
+     * @phpstan-param CheckSummary $summary
      */
-    private function displaySummary(array $results): void
+    private function displaySummary(array $summary): void
     {
-        $summary = $results['summary'];
-
         $this->io->section('Summary');
 
         $summaryData = [

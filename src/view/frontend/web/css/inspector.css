@@ -92,12 +92,17 @@
     align-items: center;
     gap: 8px;
     font-family: var(--mageforge-font-family);
-    font-size: 0.75rem;
+    font-size: 14px;
     font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: none;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(8px);
     letter-spacing: 0.025em;
+    vertical-align: middle;
+    text-decoration: none;
 }
 
 .mageforge-inspector-float-button:hover {
@@ -107,6 +112,11 @@
 
 .mageforge-inspector-float-button:active {
     transform: translateY(0);
+}
+
+.mageforge-inspector-float-button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
 }
 
 .mageforge-inspector-float-button.mageforge-active {

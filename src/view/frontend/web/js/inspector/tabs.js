@@ -127,17 +127,18 @@ export const tabsMethods = {
         const src = parentBlock.data || {};
 
         const parentData = {
-            template:    src.template   || '',
-            block:       src.block      || '',
-            module:      src.module     || '',
-            viewModel:   src.viewModel  || '',
-            parent:      src.parent     || '',
-            alias:       src.alias      || '',
-            override:    src.override   || '0',
-            blockClass:  src.block      || '',
-            parentBlock: src.parent     || '',
-            blockAlias:  src.alias      || '',
+            template:    src.template    || '',
+            block:       src.block       || '',
+            module:      src.module      || '',
+            viewModel:   src.viewModel   || '',
+            parent:      src.parent      || '',
+            alias:       src.alias       || '',
+            override:    src.override    || '0',
+            blockClass:  src.block       || '',
+            parentBlock: src.parent      || '',
+            blockAlias:  src.alias       || '',
             isOverride:  src.override === '1',
+            cmsBlockId:  src.cmsBlockId  || '',
         };
 
         // Inheritance note
@@ -189,6 +190,11 @@ export const tabsMethods = {
         }
         if (data.viewModel) {
             container.appendChild(this.createInfoSection('ViewModel', data.viewModel, '#22d3ee'));
+        }
+
+        // CMS Block identifier (only for Magento_Cms blocks with PageBuilder content)
+        if (data.cmsBlockId) {
+            container.appendChild(this.createInfoSection('CMS Block', data.cmsBlockId, '#f472b6'));
         }
 
         // Module section

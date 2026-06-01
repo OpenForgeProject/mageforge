@@ -98,10 +98,17 @@ export const uiMethods = {
         const rect = this.getElementRect(element);
         const elementId = element.getAttribute('data-mageforge-id');
 
-        // Only rebuild badge content if it's a different element
-        if (this.infoBadge.dataset.currentElement !== elementId) {
+        // Only rebuild badge content if it's a different element.
+        // For PageBuilder fallback elements that lack data-mageforge-id, use element
+        // reference comparison to avoid rebuilding on every hover/click.
+        const isSame = elementId !== null
+            ? this.infoBadge.dataset.currentElement === elementId
+            : this.infoBadge._currentElement === element;
+
+        if (!isSame) {
             this.buildBadgeContent(element);
-            this.infoBadge.dataset.currentElement = elementId;
+            this.infoBadge.dataset.currentElement = elementId ?? '';
+            this.infoBadge._currentElement = element;
         }
 
         this.positionBadge(rect);

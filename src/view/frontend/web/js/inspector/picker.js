@@ -232,6 +232,12 @@ export const pickerMethods = {
             return target;
         }
 
+        // For PageBuilder elements where no block could be resolved (e.g. injection
+        // was skipped entirely), still open the inspector showing inherited/no-data state.
+        if (target.closest('[data-content-type]')) {
+            return target;
+        }
+
         return null;
     },
 };
