@@ -39,7 +39,7 @@ export const domMethods = {
             data.id = el.getAttribute('data-mageforge-id');
             return {
                 data,
-                elements: [el, ...el.querySelectorAll('*')],
+                elements: [el],
             };
         } catch (e) {
             console.error('Failed to parse MageForge block data:', e);

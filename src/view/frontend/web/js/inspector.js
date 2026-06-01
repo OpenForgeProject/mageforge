@@ -76,10 +76,6 @@ function _registerMageforgeInspector() {
         pageTimings: null,
         performanceObservers: [],
 
-        // Block detection cache
-        cachedBlocks: null,
-        lastBlocksCacheTime: 0,
-
         // Window event handler refs (for cleanup)
         _inspectorStateHandler: null,
 
@@ -147,8 +143,18 @@ function _registerMageforgeInspector() {
                 this.toggleInspector();
             };
             btn.onkeydown = (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === 'Enter') {
                     e.preventDefault();
+                    e.stopPropagation();
+                    this.toggleInspector();
+                }
+                if (e.key === ' ') {
+                    e.preventDefault(); // prevent page scroll on Space
+                }
+            };
+            btn.onkeyup = (e) => {
+                if (e.key === ' ') {
+                    e.stopPropagation();
                     this.toggleInspector();
                 }
             };

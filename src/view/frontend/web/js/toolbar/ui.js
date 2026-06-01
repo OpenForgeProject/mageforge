@@ -130,7 +130,11 @@ export const uiMethods = {
                 this.runAllAuditsForScore();
             };
             this.runAllButton.onkeydown = (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.runAllAuditsForScore(); }
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); this.runAllAuditsForScore(); }
+                if (e.key === ' ') { e.preventDefault(); }
+            };
+            this.runAllButton.onkeyup = (e) => {
+                if (e.key === ' ') { e.stopPropagation(); this.runAllAuditsForScore(); }
             };
             buttonRow.appendChild(this.runAllButton);
 
@@ -146,7 +150,11 @@ export const uiMethods = {
                 this.resetScore();
             };
             this.resetButton.onkeydown = (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.resetScore(); }
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); this.resetScore(); }
+                if (e.key === ' ') { e.preventDefault(); }
+            };
+            this.resetButton.onkeyup = (e) => {
+                if (e.key === ' ') { e.stopPropagation(); this.resetScore(); }
             };
             buttonRow.appendChild(this.resetButton);
 
@@ -169,7 +177,11 @@ export const uiMethods = {
                 this.runAllAuditsForScore();
             };
             this.runAllButton.onkeydown = (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.runAllAuditsForScore(); }
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); this.runAllAuditsForScore(); }
+                if (e.key === ' ') { e.preventDefault(); }
+            };
+            this.runAllButton.onkeyup = (e) => {
+                if (e.key === ' ') { e.stopPropagation(); this.runAllAuditsForScore(); }
             };
             buttonRow.appendChild(this.runAllButton);
 
@@ -185,7 +197,11 @@ export const uiMethods = {
                 this.resetScore();
             };
             this.resetButton.onkeydown = (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.resetScore(); }
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); this.resetScore(); }
+                if (e.key === ' ') { e.preventDefault(); }
+            };
+            this.resetButton.onkeyup = (e) => {
+                if (e.key === ' ') { e.stopPropagation(); this.resetScore(); }
             };
             buttonRow.appendChild(this.resetButton);
 
@@ -220,8 +236,18 @@ export const uiMethods = {
             this.toggleMenu();
         };
         this.burgerButton.onkeydown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === 'Enter') {
                 e.preventDefault();
+                e.stopPropagation();
+                this.toggleMenu();
+            }
+            if (e.key === ' ') {
+                e.preventDefault(); // prevent page scroll
+            }
+        };
+        this.burgerButton.onkeyup = (e) => {
+            if (e.key === ' ') {
+                e.stopPropagation();
                 this.toggleMenu();
             }
         };
@@ -265,7 +291,11 @@ export const uiMethods = {
             this.toggleGroup(key);
         };
         header.onkeydown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggleGroup(key); }
+            if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); this.toggleGroup(key); }
+            if (e.key === ' ') { e.preventDefault(); }
+        };
+        header.onkeyup = (e) => {
+            if (e.key === ' ') { e.stopPropagation(); this.toggleGroup(key); }
         };
 
         const headerLabel = document.createElement('span');
@@ -363,7 +393,11 @@ export const uiMethods = {
             callback();
         };
         item.onkeydown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); callback(); }
+            if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); callback(); }
+            if (e.key === ' ') { e.preventDefault(); }
+        };
+        item.onkeyup = (e) => {
+            if (e.key === ' ') { e.stopPropagation(); callback(); }
         };
         return item;
     },

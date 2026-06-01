@@ -114,6 +114,11 @@
     transform: translateY(0);
 }
 
+.mageforge-inspector-float-button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
 .mageforge-inspector-float-button.mageforge-active {
     background: linear-gradient(135deg, var(--mageforge-color-green) 0%, var(--mageforge-color-green-dark) 100%);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 8px 20px rgba(16, 185, 129, 0.5);

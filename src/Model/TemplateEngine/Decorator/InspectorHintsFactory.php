@@ -6,14 +6,24 @@ namespace OpenForgeProject\MageForge\Model\TemplateEngine\Decorator;
 
 use Magento\Framework\ObjectManagerInterface;
 
+/**
+ * Factory for creating InspectorHints instances via the ObjectManager.
+ */
 class InspectorHintsFactory
 {
+    /**
+     * @param ObjectManagerInterface $objectManager
+     */
     public function __construct(
         private readonly ObjectManagerInterface $objectManager,
-    ) {}
+    ) {
+    }
 
     /**
+     * Create a new InspectorHints instance.
+     *
      * @param array<string, mixed> $data
+     * @return InspectorHints
      */
     public function create(array $data = []): InspectorHints
     {

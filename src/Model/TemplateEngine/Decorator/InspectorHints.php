@@ -226,7 +226,7 @@ class InspectorHints implements TemplateEngineInterface
         // embedded inside HTML attribute values (e.g. PageBuilder URL blocks in href="...").
         $replaced = false;
         $result = preg_replace_callback(
-            '/^(\s*<[a-zA-Z][a-zA-Z0-9]*)/s',
+            '/^(\s*<[a-zA-Z][a-zA-Z0-9-]*)/s',
             function (array $matches) use ($wrapperId, $safeJson, &$replaced): string {
                 $replaced = true;
                 return $matches[0]

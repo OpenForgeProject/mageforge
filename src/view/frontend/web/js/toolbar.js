@@ -21,16 +21,16 @@ function _registerMageforgeToolbar() {
         /** @type {HTMLDivElement|null} */
         container: null,
 
-        /** @type {HTMLButtonElement|null} */
+        /** @type {HTMLDivElement|null} */
         burgerButton: null,
 
         /** @type {HTMLDivElement|null} */
         menu: null,
 
-        /** @type {HTMLButtonElement|null} */
+        /** @type {HTMLDivElement|null} */
         runAllButton: null,
 
-        /** @type {HTMLButtonElement|null} */
+        /** @type {HTMLDivElement|null} */
         resetButton: null,
 
         // ====================================================================
