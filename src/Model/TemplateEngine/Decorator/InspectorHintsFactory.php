@@ -19,12 +19,14 @@ class InspectorHintsFactory
     ) {
     }
 
+    // phpcs:disable Magento2.Annotation.MethodArguments.ArgumentMissing
     /**
      * Create a new InspectorHints instance.
      *
      * @param array<string, mixed> $data
      * @return InspectorHints
      */
+    // phpcs:enable Magento2.Annotation.MethodArguments.ArgumentMissing
     public function create(array $data = []): InspectorHints
     {
         /** @var InspectorHints $instance */
