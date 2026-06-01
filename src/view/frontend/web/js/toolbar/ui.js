@@ -309,7 +309,7 @@ export const uiMethods = {
      * @param {string} description
      * @param {Function} callback
      * @param {?string} groupKey - Optional parent group key for the item
-     * @return {HTMLButtonElement}
+     * @return {HTMLDivElement}
      */
     createMenuItem(key, icon, label, description, callback, groupKey = null) {
         const item = document.createElement('div');
