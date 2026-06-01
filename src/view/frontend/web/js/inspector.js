@@ -109,6 +109,7 @@ function _registerMageforgeInspector() {
             this._inspectorStateHandler = (e) => {
                 if (this._inspectorFloatButton) {
                     this._inspectorFloatButton.classList.toggle('mageforge-active', e.detail.active);
+                    this._inspectorFloatButton.setAttribute('aria-pressed', e.detail.active ? 'true' : 'false');
                 }
             };
             window.addEventListener('mageforge:toolbar:inspector-state', this._inspectorStateHandler);
@@ -123,10 +124,13 @@ function _registerMageforgeInspector() {
         },
 
         _createInspectorFloatButton() {
-            const btn = document.createElement('button');
+            // Use div instead of button to avoid Luma/theme button CSS overrides
+            const btn = document.createElement('div');
             btn.className = 'mageforge-inspector-float-button';
-            btn.type = 'button';
             btn.title = 'Activate Inspector (Ctrl+Shift+I)';
+            btn.setAttribute('role', 'button');
+            btn.setAttribute('tabindex', '0');
+            btn.setAttribute('aria-pressed', 'false');
             btn.innerHTML = `
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="20" width="20">
                     <g stroke-width="0"></g>
@@ -141,6 +145,12 @@ function _registerMageforgeInspector() {
                 e.preventDefault();
                 e.stopPropagation();
                 this.toggleInspector();
+            };
+            btn.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.toggleInspector();
+                }
             };
             return btn;
         },

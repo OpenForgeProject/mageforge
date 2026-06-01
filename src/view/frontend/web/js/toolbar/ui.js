@@ -117,8 +117,9 @@ export const uiMethods = {
             const buttonRow = document.createElement('div');
             buttonRow.className = 'mageforge-toolbar-menu-button-row';
 
-            this.runAllButton = document.createElement('button');
-            this.runAllButton.type = 'button';
+            this.runAllButton = document.createElement('div');
+            this.runAllButton.setAttribute('role', 'button');
+            this.runAllButton.setAttribute('tabindex', '0');
             this.runAllButton.className = 'mageforge-toolbar-menu-run-all';
             this.runAllButton.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
@@ -128,10 +129,14 @@ export const uiMethods = {
                 e.stopPropagation();
                 this.runAllAuditsForScore();
             };
+            this.runAllButton.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.runAllAuditsForScore(); }
+            };
             buttonRow.appendChild(this.runAllButton);
 
-            this.resetButton = document.createElement('button');
-            this.resetButton.type = 'button';
+            this.resetButton = document.createElement('div');
+            this.resetButton.setAttribute('role', 'button');
+            this.resetButton.setAttribute('tabindex', '0');
             this.resetButton.className = 'mageforge-toolbar-menu-reset';
             this.resetButton.title = 'Reset score and deactivate all audits';
             this.resetButton.setAttribute('aria-label', 'Reset score and deactivate all audits');
@@ -139,6 +144,9 @@ export const uiMethods = {
             this.resetButton.onclick = (e) => {
                 e.stopPropagation();
                 this.resetScore();
+            };
+            this.resetButton.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.resetScore(); }
             };
             buttonRow.appendChild(this.resetButton);
 
@@ -148,8 +156,9 @@ export const uiMethods = {
             const buttonRow = document.createElement('div');
             buttonRow.className = 'mageforge-toolbar-menu-button-row';
 
-            this.runAllButton = document.createElement('button');
-            this.runAllButton.type = 'button';
+            this.runAllButton = document.createElement('div');
+            this.runAllButton.setAttribute('role', 'button');
+            this.runAllButton.setAttribute('tabindex', '0');
             this.runAllButton.className = 'mageforge-toolbar-menu-run-all';
             this.runAllButton.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
@@ -159,10 +168,14 @@ export const uiMethods = {
                 e.stopPropagation();
                 this.runAllAuditsForScore();
             };
+            this.runAllButton.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.runAllAuditsForScore(); }
+            };
             buttonRow.appendChild(this.runAllButton);
 
-            this.resetButton = document.createElement('button');
-            this.resetButton.type = 'button';
+            this.resetButton = document.createElement('div');
+            this.resetButton.setAttribute('role', 'button');
+            this.resetButton.setAttribute('tabindex', '0');
             this.resetButton.className = 'mageforge-toolbar-menu-reset';
             this.resetButton.title = 'Deactivate all audits';
             this.resetButton.setAttribute('aria-label', 'Deactivate all audits');
@@ -170,6 +183,9 @@ export const uiMethods = {
             this.resetButton.onclick = (e) => {
                 e.stopPropagation();
                 this.resetScore();
+            };
+            this.resetButton.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.resetScore(); }
             };
             buttonRow.appendChild(this.resetButton);
 
@@ -182,11 +198,12 @@ export const uiMethods = {
         menuFooter.appendChild(credit);
         this.menu.appendChild(menuFooter);
 
-        // Burger button (left)
-        this.burgerButton = document.createElement('button');
+        // Burger button (left) — div avoids Luma/theme button CSS overrides
+        this.burgerButton = document.createElement('div');
         this.burgerButton.className = 'mageforge-toolbar-burger';
-        this.burgerButton.type = 'button';
         this.burgerButton.title = 'Audit tools';
+        this.burgerButton.setAttribute('role', 'button');
+        this.burgerButton.setAttribute('tabindex', '0');
         this.burgerButton.setAttribute('aria-label', 'MageForge Toolbar');
         this.burgerButton.setAttribute('aria-expanded', 'false');
         this.burgerButton.innerHTML = `
@@ -201,6 +218,12 @@ export const uiMethods = {
             e.preventDefault();
             e.stopPropagation();
             this.toggleMenu();
+        };
+        this.burgerButton.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleMenu();
+            }
         };
 
         this.container.appendChild(this.menu);
@@ -231,14 +254,18 @@ export const uiMethods = {
         group.className = 'mageforge-toolbar-menu-group';
         group.dataset.groupKey = key;
 
-        const header = document.createElement('button');
-        header.type = 'button';
+        const header = document.createElement('div');
+        header.setAttribute('role', 'button');
+        header.setAttribute('tabindex', '0');
         header.className = 'mageforge-toolbar-menu-group-header';
         header.setAttribute('aria-expanded', String(!this.collapsedGroups.has(key)));
         header.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.toggleGroup(key);
+        };
+        header.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggleGroup(key); }
         };
 
         const headerLabel = document.createElement('span');
@@ -285,8 +312,9 @@ export const uiMethods = {
      * @return {HTMLButtonElement}
      */
     createMenuItem(key, icon, label, description, callback, groupKey = null) {
-        const item = document.createElement('button');
-        item.type = 'button';
+        const item = document.createElement('div');
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
         item.className = 'mageforge-toolbar-menu-item';
         item.dataset.auditKey = key;
         if (groupKey) item.dataset.groupKey = groupKey;
@@ -333,6 +361,9 @@ export const uiMethods = {
             e.preventDefault();
             e.stopPropagation();
             callback();
+        };
+        item.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); callback(); }
         };
         return item;
     },
