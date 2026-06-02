@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+## Description: Run Mago (PHP analysis, formatting, and linting)
+## Usage: mago <command> [options]
+## Example: "ddev mago"
+
+set -e
+
+# Require Mago to be installed (avoid executing remote install scripts automatically)
+if ! command -v mago >/dev/null 2>&1; then
+    echo "mago is not installed. Please install it first: https://carthage.software/mago"
+    exit 1
+fi
+
+# Change to module root where mago.toml is found
+cd /var/www/html
+
+# Run Mago with provided arguments
+mago "$@"

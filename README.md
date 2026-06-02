@@ -21,6 +21,8 @@ MageForge is a powerful CLI front-end development toolkit for Magento 2 that sim
 - [Project Information](#project-information)
 - [Credits](#credits)
 
+> **Contributor?** Jump straight to the [Development Guide](./docs/development.md) for DDEV setup, workflow, and coding standards.
+
 ## Supported Magento Versions
 
 MageForge requires Magento 2.4.7 or higher with PHP 8.3 or higher.
@@ -146,15 +148,18 @@ bin/magento mageforge:theme:inspector disable
 
 ## Additional Documentation
 
+- [Commands Documentation](./docs/commands.md) - Detailed command reference
 - [Advanced Usage Guide](./docs/advanced_usage.md) - Tips, tricks and troubleshooting
 - [Custom Theme Builders Documentation](./docs/custom_theme_builders.md) - Extend MageForge for your custom themes
-- [Commands Documentation](./docs/commands.md) - Detailed command reference
+- [Development Guide](./docs/development.md) - Local dev environment setup, workflows, and contribution guide
 
 ## Support
 
 - **Report Bugs/Features**: [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions)
 - **Contributing**: See [Contributing Guidelines](./CONTRIBUTING.md)
+
+> **Want to contribute?** Check out the [Development Guide](./docs/development.md) for environment setup, workflow, and coding standards.
 
 ## Project Information
 

@@ -1,136 +1,168 @@
-# GitHub Copilot Instructions for MageForge
+# MageForge Copilot Instructions
 
-## Project Overview
+## Structure
 
-MageForge is a powerful CLI front-end development toolkit for Magento 2 that simplifies theme development workflows. It provides tools for many types of Magento themes (Magento Standard, Hyvä, Hyvä Fallback, Custom TailwindCSS, Avanta B2B) and can be easily extended for custom themes.
+```
+magento/              # Magento 2 installation (DDEV)
+src/
+  Console/Command     # CLI commands (extend AbstractCommand)
+  Service             # Business logic & theme builders
+  Model               # Domain models
+  etc/di.xml          # DI configuration
+docs/                 # commands.md, custom_theme_builders.md, advanced_usage.md
+```
 
-## Technology Stack
+## DDEV
 
-- **Platform**: Magento 2 (requires 2.4.7 or higher)
-- **Language**: PHP 8.3+
-- **Package Manager**: Composer
-- **Type**: magento2-module
-- **Dependencies**:
-  - Laravel Prompts (for interactive CLI)
-  - Magento Framework
+All Magento CLI commands run via DDEV from the `magento/` directory. Never run `bin/magento` directly.
 
-## Coding Standards
+```bash
+ddev magento <command>
+ddev install-magento        # Fresh install
+ddev phpcs && ddev phpstan  # PHP quality
+ddev xdebug on/off
+```
 
-### General PHP Standards
+After module changes: `ddev magento setup:upgrade && ddev magento cache:clean`
 
-- **Follow Magento Coding Standards**: All PHP code must adhere to the Magento 2 Coding Standards
-- **PSR-4 Autoloading**: The project uses PSR-4 with namespace `OpenForgeProject\MageForge\`
-- **Type Declarations**: Use strict typing (`declare(strict_types=1);`) at the top of every PHP file
-- **Type Hints**: Always use type hints for parameters and return types
-- **Property Promotion**: Use PHP 8+ constructor property promotion with readonly where appropriate
-- **Documentation**: Use PHPDoc blocks for classes and methods
+## PHP Conventions (PER-CS-2.0 + Magento 2)
 
-### Code Formatting
+Every PHP file:
 
-- **Indentation**: Use 4 spaces (not tabs) for indentation
-- **Line Length**: Keep lines under 80 characters wherever possible
-- **Naming Conventions**:
-  - Classes: PascalCase
-  - Methods and properties: camelCase
-  - Constants: UPPER_SNAKE_CASE
-  - Choose meaningful names for variables and functions
-- **Comments**: Write clear and concise comments where necessary
+```php
+<?php
 
-### Code Structure
+declare(strict_types=1);
 
-- **Directory Structure**:
-  - `src/Console/Command/` - CLI commands
-  - `src/Service/` - Business logic services
-  - `src/Model/` - Data models
-  - `src/Exception/` - Custom exceptions
-  - `src/Service/ThemeBuilder/` - Theme builder implementations
-- **Interfaces**: Use interfaces for builder patterns (e.g., `BuilderInterface`)
-- **Dependency Injection**: Use constructor injection with readonly properties
+namespace OpenForgeProject\MageForge\...;
+```
 
-## Build and Validation
+- Constructor property promotion with `readonly`
+- No FQN in docblocks — native type hints only
+- Named arguments for many parameters
+- Enums over constants (PHP 8.3+)
 
-### Linting
+### Soft Dependencies (Hyvä compatibility)
 
-- **PHPCS**: Use Magento Coding Standard for PHP code
-  ```bash
-  composer create-project magento/magento-coding-standard --stability=dev /tmp/magento-coding-standard
-  /tmp/magento-coding-standard/vendor/bin/phpcs -p -s --standard=Magento2 src/
-  ```
-- **Trunk**: Run `trunk check` to lint code before submission (if available)
+MageForge must work **with and without** Hyvä installed.
 
-### Testing
+- No hard type-hints on optional module classes in constructors
+- Use `mixed` + `class_exists()` for optional third-party classes
+- Use inline `@var` for PHPStan type narrowing after `class_exists()` checks
 
-- Thoroughly test code before submitting
-- Test all CLI commands with various theme types
-- Ensure compatibility with Magento 2.4.7+
+## Builder Pattern
+
+New builders: `src/Service/ThemeBuilder/<Type>/Builder.php` implementing `BuilderInterface`:
+
+```php
+public function detect(string $themePath): bool {}   // Must be unique per builder
+public function build(...): bool {}
+public function watch(...): bool {}
+public function autoRepair(...): bool {}
+public function getName(): string {}
+```
+
+Register in `src/etc/di.xml` under `BuilderPool`:
+
+```xml
+<item name="yourbuilder" xsi:type="object">OpenForgeProject\MageForge\Service\ThemeBuilder\YourType\Builder</item>
+```
+
+BuilderPool picks the first matching builder — `detect()` must be unique (e.g. check for `hyva-themes.json`).
+
+## CLI Commands
+
+Extend `AbstractCommand`, use `executeCommand()`. `$this->io` (SymfonyStyle) is pre-injected.
+
+```php
+$this->setName($this->getCommandName('theme', 'build'))
+     ->setAliases(['m:t:b', 'frontend:build']);
+// Return Cli::RETURN_SUCCESS or Cli::RETURN_FAILURE
+```
+
+**New command**: update `.github/workflows/magento-compatibility.yml` — add tests (use `--help` or `--dry-run`) to **both** `test-elasticsearch` and `test-opensearch` jobs.
+
+## Admin Settings
+
+When adding an admin config field, all steps must be done together:
+
+1. `etc/adminhtml/system.xml` — `<field>` with `translate="label comment"`
+2. `etc/config.xml` — default value
+3. Config model — `XML_PATH_*` constant
+4. Block — getter via `ScopeConfigInterface`
+5. Template — pass as `data-*` attribute on Alpine element
+6. JavaScript — `this.$el?.getAttribute('data-...')`
+7. **`src/i18n/*.csv`** — add label **and** comment string to all locale files
+
+## Frontend Inspector
+
+- Frontend: `src/view/frontend/web/js/inspector.js`
+- Backend: `OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints`
+- Toggle: `Ctrl+Shift+I` / `Cmd+Option+I`
+- Commands: `ddev magento mageforge:theme:inspector enable|disable|status`
+
+## MageForge Toolbar
+
+Standalone Alpine.js component (`mageforgeToolbar`), separate from Inspector.
+
+```
+src/view/frontend/web/js/
+  toolbar.js              # Entry point
+  toolbar/
+    ui.js                 # DOM construction
+    menu.js               # toggleMenu/openMenu/closeMenu
+    feedback.js           # showFeedback() toast
+    audits.js             # runAudit() dispatcher
+    audits/
+      index.js            # Import & register all audits here
+src/view/frontend/web/css/toolbar.css  # All styles via --mageforge-* CSS vars
+```
+
+Adding an audit: create `toolbar/audits/<key>.js` (export `{ key, icon, label, description, run(context) }`), import and add to array in `audits/index.js`. Menu builds automatically.
+
+- Events: `mageforge:toolbar:toggle-inspector`, `mageforge:toolbar:inspector-state`
+- Never use hardcoded `rgba()` — use `--mageforge-*` CSS variables
+
+## Code Quality
+
+```bash
+ddev phpcs
+ddev phpstan
+trunk check    # actionlint, hadolint, markdownlint, prettier, shellcheck, yamllint
+trunk fmt
+```
+
+Trunk also runs checkov (see `.trunk/trunk.yaml`).
+
+## Git
+
+```
+fix/<issue-description>
+feature/<issue-description>
+#<issue-nr> - <message>
+```
+
+## Testing
+
+Manual after every change:
+
+1. `ddev magento m:t:l` — theme list
+2. `ddev magento m:t:b <theme>` — build
+3. `ddev magento m:t:w <theme>` — watch (Ctrl+C)
+4. `ddev magento m:s:c` — system check
+
+CI covers Magento 2.4.7-p10 (PHP 8.3), 2.4.8-p5 (PHP 8.4), and 2.4.9 (PHP 8.5) with OpenSearch.
+Theme codes: `Magento/luma`, `Magento/blank`, Hyvä (has `hyva-themes.json`), Custom (has `tailwind.config.js`).
+
+## Common Pitfalls
+
+- Shell commands in builders → use `Shell` service (DI), not `exec()`
+- After `di.xml` changes → `ddev magento cache:clean`
+- `detect()` must be unique — BuilderPool picks first match
+- Watch mode blocks terminal
+- Node/npm runs in DDEV container, not on host
+- New admin settings → always update `src/i18n/*.csv`
 
 ## Documentation
 
-- **Format**: Use Markdown syntax for all documentation files
-- **Location**: Documentation files go in the `docs/` directory
-- **README**: Keep README.md updated with new features or commands
-- **Comments**: Provide descriptions for functions, classes, and parameters
-
-## Git Workflow
-
-### Commits
-
-- **Format**: Use format `#<issue-number> - <commit message>`
-- **Example**: `#123 - Add support for custom theme builder`
-- **Messages**: Write clear, descriptive commit messages
-- **VSCode**: Use Git Commit Message Helper extension for proper formatting
-
-### Pull Requests
-
-1. Create an issue first to describe the feature/bug
-2. Fork the repository and create a branch for your work
-3. Make changes with clear commit messages
-4. Submit PR to merge into `main` branch
-5. Ensure all GitHub Actions checks pass
-
-## Magento-Specific Guidelines
-
-- **Module Registration**: Module is registered via `src/registration.php`
-- **Commands**: All CLI commands extend `AbstractCommand` and follow Magento command patterns
-- **Command Naming**: Use format `mageforge:<category>:<action>` (e.g., `mageforge:theme:build`)
-- **Shortcodes**: Provide shortcodes for commands (e.g., `m:t:b` for `mageforge:theme:build`)
-- **Dependency Injection**: Use Magento's dependency injection container
-- **Services**: Service classes should be in the `Service/` directory and follow single responsibility principle
-
-## Theme Builder Development
-
-When adding or modifying theme builders:
-
-- Implement `BuilderInterface`
-- Place builders in `src/Service/ThemeBuilder/<ThemeType>/Builder.php`
-- Register builders with `BuilderPool`
-- Support both build and watch modes
-- Handle npm/node dependencies appropriately
-- Follow existing builder patterns (Magento Standard, Hyvä, TailwindCSS)
-
-## Best Practices
-
-- **Error Handling**: Use custom exceptions in the `Exception/` directory
-- **Console Output**: Use Symfony Console's IO helpers for consistent output
-- **Configuration**: Keep configuration flexible to support different theme types
-- **Extensibility**: Design features to be easily extended for custom themes
-- **Performance**: Optimize build processes for fast development workflows
-- **Compatibility**: Ensure compatibility with Magento 2.4.7+ requirements
-
-## Common Commands
-
-- `mageforge:theme:list` (or `m:t:l`) - List available themes
-- `mageforge:theme:build` (or `m:t:b`) - Build theme CSS/TailwindCSS
-- `mageforge:theme:watch` (or `m:t:w`) - Start watch mode for development
-- `mageforge:system:check` (or `m:s:c`) - Get system information
-- `mageforge:system:version` (or `m:s:v`) - Show version information
-
-## License
-
-This project is licensed under GPL-3.0. By contributing, you agree that your work will be licensed under the same terms.
-
-## Community
-
-- Report bugs and request features via GitHub Issues
-- Start discussions on GitHub Discussions
-- Follow the Contributing Guidelines in CONTRIBUTING.md
+`docs/` (`commands.md`, `custom_theme_builders.md`, `advanced_usage.md`). Style: DRY, concise, British English.

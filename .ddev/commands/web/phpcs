@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+## Description: Run phpcs
+## Usage: phpcs [path]
+## Example: ddev phpcs
+## Example: ddev phpcs src/Service/StaticContentCleaner.php
+## Example: ddev phpcs vendor/openforgeproject/mageforge/src/Block
+
+cd /var/www/html/magento || exit 1
+
+PHPCS_BIN="vendor-bin/coding-standard/vendor/bin/phpcs"
+PHPCS_FALLBACK="vendor-bin/coding-standard/vendor/squizlabs/php_codesniffer/bin/phpcs"
+
+if [[ ! -x "${PHPCS_BIN}" ]]; then
+	PHPCS_BIN="${PHPCS_FALLBACK}"
+fi
+
+if [[ ! -x "${PHPCS_BIN}" ]]; then
+	echo "phpcs not found. Installing coding-standard toolchain..."
+	composer bin coding-standard install || exit 1
+	PHPCS_BIN="${PHPCS_FALLBACK}"
+fi
+
+if [[ ! -x "${PHPCS_BIN}" ]]; then
+	echo "phpcs binary still missing. Expected ${PHPCS_FALLBACK}."
+	exit 1
+fi
+
+# Set target path - default to vendor/openforgeproject/mageforge/src if not provided
+TARGET_PATH="vendor/openforgeproject/mageforge/src"
+if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
+	TARGET_PATH="$1"
+	shift # Remove the first argument
+
+	# If path starts with 'src/', convert to vendor path
+	if [[ "${TARGET_PATH}" =~ ^src/ ]]; then
+		TARGET_PATH="vendor/openforgeproject/mageforge/${TARGET_PATH}"
+	# If path doesn't exist from magento dir, try from workspace root
+	elif [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
+		TARGET_PATH="../${TARGET_PATH}"
+	fi
+fi
+
+# Run PHPCS with optional additional flags
+"${PHPCS_BIN}" -p -s --standard=Magento2 "$@" "${TARGET_PATH}"

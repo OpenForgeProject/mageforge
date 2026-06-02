@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+## Description: Run PHPStan analysis with Magento extension (same as CI pipeline)
+## Usage: phpstan [path]
+## Example: ddev phpstan
+## Example: ddev phpstan src/Block/Inspector.php
+## Example: ddev phpstan vendor/openforgeproject/mageforge/src/Service
+
+# Navigate to Magento root
+cd /var/www/html/magento || exit 1
+
+# Check if PHPStan is installed
+if [[ ! -f vendor/bin/phpstan ]]; then
+    echo "PHPStan not found. Installing PHPStan with Magento extension..."
+
+    # Allow PHPStan extension installer
+    composer config --no-plugins allow-plugins.phpstan/extension-installer true
+
+    # Install PHPStan and Magento extension
+    composer require --dev --no-update bitexpert/phpstan-magento phpstan/phpstan:^2.0 phpstan/extension-installer
+
+    # Update dependencies (limit scope to PHPStan packages)
+    composer update bitexpert/phpstan-magento phpstan/phpstan phpstan/extension-installer --with-dependencies
+
+    echo "PHPStan installation complete."
+fi
+
+# Set target path - default to vendor/openforgeproject/mageforge/src if not provided or if it's a flag
+TARGET_PATH="vendor/openforgeproject/mageforge/src"
+if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
+	TARGET_PATH="$1"
+	shift # Remove the first argument
+
+	# If path doesn't exist from magento dir, try from workspace root
+	if [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
+		TARGET_PATH="../${TARGET_PATH}"
+	fi
+fi
+
+# Run PHPStan with the same configuration as CI pipeline
+echo "Running PHPStan analysis..."
+vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon "$@" "${TARGET_PATH}"
