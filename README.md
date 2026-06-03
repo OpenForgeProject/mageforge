@@ -4,167 +4,118 @@
 
 [![Release](https://img.shields.io/github/v/release/OpenForgeProject/mageforge)](https://github.com/OpenForgeProject/mageforge/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
-MageForge is a powerful CLI front-end development toolkit for Magento 2 that simplifies theme development workflows. It provides tools for many types of Magento themes and can be easily extended for custom themes.
+MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simplifies theme building workflows, supports multiple theme types (Magento Standard, Hyvä, TailwindCSS, custom), and includes developer tools like the Frontend Inspector.
 
 ## Table of Contents
 
-- [Supported Magento Versions](#supported-magento-versions)
-- [Features](#features)
-  - [Supported Theme-Types](#supported-theme-types-)
-  - [Available Commands](#available-commands)
-- [Getting Started](#getting-started)
-  - [Installation](#installation)
-  - [Quick Start Guide](#quick-start-guide)
-  - [Frontend Inspector](#frontend-inspector-️)
-- [Additional Documentation](#additional-documentation)
+- [Requirements](#requirements)
+- [Supported Theme Types](#supported-theme-types-)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Frontend Inspector](#frontend-inspector-)
+- [Commands Reference](#commands-reference)
+- [Documentation](#documentation)
 - [Support](#support)
-- [Project Information](#project-information)
 - [Credits](#credits)
 
-> **Contributor?** Jump straight to the [Development Guide](./docs/development.md) for DDEV setup, workflow, and coding standards.
+> **Contributor?** Jump to the [Development Guide](./docs/development.md).
 
-## Supported Magento Versions
+## Requirements
 
-MageForge requires Magento 2.4.7 or higher with PHP 8.3 or higher.
-Please ensure that your Magento installation meets this requirement before installation.
+- Magento 2.4.7+ (tested on 2.4.7-p10, 2.4.8-p5, 2.4.9)
+- PHP 8.3+
+- Node.js (LTS recommended)
+- Composer
 
-## Features
-
-### Supported Theme-Types 🎨
-
-![Mageforge Hero](./.github/assets/cli-chooser.png)
+## Supported Theme Types 🎨
 
 | Theme Type                      | Support Status                                             |
 | ------------------------------- | ---------------------------------------------------------- |
 | 🎯 Magento Standard             | ✅ Fully Supported                                         |
 | 🚀 Hyvä (TailwindCSS 3.x / 4.x) | ✅ Fully Supported                                         |
+| 🛒 Hyvä Checkout                | ✅ Fully Supported
 | 🔄 Hyvä Fallback                | ✅ Fully Supported                                         |
 | 🎨 Custom TailwindCSS (no Hyvä) | ✅ Fully Supported                                         |
 | 💼 Avanta B2B                   | ✅ Fully Supported                                         |
-| 🥰 Your Custom Theme (`css`, `sass`, `less`, ... )           | [Create your own Builder](./docs/custom_theme_builders.md) |
+| 🥰 Your Custom Theme            | [Create your own Builder](./docs/custom_theme_builders.md) |
 
----
+## Installation
 
-### Available Commands
-
-| Command                             | Description                                               | Aliases                   |
-| ----------------------------------- | --------------------------------------------------------- | ------------------------- |
-| `mageforge:theme:list`              | Lists all available themes                                | `frontend:list`           |
-| `mageforge:theme:build`             | Builds selected themes (CSS/TailwindCSS)                  | `frontend:build`          |
-| `mageforge:theme:watch`             | Starts watch mode for theme development                   | `frontend:watch`          |
-| `mageforge:theme:clean`             | Clean theme static files and cache directories            | `frontend:clean`          |
-| `mageforge:theme:inspector`         | Enable, disable or check status of Frontend Inspector     | -                         |
-| `mageforge:hyva:compatibility:check`| Check modules for Hyvä theme compatibility issues         | `hyva:check`              |
-| `mageforge:hyva:tokens`             | Generate Hyvä design tokens (Hyvä themes only)            | `hyva:tokens`             |
-| `mageforge:system:version`          | Shows current and latest version of the module            | `system:version`          |
-| `mageforge:system:check`            | Get system information (OS, PHP, Database, Node.js, etc.) | `system:check`            |
-
-## Frontend Toolbar with Inspector and Performance Metrics
-![Mageforge Toolbar](./.github/assets/toolbar.jpeg)
-
-## Getting Started
-
-### Installation
-
-1. Install the module via Composer:
+1. Install via Composer:
 
    ```bash
    composer require openforgeproject/mageforge
    ```
 
 2. Enable the module:
+
    ```bash
    bin/magento module:enable OpenForgeProject_MageForge
    bin/magento setup:upgrade
    ```
 
-### Quick Start Guide
+## Quick Start
 
-1. List available themes:
-
-   ```bash
-   bin/magento mageforge:theme:list
-   ```
-
-2. Build a theme:
-
-   ```bash
-   bin/magento mageforge:theme:build <theme-code>
-   ```
-
-   Example: `bin/magento mageforge:theme:build Magento/luma`
-
-3. Start development watch mode:
-
-   ```bash
-   bin/magento mageforge:theme:watch <theme-code>
-   ```
-
-4. Generate Hyvä design tokens (for Hyvä themes):
-
-   ```bash
-   bin/magento mageforge:hyva:tokens <theme-code>
-   ```
-
-   This creates a `generated/hyva-tokens.css` file from your design tokens configuration.
-
-5. Enjoy automatic CSS rebuilding as you work on your theme files!
-
----
-
-### Frontend Inspector 🕵️
-
-The **MageForge Inspector** is a powerful developer tool that allows you to inspect Magento blocks, templates, and performance metrics directly in your browser.
-
-**Key Features:**
-- **Structure Analysis**: View template paths, block classes, and module names for any element.
-- **Performance Metrics**: See PHP render times and cache status (lifetime, tags).
-- **Web Vitals**: Monitor LCP, CLS, and INP metrics per element.
-- **Accessibility Checks**: Inspect ARIA roles, contrast ratios, and alt text.
-
-**How to use:**
-
-1. **Enable the Inspector in the CLI**:
-   ```bash
-   bin/magento mageforge:theme:inspector enable
-   ```
-   *(Note: Requires Magento Developer Mode)*
-
-2. **Enable the Inspector in Magento Admin Settings**
-You can activate the Inspector in Magento Admin under `Stores > Configuration > MageForge > Frontend Inspector`.
-
-3. **Usage in Browser**:
-   - **Toggle**: Press `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS).
-   - **Inspect**: Hover over elements to see details. Click to lock the inspector on a specific block.
-
-To disable the inspector:
 ```bash
-bin/magento mageforge:theme:inspector disable
+# 1. List available themes
+bin/magento mageforge:theme:list
+
+# 2. Build a theme
+bin/magento mageforge:theme:build Magento/luma
+
+# 3. Watch for changes (development mode)
+bin/magento mageforge:theme:watch Magento/luma
 ```
 
-> **Note:** The Inspector is currently not compatible with **Magewire** components. Magewire blocks are automatically excluded from inspection to prevent rendering errors.
+See [Commands Reference](./docs/commands_reference.md) for the full command list with options and examples.
 
----
+## Frontend Inspector 🕵️
 
-## Additional Documentation
+The MageForge Inspector lets you inspect Magento blocks, templates, and performance metrics directly in your browser.
 
-- [Commands Documentation](./docs/commands.md) - Detailed command reference
-- [Advanced Usage Guide](./docs/advanced_usage.md) - Tips, tricks and troubleshooting
-- [Custom Theme Builders Documentation](./docs/custom_theme_builders.md) - Extend MageForge for your custom themes
-- [Development Guide](./docs/development.md) - Local dev environment setup, workflows, and contribution guide
+**Features:**
+- Template paths, block classes, and module names
+- PHP render times and cache status (lifetime, tags)
+- Web Vitals: LCP, CLS, INP per element
+- Accessibility checks: ARIA roles, contrast ratios, alt text
+
+#### Screenshot
+![Mageforge Toolbar](./.github/assets/toolbar.jpeg)
+
+**Enable:**
+```bash
+bin/magento mageforge:theme:inspector enable
+```
+*(Requires Developer Mode. Can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)*
+
+**Use in Browser:**
+- Toggle: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
+- Hover over elements to inspect; click to lock on a specific block
+
+> **Note:** Not compatible with Magewire components (automatically excluded).
+
+## Commands Reference
+
+See the dedicated [Commands Reference](./docs/commands_reference.md) for complete documentation of all MageForge commands, including:
+
+- Theme commands (`list`, `build`, `watch`, `clean`, `inspector`)
+- Hyvä commands (`tokens`, `compatibility:check`)
+- System commands (`version`, `check`)
+- Options, arguments, and usage examples
+
+## Documentation
+
+- [Commands Reference](./docs/commands_reference.md) — Full command documentation
+- [Advanced Usage](./docs/advanced_usage.md) — Tips, tricks, and troubleshooting
+- [Custom Theme Builders](./docs/custom_theme_builders.md) — Extend MageForge for custom themes
+- [Development Guide](./docs/development.md) — Local dev setup, workflow, and contribution guide
 
 ## Support
 
-- **Report Bugs/Features**: [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions)
-- **Contributing**: See [Contributing Guidelines](./CONTRIBUTING.md)
+- **Bugs / Features:** [GitHub Issues](https://github.com/OpenForgeProject/mageforge/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions)
+- **Contributing:** See [Contributing Guidelines](./CONTRIBUTING.md)
 
-> **Want to contribute?** Check out the [Development Guide](./docs/development.md) for environment setup, workflow, and coding standards.
-
-## Project Information
-
-- **License**: [LICENSE](LICENSE)
-- **Changelog**: [CHANGELOG](CHANGELOG.md)
 
 ## Credits
 
@@ -173,6 +124,14 @@ MageForge uses the following third-party libraries:
 | Library | Author | License |
 | ------- | ------ | ------- |
 | [Tabler Icons](https://tabler.io/icons) | codecalm | [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE) |
+
+---
+
+## Special Thanks
+
+A big thank you to **[e3n-team](https://github.com/e3n-team)** for their continuous support and collaboration in the further development of MageForge.
+
+Your contributions have been invaluable!
 
 ---
 

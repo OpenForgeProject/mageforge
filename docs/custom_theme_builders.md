@@ -101,7 +101,7 @@ class Builder implements BuilderInterface
         return file_exists($themePath . '/your-custom-identifier.json');
     }
 
-    public function build(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         // Check if this builder is responsible for the theme
         if (!$this->detect($themePath)) {
@@ -137,7 +137,7 @@ class Builder implements BuilderInterface
         return true;
     }
 
-    public function watch(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+    public function watch(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
         // Check if this builder is responsible for the theme
         if (!$this->detect($themePath)) {
@@ -238,7 +238,7 @@ public function detect(string $themePath): bool
 This method performs the actual build process. You can implement any steps required for your theme type:
 
 ```php
-public function build(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
+public function build(string $themeCode, string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
 {
     // Build process examples:
 
