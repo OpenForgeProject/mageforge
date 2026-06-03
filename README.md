@@ -106,7 +106,6 @@ See the dedicated [Commands Reference](./docs/commands_reference.md) for complet
 ## Documentation
 
 - [Commands Reference](./docs/commands_reference.md) — Full command documentation
-- [Advanced Usage](./docs/advanced_usage.md) — Tips, tricks, and troubleshooting
 - [Custom Theme Builders](./docs/custom_theme_builders.md) — Extend MageForge for custom themes
 - [Development Guide](./docs/development.md) — Local dev setup, workflow, and contribution guide
 
