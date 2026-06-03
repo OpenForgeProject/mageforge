@@ -231,6 +231,61 @@ The module in `/src/` is what gets packaged and published to Packagist. End user
 composer require openforgeproject/mageforge
 ```
 
-Releases are automated via [Release Please](https://github.com/googleapis/release-please). When a PR is merged into `main` with a valid [Conventional Commits](https://www.conventionalcommits.org/) title, Release Please opens a release PR that bumps the version and updates the changelog. Merging that PR triggers the release.
+### Automated Releases & Changelog Generation
+
+Releases are fully automated via [Release Please](https://github.com/googleapis/release-please). The workflow works as follows:
+
+1. **PR titles drive versioning**: When a PR is merged into `main` with a valid [Conventional Commits](https://www.conventionalcommits.org/) title, Release Please automatically determines the next version number:
+   - `feat:` → **minor** bump (e.g., `0.3.0` → `0.4.0`)
+   - `fix:`, `docs:`, `perf:` → **patch** bump (e.g., `0.3.0` → `0.3.1`)
+   - `feat!:` or `fix!:` → **major** bump (e.g., `0.3.0` → `1.0.0`)
+
+2. **Automatic changelog**: Release Please generates a changelog from all PR titles and descriptions since the last release. Contributors should write clear PR descriptions so they appear meaningfully in the release notes.
+
+3. **Release PR**: Release Please opens an automated PR that updates `CHANGELOG.md`, `composer.json` version, and any other versioned files. Merging this PR triggers the actual release to Packagist and publishes a GitHub Release with the full changelog.
+
+### Changelog Sections
+
+Release Please groups changes into sections based on the Conventional Commits type in your PR title:
+
+| Commit Type | Changelog Section | Visible in Notes |
+|-------------|-------------------|------------------|
+| `feat:` | **Added** | ✅ Yes |
+| `fix:` | **Fixed** | ✅ Yes |
+| `refactor:` | **Changed** | ✅ Yes |
+| `perf:` | **Performance** | ✅ Yes |
+| `docs:` | **Documentation** | ✅ Yes |
+| `style:` | **Styling** | ✅ Yes |
+| `chore:` | Chore | ❌ Hidden |
+| `test:` | Tests | ❌ Hidden |
+| `build:` | Build | ❌ Hidden |
+| `ci:` | CI/CD | ❌ Hidden |
+
+### Automatic PR Labeling
+
+PRs are automatically labelled by the [Labeler](https://github.com/actions/labeler) workflow based on branch name, PR title, or changed files:
+
+#### Branch / Title Based Labels
+
+| Label | Trigger |
+|-------|---------|
+| **Documentation** | Any `*.md` file changed |
+| **Feature** | Branch matches `add-*`, `feature-*`, `feat-*`; or PR title starts with `feat:`, `feature:` |
+| **Fix** | Branch matches `fix-*`, `bugfix-*`; or PR title starts with `fix:`, `bugfix:` |
+| **Next-Release** | Branch/PR title matches `chore: release*` or `release-please*` |
+
+#### File-Based Labels
+
+| Label | Trigger |
+|-------|---------|
+| **Command** | Files changed in `src/Console/Command/**` |
+| **Frontend** | Files changed in `src/view/frontend/**` |
+| **Theme-Builder** | Files changed in `src/Service/ThemeBuilder/**` |
+
+> **Tip**: Name your branch according to the conventions above (`feat/my-feature`, `fix/issue-123`) and the correct labels are applied automatically.
+
+> **Tip**: Use visible section types (`feat`, `fix`, `docs`, etc.) for changes you want in the release notes. Use hidden types (`chore`, `test`, `ci`) for internal work that doesn't affect end users.
+
+> **Tip**: Check the Release Please PR before merging — it shows exactly what will appear in the release notes. You can edit the PR description to improve changelog entries if needed.
 
 The `/magento/` directory is excluded from all release artefacts.
