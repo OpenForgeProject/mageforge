@@ -207,7 +207,7 @@ class InspectorCommand extends AbstractCommand
     }
 
     /**
-     * Clean config cache
+     * Clean relevant caches after changing inspector status
      *
      * @return void
      */
