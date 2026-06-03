@@ -123,7 +123,7 @@ Generate Hyvä design tokens from `design.tokens.json` or `hyva.config.json`.
 
 ```bash
 bin/magento mageforge:hyva:tokens [<theme-code>]
-bin/magento hyva:tokens Vendor/theme # must be a Hyvä theme with design tokens configured
+bin/magento hyva:tokens Hyva/default
 ```
 
 **Arguments:**
