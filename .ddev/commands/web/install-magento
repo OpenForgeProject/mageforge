@@ -78,6 +78,21 @@ bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorA
 # install sample data
 bin/magento sampledata:deploy
 
+# optional: install Hyvä theme (open source since June 2025, requires free license key)
+read -r -p "Install Hyvä theme? This requires a free license key from https://www.hyva.io. Install now? [y/N] " install_hyva
+if [[ "$install_hyva" =~ ^[Yy]$ ]]; then
+	read -r -s -p "Enter your Hyvä token (hidden): " hyva_token
+	echo
+	if [[ -z "$hyva_token" ]]; then
+		echo "No token provided. Skipping Hyvä installation."
+	else
+		composer config repositories.private-packagist composer https://hyva-themes.repo.packagist.com/localhost-ddev-q19cy/
+		composer config --global --auth http-basic.hyva-themes.repo.packagist.com token "$hyva_token"
+		composer require 'hyva-themes/magento2-default-theme'
+		echo "Hyvä theme installed successfully."
+	fi
+fi
+
 # add path repository pointing to the module at the repo root
 composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":false}}'
 
