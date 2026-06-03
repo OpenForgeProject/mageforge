@@ -213,7 +213,7 @@ class InspectorCommand extends AbstractCommand
      */
     private function cleanCache(): void
     {
-        $this->cacheManager->clean(['config']);
-        $this->io->writeln('<comment>Config cache cleaned</comment>');
+        $this->cacheManager->clean(['config', 'layout', 'full_page', 'block_html']);
+        $this->io->writeln('<comment>Config, layout, full page & block HTML cache cleaned</comment>');
     }
 }
