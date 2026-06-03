@@ -79,7 +79,7 @@ bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorA
 bin/magento sampledata:deploy
 
 # add path repository pointing to the module at the repo root
-composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":true}}'
+composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":false}}'
 
 # require module from path repo
 composer require 'openforgeproject/mageforge:*'
