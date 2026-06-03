@@ -9,10 +9,10 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 ## Table of Contents
 
 - [Requirements](#requirements)
-- [Supported Theme Types](#supported-theme-types-)
+- [Supported Theme Types](#supported-theme-types)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Frontend Inspector](#frontend-inspector-)
+- [Frontend Inspector](#frontend-inspector)
 - [Commands Reference](#commands-reference)
 - [Documentation](#documentation)
 - [Support](#support)
@@ -27,17 +27,17 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 - Node.js (LTS recommended)
 - Composer
 
-## Supported Theme Types 🎨
+## Supported Theme Types
 
 | Theme Type                      | Support Status                                             |
 | ------------------------------- | ---------------------------------------------------------- |
-| 🎯 Magento Standard             | ✅ Supported                                              |
-| 🚀 Hyvä (TailwindCSS 3.x / 4.x) | ✅ Supported                                              |
-| 🛒 Hyvä Checkout                | ✅ Supported                                              |
-| 🔄 Hyvä Fallback                | ✅ Supported                                              |
-| 🎨 Custom TailwindCSS (no Hyvä) | ✅ Supported                                              |
-| 💼 Avanta B2B                   | ✅ Supported                                              |
-| 🥰 Your Custom Theme            | [Create your own Builder](./docs/custom_theme_builders.md) |
+| Magento Standard                | ✅ Supported                                              |
+| Hyvä (TailwindCSS 3.x / 4.x)  | ✅ Supported                                              |
+| Hyvä Checkout                   | ✅ Supported                                              |
+| Hyvä Fallback                   | ✅ Supported                                              |
+| Custom TailwindCSS (no Hyvä)    | ✅ Supported                                              |
+| Avanta B2B                      | ✅ Supported                                              |
+| Your Custom Theme               | [Create your own Builder](./docs/custom_theme_builders.md) |
 
 ## Installation
 
@@ -69,7 +69,7 @@ bin/magento mageforge:theme:watch Magento/luma
 
 See [Commands Reference](./docs/commands_reference.md) for the full command list with options and examples.
 
-## Frontend Inspector 🕵️
+## Frontend Inspector
 
 The MageForge Inspector lets you inspect Magento blocks, templates, and performance metrics directly in your browser.
 
