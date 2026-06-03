@@ -31,12 +31,12 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 
 | Theme Type                      | Support Status                                             |
 | ------------------------------- | ---------------------------------------------------------- |
-| 🎯 Magento Standard             | ✅ Fully Supported                                         |
-| 🚀 Hyvä (TailwindCSS 3.x / 4.x) | ✅ Fully Supported                                         |
-| 🛒 Hyvä Checkout                | ✅ Fully Supported
-| 🔄 Hyvä Fallback                | ✅ Fully Supported                                         |
-| 🎨 Custom TailwindCSS (no Hyvä) | ✅ Fully Supported                                         |
-| 💼 Avanta B2B                   | ✅ Fully Supported                                         |
+| 🎯 Magento Standard             | ✅ Supported                                              |
+| 🚀 Hyvä (TailwindCSS 3.x / 4.x) | ✅ Supported                                              |
+| 🛒 Hyvä Checkout                | ✅ Supported                                              |
+| 🔄 Hyvä Fallback                | ✅ Supported                                              |
+| 🎨 Custom TailwindCSS (no Hyvä) | ✅ Supported                                              |
+| 💼 Avanta B2B                   | ✅ Supported                                              |
 | 🥰 Your Custom Theme            | [Create your own Builder](./docs/custom_theme_builders.md) |
 
 ## Installation
