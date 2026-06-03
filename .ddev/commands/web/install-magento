@@ -14,8 +14,14 @@ MAGENTO_FOLDER="magento"
 
 # check if Magento is already installed
 if [[ -f "${MAGENTO_FOLDER}/bin/magento" ]]; then
-		echo "Magento is already installed. Skipping install-magento."
-		exit 0
+	echo "Magento is already installed. Skipping install-magento."
+	exit 0
+fi
+
+# clean up leftover magento-temp from failed previous installations
+if [[ -d "magento-temp" ]]; then
+	echo "Cleaning up leftover magento-temp from previous failed installation..."
+	rm -rf magento-temp
 fi
 
 # download magento
