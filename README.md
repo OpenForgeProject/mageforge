@@ -15,7 +15,7 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 - [Frontend Inspector](#frontend-inspector)
 - [Commands Reference](#commands-reference)
 - [Documentation](#documentation)
-- [Support](#support)
+- [Get your Merch](#get-your-merch)
 - [Credits](#credits)
 
 > **Contributor?** Jump to the [Development Guide](./docs/development.md).
@@ -108,6 +108,10 @@ See the dedicated [Commands Reference](./docs/commands_reference.md) for complet
 - [Commands Reference](./docs/commands_reference.md) — Full command documentation
 - [Custom Theme Builders](./docs/custom_theme_builders.md) — Extend MageForge for custom themes
 - [Development Guide](./docs/development.md) — Local dev setup, workflow, and contribution guide
+
+## Get your Merch
+
+[![Mageforge Hero](./.github/assets/MageForce-Merch.jpg)](https://mageforge.myspreadshop.de/)
 
 ## Support
 
