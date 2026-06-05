@@ -44,6 +44,18 @@ rm -rf magento-temp
 # change to magento directory
 cd "${MAGENTO_FOLDER}" || exit 1
 
+# configure Hyvä theme GitHub repositories
+composer config repositories.hyva-themes/magento2-theme-module git https://github.com/hyva-themes/magento2-theme-module.git
+composer config repositories.hyva-themes/magento2-default-theme git https://github.com/hyva-themes/magento2-default-theme.git
+composer config repositories.hyva-themes/magento2-default-theme-csp git https://github.com/hyva-themes/magento2-default-theme-csp.git
+composer config repositories.hyva-themes/magento2-base-layout-reset git https://github.com/hyva-themes/magento2-base-layout-reset.git
+composer config repositories.hyva-themes/magento2-compat-module-fallback git https://github.com/hyva-themes/magento2-compat-module-fallback.git
+composer config repositories.hyva-themes/magento2-mollie-theme-bundle git https://github.com/hyva-themes/magento2-mollie-theme-bundle.git
+composer config repositories.hyva-themes/magento2-luma-checkout git https://github.com/hyva-themes/magento2-luma-checkout.git
+composer config repositories.hyva-themes/magento2-theme-fallback git https://github.com/hyva-themes/magento2-theme-fallback.git
+composer config repositories.hyva-themes/magento2-order-cancellation-webapi git https://github.com/hyva-themes/magento2-order-cancellation-webapi.git
+composer config repositories.hyva-themes/magento2-email-module git https://github.com/hyva-themes/magento2-email-module.git
+
 # Remove *.sample extension
 find . -name "*.sample" -type f -exec sh -c 'mv "$1" "${1%.sample}"' _ {} \;
 rm -f package-lock.json # remove basic package-lock.json to avoid conflicts
@@ -78,28 +90,11 @@ bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorA
 # install sample data
 bin/magento sampledata:deploy
 
-# optional: install Hyvä theme (open source since June 2025, requires free license key)
-read -r -p "Install Hyvä theme? This requires a free license key from https://www.hyva.io/licenses/manage/shops/. Install now? [y/N] " install_hyva
-if [[ "$install_hyva" =~ ^[Yy]$ ]]; then
-	read -r -p "Enter your Hyvä https://hyva-themes.repo.packagist.com/repository-url (from https://www.hyva.io/licenses/manage/shops/): " hyva_repo_url
-	echo
-	read -r -s -p "Enter your Hyvä token: " hyva_token
-	echo
-	if [[ -z "$hyva_token" || -z "$hyva_repo_url" ]]; then
-		echo "Token or URL missing. Skipping Hyvä installation."
-	else
-		composer config repositories.private-packagist composer "$hyva_repo_url"
-		composer config --global --auth http-basic.hyva-themes.repo.packagist.com token "$hyva_token"
-		composer require 'hyva-themes/magento2-default-theme'
-		echo "Hyvä theme installed successfully."
-	fi
-fi
-
 # add path repository pointing to the module at the repo root
 composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":false}}'
 
-# require module from path repo
-composer require 'openforgeproject/mageforge:*'
+# require Hyvä theme and mageforge module
+composer require 'hyva-themes/magento2-default-theme' 'openforgeproject/mageforge:*'
 
 # enable module
 bin/magento setup:upgrade
