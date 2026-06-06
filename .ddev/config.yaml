@@ -10,6 +10,11 @@ database:
     type: mariadb
     version: "10.6"
 hooks:
+    pre-start:
+        # Pre-create parent directories for the MageForge bind-mount on the host.
+        # Docker creates missing mount-target parents as root; by creating them here
+        # (as the host user) they get the correct ownership for the DDEV web container.
+        - exec-host: mkdir -p magento/app/code/OpenForgeProject
     post-start:
         - exec-host: ddev npx skills experimental_install
 use_dns_when_possible: true

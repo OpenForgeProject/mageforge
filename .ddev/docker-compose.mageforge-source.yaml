@@ -1,0 +1,6 @@
+services:
+  web:
+    volumes:
+      # Bind-mount the module source directly into app/code/ so realpath() returns
+      # a path within the Magento root, bypassing Magento's filesystem path validator.
+      - ../src:/var/www/html/magento/app/code/OpenForgeProject/MageForge:cached
