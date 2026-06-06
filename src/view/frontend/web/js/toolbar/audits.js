@@ -17,10 +17,12 @@ export const auditMethods = {
         const isActive = this.activeAudits.has(auditKey);
         if (isActive) {
             this.activeAudits.delete(auditKey);
+            audit.run(this, false);
+            this.setAuditCounterBadge(auditKey, '', 'success');
         } else {
             this.activeAudits.add(auditKey);
+            audit.run(this, true);
         }
-        audit.run(this, !isActive);
         this.setAuditActive(auditKey, !isActive);
     },
 
@@ -98,6 +100,7 @@ export const auditMethods = {
             this.activeAudits.delete(key);
             const audit = audits.find(a => a.key === key);
             if (audit) audit.run(this, false);
+            this.setAuditCounterBadge(key, '', 'success');
             this.setAuditActive(key, false);
         });
         this.updateToggleAllButton();
