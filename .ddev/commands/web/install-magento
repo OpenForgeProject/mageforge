@@ -90,11 +90,12 @@ bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorA
 # install sample data
 bin/magento sampledata:deploy
 
-# add path repository pointing to the module at the repo root
-composer config --json repositories.mageforge '{"type":"path","url":"..","options":{"symlink":false}}'
+# require Hyvä theme
+composer require 'hyva-themes/magento2-default-theme'
 
-# require Hyvä theme and mageforge module
-composer require 'hyva-themes/magento2-default-theme' 'openforgeproject/mageforge:*'
+# enable mageforge module (source is bind-mounted via .ddev/docker-compose.mageforge-source.yaml
+# into app/code/OpenForgeProject/MageForge — no Composer installation needed)
+bin/magento module:enable OpenForgeProject_MageForge
 
-# enable module
+# run setup upgrade to apply schema and module registration
 bin/magento setup:upgrade
