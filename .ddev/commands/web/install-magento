@@ -93,6 +93,9 @@ bin/magento sampledata:deploy
 # require Hyvä theme
 composer require 'hyva-themes/magento2-default-theme'
 
+# Install MageForge module's third-party dependencies (laravel/prompts etc.) into Magento vendor.
+/var/www/html/.ddev/commands/web/install-module-deps
+
 # enable mageforge module (source is bind-mounted via .ddev/docker-compose.mageforge-source.yaml
 # into app/code/OpenForgeProject/MageForge — no Composer installation needed)
 bin/magento module:enable OpenForgeProject_MageForge

@@ -17,6 +17,9 @@ hooks:
         - exec-host: mkdir -p magento/app/code/OpenForgeProject
     post-start:
         - exec-host: ddev npx skills experimental_install
+        # Install MageForge module dependencies (e.g. laravel/prompts) that are not
+        # resolved automatically because the module is bind-mounted, not Composer-installed.
+        - exec: /var/www/html/.ddev/commands/web/install-module-deps
 use_dns_when_possible: true
 composer_root: magento
 composer_version: "2"

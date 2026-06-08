@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+## Description: Install MageForge module dependencies into the Magento vendor directory
+## Usage: install-module-deps
+## Example: ddev install-module-deps
+
+# The module source is bind-mounted (not Composer-installed), so its third-party
+# dependencies are not resolved automatically. Read them from the module's composer.json
+# and install the non-Magento/non-PHP ones into the Magento vendor.
+
+MAGENTO_DIR="/var/www/html/magento"
+MODULE_COMPOSER_JSON="/var/www/html/composer.json"
+
+# Skip if Magento is not yet installed (e.g. on initial ddev start before install-magento)
+if [[ ! -f "${MAGENTO_DIR}/vendor/autoload.php" ]]; then
+    exit 0
+fi
+
+cd "${MAGENTO_DIR}" || exit 1
+
+php -r "
+    \$manifest = json_decode(file_get_contents('${MODULE_COMPOSER_JSON}'), true);
+    \$deps = [];
+    foreach (\$manifest['require'] ?? [] as \$package => \$constraint) {
+        if (\$package !== 'php' && !str_starts_with(\$package, 'magento/')) {
+            \$deps[\$package] = \$constraint;
+        }
+    }
+    \$missing = [];
+    foreach (\$deps as \$package => \$constraint) {
+        if (!is_dir('vendor/' . \$package)) {
+            \$missing[] = escapeshellarg(\"\$package:\$constraint\");
+        }
+    }
+    if (\$missing) {
+        echo 'Installing MageForge module dependencies: ' . implode(', ', \$missing) . PHP_EOL;
+        passthru('composer require --dev ' . implode(' ', \$missing));
+    }
+"
