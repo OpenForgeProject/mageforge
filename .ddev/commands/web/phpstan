@@ -25,8 +25,13 @@ if [[ ! -f vendor/bin/phpstan ]]; then
     echo "PHPStan installation complete."
 fi
 
-# Set target path - default to vendor/openforgeproject/mageforge/src if not provided or if it's a flag
-TARGET_PATH="vendor/openforgeproject/mageforge/src"
+# Set target path - prefer app/code mount over vendor copy if not provided or if it's a flag
+if [[ -d "app/code/OpenForgeProject" ]]; then
+	DEFAULT_TARGET_PATH="app/code/OpenForgeProject"
+else
+	DEFAULT_TARGET_PATH="vendor/openforgeproject/mageforge/src"
+fi
+TARGET_PATH="${DEFAULT_TARGET_PATH}"
 if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
 	TARGET_PATH="$1"
 	shift # Remove the first argument
@@ -37,6 +42,16 @@ if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
 	fi
 fi
 
+# Determine config file location
+if [[ -f "vendor/openforgeproject/mageforge/phpstan.neon" ]]; then
+    PHPSTAN_CONFIG="vendor/openforgeproject/mageforge/phpstan.neon"
+elif [[ -f "../phpstan.neon" ]]; then
+    PHPSTAN_CONFIG="../phpstan.neon"
+else
+    echo "PHPStan config not found at vendor/openforgeproject/mageforge/phpstan.neon or ../phpstan.neon"
+    exit 1
+fi
+
 # Run PHPStan with the same configuration as CI pipeline
 echo "Running PHPStan analysis..."
-vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon "$@" "${TARGET_PATH}"
+vendor/bin/phpstan analyse -c "${PHPSTAN_CONFIG}" "$@" "${TARGET_PATH}"
