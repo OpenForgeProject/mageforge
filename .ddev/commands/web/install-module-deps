@@ -33,7 +33,9 @@ php -r "
         }
     }
     if (\$missing) {
+        \$cmd = 'composer require --no-interaction ' . implode(' ', \$missing);
         echo 'Installing MageForge module dependencies: ' . implode(', ', \$missing) . PHP_EOL;
-        passthru('composer require --dev ' . implode(' ', \$missing));
+        passthru(\$cmd, \$exitCode);
+        exit(\$exitCode);
     }
 "
