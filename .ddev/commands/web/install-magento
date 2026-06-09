@@ -12,6 +12,21 @@ cd /var/www/html || exit 1
 # global config
 MAGENTO_FOLDER="magento"
 
+# Guard: verify the MageForge bind-mount is active.
+# The Docker bind-mount (../src → .../MageForge) is a kernel-level mount established
+# when the containers start. If magento/ was deleted while DDEV was running, the mount
+# becomes orphaned: its inode is gone, and recreating the directory produces a new inode
+# not covered by the old mount. The module source would then be invisible to Magento.
+# The only fix is a container restart, which re-establishes the mount on the new inode.
+if [[ ! -f "${MAGENTO_FOLDER}/app/code/OpenForgeProject/MageForge/registration.php" ]]; then
+	echo "ERROR: The MageForge bind-mount is not active."
+	echo ""
+	echo "This happens when magento/ was deleted while DDEV was still running."
+	echo ""
+	echo "Fix: run 'ddev restart', then re-run 'ddev install-magento'."
+	exit 1
+fi
+
 # check if Magento is already installed
 if [[ -f "${MAGENTO_FOLDER}/bin/magento" ]]; then
 	echo "Magento is already installed. Skipping install-magento."
@@ -34,6 +49,7 @@ composer create-project \
 if [[ ! -d "${MAGENTO_FOLDER}" ]]; then
 	mkdir -p "${MAGENTO_FOLDER}"
 fi
+
 
 # copy everything from magento-temp into magento folder
 cp -a magento-temp/. "${MAGENTO_FOLDER}/"
@@ -87,6 +103,22 @@ bin/magento deploy:mode:set developer
 # disable 2FA
 bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
 
+# Enable MageForge: setup:install only scans vendor/ via Composer autoload, not app/code/.
+# Bind-mounted modules are therefore not auto-discovered. Add directly to config.php and let
+# setup:upgrade handle schema initialisation.
+php -r "
+    \$f = 'app/etc/config.php';
+    \$c = include \$f;
+    if (empty(\$c['modules']['OpenForgeProject_MageForge'])) {
+        \$c['modules']['OpenForgeProject_MageForge'] = 1;
+        ksort(\$c['modules']);
+        file_put_contents(\$f, '<?php' . PHP_EOL . 'return ' . var_export(\$c, true) . ';' . PHP_EOL);
+        echo 'Enabled OpenForgeProject_MageForge in app/etc/config.php' . PHP_EOL;
+    } else {
+        echo 'OpenForgeProject_MageForge already enabled in app/etc/config.php' . PHP_EOL;
+    }
+"
+
 # install sample data
 bin/magento sampledata:deploy
 
@@ -95,10 +127,6 @@ composer require 'hyva-themes/magento2-default-theme'
 
 # Install MageForge module's third-party dependencies (laravel/prompts etc.) into Magento vendor.
 /var/www/html/.ddev/commands/web/install-module-deps
-
-# enable mageforge module (source is bind-mounted via .ddev/docker-compose.mageforge-source.yaml
-# into app/code/OpenForgeProject/MageForge — no Composer installation needed)
-bin/magento module:enable OpenForgeProject_MageForge
 
 # run setup upgrade to apply schema and module registration
 bin/magento setup:upgrade
