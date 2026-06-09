@@ -103,33 +103,10 @@ bin/magento deploy:mode:set developer
 # disable 2FA
 bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
 
-# Enable MageForge: setup:install only scans vendor/ via Composer autoload, not app/code/.
-# Bind-mounted modules are therefore not auto-discovered. Add directly to config.php and let
-# setup:upgrade handle schema initialisation.
-php -r "
-    \$f = 'app/etc/config.php';
-    if (!is_file(\$f)) {
-        fwrite(STDERR, 'ERROR: ' . \$f . ' not found. Is Magento fully installed?' . PHP_EOL);
-        exit(1);
-    }
-    if (!is_readable(\$f) || !is_writable(\$f)) {
-        fwrite(STDERR, 'ERROR: ' . \$f . ' is not readable/writable.' . PHP_EOL);
-        exit(1);
-    }
-    \$c = include \$f;
-    if (!is_array(\$c)) {
-        fwrite(STDERR, 'ERROR: ' . \$f . ' did not return an array.' . PHP_EOL);
-        exit(1);
-    }
-    if (empty(\$c['modules']['OpenForgeProject_MageForge'])) {
-        \$c['modules']['OpenForgeProject_MageForge'] = 1;
-        ksort(\$c['modules']);
-        file_put_contents(\$f, '<?php' . PHP_EOL . 'return ' . var_export(\$c, true) . ';' . PHP_EOL);
-        echo 'Enabled OpenForgeProject_MageForge in app/etc/config.php' . PHP_EOL;
-    } else {
-        echo 'OpenForgeProject_MageForge already enabled in app/etc/config.php' . PHP_EOL;
-    }
-"
+# Enable MageForge: the module is bind-mounted under app/code/ and therefore not registered
+# via Composer autoload. bin/magento module:enable discovers it through the component registrar
+# (registration.php), writes the entry to app/etc/config.php, and exits non-zero on any error.
+bin/magento module:enable OpenForgeProject_MageForge
 
 # install sample data
 bin/magento sampledata:deploy
