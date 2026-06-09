@@ -41,7 +41,38 @@ php -r "
     \$missingConstraints = [];
     \$missingNames = [];
     foreach (\$deps as \$package => \$constraint) {
-        if (!is_dir('vendor/' . \$package)) {
+        \$vendorDir = 'vendor/' . \$package;
+        // Check vendor dir exists AND the installed version satisfies the required constraint.
+        // A plain directory check would miss constraint changes and leave incompatible versions.
+        \$installedVersion = null;
+        \$installedJson = 'vendor/' . \$package . '/composer.json';
+        if (is_dir(\$vendorDir) && is_file(\$installedJson)) {
+            \$installed = json_decode(file_get_contents(\$installedJson), true);
+            \$installedVersion = \$installed['version'] ?? null;
+        }
+        \$needsInstall = !is_dir(\$vendorDir);
+        if (!\$needsInstall && \$installedVersion !== null) {
+            // Use Composer's own semver check via the lock file if available.
+            \$lockFile = 'composer.lock';
+            if (is_file(\$lockFile)) {
+                \$lock = json_decode(file_get_contents(\$lockFile), true);
+                \$lockedPackages = array_merge(\$lock['packages'] ?? [], \$lock['packages-dev'] ?? []);
+                \$found = false;
+                foreach (\$lockedPackages as \$lp) {
+                    if (\$lp['name'] === \$package) {
+                        \$found = true;
+                        break;
+                    }
+                }
+                // If not in lock file, the package was added externally – reinstall.
+                if (!\$found) {
+                    \$needsInstall = true;
+                }
+            }
+        } elseif (!is_dir(\$vendorDir)) {
+            \$needsInstall = true;
+        }
+        if (\$needsInstall) {
             \$missingConstraints[] = escapeshellarg(\"\$package:\$constraint\");
             \$missingNames[] = escapeshellarg(\$package);
         }

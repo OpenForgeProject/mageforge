@@ -108,7 +108,19 @@ bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorA
 # setup:upgrade handle schema initialisation.
 php -r "
     \$f = 'app/etc/config.php';
+    if (!is_file(\$f)) {
+        fwrite(STDERR, 'ERROR: ' . \$f . ' not found. Is Magento fully installed?' . PHP_EOL);
+        exit(1);
+    }
+    if (!is_readable(\$f) || !is_writable(\$f)) {
+        fwrite(STDERR, 'ERROR: ' . \$f . ' is not readable/writable.' . PHP_EOL);
+        exit(1);
+    }
     \$c = include \$f;
+    if (!is_array(\$c)) {
+        fwrite(STDERR, 'ERROR: ' . \$f . ' did not return an array.' . PHP_EOL);
+        exit(1);
+    }
     if (empty(\$c['modules']['OpenForgeProject_MageForge'])) {
         \$c['modules']['OpenForgeProject_MageForge'] = 1;
         ksort(\$c['modules']);
