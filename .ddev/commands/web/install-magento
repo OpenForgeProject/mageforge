@@ -79,6 +79,11 @@ rm -f package-lock.json # remove basic package-lock.json to avoid conflicts
 # create missing local-themes.js file for grunt tasks
 echo 'module.exports = {};' >dev/tools/grunt/configs/local-themes.js
 
+# Require Hyvä theme and install MageForge module deps before setup:install so that
+# both are included in the initial schema-upgrade pass (avoiding a redundant second pass).
+composer require 'hyva-themes/magento2-default-theme'
+/var/www/html/.ddev/commands/web/install-module-deps
+
 # install magento
 bin/magento setup:install \
 	--admin-email=admin@mageforge.ddev.site \
@@ -111,11 +116,19 @@ bin/magento module:enable OpenForgeProject_MageForge
 # install sample data
 bin/magento sampledata:deploy
 
-# require Hyvä theme
-composer require 'hyva-themes/magento2-default-theme'
-
-# Install MageForge module's third-party dependencies (laravel/prompts etc.) into Magento vendor.
-/var/www/html/.ddev/commands/web/install-module-deps
-
-# run setup upgrade to apply schema and module registration
+# run setup upgrade to apply sample data module schemas
 bin/magento setup:upgrade
+
+# Set Hyvä Default as the active storefront theme.
+# The theme_id is a database-generated integer, so look it up after setup:upgrade
+# has registered all themes into the theme table.
+HYVA_THEME_ID=$(mysql --host=db --user=db --password=db db \
+	--skip-column-names --silent \
+	--execute="SELECT theme_id FROM theme WHERE theme_path = 'Hyva/default' LIMIT 1" 2>/dev/null)
+if [[ -n "$HYVA_THEME_ID" ]]; then
+	echo "Setting Hyvä Default (ID: ${HYVA_THEME_ID}) as storefront theme..."
+	bin/magento config:set design/theme/theme_id "$HYVA_THEME_ID"
+	bin/magento cache:clean config
+else
+	echo "WARNING: Hyvä Default theme not found in database, skipping theme activation."
+fi
