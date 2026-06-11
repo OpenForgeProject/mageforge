@@ -12,6 +12,21 @@ cd /var/www/html || exit 1
 # global config
 MAGENTO_FOLDER="magento"
 
+# Guard: verify the MageForge bind-mount is active.
+# The Docker bind-mount (../src → .../MageForge) is a kernel-level mount established
+# when the containers start. If magento/ was deleted while DDEV was running, the mount
+# becomes orphaned: its inode is gone, and recreating the directory produces a new inode
+# not covered by the old mount. The module source would then be invisible to Magento.
+# The only fix is a container restart, which re-establishes the mount on the new inode.
+if [[ ! -f "${MAGENTO_FOLDER}/app/code/OpenForgeProject/MageForge/registration.php" ]]; then
+	echo "ERROR: The MageForge bind-mount is not active."
+	echo ""
+	echo "This happens when magento/ was deleted while DDEV was still running."
+	echo ""
+	echo "Fix: run 'ddev restart', then re-run 'ddev install-magento'."
+	exit 1
+fi
+
 # check if Magento is already installed
 if [[ -f "${MAGENTO_FOLDER}/bin/magento" ]]; then
 	echo "Magento is already installed. Skipping install-magento."
@@ -34,6 +49,7 @@ composer create-project \
 if [[ ! -d "${MAGENTO_FOLDER}" ]]; then
 	mkdir -p "${MAGENTO_FOLDER}"
 fi
+
 
 # copy everything from magento-temp into magento folder
 cp -a magento-temp/. "${MAGENTO_FOLDER}/"
@@ -63,6 +79,11 @@ rm -f package-lock.json # remove basic package-lock.json to avoid conflicts
 # create missing local-themes.js file for grunt tasks
 echo 'module.exports = {};' >dev/tools/grunt/configs/local-themes.js
 
+# Require Hyvä theme and install MageForge module deps before setup:install so that
+# both are included in the initial schema-upgrade pass (avoiding a redundant second pass).
+composer require 'hyva-themes/magento2-default-theme'
+/var/www/html/.ddev/commands/web/install-module-deps
+
 # install magento
 bin/magento setup:install \
 	--admin-email=admin@mageforge.ddev.site \
@@ -87,15 +108,27 @@ bin/magento deploy:mode:set developer
 # disable 2FA
 bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
 
+# Enable MageForge: the module is bind-mounted under app/code/ and therefore not registered
+# via Composer autoload. bin/magento module:enable discovers it through the component registrar
+# (registration.php), writes the entry to app/etc/config.php, and exits non-zero on any error.
+bin/magento module:enable OpenForgeProject_MageForge
+
 # install sample data
 bin/magento sampledata:deploy
 
-# require Hyvä theme
-composer require 'hyva-themes/magento2-default-theme'
-
-# enable mageforge module (source is bind-mounted via .ddev/docker-compose.mageforge-source.yaml
-# into app/code/OpenForgeProject/MageForge — no Composer installation needed)
-bin/magento module:enable OpenForgeProject_MageForge
-
-# run setup upgrade to apply schema and module registration
+# run setup upgrade to apply sample data module schemas
 bin/magento setup:upgrade
+
+# Set Hyvä Default as the active storefront theme.
+# The theme_id is a database-generated integer, so look it up after setup:upgrade
+# has registered all themes into the theme table.
+HYVA_THEME_ID=$(mysql --host=db --user=db --password=db db \
+	--skip-column-names --silent \
+	--execute="SELECT theme_id FROM theme WHERE theme_path = 'Hyva/default' LIMIT 1" 2>/dev/null) || HYVA_THEME_ID=""
+if [[ -n "$HYVA_THEME_ID" ]]; then
+	echo "Setting Hyvä Default (ID: ${HYVA_THEME_ID}) as storefront theme..."
+	bin/magento config:set design/theme/theme_id "$HYVA_THEME_ID"
+	bin/magento cache:clean config
+else
+	echo "WARNING: Hyvä Default theme not found in database, skipping theme activation."
+fi

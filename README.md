@@ -6,10 +6,6 @@
 
 MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simplifies theme building workflows, supports multiple theme types (Magento Standard, Hyvä, TailwindCSS, custom), and includes developer tools like the Frontend Inspector.
 
-## Get your Merch
-
-[![Mageforge Hero](./.github/assets/MageForce-Merch.jpg)](https://mageforge.myspreadshop.de/)
-
 ## Table of Contents
 
 - [Requirements](#requirements)
@@ -32,6 +28,8 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 - Composer
 
 ## Supported Theme Types
+
+![Mageforge Hero](./.github/assets/cli-chooser.png)
 
 | Theme Type                      | Support Status                                             |
 | ------------------------------- | ---------------------------------------------------------- |
