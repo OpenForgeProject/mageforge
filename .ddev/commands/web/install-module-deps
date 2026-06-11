@@ -40,37 +40,23 @@ php -r "
     }
     \$missingConstraints = [];
     \$missingNames = [];
+    // Read Magento's composer.json once to compare declared constraints.
+    \$magentoManifest = is_file('composer.json')
+        ? json_decode(file_get_contents('composer.json'), true)
+        : null;
     foreach (\$deps as \$package => \$constraint) {
         \$vendorDir = 'vendor/' . \$package;
-        // Check vendor dir exists AND the installed version satisfies the required constraint.
-        // A plain directory check would miss constraint changes and leave incompatible versions.
-        \$installedVersion = null;
-        \$installedJson = 'vendor/' . \$package . '/composer.json';
-        if (is_dir(\$vendorDir) && is_file(\$installedJson)) {
-            \$installed = json_decode(file_get_contents(\$installedJson), true);
-            \$installedVersion = \$installed['version'] ?? null;
-        }
         \$needsInstall = !is_dir(\$vendorDir);
-        if (!\$needsInstall && \$installedVersion !== null) {
-            // Use Composer's own semver check via the lock file if available.
-            \$lockFile = 'composer.lock';
-            if (is_file(\$lockFile)) {
-                \$lock = json_decode(file_get_contents(\$lockFile), true);
-                \$lockedPackages = array_merge(\$lock['packages'] ?? [], \$lock['packages-dev'] ?? []);
-                \$found = false;
-                foreach (\$lockedPackages as \$lp) {
-                    if (\$lp['name'] === \$package) {
-                        \$found = true;
-                        break;
-                    }
-                }
-                // If not in lock file, the package was added externally – reinstall.
-                if (!\$found) {
-                    \$needsInstall = true;
-                }
+        if (!\$needsInstall) {
+            // Check whether Magento's composer.json already declares the exact required
+            // constraint. This detects constraint bumps in the module (e.g. ^0.3 → ^0.4)
+            // and triggers a re-install when the constraint changes.
+            \$declaredConstraint = \$magentoManifest['require'][\$package]
+                ?? \$magentoManifest['require-dev'][\$package]
+                ?? null;
+            if (\$declaredConstraint !== \$constraint) {
+                \$needsInstall = true;
             }
-        } elseif (!is_dir(\$vendorDir)) {
-            \$needsInstall = true;
         }
         if (\$needsInstall) {
             \$missingConstraints[] = escapeshellarg(\"\$package:\$constraint\");
@@ -83,7 +69,7 @@ php -r "
         // This prevents Composer from touching unrelated Magento core dependencies.
         passthru('composer require --no-interaction --no-update ' . implode(' ', \$missingConstraints), \$exitCode);
         if (\$exitCode !== 0) { exit(\$exitCode); }
-        passthru('composer update --no-interaction ' . implode(' ', \$missingNames), \$exitCode);
+        passthru('composer update --no-interaction --with-dependencies ' . implode(' ', \$missingNames), \$exitCode);
         exit(\$exitCode);
     }
 "

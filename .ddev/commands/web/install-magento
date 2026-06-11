@@ -124,7 +124,7 @@ bin/magento setup:upgrade
 # has registered all themes into the theme table.
 HYVA_THEME_ID=$(mysql --host=db --user=db --password=db db \
 	--skip-column-names --silent \
-	--execute="SELECT theme_id FROM theme WHERE theme_path = 'Hyva/default' LIMIT 1" 2>/dev/null)
+	--execute="SELECT theme_id FROM theme WHERE theme_path = 'Hyva/default' LIMIT 1" 2>/dev/null) || HYVA_THEME_ID=""
 if [[ -n "$HYVA_THEME_ID" ]]; then
 	echo "Setting Hyvä Default (ID: ${HYVA_THEME_ID}) as storefront theme..."
 	bin/magento config:set design/theme/theme_id "$HYVA_THEME_ID"
