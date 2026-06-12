@@ -12,14 +12,13 @@ cd /var/www/html || exit 1
 # global config
 MAGENTO_FOLDER="magento"
 
-# Guard: verify the MageForge bind-mount is active.
-# The Docker bind-mount (../src → .../MageForge) is a kernel-level mount established
-# when the containers start. If magento/ was deleted while DDEV was running, the mount
-# becomes orphaned: its inode is gone, and recreating the directory produces a new inode
-# not covered by the old mount. The module source would then be invisible to Magento.
-# The only fix is a container restart, which re-establishes the mount on the new inode.
-if [[ ! -f "${MAGENTO_FOLDER}/app/code/OpenForgeProject/MageForge/registration.php" ]]; then
-	echo "ERROR: The MageForge bind-mount is not active."
+# Guard: verify the module source mount is active.
+# The mount (repo root → magento/mageforge-source, read-only) is established when the
+# containers start. If magento/ was deleted while DDEV was running, the mount can become
+# orphaned: its inode is gone, and a recreated directory is not covered by the old mount.
+# A container restart re-establishes the mount on the new inode.
+if [[ ! -f "${MAGENTO_FOLDER}/mageforge-source/composer.json" ]]; then
+	echo "ERROR: The MageForge source mount is not active."
 	echo ""
 	echo "This happens when magento/ was deleted while DDEV was still running."
 	echo ""
@@ -72,17 +71,22 @@ composer config repositories.hyva-themes/magento2-theme-fallback git https://git
 composer config repositories.hyva-themes/magento2-order-cancellation-webapi git https://github.com/hyva-themes/magento2-order-cancellation-webapi.git
 composer config repositories.hyva-themes/magento2-email-module git https://github.com/hyva-themes/magento2-email-module.git
 
-# Remove *.sample extension
-find . -name "*.sample" -type f -exec sh -c 'mv "$1" "${1%.sample}"' _ {} \;
+# Remove *.sample extension (skip the read-only module source mount)
+find . -path ./mageforge-source -prune -o -name "*.sample" -type f -exec sh -c 'mv "$1" "${1%.sample}"' _ {} \;
 rm -f package-lock.json # remove basic package-lock.json to avoid conflicts
 
 # create missing local-themes.js file for grunt tasks
 echo 'module.exports = {};' >dev/tools/grunt/configs/local-themes.js
 
-# Require Hyvä theme and install MageForge module deps before setup:install so that
-# both are included in the initial schema-upgrade pass (avoiding a redundant second pass).
-composer require 'hyva-themes/magento2-default-theme'
-/var/www/html/.ddev/commands/web/install-module-deps
+# Register the module source mount as a Composer path repository. Composer symlinks
+# vendor/openforgeproject/mageforge → ../../mageforge-source, which resolves within the
+# Magento root (satisfying Magento's path validator), and resolves the module's
+# third-party dependencies (e.g. laravel/prompts) like any regular package.
+composer config repositories.mageforge '{"type": "path", "url": "mageforge-source", "options": {"symlink": true}}'
+
+# Require Hyvä theme and MageForge before setup:install so that both are included
+# in the initial schema-upgrade pass (avoiding a redundant second pass).
+composer require 'hyva-themes/magento2-default-theme' 'openforgeproject/mageforge:@dev'
 
 # install magento
 bin/magento setup:install \
@@ -108,9 +112,7 @@ bin/magento deploy:mode:set developer
 # disable 2FA
 bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
 
-# Enable MageForge: the module is bind-mounted under app/code/ and therefore not registered
-# via Composer autoload. bin/magento module:enable discovers it through the component registrar
-# (registration.php), writes the entry to app/etc/config.php, and exits non-zero on any error.
+# Enable MageForge (Composer-installed modules are disabled until enabled in app/etc/config.php)
 bin/magento module:enable OpenForgeProject_MageForge
 
 # install sample data

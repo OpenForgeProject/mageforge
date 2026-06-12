@@ -11,17 +11,12 @@ database:
     version: "10.6"
 hooks:
     pre-start:
-        # Pre-create the MageForge bind-mount target directory on the host.
-        # Docker creates missing mount-target paths as root; by creating them here
-        # (as the host user) they get the correct ownership for the DDEV web container.
-        # MageForge/ is the actual bind-mount target (../src → .../MageForge), so we
-        # must create it explicitly – creating only the parent is not enough.
-        - exec-host: mkdir -p magento/app/code/OpenForgeProject/MageForge
+        # Pre-create the mageforge-source mount target on the host. Docker creates
+        # missing mount-target paths as root; creating it here (as the host user)
+        # gives it the correct ownership for the DDEV web container.
+        - exec-host: mkdir -p magento/mageforge-source
     post-start:
         - exec-host: ddev npx skills experimental_install
-        # Install MageForge module dependencies (e.g. laravel/prompts) that are not
-        # resolved automatically because the module is bind-mounted, not Composer-installed.
-        - exec: /var/www/html/.ddev/commands/web/install-module-deps
 use_dns_when_possible: true
 composer_root: magento
 composer_version: "2"
