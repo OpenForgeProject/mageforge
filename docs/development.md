@@ -43,7 +43,7 @@ Welcome to the MageForge development repository. This guide covers everything yo
 >
 > - All module development happens in `/src/` — this is where you write code.
 > - Testing happens in `/magento/` — a full Magento 2 installation wired up for local use.
-> - `/src/` is **bind-mounted by Docker** into `/magento/app/code/OpenForgeProject/MageForge/`. Changes are visible instantly; no Composer step needed. The mount is established on `ddev start` / `ddev restart`.
+> - The repository is **mounted read-only by Docker** into `/magento/mageforge-source/` and installed into Magento as a regular Composer package (path repository with symlink). Changes in `/src/` are visible instantly; no Composer step needed. The mount is established on `ddev start` / `ddev restart`.
 > - `/magento/` is never included in a release. It exists solely for local development.
 
 ---
@@ -83,12 +83,12 @@ Basic familiarity with Magento 2 module development is assumed.
 
    This script will:
    - Install a fresh Magento 2 instance inside `/magento/`
-   - Install third-party module dependencies via `ddev install-module-deps`
+   - Install MageForge via Composer (path repository pointing at the mounted module source)
    - Install Magento sample data
    - Enable the MageForge module (`bin/magento module:enable`)
    - Set developer mode and disable 2FA
 
-   > **Note:** `ddev start` must run before this command to establish the Docker bind-mount.
+   > **Note:** `ddev start` must run before this command to establish the Docker mount.
 
 4. **Verify the installation:**
 
@@ -100,15 +100,26 @@ You now have a fully functional local development environment.
 
 ---
 
-## How the Bind-Mount Works
+## How the Module Is Installed
 
-`/src/` is bind-mounted by Docker (`.ddev/docker-compose.mageforge-source.yaml`) into the Magento app/code directory:
+The repository root is bind-mounted **read-only** by Docker (`.ddev/docker-compose.mageforge-source.yaml`) into the Magento root:
 
 ```
-../src  →  magento/app/code/OpenForgeProject/MageForge/
+..  →  magento/mageforge-source/   (read-only)
 ```
 
-A bind-mount is used instead of a Composer symlink because Magento's path validator rejects paths that resolve outside the Magento root.
+`ddev install-magento` registers this directory as a Composer **path repository** and installs the module with `composer require openforgeproject/mageforge:@dev`. Composer creates a symlink:
+
+```
+magento/vendor/openforgeproject/mageforge  →  ../../mageforge-source
+```
+
+Why this construction?
+
+- **Magento's path validator** rejects paths that resolve (via `realpath()`) outside the Magento root. A plain Composer symlink to the repository root would fail; the mount point lives *inside* the Magento root, so validation passes.
+- **Read-only protects the source**: an accidental `rm -rf magento` inside the container stops at the mount instead of deleting the repository through it.
+- **Real Composer install**: third-party dependencies of the module (e.g. `laravel/prompts`) are resolved by Composer like for any end-user installation — no extra sync scripts needed.
+- An anonymous volume shadows `mageforge-source/magento/` so the mount does not recurse into itself.
 
 **The mount is (re-)established every time the containers start.** Always run `ddev start` or `ddev restart` when:
 
@@ -116,10 +127,10 @@ A bind-mount is used instead of a Composer symlink because Magento's path valida
 - pulling config changes from the repository
 - `/magento/` was deleted while DDEV was running (see [Common Issues](#common-issues))
 
-**Third-party dependencies** (e.g. `laravel/prompts`) are not resolved automatically for bind-mounted modules. A `post-start` hook runs `ddev install-module-deps` on every start to keep them in sync. You can also trigger it manually:
+**Changed module dependencies** (`composer.json` in the repository root) are picked up with:
 
 ```bash
-ddev install-module-deps
+ddev composer update openforgeproject/mageforge
 ```
 
 ---
@@ -233,25 +244,25 @@ ddev poweroff
 ddev start
 ```
 
-**MageForge bind-mount not active / `registration.php` not found:**
+**MageForge source mount not active / `mageforge-source` empty:**
 
 This happens when `/magento/` was deleted while DDEV was still running. Docker holds the old inode; the new directory is not covered by the mount.
 
 ```bash
-ddev restart            # Re-establishes the bind-mount on the new inode
+ddev restart            # Re-establishes the mount on the new inode
 ddev install-magento    # Re-installs Magento with the mount now active
 ```
 
 **Module dependencies missing after updating `composer.json`:**
 
 ```bash
-ddev install-module-deps   # Installs / updates third-party deps declared in src/composer.json
+ddev composer update openforgeproject/mageforge   # Re-resolves the module's dependencies
 ```
 
 **Need to reinstall Magento from scratch:**
 
 ```bash
-ddev restart            # Ensure the bind-mount is fresh first
+ddev restart            # Ensure the source mount is fresh first
 ddev install-magento   # Handles cleanup automatically
 ```
 

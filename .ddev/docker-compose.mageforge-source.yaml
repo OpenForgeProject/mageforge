@@ -1,6 +1,12 @@
 services:
   web:
     volumes:
-      # Bind-mount the module source directly into app/code/ so realpath() returns
-      # a path within the Magento root, bypassing Magento's filesystem path validator.
-      - ../src:/var/www/html/magento/app/code/OpenForgeProject/MageForge:cached
+      # Mount the module repository read-only inside the Magento root. The Composer
+      # path-repository symlink (vendor/openforgeproject/mageforge → ../../mageforge-source)
+      # then resolves to a path within the Magento root, satisfying Magento's path
+      # validator. Read-only also protects the module source from an accidental
+      # `rm -rf magento` inside the container: deletion stops at the mount.
+      - ..:/var/www/html/magento/mageforge-source:ro,cached
+      # The repository contains magento/ itself; shadow it with an anonymous volume
+      # so the mount does not recurse (mageforge-source/magento/mageforge-source/…).
+      - /var/www/html/magento/mageforge-source/magento
