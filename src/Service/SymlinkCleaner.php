@@ -94,7 +94,7 @@ class SymlinkCleaner
             return false;
         }
 
-        return (($stat['mode'] ?? 0) & 0120000) === 0120000;
+        return (($stat['mode'] ?? 0) & 0o12_0000) === 0o12_0000;
     }
 
     /**

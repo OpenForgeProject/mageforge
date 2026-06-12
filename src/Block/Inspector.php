@@ -111,7 +111,7 @@ class Inspector extends Template
     {
         $value = $this->scopeConfig->getValue(
             InspectorConfig::XML_PATH_SHOW_BUTTON_LABELS,
-            ScopeInterface::SCOPE_STORE
+            ScopeInterface::SCOPE_STORE,
         );
         // Default to true when not explicitly set to '0'
         return !is_string($value) || $value !== '0';
@@ -146,10 +146,7 @@ class Inspector extends Template
      */
     public function getShowHealthScore(): bool
     {
-        $value = $this->scopeConfig->getValue(
-            InspectorConfig::XML_PATH_SHOW_HEALTH_SCORE,
-            ScopeInterface::SCOPE_STORE
-        );
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_SHOW_HEALTH_SCORE, ScopeInterface::SCOPE_STORE);
         return !is_string($value) || $value !== '0';
     }
 

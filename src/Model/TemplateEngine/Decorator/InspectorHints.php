@@ -227,11 +227,17 @@ class InspectorHints implements TemplateEngineInterface
         $replaced = false;
         $result = preg_replace_callback(
             '/^(\s*<[a-zA-Z][a-zA-Z0-9-]*)/s',
-            function (array $matches) use ($wrapperId, $safeJson, &$replaced): string {
+            static function (array $matches) use ($wrapperId, $safeJson, &$replaced): string {
                 $replaced = true;
-                return $matches[0]
-                    . ' data-mageforge-id="' . $wrapperId . '"'
-                    . ' data-mageforge-block="' . $safeJson . '"';
+                return (
+                    $matches[0]
+                    . ' data-mageforge-id="'
+                    . $wrapperId
+                    . '"'
+                    . ' data-mageforge-block="'
+                    . $safeJson
+                    . '"'
+                );
             },
             $html,
             1,
@@ -255,7 +261,7 @@ class InspectorHints implements TemplateEngineInterface
     private function getRelativePath(string $absolutePath): string
     {
         // If path starts with Magento root, make it relative
-        if (strpos($absolutePath, $this->magentoRoot) === 0) {
+        if (str_starts_with($absolutePath, $this->magentoRoot)) {
             return ltrim(substr($absolutePath, strlen($this->magentoRoot)), '/');
         }
 
@@ -345,13 +351,13 @@ class InspectorHints implements TemplateEngineInterface
         $relativePath = $this->getRelativePath($templateFile);
 
         // If path starts with app/design, it's an override
-        if (strpos($relativePath, 'app/design/') === 0) {
+        if (str_starts_with($relativePath, 'app/design/')) {
             return true;
         }
 
         // If module name is in path but not in vendor/<vendor>/<module>, it's likely an override
         $modulePathPart = str_replace('_', '/', $moduleName);
-        if (strpos($relativePath, 'vendor/') === false && strpos($relativePath, $modulePathPart) !== false) {
+        if (!str_contains($relativePath, 'vendor/') && str_contains($relativePath, $modulePathPart)) {
             return true;
         }
 

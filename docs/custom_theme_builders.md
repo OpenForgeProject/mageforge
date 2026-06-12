@@ -18,7 +18,7 @@ The ThemeBuilder architecture consists of the following components:
 
 To create your own ThemeBuilder, you'll need to set up a custom Magento 2 module with the following structure:
 
-```
+```text
 app/code/YourCompany/YourModule/
 ├── Console/
 │   └── Command/
@@ -43,6 +43,7 @@ First, create the basic module structure as shown above:
 
 1. Create the module directory: `app/code/YourCompany/YourModule/`
 2. Create a registration.php file:
+
 ```php
 <?php
 use Magento\Framework\Component\ComponentRegistrar;
@@ -55,6 +56,7 @@ ComponentRegistrar::register(
 ```
 
 3. Create a module.xml file in the etc directory:
+
 ```xml
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -358,6 +360,7 @@ public function build(string $themeCode, string $themePath, SymfonyStyle $io, Ou
 ```
 
 This approach:
+
 - Prevents modification attempts on read-only vendor themes
 - Allows themes to work without specific build tools
 - Still supports full builds when tools are present

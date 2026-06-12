@@ -1,6 +1,10 @@
 # AI Skills
 /.agents
 
+# Composer (module dev tooling)
+/vendor/
+/composer.lock
+
 .vscode
 /magento/
 /magento-temp/

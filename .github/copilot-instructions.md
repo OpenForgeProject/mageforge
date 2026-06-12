@@ -2,7 +2,7 @@
 
 ## Structure
 
-```
+```text
 magento/              # Magento 2 installation (DDEV)
 src/
   Console/Command     # CLI commands (extend AbstractCommand)
@@ -105,7 +105,7 @@ When adding an admin config field, all steps must be done together:
 
 Standalone Alpine.js component (`mageforgeToolbar`), separate from Inspector.
 
-```
+```text
 src/view/frontend/web/js/
   toolbar.js              # Entry point
   toolbar/
@@ -136,7 +136,7 @@ Trunk also runs checkov (see `.trunk/trunk.yaml`).
 
 ## Git
 
-```
+```text
 fix/<issue-description>
 feature/<issue-description>
 #<issue-nr> - <message>

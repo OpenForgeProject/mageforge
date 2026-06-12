@@ -500,7 +500,7 @@ abstract class AbstractCommand extends Command
             if ($isExplicitWildcard || $isVendorOnly) {
                 // Lazy-load themes only when needed
                 if ($availableThemes === null) {
-                    $availableThemes = array_map(fn($theme) => $theme->getCode(), $themeList->getAllThemes());
+                    $availableThemes = array_map(static fn($theme) => $theme->getCode(), $themeList->getAllThemes());
                 }
 
                 if ($isExplicitWildcard) {
@@ -509,7 +509,7 @@ abstract class AbstractCommand extends Command
                     $prefix = $code . '/'; // e.g. "Vendor" -> "Vendor/"
                 }
 
-                $matched = array_filter($availableThemes, fn(string $availableCode) => \str_starts_with(
+                $matched = array_filter($availableThemes, static fn(string $availableCode) => \str_starts_with(
                     $availableCode,
                     $prefix,
                 ));

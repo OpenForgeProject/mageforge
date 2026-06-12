@@ -4,17 +4,17 @@ Complete reference of all CLI commands provided by the MageForge module.
 
 ## Quick Overview
 
-| Group | Command | Description | Aliases |
-|-------|---------|-------------|---------|
-| **Theme** | `mageforge:theme:list` | List all available Magento themes | `frontend:list` |
-| **Theme** | `mageforge:theme:build` | Build selected themes (CSS/TailwindCSS) | `frontend:build` |
-| **Theme** | `mageforge:theme:watch` | Watch theme files and auto-rebuild | `frontend:watch` |
-| **Theme** | `mageforge:theme:clean` | Clean static files and cache directories | `frontend:clean` |
-| **Theme** | `mageforge:theme:inspector` | Manage Frontend Inspector (enable/disable/status) | — |
-| **Hyvä** | `mageforge:hyva:tokens` | Generate Hyvä design tokens | `hyva:tokens` |
-| **Hyvä** | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues | `hyva:check` |
-| **System** | `mageforge:system:version` | Show current and latest module version | `system:version` |
-| **System** | `mageforge:system:check` | Display system information (PHP, Node.js, DB, etc.) | `system:check` |
+| Group      | Command                              | Description                                         | Aliases          |
+| ---------- | ------------------------------------ | --------------------------------------------------- | ---------------- |
+| **Theme**  | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`  |
+| **Theme**  | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build` |
+| **Theme**  | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch` |
+| **Theme**  | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean` |
+| **Theme**  | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                |
+| **Hyvä**   | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`    |
+| **Hyvä**   | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues         | `hyva:check`     |
+| **System** | `mageforge:system:version`           | Show current and latest module version              | `system:version` |
+| **System** | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`   |
 
 ---
 
@@ -44,9 +44,11 @@ bin/magento frontend:build Magento/luma Magento/blank
 ```
 
 **Arguments:**
+
 - `themeCodes` — One or more theme codes in format `Vendor/theme`. Accepts wildcards like `Magento/*`.
 
 **Behavior:**
+
 - If no theme codes are provided, an interactive prompt lets you select themes.
 - For each theme, the appropriate builder is determined automatically (Hyvä, TailwindCSS, Magento Standard, etc.).
 - Displays a summary of built themes and execution time.
@@ -63,12 +65,15 @@ bin/magento frontend:watch Magento/luma
 ```
 
 **Arguments:**
+
 - `themeCode` — Optional. Theme to watch in format `Vendor/theme`. If omitted, an interactive prompt appears.
 
 **Options:**
+
 - `-t, --theme=VALUE` — Alternative way to specify the theme code.
 
 **Behavior:**
+
 - Runs indefinitely until interrupted (Ctrl+C).
 - Monitors source files (SCSS, JS, etc.) and triggers rebuilds on change.
 - Useful for active theme development.
@@ -86,9 +91,11 @@ bin/magento mageforge:theme:clean --dry-run
 ```
 
 **Arguments:**
+
 - `themeCodes` — Optional. One or more theme codes to clean.
 
 **Options:**
+
 - `-a, --all` — Clean all themes.
 - `--dry-run` — Show what would be cleaned without actually deleting anything.
 
@@ -105,9 +112,11 @@ bin/magento mageforge:theme:inspector status
 ```
 
 **Arguments:**
+
 - `action` — Required. One of: `enable`, `disable`, `status`.
 
 **Notes:**
+
 - Requires Magento Developer Mode for enabling.
 - Can also be toggled via Admin: `Stores > Configuration > MageForge > Frontend Inspector`.
 - Browser shortcut: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS).
@@ -127,6 +136,7 @@ bin/magento hyva:tokens Hyva/default
 ```
 
 **Arguments:**
+
 - `themeCode` — Optional. Theme code in format `Vendor/theme`. If omitted, an interactive prompt appears.
 
 **Output:** Creates a `generated/hyva-tokens.css` file from the design tokens configuration.
@@ -143,8 +153,9 @@ bin/magento hyva:check
 ```
 
 **Options:**
+
 - `-a, --show-all` — Show all modules including compatible ones.
-- `-t, --third-party-only` — Check only third-party modules (exclude Magento_*).
+- `-t, --third-party-only` — Check only third-party modules (exclude Magento\_\*).
 - `--include-vendor` — Include Magento core modules in the check.
 - `--detailed` — Show detailed compatibility information.
 
@@ -177,6 +188,7 @@ bin/magento system:check
 ```
 
 **Reports:**
+
 - PHP version and extensions
 - Magento version
 - Database type and version (MySQL/MariaDB)
@@ -192,7 +204,7 @@ bin/magento system:check
 
 ## Command Groups Summary
 
-```
+```text
 mageforge:theme:list          → List available themes
 mageforge:theme:build         → Build theme assets
 mageforge:theme:watch         → Watch & auto-rebuild

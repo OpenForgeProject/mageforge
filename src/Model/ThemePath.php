@@ -27,8 +27,6 @@ class ThemePath
     {
         $registeredThemes = $this->componentRegistrar->getPaths(ComponentRegistrar::THEME);
 
-        return $registeredThemes['frontend/' . $themeCode]
-            ?? $registeredThemes['adminhtml/' . $themeCode]
-            ?? null;
+        return $registeredThemes['frontend/' . $themeCode] ?? $registeredThemes['adminhtml/' . $themeCode] ?? null;
     }
 }

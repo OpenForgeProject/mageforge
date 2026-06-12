@@ -68,7 +68,8 @@ class Builder implements BuilderInterface
         if ($this->fileDriver->isExists($themePath . '/composer.json')) {
             $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
             $composerJson = json_decode($composerContent, true);
-            if (is_array($composerJson)
+            if (
+                is_array($composerJson)
                 && isset($composerJson['name'])
                 && is_string($composerJson['name'])
                 && str_contains($composerJson['name'], 'hyva')
@@ -279,7 +280,7 @@ class Builder implements BuilderInterface
                 }
             }
 
-            $exitCode = $process->run(function ($type, $buffer) use ($output): void {
+            $exitCode = $process->run(static function ($type, $buffer) use ($output): void {
                 $output->write($buffer);
             });
 

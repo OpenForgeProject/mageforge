@@ -16,10 +16,10 @@ class ToolbarPosition implements OptionSourceInterface
     public function toOptionArray(): array
     {
         return [
-            ['value' => 'bottom-left',  'label' => (string) __('Bottom Left')],
+            ['value' => 'bottom-left', 'label' => (string) __('Bottom Left')],
             ['value' => 'bottom-right', 'label' => (string) __('Bottom Right')],
-            ['value' => 'top-left',     'label' => (string) __('Top Left')],
-            ['value' => 'top-right',    'label' => (string) __('Top Right')],
+            ['value' => 'top-left', 'label' => (string) __('Top Left')],
+            ['value' => 'top-right', 'label' => (string) __('Top Right')],
         ];
     }
 }

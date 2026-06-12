@@ -28,6 +28,7 @@ class ThemeList
     {
         /** @var array<string, Theme> $items */
         $items = $this->magentoThemeList->getItems();
+
         return $items;
     }
 }

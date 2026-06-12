@@ -31,6 +31,7 @@ class InspectorHintsFactory
     {
         /** @var InspectorHints $instance */
         $instance = $this->objectManager->create(InspectorHints::class, $data);
+
         return $instance;
     }
 }

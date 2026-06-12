@@ -82,7 +82,7 @@ class BuildCommand extends AbstractCommand
 
         if (empty($themeCodes)) {
             $themes = $this->themeList->getAllThemes();
-            $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+            $options = array_values(array_map(static fn($theme) => $theme->getCode(), $themes));
 
             // Check if we're in an interactive terminal environment
             if (!$this->isInteractiveTerminal($output)) {
@@ -96,9 +96,12 @@ class BuildCommand extends AbstractCommand
 
             $themeCodesPrompt = new MultiSearchPrompt(
                 label: 'Select themes to build',
-                options: fn(string $value) => empty($value)
+                options: static fn(string $value) => empty($value)
                     ? $options
-                    : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
+                    : array_values(array_filter(
+                        $options,
+                        static fn($option) => stripos((string) $option, $value) !== false,
+                    )),
                 placeholder: 'Type to search theme...',
                 hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
                 required: false,

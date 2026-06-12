@@ -22,8 +22,18 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           tools: composer:v2
 
-      - name: Install Magento Coding Standard
-        run: composer create-project magento/magento-coding-standard --stability=dev /tmp/magento-coding-standard
+      - name: Cache Composer packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-phpcs-${{ hashFiles('composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-phpcs
 
+      # The coding standard is a require-dev dependency of the module, so CI and
+      # local development (ddev phpcs) use the same pinned tool versions.
+      - name: Install dev dependencies
+        run: composer install --no-interaction --no-progress
+
+      # Standard and file list come from phpcs.xml.dist
       - name: Run PHPCS
-        run: /tmp/magento-coding-standard/vendor/bin/phpcs -p -s --standard=Magento2 src/
+        run: vendor/bin/phpcs -p -s

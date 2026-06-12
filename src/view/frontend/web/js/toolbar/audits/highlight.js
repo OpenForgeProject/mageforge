@@ -8,7 +8,7 @@
  * is kept on the element purely as a selector marker for clearHighlight().
  */
 
-const AUDIT_OVERLAY_CLASS = 'mageforge-audit-overlay';
+const AUDIT_OVERLAY_CLASS = "mageforge-audit-overlay";
 
 /**
  * Module-level registry: tracks one overlay per element and the set of
@@ -31,16 +31,16 @@ let rafPending = false;
 let sharedRo = null;
 
 function scheduleUpdate() {
-    if (rafPending) return;
-    rafPending = true;
-    requestAnimationFrame(() => {
-        rafPending = false;
-        // Snapshot before iterating: update() calls may delete entries
-        // (image disconnected → cleanup) while we are looping.
-        for (const updateFn of [...activeOverlays.values()]) {
-            updateFn();
-        }
-    });
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    // Snapshot before iterating: update() calls may delete entries
+    // (image disconnected → cleanup) while we are looping.
+    for (const updateFn of [...activeOverlays.values()]) {
+      updateFn();
+    }
+  });
 }
 
 /**
@@ -53,49 +53,53 @@ function scheduleUpdate() {
  * @param {'error'|'warning'} [severity='error']
  * @returns {function} cleanup
  */
-function createOverlay(el, severity = 'error') {
-    const overlay = document.createElement('span');
-    overlay.className = AUDIT_OVERLAY_CLASS;
-    if (severity === 'warning') overlay.classList.add('mageforge-audit-overlay--warning');
-    document.body.appendChild(overlay);
+function createOverlay(el, severity = "error") {
+  const overlay = document.createElement("span");
+  overlay.className = AUDIT_OVERLAY_CLASS;
+  if (severity === "warning")
+    overlay.classList.add("mageforge-audit-overlay--warning");
+  document.body.appendChild(overlay);
 
-    function update() {
-        if (!el.isConnected) {
-            cleanup();
+  function update() {
+    if (!el.isConnected) {
+      cleanup();
 
-            return;
-        }
-        const rect = el.getBoundingClientRect();
-        overlay.style.top    = `${rect.top}px`;
-        overlay.style.left   = `${rect.left}px`;
-        overlay.style.width  = `${rect.width}px`;
-        overlay.style.height = `${rect.height}px`;
+      return;
     }
+    const rect = el.getBoundingClientRect();
+    overlay.style.top = `${rect.top}px`;
+    overlay.style.left = `${rect.left}px`;
+    overlay.style.width = `${rect.width}px`;
+    overlay.style.height = `${rect.height}px`;
+  }
 
-    update();
+  update();
 
-    activeOverlays.set(overlay, update);
+  activeOverlays.set(overlay, update);
 
-    // Attach shared listeners only when the first overlay is created.
-    if (activeOverlays.size === 1) {
-        sharedRo = new ResizeObserver(scheduleUpdate);
-        sharedRo.observe(document.documentElement);
-        window.addEventListener('scroll', scheduleUpdate, { passive: true, capture: true });
+  // Attach shared listeners only when the first overlay is created.
+  if (activeOverlays.size === 1) {
+    sharedRo = new ResizeObserver(scheduleUpdate);
+    sharedRo.observe(document.documentElement);
+    window.addEventListener("scroll", scheduleUpdate, {
+      passive: true,
+      capture: true,
+    });
+  }
+
+  // Named so update() can reference it before its var declaration (hoisting).
+  function cleanup() {
+    activeOverlays.delete(overlay);
+    // Tear down shared listeners once no overlays remain.
+    if (activeOverlays.size === 0) {
+      sharedRo?.disconnect();
+      sharedRo = null;
+      window.removeEventListener("scroll", scheduleUpdate, { capture: true });
     }
+    overlay.remove();
+  }
 
-    // Named so update() can reference it before its var declaration (hoisting).
-    function cleanup() {
-        activeOverlays.delete(overlay);
-        // Tear down shared listeners once no overlays remain.
-        if (activeOverlays.size === 0) {
-            sharedRo?.disconnect();
-            sharedRo = null;
-            window.removeEventListener('scroll', scheduleUpdate, { capture: true });
-        }
-        overlay.remove();
-    }
-
-    return cleanup;
+  return cleanup;
 }
 
 /**
@@ -105,18 +109,18 @@ function createOverlay(el, severity = 'error') {
  * @param {string} key - Audit key (e.g. 'images-without-alt')
  */
 export function clearHighlight(key) {
-    const cls = `mageforge-audit-${key}`;
-    document.querySelectorAll(`.${cls}`).forEach(el => {
-        el.classList.remove(cls);
-        const entry = overlayRegistry.get(el);
-        if (entry) {
-            entry.keys.delete(key);
-            if (entry.keys.size === 0) {
-                entry.cleanup();
-                overlayRegistry.delete(el);
-            }
-        }
-    });
+  const cls = `mageforge-audit-${key}`;
+  document.querySelectorAll(`.${cls}`).forEach((el) => {
+    el.classList.remove(cls);
+    const entry = overlayRegistry.get(el);
+    if (entry) {
+      entry.keys.delete(key);
+      if (entry.keys.size === 0) {
+        entry.cleanup();
+        overlayRegistry.delete(el);
+      }
+    }
+  });
 }
 
 /**
@@ -132,33 +136,33 @@ export function clearHighlight(key) {
  * @param {boolean}    [options.skipBadge=false]  - Skip badge + scroll update
  */
 export function applyHighlight(elements, key, context, options = {}) {
-    const severity = options.severity ?? 'error';
-    const skipBadge = options.skipBadge ?? false;
+  const severity = options.severity ?? "error";
+  const skipBadge = options.skipBadge ?? false;
 
-    // Never flag elements that are part of the MageForge Toolbar itself
-    elements = elements.filter(el => !el.closest('.mageforge-toolbar'));
+  // Never flag elements that are part of the MageForge Toolbar itself
+  elements = elements.filter((el) => !el.closest(".mageforge-toolbar"));
 
-    if (elements.length === 0) {
-        if (!skipBadge) context.setAuditCounterBadge(key, '0', 'success');
-        return;
+  if (elements.length === 0) {
+    if (!skipBadge) context.setAuditCounterBadge(key, "0", "success");
+    return;
+  }
+  const cls = `mageforge-audit-${key}`;
+  elements.forEach((el) => {
+    el.classList.add(cls);
+    const existing = overlayRegistry.get(el);
+    if (existing) {
+      existing.keys.add(key);
+    } else {
+      overlayRegistry.set(el, {
+        cleanup: createOverlay(el, severity),
+        keys: new Set([key]),
+      });
     }
-    const cls = `mageforge-audit-${key}`;
-    elements.forEach(el => {
-        el.classList.add(cls);
-        const existing = overlayRegistry.get(el);
-        if (existing) {
-            existing.keys.add(key);
-        } else {
-            overlayRegistry.set(el, {
-                cleanup: createOverlay(el, severity),
-                keys: new Set([key]),
-            });
-        }
-    });
-    if (!skipBadge) {
-        if (!context._batchRunning) {
-            elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        context.setAuditCounterBadge(key, `${elements.length}`, severity);
+  });
+  if (!skipBadge) {
+    if (!context._batchRunning) {
+      elements[0].scrollIntoView({ behavior: "smooth", block: "center" });
     }
+    context.setAuditCounterBadge(key, `${elements.length}`, severity);
+  }
 }

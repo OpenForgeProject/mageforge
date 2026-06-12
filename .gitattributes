@@ -6,6 +6,8 @@
 /docs/                            export-ignore
 /phpstan.neon                     export-ignore
 /mago.toml                        export-ignore
+/phpcs.xml.dist                   export-ignore
+/.editorconfig                    export-ignore
 /CONTRIBUTING.md                  export-ignore
 /context7.json                    export-ignore
 /release-please-config.json       export-ignore
