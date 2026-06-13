@@ -1,8 +1,6 @@
-# This workflow will triage pull requests and apply a label based on the
-# paths that are modified in the pull request.
-#
-# To use this workflow, you will need to set up a .github/labeler.yml
-# file with configuration.  For more information, see:
+# Triages pull requests and applies labels based on the changed files and the
+# head-branch name (.github/labeler.yml), plus the PR title (Conventional Commits)
+# in the dedicated step below.
 # https://github.com/actions/labeler
 
 name: Labeler
@@ -19,6 +17,29 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5
+      - name: Label by changed files and branch name
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      # actions/labeler cannot match the PR title, so map Conventional Commits
+      # prefixes to labels here. The title is passed via env (never interpolated
+      # into the script) and only used as regex match data, so it cannot inject
+      # shell commands.
+      - name: Label by PR title
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          shopt -s nocasematch
+          if [[ "$PR_TITLE" =~ ^(feat|feature)(\(.+\))?!?: ]]; then
+            gh pr edit "$PR_NUMBER" --add-label Feature
+          fi
+          if [[ "$PR_TITLE" =~ ^(fix|bugfix)(\(.+\))?!?: ]]; then
+            gh pr edit "$PR_NUMBER" --add-label Fix
+          fi
+          if [[ "$PR_TITLE" =~ ^chore(\(.+\))?!?:[[:space:]]release ]]; then
+            gh pr edit "$PR_NUMBER" --add-label Next-Release
+          fi
