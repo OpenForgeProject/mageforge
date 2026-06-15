@@ -164,7 +164,8 @@ class CheckCommand extends AbstractCommand
 
             /** @var array<int, array<string, mixed>> $nodes */
             foreach ($nodes as $node) {
-                if (isset($node['lts'])
+                if (
+                    isset($node['lts'])
                     && $node['lts'] !== false
                     && isset($node['version'])
                     && is_string($node['version'])
@@ -685,12 +686,10 @@ class CheckCommand extends AbstractCommand
             return "$usedGB GB / $totalGB GB ($usedPercent%)";
         }
 
-        $totalGB = round($totalSpace / 1024 / 1024 / 1024, 2);
-        $freeGB = round($freeSpace / 1024 / 1024 / 1024, 2);
+        $totalGB = round((($totalSpace / 1024) / 1024) / 1024, 2);
+        $freeGB = round((($freeSpace / 1024) / 1024) / 1024, 2);
         $usedGB = round($totalGB - $freeGB, 2);
-        $usedPercent = $totalGB > 0.0
-            ? round(($usedGB / $totalGB) * 100, 2)
-            : 0.0;
+        $usedPercent = $totalGB > 0.0 ? round(($usedGB / $totalGB) * 100, 2) : 0.0;
 
         return "$usedGB GB / $totalGB GB ($usedPercent%)";
     }
@@ -811,7 +810,7 @@ class CheckCommand extends AbstractCommand
     private function getSystemEnvironmentValue(string $name): ?string
     {
         // Use ini_get for certain system variables as a safer alternative
-        if (in_array($name, ['memory_limit', 'max_execution_time'])) {
+        if (in_array($name, ['memory_limit', 'max_execution_time'], true)) {
             $value = (string) ini_get($name);
             if ($value !== '') {
                 return $value;

@@ -11,45 +11,40 @@ cd /var/www/html/magento || exit 1
 
 # Check if PHPStan is installed
 if [[ ! -f vendor/bin/phpstan ]]; then
-    echo "PHPStan not found. Installing PHPStan with Magento extension..."
+	echo "PHPStan not found. Installing PHPStan with Magento extension..."
 
-    # Allow PHPStan extension installer
-    composer config --no-plugins allow-plugins.phpstan/extension-installer true
+	# Allow PHPStan extension installer
+	composer config --no-plugins allow-plugins.phpstan/extension-installer true
 
-    # Install PHPStan and Magento extension
-    composer require --dev --no-update bitexpert/phpstan-magento phpstan/phpstan:^2.0 phpstan/extension-installer
+	# Install PHPStan and Magento extension
+	composer require --dev --no-update bitexpert/phpstan-magento phpstan/phpstan:^2.0 phpstan/extension-installer
 
-    # Update dependencies (limit scope to PHPStan packages)
-    composer update bitexpert/phpstan-magento phpstan/phpstan phpstan/extension-installer --with-dependencies
+	# Update dependencies (limit scope to PHPStan packages)
+	composer update bitexpert/phpstan-magento phpstan/phpstan phpstan/extension-installer --with-dependencies
 
-    echo "PHPStan installation complete."
+	echo "PHPStan installation complete."
 fi
 
-# Set target path - prefer app/code mount over vendor copy if not provided or if it's a flag
-if [[ -d "app/code/OpenForgeProject" ]]; then
-	DEFAULT_TARGET_PATH="app/code/OpenForgeProject"
-else
-	DEFAULT_TARGET_PATH="vendor/openforgeproject/mageforge/src"
-fi
-TARGET_PATH="${DEFAULT_TARGET_PATH}"
-if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
+# Default target: the module source, symlinked into vendor via the Composer path repository
+TARGET_PATH="vendor/openforgeproject/mageforge/src"
+if [[ $# -gt 0 ]] && [[ ! $1 =~ ^- ]]; then
 	TARGET_PATH="$1"
 	shift # Remove the first argument
 
 	# If path doesn't exist from magento dir, try from workspace root
-	if [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
+	if [[ ! -e ${TARGET_PATH} ]] && [[ -e "../${TARGET_PATH}" ]]; then
 		TARGET_PATH="../${TARGET_PATH}"
 	fi
 fi
 
 # Determine config file location
 if [[ -f "vendor/openforgeproject/mageforge/phpstan.neon" ]]; then
-    PHPSTAN_CONFIG="vendor/openforgeproject/mageforge/phpstan.neon"
+	PHPSTAN_CONFIG="vendor/openforgeproject/mageforge/phpstan.neon"
 elif [[ -f "../phpstan.neon" ]]; then
-    PHPSTAN_CONFIG="../phpstan.neon"
+	PHPSTAN_CONFIG="../phpstan.neon"
 else
-    echo "PHPStan config not found at vendor/openforgeproject/mageforge/phpstan.neon or ../phpstan.neon"
-    exit 1
+	echo "PHPStan config not found at vendor/openforgeproject/mageforge/phpstan.neon or ../phpstan.neon"
+	exit 1
 fi
 
 # Run PHPStan with the same configuration as CI pipeline

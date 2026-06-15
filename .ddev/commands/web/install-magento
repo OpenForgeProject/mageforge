@@ -45,10 +45,9 @@ composer create-project \
 	magento-temp
 
 # Create Magento Folder if not exist
-if [[ ! -d "${MAGENTO_FOLDER}" ]]; then
+if [[ ! -d ${MAGENTO_FOLDER} ]]; then
 	mkdir -p "${MAGENTO_FOLDER}"
 fi
-
 
 # copy everything from magento-temp into magento folder
 cp -a magento-temp/. "${MAGENTO_FOLDER}/"
@@ -127,9 +126,9 @@ bin/magento setup:upgrade
 HYVA_THEME_ID=$(mysql --host=db --user=db --password=db db \
 	--skip-column-names --silent \
 	--execute="SELECT theme_id FROM theme WHERE theme_path = 'Hyva/default' LIMIT 1" 2>/dev/null) || HYVA_THEME_ID=""
-if [[ -n "$HYVA_THEME_ID" ]]; then
+if [[ -n ${HYVA_THEME_ID} ]]; then
 	echo "Setting Hyvä Default (ID: ${HYVA_THEME_ID}) as storefront theme..."
-	bin/magento config:set design/theme/theme_id "$HYVA_THEME_ID"
+	bin/magento config:set design/theme/theme_id "${HYVA_THEME_ID}"
 	bin/magento cache:clean config
 else
 	echo "WARNING: Hyvä Default theme not found in database, skipping theme activation."

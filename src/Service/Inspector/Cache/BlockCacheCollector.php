@@ -91,7 +91,7 @@ class BlockCacheCollector
      * @param BlockInterface $block
      * @return int|null|false False if not cacheable, null for unlimited, int for specific lifetime
      */
-    private function resolveCacheLifetime(BlockInterface $block): int|null|false
+    private function resolveCacheLifetime(BlockInterface $block): int|false|null
     {
         if (!method_exists($block, 'getCacheLifetime')) {
             return false;

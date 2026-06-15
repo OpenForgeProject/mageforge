@@ -1,2 +1,6 @@
 # Prettier friendly markdownlint config (all formatting rules disabled)
 extends: markdownlint/style/prettier
+
+# Allow repeated headings like "### Added" across CHANGELOG release sections
+MD024:
+  siblings_only: true

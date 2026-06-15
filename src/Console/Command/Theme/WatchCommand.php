@@ -75,9 +75,12 @@ class WatchCommand extends AbstractCommand
 
             $themeCodePrompt = new SearchPrompt(
                 label: 'Select theme to watch',
-                options: fn(string $value) => empty($value)
+                options: static fn(string $value) => empty($value)
                     ? $options
-                    : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
+                    : array_values(array_filter(
+                        $options,
+                        static fn($option) => stripos((string) $option, $value) !== false,
+                    )),
                 placeholder: 'Type to search theme...',
                 scroll: 10,
                 hint: 'Type to search, arrow keys to navigate, Enter to confirm',

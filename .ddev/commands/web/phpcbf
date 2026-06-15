@@ -1,42 +1,19 @@
 #!/usr/bin/env bash
 
-## Description: Run phpcbf (auto-fix coding standard issues)
-## Usage: phpcbf [path]
+set -euo pipefail
+
+## Description: Run PHP Code Beautifier (auto-fix Magento2 standard violations)
+## Usage: phpcbf [path] [flags]
 ## Example: ddev phpcbf
 ## Example: ddev phpcbf src/Service/StaticContentCleaner.php
-## Example: ddev phpcbf vendor/openforgeproject/mageforge/src/Block
 
-cd /var/www/html/magento || exit 1
+cd /var/www/html
 
-PHPCBF_BIN="vendor-bin/coding-standard/vendor/bin/phpcbf"
-PHPCBF_FALLBACK="vendor-bin/coding-standard/vendor/squizlabs/php_codesniffer/bin/phpcbf"
-
-if [[ ! -x "${PHPCBF_BIN}" ]]; then
-	PHPCBF_BIN="${PHPCBF_FALLBACK}"
+# The coding standard is a require-dev dependency of the module itself.
+if [[ ! -x vendor/bin/phpcbf ]]; then
+	echo "phpcbf not found. Installing module dev dependencies..."
+	composer install --no-interaction
 fi
 
-if [[ ! -x "${PHPCBF_BIN}" ]]; then
-	echo "phpcbf not found. Installing coding-standard toolchain..."
-	composer bin coding-standard install || exit 1
-	PHPCBF_BIN="${PHPCBF_FALLBACK}"
-fi
-
-if [[ ! -x "${PHPCBF_BIN}" ]]; then
-	echo "phpcbf binary still missing. Expected ${PHPCBF_FALLBACK}."
-	exit 1
-fi
-
-# Set target path - default to vendor/openforgeproject/mageforge/src if not provided
-TARGET_PATH="vendor/openforgeproject/mageforge/src"
-if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
-	TARGET_PATH="$1"
-	shift # Remove the first argument
-
-	# If path doesn't exist from magento dir, try from workspace root
-	if [[ ! -e "${TARGET_PATH}" ]] && [[ -e "../${TARGET_PATH}" ]]; then
-		TARGET_PATH="../${TARGET_PATH}"
-	fi
-fi
-
-# Run PHPCBF with optional additional flags
-"${PHPCBF_BIN}" -p -s --standard=Magento2 "$@" "${TARGET_PATH}"
+# The ruleset (phpcs.xml.dist) defines the standard and default file list.
+vendor/bin/phpcbf -p "$@"

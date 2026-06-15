@@ -107,13 +107,16 @@ class TokensCommand extends AbstractCommand
         }
 
         $themes = $this->themeList->getAllThemes();
-        $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+        $options = array_values(array_map(static fn($theme) => $theme->getCode(), $themes));
 
         $themeCodePrompt = new SearchPrompt(
             label: 'Select theme to generate tokens for',
-            options: fn(string $value) => empty($value)
+            options: static fn(string $value) => empty($value)
                 ? $options
-                : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
+                : array_values(array_filter(
+                    $options,
+                    static fn($option) => stripos((string) $option, $value) !== false,
+                )),
             placeholder: 'Type to search theme...',
             scroll: 10,
             hint: 'Type to search, arrow keys to navigate, Enter to confirm',
@@ -262,7 +265,7 @@ class TokensCommand extends AbstractCommand
         $varGeneratedPath = $currentDir . '/var/generated/hyva-token/' . str_replace('/', '/', $themeCode);
 
         if (!$this->fileDriver->isDirectory($varGeneratedPath)) {
-            $this->fileDriver->createDirectory($varGeneratedPath, 0755);
+            $this->fileDriver->createDirectory($varGeneratedPath, 0o755);
         }
 
         $generatedFilePath = $varGeneratedPath . '/hyva-tokens.css';

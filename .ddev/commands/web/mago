@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 
-## Description: Run Mago (PHP analysis, formatting, and linting)
+set -euo pipefail
+
+## Description: Run Mago (PHP linter and formatter)
 ## Usage: mago <command> [options]
-## Example: "ddev mago"
+## Example: ddev mago lint
+## Example: ddev mago fmt
+## Example: ddev mago fmt --dry-run
 
-set -e
-
-# Require Mago to be installed (avoid executing remote install scripts automatically)
-if ! command -v mago >/dev/null 2>&1; then
-    echo "mago is not installed. Please install it first: https://carthage.software/mago"
-    exit 1
-fi
-
-# Change to module root where mago.toml is found
 cd /var/www/html
 
-# Run Mago with provided arguments
-mago "$@"
+# Mago is a require-dev dependency of the module itself.
+if [[ ! -x vendor/bin/mago ]]; then
+	echo "mago not found. Installing module dev dependencies..."
+	composer install --no-interaction
+fi
+
+vendor/bin/mago "$@"

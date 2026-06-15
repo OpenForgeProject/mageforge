@@ -59,7 +59,7 @@ class InspectorHints
         $isEnabled = $this->scopeConfig->isSetFlag(
             InspectorConfig::XML_PATH_ENABLED,
             ScopeInterface::SCOPE_STORE,
-            $storeCode
+            $storeCode,
         );
         if (!$isEnabled) {
             return $invocationResult;

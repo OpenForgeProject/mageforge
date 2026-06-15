@@ -130,7 +130,7 @@ class CleanCommand extends AbstractCommand
     private function getAllThemeCodes(): ?array
     {
         $themes = $this->themeList->getAllThemes();
-        $themeCodes = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+        $themeCodes = array_values(array_map(static fn($theme) => $theme->getCode(), $themes));
 
         if (empty($themeCodes)) {
             $this->io->info('No themes found.');
@@ -151,7 +151,7 @@ class CleanCommand extends AbstractCommand
     private function selectThemesInteractively(OutputInterface $output): ?array
     {
         $themes = $this->themeList->getAllThemes();
-        $options = array_values(array_map(fn($theme) => $theme->getCode(), $themes));
+        $options = array_values(array_map(static fn($theme) => $theme->getCode(), $themes));
 
         if (!$this->isInteractiveTerminal($output)) {
             $this->displayAvailableThemes($themes);
@@ -199,9 +199,12 @@ class CleanCommand extends AbstractCommand
 
         $themeCodesPrompt = new MultiSearchPrompt(
             label: 'Select themes to clean',
-            options: fn(string $value) => empty($value)
+            options: static fn(string $value) => empty($value)
                 ? $options
-                : array_values(array_filter($options, fn($option) => stripos((string) $option, $value) !== false)),
+                : array_values(array_filter(
+                    $options,
+                    static fn($option) => stripos((string) $option, $value) !== false,
+                )),
             placeholder: 'Type to search theme...',
             hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
             required: false,

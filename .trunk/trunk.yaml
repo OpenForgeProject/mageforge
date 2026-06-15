@@ -21,6 +21,11 @@ lint:
     - linters: [yamllint, prettier]
       paths:
         - .ddev/**
+    # Local-dev container images (ddev-generated); health checks are defined in
+    # the compose files, and the images run as the upstream default user.
+    - linters: [checkov]
+      paths:
+        - .ddev/**
   enabled:
     - checkov@3.2.499
     - actionlint@1.7.10

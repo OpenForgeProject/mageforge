@@ -1,0 +1,54 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mago:
+    name: Mago (PHP lint + format check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-lint-${{ hashFiles('composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-lint
+
+      - name: Install dev dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Mago lint
+        run: vendor/bin/mago lint
+
+      - name: Mago format check
+        run: vendor/bin/mago fmt --dry-run
+
+  trunk:
+    name: Trunk Check (yaml, markdown, shell, actions, …)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1

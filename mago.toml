@@ -1,9 +1,11 @@
 # Mago configuration for MageForge
 # https://mago.carthage.software/
 
+php-version = "8.3"
+
 [source]
-paths = ["src/"]
-includes = ["../../"]
+paths = ["src"]
+includes = ["vendor"]
 extensions = ["php", "phtml"]
 
 [parser]
@@ -12,3 +14,27 @@ enable-short-tags = false
 [formatter]
 inline-empty-constructor-braces = false
 inline-empty-classlike-braces = false
+
+[linter.rules]
+# Code-size metrics: Magento CLI commands and services are naturally verbose;
+# refactoring purely to satisfy thresholds is not a goal of this codebase.
+cyclomatic-complexity = { enabled = false }
+kan-defect = { enabled = false }
+halstead = { enabled = false }
+too-many-methods = { enabled = false }
+excessive-parameter-list = { enabled = false }
+# Magento idioms: empty()/isset() and boolean flags are pervasive in framework
+# APIs and interfaces we implement; PHPStan level 9 covers the real pitfalls.
+no-empty = { enabled = false }
+no-isset = { enabled = false }
+no-boolean-flag-parameter = { enabled = false }
+# Style preferences that conflict with the Magento2 coding standard or would
+# cause churn without correctness value.
+literal-named-argument = { enabled = false }
+braced-string-interpolation = { enabled = false }
+no-else-clause = { enabled = false }
+prefer-early-continue = { enabled = false }
+no-shorthand-ternary = { enabled = false }
+# Conflicts with the inline `/** @var ... */` + return-variable pattern this
+# codebase uses to type ObjectManager/framework returns for PHPStan level 9.
+inline-variable-return = { enabled = false }

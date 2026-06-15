@@ -1,8 +1,8 @@
 .admin__page-nav._collapsed.mageforge-tab .title,
 .admin__page-nav._collapsed._show.mageforge-tab .title {
-    background-image: url('../images/MageForgeLogo.png');
-    background-position: 15px center;
-    background-repeat: no-repeat;
-    background-size: auto 50%;
-    text-indent: 35px;
+  background-image: url("../images/MageForgeLogo.png");
+  background-position: 15px center;
+  background-repeat: no-repeat;
+  background-size: auto 50%;
+  text-indent: 35px;
 }

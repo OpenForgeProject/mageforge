@@ -16,7 +16,7 @@ Welcome to the MageForge development repository. This guide covers everything yo
 
 ## Repository Structure
 
-```
+```text
 /mageforge
 ├── /src/                   # ⭐ The MageForge module code
 │   ├── /Console/Command/   # CLI commands
@@ -50,11 +50,11 @@ Welcome to the MageForge development repository. This guide covers everything yo
 
 ## Prerequisites
 
-| Tool | Notes |
-| ---- | ----- |
+| Tool                                                                           | Notes                       |
+| ------------------------------------------------------------------------------ | --------------------------- |
 | [DDEV](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/) | v1.23 or higher recommended |
-| Git | For cloning and branching |
-| Docker | Required by DDEV |
+| Git                                                                            | For cloning and branching   |
+| Docker                                                                         | Required by DDEV            |
 
 Basic familiarity with Magento 2 module development is assumed.
 
@@ -104,19 +104,19 @@ You now have a fully functional local development environment.
 
 The repository root is bind-mounted **read-only** by Docker (`.ddev/docker-compose.mageforge-source.yaml`) into the Magento root:
 
-```
+```text
 ..  →  magento/mageforge-source/   (read-only)
 ```
 
 `ddev install-magento` registers this directory as a Composer **path repository** and installs the module with `composer require openforgeproject/mageforge:@dev`. Composer creates a symlink:
 
-```
+```text
 magento/vendor/openforgeproject/mageforge  →  ../../mageforge-source
 ```
 
 Why this construction?
 
-- **Magento's path validator** rejects paths that resolve (via `realpath()`) outside the Magento root. A plain Composer symlink to the repository root would fail; the mount point lives *inside* the Magento root, so validation passes.
+- **Magento's path validator** rejects paths that resolve (via `realpath()`) outside the Magento root. A plain Composer symlink to the repository root would fail; the mount point lives _inside_ the Magento root, so validation passes.
 - **Read-only protects the source**: an accidental `rm -rf magento` inside the container stops at the mount instead of deleting the repository through it.
 - **Real Composer install**: third-party dependencies of the module (e.g. `laravel/prompts`) are resolved by Composer like for any end-user installation — no extra sync scripts needed.
 - An anonymous volume shadows `mageforge-source/magento/` so the mount does not recurse into itself.
@@ -187,8 +187,8 @@ ddev magento mageforge:system:check
 
 CI runs the following matrix against OpenSearch — test locally before opening a PR:
 
-| Magento | PHP |
-| ------- | --- |
+| Magento   | PHP |
+| --------- | --- |
 | 2.4.7-p10 | 8.3 |
 | 2.4.8-p5  | 8.4 |
 | 2.4.9     | 8.5 |
@@ -200,18 +200,30 @@ CI runs the following matrix against OpenSearch — test locally before opening 
 Run all checks before submitting a pull request:
 
 ```bash
-# All linters (actionlint, hadolint, markdownlint, prettier, shellcheck, yamllint)
+# All non-PHP linters (actionlint, checkov, hadolint, markdownlint, prettier, shellcheck, yamllint)
 trunk check
 
-# Auto-format
+# Auto-format non-PHP files (prettier, shfmt, …)
 trunk fmt
 
-# PHP CodeSniffer – Magento Coding Standard
-ddev phpcs
+# Mago – PHP linter & formatter (config: mago.toml)
+ddev mago lint
+ddev mago fmt            # or: ddev mago fmt --dry-run
 
-# PHPStan – static analysis
+# PHP CodeSniffer – Magento Coding Standard
+ddev phpcs               # auto-fix: ddev phpcbf
+
+# PHPStan – static analysis (level 9, requires the local Magento installation)
 ddev phpstan
 ```
+
+PHPCS and Mago are `require-dev` dependencies of the module (`composer install` in the
+repository root provides `vendor/bin/phpcs` and `vendor/bin/mago`), so local runs and CI
+use the same tool versions. PHPStan runs inside the Magento installation because it needs
+the Magento class definitions.
+
+CI runs the same checks on every pull request: the **PHPCS**, **PHPStan** and **Lint**
+workflows (Mago + Trunk) must all pass.
 
 ### PHP Conventions
 
@@ -302,17 +314,17 @@ Releases are fully automated via [Release Please](https://github.com/googleapis/
 Release Please groups changes into sections based on the Conventional Commits type in your PR title:
 
 | Commit Type | Changelog Section | Visible in Notes |
-|-------------|-------------------|------------------|
-| `feat:` | **Added** | ✅ Yes |
-| `fix:` | **Fixed** | ✅ Yes |
-| `refactor:` | **Changed** | ✅ Yes |
-| `perf:` | **Performance** | ✅ Yes |
-| `docs:` | **Documentation** | ✅ Yes |
-| `style:` | **Styling** | ✅ Yes |
-| `chore:` | Chore | ❌ Hidden |
-| `test:` | Tests | ❌ Hidden |
-| `build:` | Build | ❌ Hidden |
-| `ci:` | CI/CD | ❌ Hidden |
+| ----------- | ----------------- | ---------------- |
+| `feat:`     | **Added**         | ✅ Yes           |
+| `fix:`      | **Fixed**         | ✅ Yes           |
+| `refactor:` | **Changed**       | ✅ Yes           |
+| `perf:`     | **Performance**   | ✅ Yes           |
+| `docs:`     | **Documentation** | ✅ Yes           |
+| `style:`    | **Styling**       | ✅ Yes           |
+| `chore:`    | Chore             | ❌ Hidden        |
+| `test:`     | Tests             | ❌ Hidden        |
+| `build:`    | Build             | ❌ Hidden        |
+| `ci:`       | CI/CD             | ❌ Hidden        |
 
 ### Automatic PR Labeling
 
@@ -320,19 +332,19 @@ PRs are automatically labelled by the [Labeler](https://github.com/actions/label
 
 #### Branch / Title Based Labels
 
-| Label | Trigger |
-|-------|---------|
-| **Documentation** | Any `*.md` file changed |
-| **Feature** | Branch matches `add-*`, `feature-*`, `feat-*`; or PR title starts with `feat:`, `feature:` |
-| **Fix** | Branch matches `fix-*`, `bugfix-*`; or PR title starts with `fix:`, `bugfix:` |
-| **Next-Release** | Branch/PR title matches `chore: release*` or `release-please*` |
+| Label             | Trigger                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| **Documentation** | Any `*.md` file changed                                                                    |
+| **Feature**       | Branch matches `add-*`, `feature-*`, `feat-*`; or PR title starts with `feat:`, `feature:` |
+| **Fix**           | Branch matches `fix-*`, `bugfix-*`; or PR title starts with `fix:`, `bugfix:`              |
+| **Next-Release**  | Branch/PR title matches `chore: release*` or `release-please*`                             |
 
 #### File-Based Labels
 
-| Label | Trigger |
-|-------|---------|
-| **Command** | Files changed in `src/Console/Command/**` |
-| **Frontend** | Files changed in `src/view/frontend/**` |
+| Label             | Trigger                                        |
+| ----------------- | ---------------------------------------------- |
+| **Command**       | Files changed in `src/Console/Command/**`      |
+| **Frontend**      | Files changed in `src/view/frontend/**`        |
 | **Theme-Builder** | Files changed in `src/Service/ThemeBuilder/**` |
 
 > **Tip**: Name your branch according to the conventions above (`feat/my-feature`, `fix/issue-123`) and the correct labels are applied automatically.

@@ -31,15 +31,15 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 
 ![Mageforge Hero](./.github/assets/cli-chooser.png)
 
-| Theme Type                      | Support Status                                             |
-| ------------------------------- | ---------------------------------------------------------- |
-| Magento Standard                | ✅ Supported                                              |
-| Hyvä (TailwindCSS 3.x / 4.x)  | ✅ Supported                                              |
-| Hyvä Checkout                   | ✅ Supported                                              |
-| Hyvä Fallback                   | ✅ Supported                                              |
-| Custom TailwindCSS (no Hyvä)    | ✅ Supported                                              |
-| Avanta B2B                      | ✅ Supported                                              |
-| Your Custom Theme               | [Create your own Builder](./docs/custom_theme_builders.md) |
+| Theme Type                   | Support Status                                             |
+| ---------------------------- | ---------------------------------------------------------- |
+| Magento Standard             | ✅ Supported                                               |
+| Hyvä (TailwindCSS 3.x / 4.x) | ✅ Supported                                               |
+| Hyvä Checkout                | ✅ Supported                                               |
+| Hyvä Fallback                | ✅ Supported                                               |
+| Custom TailwindCSS (no Hyvä) | ✅ Supported                                               |
+| Avanta B2B                   | ✅ Supported                                               |
+| Your Custom Theme            | [Create your own Builder](./docs/custom_theme_builders.md) |
 
 ## Installation
 
@@ -76,21 +76,26 @@ See [Commands Reference](./docs/commands_reference.md) for the full command list
 The MageForge Inspector lets you inspect Magento blocks, templates, and performance metrics directly in your browser.
 
 **Features:**
+
 - Template paths, block classes, and module names
 - PHP render times and cache status (lifetime, tags)
 - Web Vitals: LCP, CLS, INP per element
 - Accessibility checks: ARIA roles, contrast ratios, alt text
 
-#### Screenshot
+### Screenshot
+
 ![Mageforge Toolbar](./.github/assets/toolbar.jpeg)
 
 **Enable:**
+
 ```bash
 bin/magento mageforge:theme:inspector enable
 ```
-*(Requires Developer Mode. Can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)*
+
+_(Requires Developer Mode. Can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)_
 
 **Use in Browser:**
+
 - Toggle: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
 - Hover over elements to inspect; click to lock on a specific block
 
@@ -121,13 +126,12 @@ See the dedicated [Commands Reference](./docs/commands_reference.md) for complet
 - **Discussions:** [GitHub Discussions](https://github.com/OpenForgeProject/mageforge/discussions)
 - **Contributing:** See [Contributing Guidelines](./CONTRIBUTING.md)
 
-
 ## Credits
 
 MageForge uses the following third-party libraries:
 
-| Library | Author | License |
-| ------- | ------ | ------- |
+| Library                                 | Author   | License                                                         |
+| --------------------------------------- | -------- | --------------------------------------------------------------- |
 | [Tabler Icons](https://tabler.io/icons) | codecalm | [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE) |
 
 ---

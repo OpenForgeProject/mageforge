@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<ruleset name="MageForge">
+    <description>Magento2 coding standard with Mago-formatter compatibility.</description>
+
+    <file>src/</file>
+
+    <arg name="extensions" value="php,phtml"/>
+
+    <rule ref="Magento2">
+        <!-- Mago formats multi-line conditions PSR-12 style (newline after the
+             opening parenthesis); this PSR-2-era sniff would flag that. -->
+        <exclude name="PSR2.ControlStructures.ControlStructureSpacing"/>
+    </rule>
+</ruleset>
