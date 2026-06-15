@@ -2,7 +2,8 @@
  * MageForge Toolbar - DOM construction and menu controls
  */
 
-const LOGO_SVG_PATH = 'M176 0L0 101.614V297L176 398.614L352 297V101.614L176 0ZM39 275.5V124L76.2391 101.614L101.5 162L126.5 73.4393L164.5 51.5V346.939L126.5 325V188L108.5 239H95L76.2391 188V297L39 275.5ZM187.5 346.939V51.5L313 124V170H275.5V146.368L225.5 117.5V188H280V226.5H225.5V325L187.5 346.939Z';
+const LOGO_SVG_PATH =
+  "M176 0L0 101.614V297L176 398.614L352 297V101.614L176 0ZM39 275.5V124L76.2391 101.614L101.5 162L126.5 73.4393L164.5 51.5V346.939L126.5 325V188L108.5 239H95L76.2391 188V297L39 275.5ZM187.5 346.939V51.5L313 124V170H275.5V146.368L225.5 117.5V188H280V226.5H225.5V325L187.5 346.939Z";
 
 function createLogoSvg(fill) {
   return `<svg width="24" height="27" viewBox="0 0 352 399" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="${LOGO_SVG_PATH}" fill="${fill}"></path></svg>`;
@@ -284,7 +285,7 @@ export const uiMethods = {
     this.burgerButton.title = "Audit tools";
     this.burgerButton.setAttribute("role", "button");
     this.burgerButton.setAttribute("tabindex", "0");
-    this.burgerButton.setAttribute("aria-label", "MageForge");
+    this.burgerButton.setAttribute("aria-label", "Open audit tools menu");
     this.burgerButton.setAttribute("aria-expanded", "false");
     this.burgerButton.innerHTML = `
             <div class="mageforge-toolbar-burger-logo">${logoSvgWhite}</div>
