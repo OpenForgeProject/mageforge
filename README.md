@@ -29,7 +29,7 @@ MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simp
 
 ## Supported Theme Types
 
-![Mageforge Hero](./.github/assets/cli-chooser.png)
+![Mageforge Hero](./.github/assets/MageForge-cli-chooser.png)
 
 | Theme Type                   | Support Status                                             |
 | ---------------------------- | ---------------------------------------------------------- |
@@ -84,7 +84,7 @@ The MageForge Inspector lets you inspect Magento blocks, templates, and performa
 
 ### Screenshot
 
-![Mageforge Toolbar](./.github/assets/toolbar.jpeg)
+![Mageforge Toolbar](./.github/assets/MageForge-Toolbar.jpeg)
 
 **Enable:**
 
@@ -118,7 +118,7 @@ See the dedicated [Commands Reference](./docs/commands_reference.md) for complet
 
 ## Get your Merch
 
-[![Mageforge Hero](./.github/assets/MageForce-Merch.jpg)](https://mageforge.myspreadshop.de/)
+[![Mageforge Hero](./.github/assets/MageForge-Merch.jpg)](https://mageforge.myspreadshop.de/)
 
 ## Support
 
