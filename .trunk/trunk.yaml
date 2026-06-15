@@ -7,14 +7,14 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v1.7.4
+      ref: v1.10.2
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
   enabled:
     - go@1.21.0
     - node@22.16.0
-    - python@3.10.8
+    - python@3.14.4
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   ignore:
@@ -27,13 +27,16 @@ lint:
       paths:
         - .ddev/**
   enabled:
-    - checkov@3.2.499
-    - actionlint@1.7.10
+    - pinact@4.0.0
+    - svgo@4.0.1
+    - taplo@0.10.0
+    - checkov@3.3.1
+    - actionlint@1.7.12
     - git-diff-check
     - hadolint@2.14.0
-    - markdownlint@0.47.0
+    - markdownlint@0.48.0
     - oxipng@10.1.0
-    - prettier@3.8.1
+    - prettier@3.8.4
     - shellcheck@0.11.0
     - shfmt@3.6.0
     - trufflehog@3.92.5
