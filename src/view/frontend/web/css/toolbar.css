@@ -121,27 +121,16 @@
   background: var(--mageforge-color-green);
 }
 
-.mageforge-toolbar-burger-icon {
+.mageforge-toolbar-burger-logo {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   flex-shrink: 0;
-}
-
-.mageforge-toolbar-burger-bar {
-  display: block;
-  width: 14px;
-  height: 2px;
-  background: var(--mageforge-color-white);
-  border-radius: 1px;
-  transition: all 0.2s ease;
 }
 
 .mageforge-toolbar-burger-label {
   font-family: var(--mageforge-font-family);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--mageforge-color-white);
@@ -234,6 +223,17 @@
   background-clip: text;
   -webkit-background-clip: text;
   display: block;
+}
+
+.mageforge-toolbar-menu-logo {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+}
+
+.mageforge-toolbar-menu-logo svg {
+  height: 24px;
+  width: auto;
 }
 
 .mageforge-toolbar-menu-close {
