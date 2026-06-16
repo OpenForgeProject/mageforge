@@ -1,0 +1,14 @@
+/**
+ * MageForge Toolbar - Menu Footer
+ *
+ * Styles for the menu footer section.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar-menu-footer {
+  border-top: 1px solid var(--mageforge-border-color);
+  margin-top: 4px;
+  padding-top: 6px;
+}

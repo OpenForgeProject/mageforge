@@ -1,0 +1,42 @@
+/**
+ * MageForge Toolbar - Responsive
+ *
+ * Mobile-first breakpoints for toolbar and menu sizing.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+@media (max-width: 640px) {
+  .mageforge-toolbar {
+    bottom: 10px;
+    left: 10px;
+  }
+  .mageforge-toolbar[data-position="bottom-right"] {
+    left: auto;
+    right: 10px;
+  }
+  .mageforge-toolbar[data-position="top-left"] {
+    bottom: auto;
+    left: 10px;
+    top: 10px;
+  }
+  .mageforge-toolbar[data-position="top-right"] {
+    bottom: auto;
+    left: auto;
+    right: 10px;
+    top: 10px;
+  }
+  .mageforge-toolbar-menu {
+    min-width: 300px;
+    max-height: calc(100vh - 60px);
+    overflow: auto;
+  }
+  .mageforge-toolbar-burger-label {
+    display: none;
+  }
+  .mageforge-toolbar-burger {
+    height: 32px;
+    width: auto;
+  }
+}

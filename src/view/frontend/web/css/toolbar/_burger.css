@@ -1,0 +1,86 @@
+/**
+ * MageForge Toolbar - Burger Button
+ *
+ * Styles for the main toolbar toggle button.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+/* ============================================================================
+   Toolbar Container
+   ========================================================================== */
+
+.mageforge-toolbar {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999998;
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   Burger Button
+   ========================================================================== */
+
+.mageforge-toolbar-burger {
+  height: 36px;
+  padding: 0 10px 0 8px;
+  background: var(--mageforge-burger-bg);
+  color: var(--mageforge-color-white);
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 12px var(--mageforge-shadow-md),
+    0 2px 4px var(--mageforge-shadow-sm);
+  flex-shrink: 0;
+  background-image: var(--gradient-brand);
+}
+
+.mageforge-toolbar-burger:hover {
+  background: var(--mageforge-burger-bg-hover);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 20px var(--mageforge-shadow-lg),
+    0 4px 8px var(--mageforge-shadow-md);
+  background-image: var(--gradient-brand-hover);
+}
+
+.mageforge-toolbar-burger:active {
+  transform: translateY(0);
+}
+
+.mageforge-toolbar-burger.mageforge-active {
+  background: var(--mageforge-color-green);
+}
+
+.mageforge-toolbar-burger-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mageforge-toolbar-burger-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--mageforge-color-white);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.mageforge-toolbar--no-labels .mageforge-toolbar-burger-label,
+.mageforge-toolbar--no-labels .mageforge-inspector-float-button span {
+  display: none;
+}

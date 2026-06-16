@@ -1,0 +1,38 @@
+/**
+ * MageForge Toolbar - Feedback Toast
+ *
+ * Styles for success/error feedback toasts.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar-feedback {
+  position: fixed;
+  font-family: var(--mageforge-font-family);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999999;
+  animation:
+    mageforge-toolbar-slide-up 0.2s ease-out,
+    mageforge-toolbar-fade-out 0.4s ease-in 2.6s forwards;
+}
+
+.mageforge-toolbar-feedback--success {
+  color: var(--mageforge-color-green);
+  background: var(--mageforge-color-green-alpha-15);
+  border: 1px solid var(--mageforge-color-green-alpha-35);
+  box-shadow: 0 4px 12px var(--mageforge-color-green-alpha-15);
+}
+
+.mageforge-toolbar-feedback--error {
+  color: var(--mageforge-color-red);
+  background: var(--mageforge-color-red-alpha-15);
+  border: 1px solid var(--mageforge-color-red-alpha-35);
+  box-shadow: 0 4px 12px var(--mageforge-color-red-alpha-15);
+}

@@ -1,0 +1,30 @@
+/**
+ * MageForge Toolbar - Menu Credit
+ *
+ * Styles for the "Made with ❤️" credit link at the bottom of the menu.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar-menu-credit {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-toolbar-menu-credit-heart {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-toolbar-menu-credit-link {
+  color: var(--mageforge-color-slate-400);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.mageforge-toolbar-menu-credit-link:hover {
+  color: var(--mageforge-color-blue);
+}

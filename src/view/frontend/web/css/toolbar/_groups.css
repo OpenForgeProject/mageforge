@@ -1,0 +1,93 @@
+/**
+ * MageForge Toolbar - Menu Groups
+ *
+ * Styles for collapsible audit groups with headers, chevrons and group labels.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar-menu-group {
+  margin-bottom: 4px;
+}
+
+.mageforge-toolbar-menu-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 4px 4px 6px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--mageforge-border-color);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.mageforge-toolbar-menu-group
+  .mageforge-toolbar-menu-group-header:hover
+  .mageforge-toolbar-menu-group-label,
+.mageforge-toolbar-menu-group-header:hover
+  .mageforge-toolbar-menu-group-chevron {
+  color: var(--mageforge-color-white);
+}
+
+.mageforge-toolbar-menu-group-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+  letter-spacing: 0.08em;
+  color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="wcag"]
+  .mageforge-toolbar-menu-group-label {
+  color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="html-quality"]
+  .mageforge-toolbar-menu-group-label {
+  color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-menu-group[data-group-key="performance"]
+  .mageforge-toolbar-menu-group-label {
+  color: var(--mageforge-group-color-performance);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="wcag"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="html-quality"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="performance"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-performance);
+}
+
+.mageforge-toolbar-menu-group-chevron {
+  color: var(--mageforge-color-slate-400);
+  line-height: 0;
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease;
+}
+
+.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-chevron {
+  transform: rotate(-90deg);
+}
+
+.mageforge-toolbar-menu-group-items {
+  overflow: hidden;
+}
+
+.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-items {
+  display: none;
+}
