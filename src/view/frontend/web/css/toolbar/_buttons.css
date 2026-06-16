@@ -82,3 +82,164 @@
   background: var(--mageforge-surface-glass-hover);
   border-color: var(--mageforge-border-glass);
 }
+
+/* ── Home panel: Check Health Score button ─────────────────────────── */
+
+.mageforge-home-check-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 80%;
+  padding: 12px 20px;
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 100%
+  );
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  font-family: var(--mageforge-font-family);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+
+.mageforge-home-check-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+}
+
+.mageforge-home-check-btn:active {
+  transform: translateY(0);
+}
+
+.mageforge-home-check-btn:disabled,
+.mageforge-home-check-btn.mageforge-running {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Home panel: Check + Reset button row ──────────────────────────── */
+
+.mageforge-home-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+}
+
+.mageforge-home-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mageforge-home-reset-btn:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+  border-color: var(--mageforge-border-glass);
+}
+
+/* ── Group panels: Run [Group] Checks button ───────────────────────── */
+
+.mageforge-group-run-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 100%
+  );
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  font-family: var(--mageforge-font-family);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+}
+
+.mageforge-group-run-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(59, 130, 246, 0.35);
+}
+
+.mageforge-group-run-btn:active {
+  transform: translateY(0);
+}
+
+.mageforge-group-run-btn:disabled,
+.mageforge-group-run-btn.mageforge-running {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Group panels: Run + Reset button row ──────────────────────────── */
+
+.mageforge-group-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.mageforge-group-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mageforge-group-reset-btn:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+  border-color: var(--mageforge-border-glass);
+}

@@ -99,6 +99,88 @@ export const auditMethods = {
   },
 
   /**
+   * Run all audits for a specific group, wait for the DOM to settle, then
+   * compute and display a score (0–100) in that panel's ring.
+   */
+  async runGroupAuditsForScore(groupKey) {
+    const btn = this[`runGroupButton-${groupKey}`];
+    if (!btn) return;
+    btn.disabled = true;
+    btn.classList.add("mageforge-running");
+
+    try {
+      this._batchRunning = true;
+      const groupAudits = audits.filter((a) => a.group === groupKey);
+
+      // Deactivate existing audits in this group
+      groupAudits.forEach((audit) => {
+        if (this.activeAudits.has(audit.key)) {
+          this.activeAudits.delete(audit.key);
+          audit.run(this, false);
+        }
+      });
+
+      // Run all audits in the group
+      groupAudits.forEach((audit) => {
+        if (!this.activeAudits.has(audit.key)) {
+          this.runAudit(audit.key);
+        }
+      });
+
+      // Allow async DOM mutations to settle
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      let totalPoints = 0;
+      let maxPoints = 0;
+      groupAudits.forEach((audit) => {
+        const item = this.menu?.querySelector(
+          `[data-audit-key="${audit.key}"]`,
+        );
+        if (!item) return;
+        maxPoints += 100;
+        const status = item.querySelector(".mageforge-toolbar-menu-status");
+        if (!status || !status.textContent.trim()) {
+          totalPoints += 100;
+        } else if (
+          status.classList.contains("mageforge-toolbar-menu-status--success")
+        ) {
+          totalPoints += 100;
+        } else if (
+          status.classList.contains("mageforge-toolbar-menu-status--warning")
+        ) {
+          totalPoints += 50;
+        }
+      });
+
+      const score =
+        maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
+      this.updateGroupScore(groupKey, score);
+    } finally {
+      this._batchRunning = false;
+      btn.disabled = false;
+      btn.classList.remove("mageforge-running");
+    }
+  },
+
+  /**
+   * Reset all audits for a specific group (deactivate + hide score).
+   */
+  resetGroupAudits(groupKey) {
+    const groupAudits = audits.filter((a) => a.group === groupKey);
+    groupAudits.forEach((audit) => {
+      if (this.activeAudits.has(audit.key)) {
+        this.activeAudits.delete(audit.key);
+        audit.run(this, false);
+        this.setAuditCounterBadge(audit.key, "", "success");
+        this.setAuditActive(audit.key, false);
+      }
+    });
+
+    // Reset score ring
+    this.updateGroupScore(groupKey, 0);
+  },
+
+  /**
    * Deactivates all currently active audits (called when closing the toolbar).
    */
   deactivateAllAudits() {
@@ -110,6 +192,13 @@ export const auditMethods = {
       this.setAuditCounterBadge(key, "", "success");
       this.setAuditActive(key, false);
     });
+
+    // Hide all group reset buttons
+    this.getAuditGroups().forEach((group) => {
+      const resetBtn = this[`groupResetButton-${group.key}`];
+      if (resetBtn) resetBtn.style.display = "none";
+    });
+
     this.updateToggleAllButton();
   },
 

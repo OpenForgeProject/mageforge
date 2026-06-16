@@ -276,6 +276,61 @@ export const uiMethods = {
 
       const body = document.createElement("div");
       body.className = "mageforge-tab-panel-body";
+
+      // Group-specific run button row at the top of the panel body
+      const groupBtnRow = document.createElement("div");
+      groupBtnRow.className = "mageforge-group-btn-row";
+
+      const groupBtn = document.createElement("button");
+      groupBtn.type = "button";
+      groupBtn.className = "mageforge-group-run-btn";
+      groupBtn.dataset.group = group.key;
+      this[`runGroupButton-${group.key}`] = groupBtn;
+      const groupLabel = this.getAuditGroups().find((g) => g.key === group.key)?.label ?? group.key;
+      groupBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Run ${groupLabel} Checks
+      `;
+      groupBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.runGroupAuditsForScore(group.key);
+      };
+      groupBtnRow.appendChild(groupBtn);
+
+      // Reset button (hidden by default, shown after run)
+      const groupResetBtn = document.createElement("div");
+      groupResetBtn.setAttribute("role", "button");
+      groupResetBtn.setAttribute("tabindex", "0");
+      groupResetBtn.className = "mageforge-group-reset-btn";
+      groupResetBtn.setAttribute("aria-label", `Reset ${groupLabel} audits`);
+      groupResetBtn.title = `Reset ${groupLabel} audits`;
+      groupResetBtn.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+      groupResetBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.resetGroupAudits(group.key);
+      };
+      groupResetBtn.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          this.resetGroupAudits(group.key);
+        }
+        if (e.key === " ") e.preventDefault();
+      };
+      groupResetBtn.onkeyup = (e) => {
+        if (e.key === " ") {
+          e.stopPropagation();
+          this.resetGroupAudits(group.key);
+        }
+      };
+      groupBtnRow.appendChild(groupResetBtn);
+
+      // Store reference for showing/hiding
+      this[`groupResetButton-${group.key}`] = groupResetBtn;
+
+      body.appendChild(groupBtnRow);
+
       items.forEach((audit) => {
         body.appendChild(
           this.createMenuItem(
@@ -385,7 +440,7 @@ export const uiMethods = {
   },
 
   /**
-   * Home panel: half-arc gauge overview + intro hint.
+   * Home panel: half-arc gauge overview + Check Health Score button.
    *
    * @param {boolean} showHealthScore
    * @returns {HTMLDivElement}
@@ -425,8 +480,67 @@ export const uiMethods = {
             <div class="mageforge-toolbar-health-score-label">Overall Health Score</div>
           </div>
         </div>
-        <p class="mageforge-home-hint">Select a category on the left or click <strong>Run All Tests</strong> below.</p>
       `;
+
+      // Check Health Score button + Reset side by side
+      const btnRow = document.createElement("div");
+      btnRow.className = "mageforge-home-btn-row";
+
+      this.runAllButton = document.createElement("button");
+      this.runAllButton.type = "button";
+      this.runAllButton.className = "mageforge-home-check-btn";
+      this.runAllButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Check Health Score
+      `;
+      this.runAllButton.onclick = (e) => {
+        e.stopPropagation();
+        this.runAllAuditsForScore();
+      };
+      btnRow.appendChild(this.runAllButton);
+
+      // Reset button next to Check Health Score
+      this.resetButton = document.createElement("div");
+      this.resetButton.setAttribute("role", "button");
+      this.resetButton.setAttribute("tabindex", "0");
+      this.resetButton.className = "mageforge-home-reset-btn";
+      this.resetButton.title = "Reset score and deactivate all audits";
+      this.resetButton.setAttribute(
+        "aria-label",
+        "Reset score and deactivate all audits",
+      );
+      this.resetButton.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+      this.resetButton.onclick = (e) => {
+        e.stopPropagation();
+        this.resetScore();
+      };
+      this.resetButton.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          this.resetScore();
+        }
+        if (e.key === " ") {
+          e.preventDefault();
+        }
+      };
+      this.resetButton.onkeyup = (e) => {
+        if (e.key === " ") {
+          e.stopPropagation();
+          this.resetScore();
+        }
+      };
+      btnRow.appendChild(this.resetButton);
+
+      panel.appendChild(btnRow);
+
+      panel.appendChild(
+        Object.assign(document.createElement("p"), {
+          className: "mageforge-home-hint",
+          textContent: "Select a category on the left for detailed checks.",
+        }),
+      );
     } else {
       panel.innerHTML = `<p class="mageforge-home-hint">Select a category on the left to run audits.</p>`;
     }
@@ -439,83 +553,13 @@ export const uiMethods = {
   // ────────────────────────────────────────────────────────────────────────
 
   /**
-   * Footer row: Run All Tests + Reset button + credit line.
-   * Sets this.runAllButton and this.resetButton as side effects.
+   * Footer row: credit line only.
    *
    * @returns {HTMLDivElement}
    */
   _buildMenuFooter() {
     const footer = document.createElement("div");
     footer.className = "mageforge-toolbar-menu-footer";
-
-    // ── Button row ──────────────────────────────────────────────────────
-    const btnRow = document.createElement("div");
-    btnRow.className = "mageforge-toolbar-menu-button-row";
-
-    this.runAllButton = document.createElement("div");
-    this.runAllButton.setAttribute("role", "button");
-    this.runAllButton.setAttribute("tabindex", "0");
-    this.runAllButton.className = "mageforge-toolbar-menu-run-all";
-    this.runAllButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
-      RUN ALL TESTS
-    `;
-    this.runAllButton.onclick = (e) => {
-      e.stopPropagation();
-      this.runAllAuditsForScore();
-    };
-    this.runAllButton.onkeydown = (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        this.runAllAuditsForScore();
-      }
-      if (e.key === " ") {
-        e.preventDefault();
-      }
-    };
-    this.runAllButton.onkeyup = (e) => {
-      if (e.key === " ") {
-        e.stopPropagation();
-        this.runAllAuditsForScore();
-      }
-    };
-    btnRow.appendChild(this.runAllButton);
-
-    this.resetButton = document.createElement("div");
-    this.resetButton.setAttribute("role", "button");
-    this.resetButton.setAttribute("tabindex", "0");
-    this.resetButton.className = "mageforge-toolbar-menu-reset";
-    this.resetButton.title = "Reset score and deactivate all audits";
-    this.resetButton.setAttribute(
-      "aria-label",
-      "Reset score and deactivate all audits",
-    );
-    this.resetButton.innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
-    this.resetButton.onclick = (e) => {
-      e.stopPropagation();
-      this.resetScore();
-    };
-    this.resetButton.onkeydown = (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        this.resetScore();
-      }
-      if (e.key === " ") {
-        e.preventDefault();
-      }
-    };
-    this.resetButton.onkeyup = (e) => {
-      if (e.key === " ") {
-        e.stopPropagation();
-        this.resetScore();
-      }
-    };
-    btnRow.appendChild(this.resetButton);
-
-    footer.appendChild(btnRow);
 
     // ── Credit line ─────────────────────────────────────────────────────
     const credit = document.createElement("div");
@@ -813,6 +857,32 @@ export const uiMethods = {
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
       el.textContent = score;
     });
+  },
+
+  /**
+   * Update the score ring in a specific group panel header.
+   *
+   * @param {string} groupKey
+   * @param {number} score
+   */
+  updateGroupScore(groupKey, score) {
+    if (!this.menu) return;
+    const CIRCUMFERENCE = 113.1;
+
+    const panel = this.menu.querySelector(`[data-panel="${groupKey}"]`);
+    if (!panel) return;
+
+    const ring = panel.querySelector(".mageforge-score-ring");
+    if (ring) {
+      ring.setAttribute(
+        "stroke-dasharray",
+        `${((score / 100) * CIRCUMFERENCE).toFixed(2)} ${CIRCUMFERENCE}`,
+      );
+    }
+    const number = panel.querySelector(".mageforge-score-number");
+    if (number) {
+      number.textContent = score;
+    }
   },
 
   /**

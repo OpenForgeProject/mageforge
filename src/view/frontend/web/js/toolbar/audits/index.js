@@ -37,8 +37,8 @@ import unsafeBlankTarget from "./unsafe-blank-target.js";
 
 /** @type {AuditGroup[]} */
 export const auditGroups = [
-  { key: "wcag", label: "WCAG Checks" },
   { key: "html-quality", label: "HTML Quality" },
+  { key: "wcag", label: "Accessibility" },
   { key: "performance", label: "Performance" },
 ];
 
