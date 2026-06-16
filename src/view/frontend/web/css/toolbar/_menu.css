@@ -31,13 +31,15 @@
   box-shadow:
     0 -8px 24px var(--mageforge-shadow-lg),
     0 6px 10px var(--mageforge-shadow-sm);
-  padding: 0 6px 6px;
-  min-width: 350px;
-  max-height: 90vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  padding: 0;
+  min-width: 440px;
+  max-height: min(90vh, 1000px);
+  min-height: 60vh;
+  overflow: hidden;
   font-family: var(--mageforge-font-family);
+  /* flex-column keeps the footer pinned; the tab section fills remaining height */
   display: none;
+  flex-direction: column;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -47,7 +49,7 @@
 }
 
 .mageforge-toolbar-menu.mageforge-menu-open {
-  display: block;
+  display: flex;
   opacity: 1;
   transform: translateY(0);
 }
@@ -68,12 +70,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 8px 2px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--mageforge-border-color);
-  margin-bottom: 4px;
-  position: sticky;
-  top: 0;
-  z-index: 99999;
+  flex-shrink: 0;
   background: linear-gradient(
     135deg,
     var(--mageforge-bg-dark) 0%,
@@ -85,8 +84,7 @@
   font-family: var(--mageforge-font-family);
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  padding-bottom: 8px;
+  padding-bottom: 2px;
   color: transparent;
   background-image: var(--gradient-brand);
   background-clip: text;
@@ -97,7 +95,7 @@
 .mageforge-toolbar-menu-logo {
   display: flex;
   align-items: center;
-  padding-bottom: 8px;
+  gap: 8px;
 }
 
 .mageforge-toolbar-menu-logo svg {
@@ -130,6 +128,7 @@
 .mageforge-toolbar-menu-item {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   width: 100%;
   padding: 8px 10px;

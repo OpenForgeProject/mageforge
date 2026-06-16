@@ -18,6 +18,7 @@ export default {
   run(context, active) {
     if (!active) {
       clearHighlight(this.key);
+      context.setAuditFindings(this.key, []);
       return;
     }
 
@@ -47,6 +48,7 @@ export default {
     const total = errors.length + warnings.length;
     if (total === 0) {
       context.setAuditCounterBadge(this.key, "0", "success");
+      context.setAuditFindings(this.key, []);
       return;
     }
 
@@ -55,6 +57,12 @@ export default {
       severity: "warning",
       skipBadge: true,
     });
+
+    // Populate the clickable findings list
+    context.setAuditFindings(this.key, [
+      ...errors.map((el) => ({ el, severity: "error",   action: "Add alt text" })),
+      ...warnings.map((el) => ({ el, severity: "warning", action: "Check alt text" })),
+    ]);
 
     // Scroll to first issue (errors take priority)
     const first = errors[0] ?? warnings[0];

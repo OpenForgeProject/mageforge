@@ -15,8 +15,8 @@ function _registerMageforgeToolbar() {
     /** @type {Set<string>} Keys of currently active audits */
     activeAudits: new Set(),
 
-    /** @type {Set<string>} Keys of currently collapsed groups */
-    collapsedGroups: new Set(),
+    /** @type {string} Key of the currently active tab */
+    activeTab: "home",
 
     /** @type {HTMLDivElement|null} */
     container: null,
@@ -38,16 +38,6 @@ function _registerMageforgeToolbar() {
     // ====================================================================
 
     init() {
-      try {
-        const saved = localStorage.getItem(
-          "mageforge-toolbar-collapsed-groups",
-        );
-        if (saved) {
-          try {
-            JSON.parse(saved).forEach((key) => this.collapsedGroups.add(key));
-          } catch (_) {}
-        }
-      } catch (_) {}
       this.createToolbar();
     },
 

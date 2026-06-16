@@ -1,61 +1,204 @@
 /**
- * MageForge Toolbar - Menu Groups
+ * MageForge Toolbar - Vertical Tab Navigation
  *
- * Styles for collapsible audit groups with headers, chevrons and group labels.
+ * Two-column layout: left nav sidebar + right content panels.
+ * The nav sidebar has Home at top, audit groups in the middle, Settings at bottom.
+ * Active tab gets a filled pill background in the group's accent colour.
  *
  * @package OpenForgeProject\MageForge
  * @license GPL-3.0
  */
 
-.mageforge-toolbar-menu-group {
-  margin-bottom: 4px;
+/* ============================================================================
+   Tab Container  (fills the space between title bar and footer)
+   ========================================================================== */
+
+.mageforge-toolbar-tabs {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.mageforge-toolbar-menu-group-header {
+/* ============================================================================
+   Tab Nav  (left sidebar)
+   ========================================================================== */
+
+.mageforge-toolbar-tab-nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  width: 72px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--mageforge-border-color);
+  padding: 6px 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================================================================
+   Tab Button
+   ========================================================================== */
+
+.mageforge-toolbar-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 5px;
   width: 100%;
-  padding: 4px 4px 4px 6px;
+  padding: 8px 4px;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--mageforge-border-color);
+  border-radius: 8px;
   cursor: pointer;
-  margin-bottom: 4px;
+  color: rgba(148, 163, 184, 0.55);
+  font-family: var(--mageforge-font-family);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  line-height: 1.2;
+  transition: color 0.15s ease;
 }
 
-.mageforge-toolbar-menu-group
-  .mageforge-toolbar-menu-group-header:hover
-  .mageforge-toolbar-menu-group-label,
-.mageforge-toolbar-menu-group-header:hover
-  .mageforge-toolbar-menu-group-chevron {
+.mageforge-toolbar-tab-btn:hover {
   color: var(--mageforge-color-white);
 }
 
-.mageforge-toolbar-menu-group-label {
-  font-family: var(--mageforge-font-family);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  transition: color 0.15s ease;
-  letter-spacing: 0.08em;
-  color: var(--mageforge-color-slate-400);
+/* ── Active state: icon wrapper gets the filled pill ── */
+
+.mageforge-toolbar-tab-btn.mageforge-tab-active {
+  color: var(--mageforge-color-white);
 }
 
-.mageforge-toolbar-menu-group[data-group-key="wcag"]
-  .mageforge-toolbar-menu-group-label {
+.mageforge-toolbar-tab-btn[data-tab="home"].mageforge-tab-active .mageforge-tab-icon,
+.mageforge-toolbar-tab-btn[data-tab="settings"].mageforge-tab-active .mageforge-tab-icon {
+  background: rgba(229, 98, 42, 0.3);
+  color: #fb923c;
+}
+
+.mageforge-toolbar-tab-btn[data-tab="wcag"].mageforge-tab-active .mageforge-tab-icon {
+  background: rgba(168, 85, 247, 0.25);
   color: var(--mageforge-group-color-wcag);
 }
 
-.mageforge-toolbar-menu-group[data-group-key="html-quality"]
-  .mageforge-toolbar-menu-group-label {
+.mageforge-toolbar-tab-btn[data-tab="html-quality"].mageforge-tab-active .mageforge-tab-icon {
+  background: rgba(59, 130, 246, 0.25);
   color: var(--mageforge-group-color-html-quality);
 }
 
-.mageforge-toolbar-menu-group[data-group-key="performance"]
-  .mageforge-toolbar-menu-group-label {
+.mageforge-toolbar-tab-btn[data-tab="performance"].mageforge-tab-active .mageforge-tab-icon {
+  background: rgba(251, 146, 60, 0.25);
   color: var(--mageforge-group-color-performance);
 }
+
+/* ── Tab icon wrapper (receives the pill background) ── */
+
+.mageforge-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 34px;
+  border-radius: 8px;
+  line-height: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+/* ── Tab label ── */
+
+.mageforge-tab-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ============================================================================
+   Tab Content  (right column – contains all panels)
+   ========================================================================== */
+
+.mageforge-toolbar-tab-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Tab Panel
+   ========================================================================== */
+
+.mageforge-toolbar-tab-panel {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.mageforge-toolbar-tab-panel.mageforge-tab-panel-active {
+  display: flex;
+}
+
+/* ── Panel header: title + score ring ── */
+
+.mageforge-tab-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--mageforge-border-color);
+  flex-shrink: 0;
+}
+
+.mageforge-tab-panel-title {
+  font-family: var(--mageforge-font-family);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mageforge-color-white);
+  margin: 0;
+}
+
+/* ── Panel body: the scrollable audit list ── */
+
+.mageforge-tab-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+}
+
+/* ── Home panel ── */
+
+.mageforge-home-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 4px;
+}
+
+.mageforge-home-hint {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  color: var(--mageforge-color-slate-400);
+  text-align: center;
+  padding: 6px 16px 0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mageforge-home-hint strong {
+  color: var(--mageforge-color-white);
+}
+
+/* ============================================================================
+   Audit icon colours (per group)
+   ========================================================================== */
 
 .mageforge-toolbar-menu-item[data-group-key="wcag"]
   .mageforge-toolbar-menu-icon {
@@ -72,22 +215,148 @@
   color: var(--mageforge-group-color-performance);
 }
 
-.mageforge-toolbar-menu-group-chevron {
+
+/* ============================================================================
+   Tab Container  (flex row: nav | content)
+   ========================================================================== */
+
+.mageforge-toolbar-tabs {
+  display: flex;
+  flex-direction: row;
+}
+
+/* ============================================================================
+   Tab Nav  (left column)
+   ========================================================================== */
+
+.mageforge-toolbar-tab-nav {
+  display: flex;
+  flex-direction: column;
+  width: 160px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--mageforge-border-color);
+  padding: 6px 4px;
+  gap: 2px;
+}
+
+/* ============================================================================
+   Tab Button
+   ========================================================================== */
+
+.mageforge-toolbar-tab-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 8px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   color: var(--mageforge-color-slate-400);
-  line-height: 0;
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  line-height: 1.3;
   transition:
     color 0.15s ease,
-    transform 0.2s ease;
+    background 0.15s ease;
+  position: relative;
 }
 
-.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-chevron {
-  transform: rotate(-90deg);
+.mageforge-toolbar-tab-btn:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
 }
 
-.mageforge-toolbar-menu-group-items {
-  overflow: hidden;
+/* Active state – per-group colour accent */
+
+.mageforge-toolbar-tab-btn[data-tab="wcag"].mageforge-tab-active {
+  color: var(--mageforge-group-color-wcag);
+  background: rgba(168, 85, 247, 0.1);
 }
 
-.mageforge-toolbar-menu-group--collapsed .mageforge-toolbar-menu-group-items {
+.mageforge-toolbar-tab-btn[data-tab="html-quality"].mageforge-tab-active {
+  color: var(--mageforge-group-color-html-quality);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.mageforge-toolbar-tab-btn[data-tab="performance"].mageforge-tab-active {
+  color: var(--mageforge-group-color-performance);
+  background: rgba(251, 146, 60, 0.1);
+}
+
+/* Left-edge indicator bar on active tab */
+
+.mageforge-toolbar-tab-btn.mageforge-tab-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* ============================================================================
+   Tab Icon & Label
+   ========================================================================== */
+
+.mageforge-tab-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.mageforge-tab-label {
+  display: block;
+  white-space: normal;
+}
+
+/* ============================================================================
+   Tab Content  (right column)
+   ========================================================================== */
+
+.mageforge-toolbar-tab-content {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+/* ============================================================================
+   Tab Panel
+   ========================================================================== */
+
+.mageforge-toolbar-tab-panel {
   display: none;
 }
+
+.mageforge-toolbar-tab-panel.mageforge-tab-panel-active {
+  display: block;
+}
+
+/* ============================================================================
+   Audit icon colours (per group)
+   ========================================================================== */
+
+.mageforge-toolbar-menu-item[data-group-key="wcag"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="html-quality"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="performance"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-performance);
+}
+

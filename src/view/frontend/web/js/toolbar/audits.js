@@ -132,36 +132,6 @@ export const auditMethods = {
   },
 
   /**
-   * Toggle collapsed state of a menu group.
-   *
-   * @param {string} key
-   */
-  toggleGroup(key) {
-    if (this.collapsedGroups.has(key)) {
-      this.collapsedGroups.delete(key);
-    } else {
-      this.collapsedGroups.add(key);
-    }
-    localStorage.setItem(
-      "mageforge-toolbar-collapsed-groups",
-      JSON.stringify([...this.collapsedGroups]),
-    );
-    if (!this.menu) return;
-    const group = this.menu.querySelector(`[data-group-key="${key}"]`);
-    if (group) {
-      const isCollapsed = this.collapsedGroups.has(key);
-      group.classList.toggle(
-        "mageforge-toolbar-menu-group--collapsed",
-        isCollapsed,
-      );
-      const header = group.querySelector(
-        ".mageforge-toolbar-menu-group-header",
-      );
-      if (header) header.setAttribute("aria-expanded", String(!isCollapsed));
-    }
-  },
-
-  /**
    * Update the description text of an audit menu item.
    * Useful for audits that want to surface detail (e.g. which IDs are duplicated).
    *

@@ -1,11 +1,131 @@
 /**
- * MageForge Toolbar - Health Score Gauge
+ * MageForge Toolbar - Health Score Gauges
  *
- * SVG-based health score visualization.
+ * Two score components:
+ *   1. Half-arc gauge  – large display in the Home panel
+ *   2. Score ring      – compact circular widget in audit panel headers
  *
  * @package OpenForgeProject\MageForge
  * @license GPL-3.0
  */
+
+/* ============================================================================
+   Half-arc gauge  (Home panel)
+   ========================================================================== */
+
+.mageforge-toolbar-health-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 12px 6px;
+  gap: 2px;
+}
+
+.mageforge-toolbar-health-gauge {
+  width: 130px;
+  height: 75px;
+  overflow: visible;
+}
+
+.mageforge-health-gauge-progress {
+  transition: stroke-dasharray 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mageforge-health-gauge-needle {
+  transition:
+    x2 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    y2 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+}
+
+.mageforge-toolbar-health-score-text {
+  text-align: center;
+}
+
+.mageforge-toolbar-health-score-value {
+  font-family: var(--mageforge-font-family);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mageforge-color-white);
+  line-height: 1.2;
+}
+
+.mageforge-toolbar-health-score-max {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-toolbar-health-score-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+  margin-top: 2px;
+}
+
+/* ============================================================================
+   Score ring  (audit panel headers)
+   ========================================================================== */
+
+.mageforge-score-widget {
+  position: relative;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+}
+
+.mageforge-score-ring {
+  transition: stroke-dasharray 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Text overlay centred inside the SVG */
+.mageforge-score-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.mageforge-score-value {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  line-height: 1;
+}
+
+.mageforge-score-number {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--mageforge-color-white);
+  line-height: 1;
+}
+
+.mageforge-score-denom {
+  font-family: var(--mageforge-font-family);
+  font-size: 7px;
+  color: var(--mageforge-color-slate-400);
+  line-height: 1;
+}
+
+.mageforge-score-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 6px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+  text-align: center;
+  line-height: 1;
+}
+
 
 .mageforge-toolbar-health-wrapper {
   display: flex;

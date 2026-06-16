@@ -28,9 +28,15 @@
     top: 10px;
   }
   .mageforge-toolbar-menu {
-    min-width: 300px;
+    min-width: 320px;
     max-height: calc(100vh - 60px);
-    overflow: auto;
+  }
+  .mageforge-toolbar-tab-nav {
+    width: 60px;
+  }
+  .mageforge-tab-icon {
+    width: 36px;
+    height: 30px;
   }
   .mageforge-toolbar-burger-label {
     display: none;
