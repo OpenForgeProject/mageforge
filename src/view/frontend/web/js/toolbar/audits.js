@@ -91,6 +91,7 @@ export const auditMethods = {
       const score =
         maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
       this.updateHealthScore(score);
+      this.updateHomeSummary();
     } finally {
       this._batchRunning = false;
       btn.disabled = false;
@@ -155,6 +156,7 @@ export const auditMethods = {
       const score =
         maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
       this.updateGroupScore(groupKey, score);
+      this.updateHomeSummary();
     } finally {
       this._batchRunning = false;
       btn.disabled = false;

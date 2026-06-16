@@ -16,6 +16,7 @@
 .mageforge-toolbar-tabs {
   display: flex;
   flex-direction: row;
+  flex: 1;
 }
 
 /* ============================================================================
@@ -25,7 +26,7 @@
 .mageforge-toolbar-tab-nav {
   display: flex;
   flex-direction: column;
-  width: auto;
+  width: 200px;
   flex-shrink: 0;
   border-right: 1px solid var(--mageforge-border-color);
   padding: 6px 4px;
@@ -112,6 +113,40 @@
   white-space: normal;
 }
 
+/* ── Tab badges (error/warning counts) ─────────────────────────────── */
+
+.mageforge-tab-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  justify-self: center;
+}
+
+.mageforge-tab-badge {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.mageforge-tab-badge--errors {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--mageforge-color-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.mageforge-tab-badge--warnings {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--mageforge-color-amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 /* ============================================================================
    Tab Content  (right column)
    ========================================================================== */
@@ -119,6 +154,7 @@
 .mageforge-toolbar-tab-content {
   flex: 1;
   min-width: 0;
+  min-height: 0; /* allow flex-shrink below content size */
   padding: 4px 0;
 }
 
@@ -149,6 +185,7 @@
   overflow-x: hidden;
   padding: 8px;
   gap: 8px;
+  height:50%;
 }
 
 /* ── Home panel ── */

@@ -8,7 +8,7 @@
  */
 
 .mageforge-toolbar-menu-credit {
-  margin-top: 8px;
+  padding-bottom: 4px;
   text-align: center;
   font-family: var(--mageforge-font-family);
   font-size: 10px;

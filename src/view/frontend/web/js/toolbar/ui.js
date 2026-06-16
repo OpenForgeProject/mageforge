@@ -220,6 +220,10 @@ export const uiMethods = {
     btn.innerHTML = `
       <span class="mageforge-tab-icon" aria-hidden="true">${icon}</span>
       <span class="mageforge-tab-label">${label.split(" ")[0]}</span>
+      <span class="mageforge-tab-badges" data-tab-badges-for="${key}">
+        <span class="mageforge-tab-badge mageforge-tab-badge--errors" data-type="errors"></span>
+        <span class="mageforge-tab-badge mageforge-tab-badge--warnings" data-type="warnings"></span>
+      </span>
     `;
     btn.onclick = (e) => {
       e.stopPropagation();
@@ -491,7 +495,7 @@ export const uiMethods = {
       this.runAllButton.className = "mageforge-home-check-btn";
       this.runAllButton.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        Check Health Score
+        Perform Full Check
       `;
       this.runAllButton.onclick = (e) => {
         e.stopPropagation();
@@ -499,7 +503,7 @@ export const uiMethods = {
       };
       btnRow.appendChild(this.runAllButton);
 
-      // Reset button next to Check Health Score
+      // Reset button next to Perform Full Check
       this.resetButton = document.createElement("div");
       this.resetButton.setAttribute("role", "button");
       this.resetButton.setAttribute("tabindex", "0");
@@ -728,6 +732,16 @@ export const uiMethods = {
     const container = item.querySelector(".mageforge-audit-findings");
     if (!container) return;
 
+    // Store finding counts on the item for badge aggregation
+    let errorCount = 0;
+    let warningCount = 0;
+    findings?.forEach((f) => {
+      if (f.severity === 'warning') warningCount++;
+      else errorCount++;
+    });
+    item.dataset.findingErrors = String(errorCount);
+    item.dataset.findingWarnings = String(warningCount);
+
     container.innerHTML = "";
     container.classList.remove("mageforge-findings-open");
 
@@ -806,10 +820,71 @@ export const uiMethods = {
     }
 
     this.updateToggleAllButton();
+    this.updateHomeSummary();
   },
 
   /** No-op – retained for compatibility. */
   updateToggleAllButton() {},
+
+  /**
+   * Update error/warning badges on the left navigation tabs.
+   * Counts actual findings (affected elements), not just audits.
+   */
+  updateHomeSummary() {
+    if (!this.menu) return;
+
+    // Count actual findings (elements) per group
+    const groupCounts = {};
+    this.menu.querySelectorAll('[data-audit-key]').forEach((item) => {
+      const errors = parseInt(item.dataset.findingErrors || '0', 10);
+      const warnings = parseInt(item.dataset.findingWarnings || '0', 10);
+
+      if (!errors && !warnings) return;
+
+      const groupKey = item.dataset.groupKey;
+      if (!groupKey) return;
+
+      if (!groupCounts[groupKey]) {
+        groupCounts[groupKey] = { errors: 0, warnings: 0 };
+      }
+
+      groupCounts[groupKey].errors += errors;
+      groupCounts[groupKey].warnings += warnings;
+    });
+
+    // Reset ALL badges first, then populate only those with findings
+    this.menu.querySelectorAll('[data-tab-badges-for]').forEach((container) => {
+      const errorBadge = container.querySelector('[data-type="errors"]');
+      const warningBadge = container.querySelector('[data-type="warnings"]');
+      if (errorBadge) {
+        errorBadge.textContent = '';
+        errorBadge.style.display = 'none';
+      }
+      if (warningBadge) {
+        warningBadge.textContent = '';
+        warningBadge.style.display = 'none';
+      }
+    });
+
+    // Update badges for each group tab with findings
+    Object.entries(groupCounts).forEach(([groupKey, counts]) => {
+      const container = this.menu.querySelector(`[data-tab-badges-for="${groupKey}"]`);
+      if (!container) return;
+
+      const errorBadge = container.querySelector('[data-type="errors"]');
+      const warningBadge = container.querySelector('[data-type="warnings"]');
+
+      if (counts.errors > 0 && errorBadge) {
+        errorBadge.textContent = counts.errors;
+        errorBadge.style.display = 'inline-flex';
+      }
+
+      if (counts.warnings > 0 && warningBadge) {
+        warningBadge.textContent = counts.warnings;
+        warningBadge.style.display = 'inline-flex';
+      }
+    });
+  },
 
   // ────────────────────────────────────────────────────────────────────────
   // Health score
@@ -911,6 +986,9 @@ export const uiMethods = {
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
       el.textContent = "--";
     });
+
+    // Reset all navigation badges
+    this.updateHomeSummary();
   },
 
   // ────────────────────────────────────────────────────────────────────────

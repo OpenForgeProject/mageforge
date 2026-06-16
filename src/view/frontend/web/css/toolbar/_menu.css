@@ -32,9 +32,9 @@
     0 -8px 24px var(--mageforge-shadow-lg),
     0 6px 10px var(--mageforge-shadow-sm);
   padding: 0;
-  min-width: 550px;
+  min-width: 600px;
   max-height: min(90vh, 1000px);
-  min-height: 60vh;
+  min-height: 400px;
   overflow: hidden;
   font-family: var(--mageforge-font-family);
   /* flex-column keeps the footer pinned; the tab section fills remaining height */

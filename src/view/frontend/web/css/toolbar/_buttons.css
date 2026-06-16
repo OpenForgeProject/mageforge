@@ -164,6 +164,56 @@
   border-color: var(--mageforge-border-glass);
 }
 
+/* ── Home panel: Error / Warning summary badges ─────────────────────── */
+
+.mageforge-home-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 16px 4px;
+}
+
+.mageforge-home-summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--mageforge-surface-glass);
+  border: 1px solid var(--mageforge-border-color);
+}
+
+.mageforge-home-summary-errors {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.mageforge-home-summary-warnings {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.mageforge-home-summary-count {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mageforge-home-summary-errors .mageforge-home-summary-count {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-home-summary-warnings .mageforge-home-summary-count {
+  color: var(--mageforge-color-amber);
+}
+
+.mageforge-home-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mageforge-color-slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* ── Group panels: Run [Group] Checks button ───────────────────────── */
 
 .mageforge-group-run-btn {
@@ -172,7 +222,6 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
   padding: 10px 16px;
   background: linear-gradient(
     90deg,
