@@ -195,12 +195,6 @@ export const auditMethods = {
       this.setAuditActive(key, false);
     });
 
-    // Hide all group reset buttons
-    this.getAuditGroups().forEach((group) => {
-      const resetBtn = this[`groupResetButton-${group.key}`];
-      if (resetBtn) resetBtn.style.display = "none";
-    });
-
     this.updateToggleAllButton();
   },
 
