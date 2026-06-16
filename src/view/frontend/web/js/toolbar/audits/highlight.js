@@ -124,6 +124,30 @@ export function clearHighlight(key) {
 }
 
 /**
+ * Build a short, human-readable CSS selector for labelling a finding.
+ *
+ * @param {Element} el
+ * @returns {string}
+ */
+export function getReadableSelector(el) {
+  if (el.id) return `#${el.id}`;
+  const tag = el.tagName.toLowerCase();
+  const classes = [...el.classList]
+    .filter((c) => !c.startsWith("mageforge"))
+    .slice(0, 2)
+    .join(".");
+  if (classes) return `${tag}.${classes}`;
+  const ariaLabel = el.getAttribute("aria-label");
+  if (ariaLabel) return `${tag}[aria-label]`;
+  if (el.name) return `${tag}[name="${el.name}"]`;
+  if (tag === "img" && el.src) {
+    const base = el.src.split("/").pop().split("?")[0].slice(0, 24);
+    return `img/${base}`;
+  }
+  return tag;
+}
+
+/**
  * Highlights a set of elements by injecting a positioned overlay, scrolls to
  * the first result, and updates the counter badge on the toolbar menu item.
  * Works for any element type – no special casing required in audit code.
@@ -134,16 +158,21 @@ export function clearHighlight(key) {
  * @param {object}     [options={}]    - Options
  * @param {'error'|'warning'} [options.severity='error'] - Visual severity level
  * @param {boolean}    [options.skipBadge=false]  - Skip badge + scroll update
+ * @param {boolean}    [options.autoFindings=false] - Auto-generate findings list for "Affected Elements" panel
+ * @param {(el: Element, severity: string) => {selector?: string, action?: string}} [options.formatFinding] - Custom formatter for each finding row
  */
 export function applyHighlight(elements, key, context, options = {}) {
   const severity = options.severity ?? "error";
   const skipBadge = options.skipBadge ?? false;
+  const autoFindings = options.autoFindings ?? false;
+  const formatFinding = options.formatFinding;
 
   // Never flag elements that are part of the MageForge Toolbar itself
   elements = elements.filter((el) => !el.closest(".mageforge-toolbar"));
 
   if (elements.length === 0) {
     if (!skipBadge) context.setAuditCounterBadge(key, "0", "success");
+    if (autoFindings) context.setAuditFindings(key, []);
     return;
   }
   const cls = `mageforge-audit-${key}`;
@@ -164,5 +193,14 @@ export function applyHighlight(elements, key, context, options = {}) {
       elements[0].scrollIntoView({ behavior: "smooth", block: "center" });
     }
     context.setAuditCounterBadge(key, `${elements.length}`, severity);
+  }
+
+  // Auto-generate findings for the "Affected Elements" panel
+  if (autoFindings) {
+    const findings = elements.map((el) => {
+      const base = { el, selector: getReadableSelector(el), severity };
+      return formatFinding ? { ...base, ...formatFinding(el, severity) } : base;
+    });
+    context.setAuditFindings(key, findings);
   }
 }

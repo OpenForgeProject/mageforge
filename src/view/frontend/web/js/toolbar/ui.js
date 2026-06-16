@@ -31,12 +31,15 @@
 const LOGO_SVG_PATH =
   "M176 0L0 101.614V297L176 398.614L352 297V101.614L176 0ZM39 275.5V124L76.2391 101.614L101.5 162L126.5 73.4393L164.5 51.5V346.939L126.5 325V188L108.5 239H95L76.2391 188V297L39 275.5ZM187.5 346.939V51.5L313 124V170H275.5V146.368L225.5 117.5V188H280V226.5H225.5V325L187.5 346.939Z";
 
-const ICON_HOME = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+const ICON_HOME =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>';
 
 const GROUP_ICONS = {
-  "wcag":         '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
-  "html-quality": '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-  "performance":  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  wcag: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+  "html-quality":
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
+  performance:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',
 };
 
 // ── Module-level helpers ───────────────────────────────────────────────────
@@ -72,7 +75,6 @@ function getReadableSelector(el) {
 // ── Exported mixin ─────────────────────────────────────────────────────────
 
 export const uiMethods = {
-
   // ────────────────────────────────────────────────────────────────────────
   // Entry point
   // ────────────────────────────────────────────────────────────────────────
@@ -85,10 +87,16 @@ export const uiMethods = {
     this.container.className = "mageforge-toolbar";
 
     if (this.$el?.hasAttribute("data-theme")) {
-      this.container.setAttribute("data-theme", this.$el.getAttribute("data-theme"));
+      this.container.setAttribute(
+        "data-theme",
+        this.$el.getAttribute("data-theme"),
+      );
     }
     if (this.$el?.hasAttribute("data-position")) {
-      this.container.setAttribute("data-position", this.$el.getAttribute("data-position"));
+      this.container.setAttribute(
+        "data-position",
+        this.$el.getAttribute("data-position"),
+      );
     }
     if (this.$el?.getAttribute("data-show-labels") === "0") {
       this.container.classList.add("mageforge-toolbar--no-labels");
@@ -182,7 +190,9 @@ export const uiMethods = {
     nav.appendChild(this._buildNavTab("home", ICON_HOME, "Home", true));
 
     this.getAuditGroups().forEach((group) => {
-      nav.appendChild(this._buildNavTab(group.key, GROUP_ICONS[group.key] ?? "", group.label));
+      nav.appendChild(
+        this._buildNavTab(group.key, GROUP_ICONS[group.key] ?? "", group.label),
+      );
     });
 
     return nav;
@@ -211,9 +221,16 @@ export const uiMethods = {
       <span class="mageforge-tab-icon" aria-hidden="true">${icon}</span>
       <span class="mageforge-tab-label">${label.split(" ")[0]}</span>
     `;
-    btn.onclick   = (e) => { e.stopPropagation(); this.switchTab(key); };
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      this.switchTab(key);
+    };
     btn.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); this.switchTab(key); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        e.stopPropagation();
+        this.switchTab(key);
+      }
     };
     return btn;
   },
@@ -231,7 +248,8 @@ export const uiMethods = {
     const wrapper = document.createElement("div");
     wrapper.className = "mageforge-toolbar-tab-content";
 
-    const showHealthScore = this.$el?.getAttribute("data-show-health-score") !== "0";
+    const showHealthScore =
+      this.$el?.getAttribute("data-show-health-score") !== "0";
 
     const grouped = {};
     const ungrouped = [];
@@ -261,7 +279,10 @@ export const uiMethods = {
       items.forEach((audit) => {
         body.appendChild(
           this.createMenuItem(
-            audit.key, audit.icon, audit.label, audit.description,
+            audit.key,
+            audit.icon,
+            audit.label,
+            audit.description,
             () => this.runAudit(audit.key),
             group.key,
           ),
@@ -278,7 +299,10 @@ export const uiMethods = {
       ungrouped.forEach((audit) => {
         panel.appendChild(
           this.createMenuItem(
-            audit.key, audit.icon, audit.label, audit.description,
+            audit.key,
+            audit.icon,
+            audit.label,
+            audit.description,
             () => this.runAudit(audit.key),
           ),
         );
@@ -340,15 +364,15 @@ export const uiMethods = {
       <svg width="50" height="50" viewBox="0 0 44 44" aria-hidden="true">
         <defs>
           <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stop-color="#ef4444"/>
-            <stop offset="50%"  stop-color="#edb04d"/>
-            <stop offset="100%" stop-color="#10b981"/>
+            <stop offset="0%"   stop-color="#ef4444"></stop>
+            <stop offset="50%"  stop-color="#edb04d"></stop>
+            <stop offset="100%" stop-color="#10b981"></stop>
           </linearGradient>
         </defs>
-        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="4"/>
+        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="4"></circle>
         <circle cx="22" cy="22" r="18" fill="none" stroke="url(#${gradId})" stroke-width="4"
                 stroke-dasharray="0 ${CIRCUMFERENCE}" stroke-linecap="round"
-                transform="rotate(-90 22 22)" class="mageforge-score-ring"/>
+                transform="rotate(-90 22 22)" class="mageforge-score-ring"></circle>
       </svg>
       <div class="mageforge-score-overlay">
         <div class="mageforge-score-value">
@@ -378,20 +402,20 @@ export const uiMethods = {
           <svg viewBox="0 0 120 70" class="mageforge-toolbar-health-gauge" aria-hidden="true">
             <defs>
               <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%"   stop-color="#ef4444"/>
-                <stop offset="50%"  stop-color="#edb04d"/>
-                <stop offset="100%" stop-color="#10b981"/>
+                <stop offset="0%"   stop-color="#ef4444"></stop>
+                <stop offset="50%"  stop-color="#edb04d"></stop>
+                <stop offset="100%" stop-color="#10b981"></stop>
               </linearGradient>
             </defs>
             <path d="M 10 65 A 50 50 0 0 1 110 65"
-                  fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"/>
+                  fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"></path>
             <path d="M 10 65 A 50 50 0 0 1 110 65"
                   fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"/>
+                  stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
             <line class="mageforge-health-gauge-needle"
                   x1="60" y1="65" x2="60" y2="20"
-                  stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"/>
-            <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"/>
+                  stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>
+            <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"></circle>
           </svg>
           <div class="mageforge-toolbar-health-score-text">
             <div class="mageforge-toolbar-health-score-value">
@@ -433,15 +457,29 @@ export const uiMethods = {
     this.runAllButton.setAttribute("tabindex", "0");
     this.runAllButton.className = "mageforge-toolbar-menu-run-all";
     this.runAllButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
       RUN ALL TESTS
     `;
-    this.runAllButton.onclick   = (e) => { e.stopPropagation(); this.runAllAuditsForScore(); };
-    this.runAllButton.onkeydown = (e) => {
-      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); this.runAllAuditsForScore(); }
-      if (e.key === " ")     { e.preventDefault(); }
+    this.runAllButton.onclick = (e) => {
+      e.stopPropagation();
+      this.runAllAuditsForScore();
     };
-    this.runAllButton.onkeyup   = (e) => { if (e.key === " ") { e.stopPropagation(); this.runAllAuditsForScore(); } };
+    this.runAllButton.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        this.runAllAuditsForScore();
+      }
+      if (e.key === " ") {
+        e.preventDefault();
+      }
+    };
+    this.runAllButton.onkeyup = (e) => {
+      if (e.key === " ") {
+        e.stopPropagation();
+        this.runAllAuditsForScore();
+      }
+    };
     btnRow.appendChild(this.runAllButton);
 
     this.resetButton = document.createElement("div");
@@ -449,14 +487,32 @@ export const uiMethods = {
     this.resetButton.setAttribute("tabindex", "0");
     this.resetButton.className = "mageforge-toolbar-menu-reset";
     this.resetButton.title = "Reset score and deactivate all audits";
-    this.resetButton.setAttribute("aria-label", "Reset score and deactivate all audits");
-    this.resetButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
-    this.resetButton.onclick   = (e) => { e.stopPropagation(); this.resetScore(); };
-    this.resetButton.onkeydown = (e) => {
-      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); this.resetScore(); }
-      if (e.key === " ")     { e.preventDefault(); }
+    this.resetButton.setAttribute(
+      "aria-label",
+      "Reset score and deactivate all audits",
+    );
+    this.resetButton.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+    this.resetButton.onclick = (e) => {
+      e.stopPropagation();
+      this.resetScore();
     };
-    this.resetButton.onkeyup   = (e) => { if (e.key === " ") { e.stopPropagation(); this.resetScore(); } };
+    this.resetButton.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        this.resetScore();
+      }
+      if (e.key === " ") {
+        e.preventDefault();
+      }
+    };
+    this.resetButton.onkeyup = (e) => {
+      if (e.key === " ") {
+        e.stopPropagation();
+        this.resetScore();
+      }
+    };
     btnRow.appendChild(this.resetButton);
 
     footer.appendChild(btnRow);
@@ -464,7 +520,8 @@ export const uiMethods = {
     // ── Credit line ─────────────────────────────────────────────────────
     const credit = document.createElement("div");
     credit.className = "mageforge-toolbar-menu-credit";
-    credit.innerHTML = 'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
+    credit.innerHTML =
+      'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
     footer.appendChild(credit);
 
     return footer;
@@ -491,12 +548,27 @@ export const uiMethods = {
       <div class="mageforge-toolbar-burger-logo">${createLogoSvg("white")}</div>
       <span class="mageforge-toolbar-burger-label">MageForge</span>
     `;
-    btn.onclick   = (e) => { e.preventDefault(); e.stopPropagation(); this.toggleMenu(); };
-    btn.onkeydown = (e) => {
-      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); this.toggleMenu(); }
-      if (e.key === " ")     { e.preventDefault(); }
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleMenu();
     };
-    btn.onkeyup   = (e) => { if (e.key === " ") { e.stopPropagation(); this.toggleMenu(); } };
+    btn.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleMenu();
+      }
+      if (e.key === " ") {
+        e.preventDefault();
+      }
+    };
+    btn.onkeyup = (e) => {
+      if (e.key === " ") {
+        e.stopPropagation();
+        this.toggleMenu();
+      }
+    };
     return btn;
   },
 
@@ -520,11 +592,15 @@ export const uiMethods = {
       btn.setAttribute("tabindex", active ? "0" : "-1");
     });
 
-    this.menu.querySelectorAll(".mageforge-toolbar-tab-panel").forEach((panel) => {
-      const active = panel.dataset.panel === key;
-      panel.classList.toggle("mageforge-tab-panel-active", active);
-      active ? panel.removeAttribute("hidden") : panel.setAttribute("hidden", "");
-    });
+    this.menu
+      .querySelectorAll(".mageforge-toolbar-tab-panel")
+      .forEach((panel) => {
+        const active = panel.dataset.panel === key;
+        panel.classList.toggle("mageforge-tab-panel-active", active);
+        active
+          ? panel.removeAttribute("hidden")
+          : panel.setAttribute("hidden", "");
+      });
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -569,12 +645,27 @@ export const uiMethods = {
     findings.addEventListener("click", (e) => e.stopPropagation());
     item.appendChild(findings);
 
-    item.onclick   = (e) => { e.preventDefault(); e.stopPropagation(); callback(); };
-    item.onkeydown = (e) => {
-      if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); callback(); }
-      if (e.key === " ")     { e.preventDefault(); }
+    item.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      callback();
     };
-    item.onkeyup   = (e) => { if (e.key === " ") { e.stopPropagation(); callback(); } };
+    item.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        callback();
+      }
+      if (e.key === " ") {
+        e.preventDefault();
+      }
+    };
+    item.onkeyup = (e) => {
+      if (e.key === " ") {
+        e.stopPropagation();
+        callback();
+      }
+    };
 
     return item;
   },
@@ -628,7 +719,7 @@ export const uiMethods = {
       row.innerHTML = `
         <span class="mageforge-finding-tree" aria-hidden="true">${isLast ? "\u2514" : "\u251C"}\u2500</span>
         <span class="mageforge-finding-selector" title="${selectorStr}">${selectorStr}</span>
-        ${action ? `<span class="mageforge-finding-action">${action}</span>` : ""}
+        <span class="mageforge-finding-action">Show Element</span>
       `;
       row.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -658,9 +749,15 @@ export const uiMethods = {
     item.setAttribute("aria-pressed", String(active));
 
     if (!active) {
-      item.classList.remove("mageforge-active--error", "mageforge-active--warning");
+      item.classList.remove(
+        "mageforge-active--error",
+        "mageforge-active--warning",
+      );
       const status = item.querySelector(".mageforge-toolbar-menu-status");
-      if (status) { status.textContent = ""; status.className = "mageforge-toolbar-menu-status"; }
+      if (status) {
+        status.textContent = "";
+        status.className = "mageforge-toolbar-menu-status";
+      }
       this.setAuditFindings(key, []);
     }
 
@@ -681,26 +778,41 @@ export const uiMethods = {
    */
   updateHealthScore(score) {
     if (!this.menu) return;
-    const ARC_LENGTH    = 157.08;
+    const ARC_LENGTH = 157.08;
     const CIRCUMFERENCE = 113.1;
 
     // Half-arc gauge in the Home panel
-    const progress = this.menu.querySelector(".mageforge-health-gauge-progress");
-    const needle   = this.menu.querySelector(".mageforge-health-gauge-needle");
-    if (progress) progress.setAttribute("stroke-dasharray", `${((score / 100) * ARC_LENGTH).toFixed(2)} ${ARC_LENGTH}`);
+    const progress = this.menu.querySelector(
+      ".mageforge-health-gauge-progress",
+    );
+    const needle = this.menu.querySelector(".mageforge-health-gauge-needle");
+    if (progress)
+      progress.setAttribute(
+        "stroke-dasharray",
+        `${((score / 100) * ARC_LENGTH).toFixed(2)} ${ARC_LENGTH}`,
+      );
     if (needle) {
       const rad = (1 - score / 100) * Math.PI;
       needle.setAttribute("x2", (60 + 45 * Math.cos(rad)).toFixed(1));
       needle.setAttribute("y2", (65 - 45 * Math.sin(rad)).toFixed(1));
       needle.setAttribute("opacity", "1");
     }
-    this.menu.querySelectorAll(".mageforge-toolbar-health-score-number").forEach((el) => { el.textContent = score; });
+    this.menu
+      .querySelectorAll(".mageforge-toolbar-health-score-number")
+      .forEach((el) => {
+        el.textContent = score;
+      });
 
     // Circular rings in audit panel headers
     this.menu.querySelectorAll(".mageforge-score-ring").forEach((ring) => {
-      ring.setAttribute("stroke-dasharray", `${((score / 100) * CIRCUMFERENCE).toFixed(2)} ${CIRCUMFERENCE}`);
+      ring.setAttribute(
+        "stroke-dasharray",
+        `${((score / 100) * CIRCUMFERENCE).toFixed(2)} ${CIRCUMFERENCE}`,
+      );
     });
-    this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => { el.textContent = score; });
+    this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
+      el.textContent = score;
+    });
   },
 
   /**
@@ -709,23 +821,35 @@ export const uiMethods = {
   resetScore() {
     this.deactivateAllAudits();
     if (!this.menu) return;
-    const ARC_LENGTH    = 157.08;
+    const ARC_LENGTH = 157.08;
     const CIRCUMFERENCE = 113.1;
 
-    const progress = this.menu.querySelector(".mageforge-health-gauge-progress");
-    const needle   = this.menu.querySelector(".mageforge-health-gauge-needle");
+    const progress = this.menu.querySelector(
+      ".mageforge-health-gauge-progress",
+    );
+    const needle = this.menu.querySelector(".mageforge-health-gauge-needle");
     if (progress) progress.setAttribute("stroke-dasharray", `0 ${ARC_LENGTH}`);
-    if (needle)   needle.setAttribute("opacity", "0");
-    this.menu.querySelectorAll(".mageforge-toolbar-health-score-number").forEach((el) => { el.textContent = "--"; });
-    this.menu.querySelectorAll(".mageforge-score-ring").forEach((ring) => { ring.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`); });
-    this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => { el.textContent = "--"; });
+    if (needle) needle.setAttribute("opacity", "0");
+    this.menu
+      .querySelectorAll(".mageforge-toolbar-health-score-number")
+      .forEach((el) => {
+        el.textContent = "--";
+      });
+    this.menu.querySelectorAll(".mageforge-score-ring").forEach((ring) => {
+      ring.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`);
+    });
+    this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
+      el.textContent = "--";
+    });
   },
 
   // ────────────────────────────────────────────────────────────────────────
   // Menu open / close
   // ────────────────────────────────────────────────────────────────────────
 
-  toggleMenu() { this.menuOpen ? this.closeMenu() : this.openMenu(); },
+  toggleMenu() {
+    this.menuOpen ? this.closeMenu() : this.openMenu();
+  },
 
   openMenu() {
     this.menuOpen = true;
@@ -746,12 +870,13 @@ export const uiMethods = {
       document.removeEventListener("click", this._outsideClickHandler);
       this._outsideClickHandler = null;
     }
-    if (this.container?.parentNode) this.container.parentNode.removeChild(this.container);
-    this.container    = null;
-    this.menu         = null;
+    if (this.container?.parentNode)
+      this.container.parentNode.removeChild(this.container);
+    this.container = null;
+    this.menu = null;
     this.burgerButton = null;
     this.runAllButton = null;
-    this.resetButton  = null;
-    this.menuOpen     = false;
+    this.resetButton = null;
+    this.menuOpen = false;
   },
 };

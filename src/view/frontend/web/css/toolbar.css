@@ -8,19 +8,19 @@
  * @license GPL-3.0
  */
 
-@import url('toolbar/_variables.css');
-@import url('toolbar/_reset.css');
-@import url('toolbar/_burger.css');
-@import url('toolbar/_menu.css');
-@import url('toolbar/_groups.css');
-@import url('toolbar/_findings.css');
-@import url('toolbar/_highlights.css');
-@import url('toolbar/_feedback.css');
-@import url('toolbar/_animations.css');
-@import url('toolbar/_footer.css');
-@import url('toolbar/_health.css');
-@import url('toolbar/_buttons.css');
-@import url('toolbar/_credit.css');
-@import url('toolbar/_positions.css');
-@import url('toolbar/_themes.css');
-@import url('toolbar/_responsive.css');
+@import url("toolbar/_variables.css");
+@import url("toolbar/_reset.css");
+@import url("toolbar/_burger.css");
+@import url("toolbar/_menu.css");
+@import url("toolbar/_groups.css");
+@import url("toolbar/_findings.css");
+@import url("toolbar/_highlights.css");
+@import url("toolbar/_feedback.css");
+@import url("toolbar/_animations.css");
+@import url("toolbar/_footer.css");
+@import url("toolbar/_health.css");
+@import url("toolbar/_buttons.css");
+@import url("toolbar/_credit.css");
+@import url("toolbar/_positions.css");
+@import url("toolbar/_themes.css");
+@import url("toolbar/_responsive.css");

@@ -149,7 +149,11 @@
 }
 
 .mageforge-toolbar-menu-item.mageforge-active {
-  background: linear-gradient(90deg, var(--mageforge-color-green-alpha-15) 0%, transparent 100px);
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-green-alpha-15) 0%,
+    transparent 100px
+  );
 }
 
 .mageforge-toolbar-menu-item.mageforge-active .mageforge-toolbar-menu-label {
@@ -157,7 +161,11 @@
 }
 
 .mageforge-toolbar-menu-item.mageforge-active--error {
-  background: linear-gradient(90deg, var(--mageforge-color-red-alpha-15) 0%, transparent 100px);
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-red-alpha-15) 0%,
+    transparent 100px
+  );
 }
 
 .mageforge-toolbar-menu-item.mageforge-active--error
@@ -166,7 +174,11 @@
 }
 
 .mageforge-toolbar-menu-item.mageforge-active--warning {
-  background: linear-gradient(90deg, var(--mageforge-color-amber-alpha-15) 0%, transparent 100px);
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-amber-alpha-15) 0%,
+    transparent 100px
+  );
 }
 
 .mageforge-toolbar-menu-item.mageforge-active--warning

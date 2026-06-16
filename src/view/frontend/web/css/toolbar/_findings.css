@@ -50,11 +50,13 @@
     background 0.15s ease;
 }
 
-.mageforge-toolbar-menu-item.mageforge-active--error .mageforge-findings-toggle {
+.mageforge-toolbar-menu-item.mageforge-active--error
+  .mageforge-findings-toggle {
   color: var(--mageforge-color-red);
   border-color: var(--mageforge-color-red);
 }
-.mageforge-toolbar-menu-item.mageforge-active--warning .mageforge-findings-toggle {
+.mageforge-toolbar-menu-item.mageforge-active--warning
+  .mageforge-findings-toggle {
   color: var(--mageforge-color-amber);
   border-color: var(--mageforge-color-amber);
 }
@@ -165,7 +167,7 @@
    ========================================================================== */
 
 .mageforge-finding-flash {
-  outline: 2px solid var(--mageforge-color-blue) !important;
+  outline: 2px dashed #ef4444 !important;
   outline-offset: 3px !important;
   border-radius: 2px;
 }
