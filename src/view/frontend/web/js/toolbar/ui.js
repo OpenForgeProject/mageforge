@@ -290,7 +290,9 @@ export const uiMethods = {
       groupBtn.className = "mageforge-group-run-btn";
       groupBtn.dataset.group = group.key;
       this[`runGroupButton-${group.key}`] = groupBtn;
-      const groupLabel = this.getAuditGroups().find((g) => g.key === group.key)?.label ?? group.key;
+      const groupLabel =
+        this.getAuditGroups().find((g) => g.key === group.key)?.label ??
+        group.key;
       groupBtn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         Run ${groupLabel} Checks
@@ -736,7 +738,7 @@ export const uiMethods = {
     let errorCount = 0;
     let warningCount = 0;
     findings?.forEach((f) => {
-      if (f.severity === 'warning') warningCount++;
+      if (f.severity === "warning") warningCount++;
       else errorCount++;
     });
     item.dataset.findingErrors = String(errorCount);
@@ -835,9 +837,9 @@ export const uiMethods = {
 
     // Count actual findings (elements) per group
     const groupCounts = {};
-    this.menu.querySelectorAll('[data-audit-key]').forEach((item) => {
-      const errors = parseInt(item.dataset.findingErrors || '0', 10);
-      const warnings = parseInt(item.dataset.findingWarnings || '0', 10);
+    this.menu.querySelectorAll("[data-audit-key]").forEach((item) => {
+      const errors = parseInt(item.dataset.findingErrors || "0", 10);
+      const warnings = parseInt(item.dataset.findingWarnings || "0", 10);
 
       if (!errors && !warnings) return;
 
@@ -853,22 +855,24 @@ export const uiMethods = {
     });
 
     // Reset ALL badges first, then populate only those with findings
-    this.menu.querySelectorAll('[data-tab-badges-for]').forEach((container) => {
+    this.menu.querySelectorAll("[data-tab-badges-for]").forEach((container) => {
       const errorBadge = container.querySelector('[data-type="errors"]');
       const warningBadge = container.querySelector('[data-type="warnings"]');
       if (errorBadge) {
-        errorBadge.textContent = '';
-        errorBadge.style.display = 'none';
+        errorBadge.textContent = "";
+        errorBadge.style.display = "none";
       }
       if (warningBadge) {
-        warningBadge.textContent = '';
-        warningBadge.style.display = 'none';
+        warningBadge.textContent = "";
+        warningBadge.style.display = "none";
       }
     });
 
     // Update badges for each group tab with findings
     Object.entries(groupCounts).forEach(([groupKey, counts]) => {
-      const container = this.menu.querySelector(`[data-tab-badges-for="${groupKey}"]`);
+      const container = this.menu.querySelector(
+        `[data-tab-badges-for="${groupKey}"]`,
+      );
       if (!container) return;
 
       const errorBadge = container.querySelector('[data-type="errors"]');
@@ -876,12 +880,12 @@ export const uiMethods = {
 
       if (counts.errors > 0 && errorBadge) {
         errorBadge.textContent = counts.errors;
-        errorBadge.style.display = 'inline-flex';
+        errorBadge.style.display = "inline-flex";
       }
 
       if (counts.warnings > 0 && warningBadge) {
         warningBadge.textContent = counts.warnings;
-        warningBadge.style.display = 'inline-flex';
+        warningBadge.style.display = "inline-flex";
       }
     });
   },

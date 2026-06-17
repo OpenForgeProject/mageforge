@@ -9,6 +9,6 @@
 
 .mageforge-toolbar-menu-footer {
   border-top: 1px solid var(--mageforge-border-color);
-  margin-top: auto; /* pin to bottom of flex container */; /* pin to bottom of flex container */
+  margin-top: auto; /* pin to bottom of flex container */ /* pin to bottom of flex container */
   padding-top: 6px;
 }

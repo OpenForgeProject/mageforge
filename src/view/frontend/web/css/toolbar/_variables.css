@@ -70,4 +70,10 @@
     var(--mageforge-color-pink) 70%,
     var(--mageforge-color-amber) 100%
   );
+
+  /* Scrollbar */
+  --mageforge-scrollbar-width: 4px;
+  --mageforge-scrollbar-bg: transparent;
+  --mageforge-scrollbar-thumb-bg: var(--mageforge-color-blue);
+  --mageforge-scrollbar-thumb-hover-bg: var(--mageforge-color-blue-alpha-35);
 }

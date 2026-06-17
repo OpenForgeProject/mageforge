@@ -25,7 +25,7 @@
 
 .mageforge-toolbar-tab-nav {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   width: 200px;
   flex-shrink: 0;
   border-right: 1px solid var(--mageforge-border-color);
@@ -183,9 +183,35 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  max-height: 600px;
   padding: 8px;
   gap: 8px;
-  height:50%;
+  height: 50%;
+}
+
+.mageforge-tab-panel-body::-webkit-scrollbar {
+  width: var(--mageforge-scrollbar-width);
+}
+
+.mageforge-tab-panel-body::-webkit-scrollbar-track {
+  background: var(--mageforge-scrollbar-bg);
+}
+
+.mageforge-tab-panel-body::-webkit-scrollbar-thumb {
+  background: var(--mageforge-scrollbar-thumb-bg);
+  border-radius: 100vw;
+  transition: background 0.2s ease;
+}
+
+.mageforge-tab-panel-body::-webkit-scrollbar-thumb:hover {
+  background: var(--mageforge-scrollbar-thumb-hover-bg);
+}
+
+/* Firefox */
+.mageforge-tab-panel-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mageforge-scrollbar-thumb-bg)
+    var(--mageforge-scrollbar-bg);
 }
 
 /* ── Home panel ── */
