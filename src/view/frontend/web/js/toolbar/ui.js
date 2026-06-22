@@ -187,7 +187,7 @@ export const uiMethods = {
     nav.setAttribute("role", "tablist");
     nav.setAttribute("aria-label", "Audit categories");
 
-    // Action bar pinned to the visual bottom of the nav.
+    // Action bar (run/reset for the current tab).
     // column-reverse means the first DOM child appears at the visual bottom.
     this.footerActionBar = document.createElement("div");
     this.footerActionBar.className = "mageforge-nav-action-bar";
@@ -202,6 +202,56 @@ export const uiMethods = {
     });
 
     return nav;
+  },
+
+  /**
+   * When audits from 2+ groups are active, relabel every group reset button
+   * to "Reset All" and wire it to reset everything; otherwise restore the
+   * per-group label and behaviour.
+   */
+  _updateResetAllButton() {
+    const isMulti = this._isMultiGroupActive();
+    const RESET_SVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+    const label = isMulti ? "Reset All" : "Reset";
+    this.getAuditGroups().forEach((group) => {
+      const btn = this[`groupResetButton-${group.key}`];
+      if (!btn) return;
+      btn.innerHTML = `${RESET_SVG} ${label}`;
+      const ariaLabel = isMulti
+        ? "Reset all active audits"
+        : `Reset ${group.label} audits`;
+      btn.setAttribute("aria-label", ariaLabel);
+      btn.title = ariaLabel;
+      btn.classList.toggle("mageforge-group-reset-btn--all", isMulti);
+
+      const groupHasActive =
+        isMulti ||
+        this.getAudits().some(
+          (a) => a.group === group.key && this.activeAudits.has(a.key),
+        );
+      btn.classList.toggle("mageforge-group-reset-btn--disabled", !groupHasActive);
+      btn.setAttribute("aria-disabled", String(!groupHasActive));
+      btn.setAttribute("tabindex", groupHasActive ? "0" : "-1");
+    });
+
+    // Home reset button: disabled when nothing is active at all
+    if (this.resetButton) {
+      const hasAny = this.activeAudits.size > 0;
+      this.resetButton.classList.toggle("mageforge-group-reset-btn--disabled", !hasAny);
+      this.resetButton.setAttribute("aria-disabled", String(!hasAny));
+      this.resetButton.setAttribute("tabindex", hasAny ? "0" : "-1");
+    }
+  },
+
+  /** Returns true when audits from at least 2 different groups are active. */
+  _isMultiGroupActive() {
+    const activeGroups = new Set(
+      this.getAudits()
+        .filter((a) => a.group && this.activeAudits.has(a.key))
+        .map((a) => a.group),
+    );
+    return activeGroups.size >= 2;
   },
 
   /**
@@ -315,22 +365,31 @@ export const uiMethods = {
       groupResetBtn.title = `Reset ${groupLabel} audits`;
       groupResetBtn.innerHTML =
         '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
+      const handleGroupReset = () => {
+        const btn = this[`groupResetButton-${group.key}`];
+        if (btn?.classList.contains("mageforge-group-reset-btn--disabled")) return;
+        if (this._isMultiGroupActive()) {
+          this.resetScore();
+        } else {
+          this.resetGroupAudits(group.key);
+        }
+      };
       groupResetBtn.onclick = (e) => {
         e.stopPropagation();
-        this.resetGroupAudits(group.key);
+        handleGroupReset();
       };
       groupResetBtn.onkeydown = (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
           e.stopPropagation();
-          this.resetGroupAudits(group.key);
+          handleGroupReset();
         }
         if (e.key === " ") e.preventDefault();
       };
       groupResetBtn.onkeyup = (e) => {
         if (e.key === " ") {
           e.stopPropagation();
-          this.resetGroupAudits(group.key);
+          handleGroupReset();
         }
       };
       this[`groupResetButton-${group.key}`] = groupResetBtn;
@@ -589,6 +648,7 @@ export const uiMethods = {
     // Populate nav action bar for the initially active tab (home).
     // footerActionBar was already created in _buildTabNav().
     this._updateFooterActions("home");
+    this._updateResetAllButton();
 
     return footer;
   },
@@ -868,6 +928,7 @@ export const uiMethods = {
 
     this.updateToggleAllButton();
     this.updateHomeSummary();
+    this._updateResetAllButton();
   },
 
   /** No-op – retained for compatibility. */
