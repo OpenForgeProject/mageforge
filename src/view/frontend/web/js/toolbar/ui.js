@@ -1105,7 +1105,7 @@ export const uiMethods = {
   updateDashboardIssues() {
     if (!this.dashboardIssuesEl) return;
 
-    /** @type {Array<{label: string, count: number, severity: string}>} */
+    /** @type {Array<{label: string, count: number, severity: string, groupKey: string|null}>} */
     const rows = [];
     this.menu?.querySelectorAll("[data-audit-key]").forEach((item) => {
       let errors = parseInt(item.dataset.findingErrors || "0", 10);
@@ -1127,8 +1127,9 @@ export const uiMethods = {
       if (!errors && !warnings) return;
       const label =
         item.querySelector(".mageforge-toolbar-menu-label")?.textContent ?? "";
-      if (errors) rows.push({ label, count: errors, severity: "error" });
-      if (warnings) rows.push({ label, count: warnings, severity: "warning" });
+      const groupKey = item.dataset.groupKey ?? null;
+      if (errors) rows.push({ label, count: errors, severity: "error", groupKey });
+      if (warnings) rows.push({ label, count: warnings, severity: "warning", groupKey });
     });
 
     this.dashboardIssuesEl.innerHTML = "";
@@ -1147,10 +1148,41 @@ export const uiMethods = {
     heading.textContent = "Issues found";
     this.dashboardIssuesEl.appendChild(heading);
 
-    rows.forEach(({ label, count, severity }) => {
+    rows.forEach(({ label, count, severity, groupKey }) => {
       const row = document.createElement("div");
       row.className = `mageforge-dashboard-issue mageforge-dashboard-issue--${severity}`;
-      row.innerHTML = `<span class="mageforge-dashboard-issue-count">${count}</span><span class="mageforge-dashboard-issue-label">${label}</span>`;
+
+      const countEl = document.createElement("span");
+      countEl.className = "mageforge-dashboard-issue-count";
+      countEl.textContent = String(count);
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "mageforge-dashboard-issue-label";
+      labelEl.textContent = label;
+
+      row.appendChild(countEl);
+      row.appendChild(labelEl);
+
+      if (groupKey) {
+        const groupLabel =
+          this.getAuditGroups().find((g) => g.key === groupKey)?.label ?? groupKey;
+        const badge = document.createElement("button");
+        badge.type = "button";
+        badge.className = "mageforge-dashboard-issue-group";
+        badge.style.setProperty(
+          "--issue-group-color",
+          `var(--mageforge-group-color-${groupKey})`,
+        );
+        badge.innerHTML = GROUP_ICONS[groupKey] ?? "";
+        badge.title = `Jump to ${groupLabel}`;
+        badge.setAttribute("aria-label", `Jump to ${groupLabel}`);
+        badge.onclick = (e) => {
+          e.stopPropagation();
+          this.switchTab(groupKey);
+        };
+        row.appendChild(badge);
+      }
+
       this.dashboardIssuesEl.appendChild(row);
     });
   },
