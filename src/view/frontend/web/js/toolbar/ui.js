@@ -615,6 +615,9 @@ export const uiMethods = {
       btnRow.appendChild(this.resetButton);
       // btnRow held as ref; rendered in footer action bar via _updateFooterActions
 
+      panel.appendChild(this._buildPageContext());
+      panel.appendChild(this._buildQuickStats());
+
       // Category score breakdown
       const categories = document.createElement("div");
       categories.className = "mageforge-dashboard-categories";
@@ -651,6 +654,135 @@ export const uiMethods = {
     }
 
     return panel;
+  },
+
+  _buildPageContext() {
+    const classes = document.body.className;
+    let pageType = "Page";
+    if (classes.includes("catalog-product-view")) pageType = "Product";
+    else if (classes.includes("catalog-category-view")) pageType = "Category";
+    else if (classes.includes("checkout-index-index")) pageType = "Checkout";
+    else if (classes.includes("checkout-cart-index")) pageType = "Cart";
+    else if (classes.includes("catalogsearch-result-index")) pageType = "Search";
+    else if (classes.includes("cms-index-index")) pageType = "Homepage";
+    else if (classes.includes("cms-page-view")) pageType = "CMS Page";
+    else if (classes.includes("customer-account")) pageType = "Account";
+
+    const rawTitle = document.title.split(" - ")[0].trim();
+    const title =
+      rawTitle.length > 36 ? rawTitle.slice(0, 34) + "\u2026" : rawTitle;
+    const path = location.pathname;
+    const displayPath =
+      path.length > 34 ? "\u2026" + path.slice(-32) : path;
+
+    const el = document.createElement("div");
+    el.className = "mageforge-page-context";
+
+    const typeBadge = document.createElement("span");
+    typeBadge.className = "mageforge-page-context-type";
+    typeBadge.textContent = pageType;
+
+    const titleEl = document.createElement("span");
+    titleEl.className = "mageforge-page-context-title";
+    titleEl.textContent = title || "(no title)";
+    titleEl.title = document.title;
+
+    const urlEl = document.createElement("span");
+    urlEl.className = "mageforge-page-context-url";
+    urlEl.textContent = displayPath;
+    urlEl.title = path;
+
+    el.appendChild(typeBadge);
+    el.appendChild(titleEl);
+    el.appendChild(urlEl);
+    return el;
+  },
+
+  _buildQuickStats() {
+    const allImgs = [...document.querySelectorAll("img")].filter(
+      (img) => !this.container?.contains(img),
+    );
+    const imgNoAlt = allImgs.filter(
+      (img) => img.getAttribute("alt") === null,
+    ).length;
+    const imgNoLazy = allImgs.filter(
+      (img) => !img.getAttribute("loading"),
+    ).length;
+    const extScripts = document.querySelectorAll("script[src]").length;
+    const inlineScripts =
+      document.querySelectorAll("script:not([src])").length;
+    const stylesheets = document.querySelectorAll(
+      'link[rel="stylesheet"]',
+    ).length;
+
+    const el = document.createElement("div");
+    el.className = "mageforge-quick-stats";
+
+    const heading = document.createElement("p");
+    heading.className = "mageforge-section-heading";
+    heading.textContent = "Page Overview";
+    el.appendChild(heading);
+
+    const grid = document.createElement("div");
+    grid.className = "mageforge-quick-stats-grid";
+
+    const items = [
+      {
+        value: allImgs.length,
+        label: "Images",
+        sub:
+          imgNoAlt > 0
+            ? `${imgNoAlt} no alt`
+            : imgNoLazy > 0
+              ? `${imgNoLazy} no lazy`
+              : "all good",
+        warn: imgNoAlt > 0,
+      },
+      {
+        value: extScripts,
+        label: "JS Files",
+        sub: `${inlineScripts} inline`,
+        warn: false,
+      },
+      {
+        value: stylesheets,
+        label: "CSS Files",
+        sub: null,
+        warn: false,
+      },
+    ];
+
+    items.forEach(({ value, label, sub, warn }) => {
+      const item = document.createElement("div");
+      item.className = "mageforge-quick-stat";
+
+      const valueEl = document.createElement("span");
+      valueEl.className = `mageforge-quick-stat-value${
+        warn ? " mageforge-quick-stat-value--warn" : ""
+      }`;
+      valueEl.textContent = String(value);
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "mageforge-quick-stat-label";
+      labelEl.textContent = label;
+
+      item.appendChild(valueEl);
+      item.appendChild(labelEl);
+
+      if (sub !== null) {
+        const subEl = document.createElement("span");
+        subEl.className = `mageforge-quick-stat-sub${
+          warn ? " mageforge-quick-stat-sub--warn" : ""
+        }`;
+        subEl.textContent = sub;
+        item.appendChild(subEl);
+      }
+
+      grid.appendChild(item);
+    });
+
+    el.appendChild(grid);
+    return el;
   },
 
   // ────────────────────────────────────────────────────────────────────────

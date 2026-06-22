@@ -269,6 +269,124 @@
   color: var(--mageforge-color-white);
 }
 
+/* ── Page context bar ── */
+
+.mageforge-page-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 8px;
+  border-bottom: 1px solid var(--mageforge-border-color);
+  overflow: hidden;
+}
+
+.mageforge-page-context-type {
+  font-family: var(--mageforge-font-family);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-orange);
+  background: rgba(251, 146, 60, 0.12);
+  padding: 2px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.mageforge-page-context-title {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mageforge-color-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.mageforge-page-context-url {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  color: var(--mageforge-color-slate-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 38%;
+  direction: rtl;
+  text-align: left;
+}
+
+/* ── Reusable section heading ── */
+
+.mageforge-section-heading {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+  margin: 0 0 6px;
+}
+
+/* ── Quick stats grid ── */
+
+.mageforge-quick-stats {
+  padding: 10px 12px 4px;
+  border-bottom: 1px solid var(--mageforge-border-color);
+}
+
+.mageforge-quick-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.mageforge-quick-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 7px 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mageforge-quick-stat-value {
+  font-family: var(--mageforge-font-family);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mageforge-color-white);
+  line-height: 1.1;
+}
+
+.mageforge-quick-stat-value--warn {
+  color: var(--mageforge-color-amber);
+}
+
+.mageforge-quick-stat-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-quick-stat-sub {
+  font-family: var(--mageforge-font-family);
+  font-size: 9px;
+  color: var(--mageforge-color-slate-400);
+  text-align: center;
+  margin-top: 1px;
+}
+
+.mageforge-quick-stat-sub--warn {
+  color: var(--mageforge-color-amber);
+}
+
 /* ── Dashboard category score breakdown ── */
 
 .mageforge-dashboard-categories {
