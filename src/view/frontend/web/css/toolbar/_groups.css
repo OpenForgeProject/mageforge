@@ -70,6 +70,11 @@
 
 /* Active state – per-group colour accent */
 
+.mageforge-toolbar-tab-btn[data-tab="home"].mageforge-tab-active {
+  color: var(--mageforge-color-white);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .mageforge-toolbar-tab-btn[data-tab="wcag"].mageforge-tab-active {
   color: var(--mageforge-group-color-wcag);
   background: rgba(168, 85, 247, 0.1);
