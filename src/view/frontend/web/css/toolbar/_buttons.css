@@ -60,6 +60,22 @@
   transform: none;
 }
 
+.mageforge-toolbar-menu-run-all.mageforge-running svg:first-child {
+  display: none;
+}
+
+.mageforge-toolbar-menu-run-all.mageforge-running::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--mageforge-color-white);
+  border-radius: 50%;
+  animation: mageforge-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
 .mageforge-toolbar-menu-run-all:focus-visible {
   outline: 2px solid var(--mageforge-color-blue);
   outline-offset: 2px;
@@ -308,6 +324,22 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.mageforge-group-run-btn.mageforge-running svg:first-child {
+  display: none;
+}
+
+.mageforge-group-run-btn.mageforge-running::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--mageforge-color-white);
+  border-radius: 50%;
+  animation: mageforge-spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
 .mageforge-group-run-btn:focus-visible {

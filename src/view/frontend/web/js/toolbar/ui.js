@@ -885,13 +885,18 @@ export const uiMethods = {
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className = "mageforge-findings-toggle";
-    toggleBtn.textContent = `Show affected elements (${findings.length})`;
+    toggleBtn.innerHTML = `
+      <svg class="mageforge-findings-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      <span class="mageforge-findings-toggle-text">Show affected elements (${findings.length})</span>
+    `;
     toggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = container.classList.toggle("mageforge-findings-open");
-      toggleBtn.textContent = isOpen
-        ? `Hide affected elements (${findings.length})`
-        : `Show affected elements (${findings.length})`;
+      const textEl = toggleBtn.querySelector(".mageforge-findings-toggle-text");
+      if (textEl)
+        textEl.textContent = isOpen
+          ? `Hide affected elements (${findings.length})`
+          : `Show affected elements (${findings.length})`;
     });
     container.appendChild(toggleBtn);
 

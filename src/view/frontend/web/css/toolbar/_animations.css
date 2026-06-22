@@ -26,3 +26,9 @@
     opacity: 0;
   }
 }
+
+@keyframes mageforge-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

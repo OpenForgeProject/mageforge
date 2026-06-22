@@ -47,6 +47,7 @@ export const auditMethods = {
    * an overall health score (0–100) in the footer gauge.
    */
   async runAllAuditsForScore() {
+    if (this._batchRunning) return;
     const btn = this.runAllButton;
     if (!btn) return;
     btn.disabled = true;
@@ -137,6 +138,7 @@ export const auditMethods = {
    * compute and display a score (0–100) in that panel's ring.
    */
   async runGroupAuditsForScore(groupKey) {
+    if (this._batchRunning) return;
     const btn = this[`runGroupButton-${groupKey}`];
     if (!btn) return;
     btn.disabled = true;

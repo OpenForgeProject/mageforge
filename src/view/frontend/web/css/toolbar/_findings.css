@@ -67,6 +67,20 @@
   background: var(--mageforge-surface-glass-hover);
 }
 
+.mageforge-findings-toggle:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+.mageforge-findings-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.mageforge-audit-findings.mageforge-findings-open .mageforge-findings-chevron {
+  transform: rotate(180deg);
+}
+
 /* ── Findings list (hidden until open) ── */
 
 .mageforge-findings-list {
