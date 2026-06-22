@@ -124,6 +124,24 @@
   line-height: 0;
 }
 
+/* Per-group icon colour (always visible, not just when active) */
+
+.mageforge-toolbar-tab-btn[data-tab="wcag"] .mageforge-tab-icon {
+  color: var(--mageforge-group-color-wcag);
+}
+
+.mageforge-toolbar-tab-btn[data-tab="html-quality"] .mageforge-tab-icon {
+  color: var(--mageforge-group-color-html-quality);
+}
+
+.mageforge-toolbar-tab-btn[data-tab="performance"] .mageforge-tab-icon {
+  color: var(--mageforge-group-color-performance);
+}
+
+.mageforge-toolbar-tab-btn[data-tab="seo"] .mageforge-tab-icon {
+  color: var(--mageforge-group-color-seo);
+}
+
 .mageforge-tab-label {
   display: block;
   white-space: normal;

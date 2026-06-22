@@ -46,10 +46,10 @@ import unsafeBlankTarget from "./unsafe-blank-target.js";
 
 /** @type {AuditGroup[]} */
 export const auditGroups = [
+  { key: "seo", label: "SEO" },
+  { key: "performance", label: "Performance" },
   { key: "html-quality", label: "HTML Quality" },
   { key: "wcag", label: "Accessibility" },
-  { key: "performance", label: "Performance" },
-  { key: "seo", label: "SEO" },
 ];
 
 /** @type {AuditDefinition[]} */

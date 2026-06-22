@@ -618,7 +618,9 @@ export const uiMethods = {
       // Category score breakdown
       const categories = document.createElement("div");
       categories.className = "mageforge-dashboard-categories";
-      this.getAuditGroups().forEach((group) => {
+      [...this.getAuditGroups()]
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .forEach((group) => {
         const card = document.createElement("div");
         card.className = "mageforge-dashboard-category";
         card.style.setProperty(
