@@ -65,20 +65,23 @@
 
 /* "Reset All" state: red tint to signal destructive scope */
 
-.mageforge-nav-action-bar .mageforge-group-reset-btn.mageforge-group-reset-btn--all {
+.mageforge-nav-action-bar
+  .mageforge-group-reset-btn.mageforge-group-reset-btn--all {
   color: var(--mageforge-color-red, #ef4444);
   background: rgba(239, 68, 68, 0.08);
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-.mageforge-nav-action-bar .mageforge-group-reset-btn.mageforge-group-reset-btn--all:hover {
+.mageforge-nav-action-bar
+  .mageforge-group-reset-btn.mageforge-group-reset-btn--all:hover {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.75);
 }
 
 /* Disabled state: nothing active in the current group */
 
-.mageforge-nav-action-bar .mageforge-group-reset-btn.mageforge-group-reset-btn--disabled {
+.mageforge-nav-action-bar
+  .mageforge-group-reset-btn.mageforge-group-reset-btn--disabled {
   opacity: 0.35;
   cursor: not-allowed;
   pointer-events: none;

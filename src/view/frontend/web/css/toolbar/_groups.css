@@ -261,7 +261,8 @@
   min-height: 0;
   padding: 8px 0 4px;
   scrollbar-width: thin;
-  scrollbar-color: var(--mageforge-scrollbar-thumb-bg) var(--mageforge-scrollbar-bg);
+  scrollbar-color: var(--mageforge-scrollbar-thumb-bg)
+    var(--mageforge-scrollbar-bg);
 }
 
 .mageforge-home-panel::-webkit-scrollbar {

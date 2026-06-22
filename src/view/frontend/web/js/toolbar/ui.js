@@ -234,7 +234,10 @@ export const uiMethods = {
         this.getAudits().some(
           (a) => a.group === group.key && this.activeAudits.has(a.key),
         );
-      btn.classList.toggle("mageforge-group-reset-btn--disabled", !groupHasActive);
+      btn.classList.toggle(
+        "mageforge-group-reset-btn--disabled",
+        !groupHasActive,
+      );
       btn.setAttribute("aria-disabled", String(!groupHasActive));
       btn.setAttribute("tabindex", groupHasActive ? "0" : "-1");
     });
@@ -242,7 +245,10 @@ export const uiMethods = {
     // Home reset button: disabled when nothing is active at all
     if (this.resetButton) {
       const hasAny = this.activeAudits.size > 0;
-      this.resetButton.classList.toggle("mageforge-group-reset-btn--disabled", !hasAny);
+      this.resetButton.classList.toggle(
+        "mageforge-group-reset-btn--disabled",
+        !hasAny,
+      );
       this.resetButton.setAttribute("aria-disabled", String(!hasAny));
       this.resetButton.setAttribute("tabindex", hasAny ? "0" : "-1");
     }
@@ -371,7 +377,8 @@ export const uiMethods = {
         '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
       const handleGroupReset = () => {
         const btn = this[`groupResetButton-${group.key}`];
-        if (btn?.classList.contains("mageforge-group-reset-btn--disabled")) return;
+        if (btn?.classList.contains("mageforge-group-reset-btn--disabled"))
+          return;
         if (this._isMultiGroupActive()) {
           this.resetScore();
         } else {
@@ -624,18 +631,18 @@ export const uiMethods = {
       [...this.getAuditGroups()]
         .sort((a, b) => a.label.localeCompare(b.label))
         .forEach((group) => {
-        const card = document.createElement("div");
-        card.className = "mageforge-dashboard-category";
-        card.style.setProperty(
-          "--category-color",
-          `var(--mageforge-group-color-${group.key})`,
-        );
-        card.innerHTML = `
+          const card = document.createElement("div");
+          card.className = "mageforge-dashboard-category";
+          card.style.setProperty(
+            "--category-color",
+            `var(--mageforge-group-color-${group.key})`,
+          );
+          card.innerHTML = `
           <span class="mageforge-dashboard-category-label">${group.label}</span>
           <span class="mageforge-dashboard-category-score" data-dashboard-group-score="${group.key}">--</span>
         `;
-        categories.appendChild(card);
-      });
+          categories.appendChild(card);
+        });
       panel.appendChild(categories);
 
       // Issues list – populated by updateDashboardIssues()
@@ -663,7 +670,8 @@ export const uiMethods = {
     else if (classes.includes("catalog-category-view")) pageType = "Category";
     else if (classes.includes("checkout-index-index")) pageType = "Checkout";
     else if (classes.includes("checkout-cart-index")) pageType = "Cart";
-    else if (classes.includes("catalogsearch-result-index")) pageType = "Search";
+    else if (classes.includes("catalogsearch-result-index"))
+      pageType = "Search";
     else if (classes.includes("cms-index-index")) pageType = "Homepage";
     else if (classes.includes("cms-page-view")) pageType = "CMS Page";
     else if (classes.includes("customer-account")) pageType = "Account";
@@ -672,8 +680,7 @@ export const uiMethods = {
     const title =
       rawTitle.length > 36 ? rawTitle.slice(0, 34) + "\u2026" : rawTitle;
     const path = location.pathname;
-    const displayPath =
-      path.length > 34 ? "\u2026" + path.slice(-32) : path;
+    const displayPath = path.length > 34 ? "\u2026" + path.slice(-32) : path;
 
     const el = document.createElement("div");
     el.className = "mageforge-page-context";
@@ -709,8 +716,7 @@ export const uiMethods = {
       (img) => !img.getAttribute("loading"),
     ).length;
     const extScripts = document.querySelectorAll("script[src]").length;
-    const inlineScripts =
-      document.querySelectorAll("script:not([src])").length;
+    const inlineScripts = document.querySelectorAll("script:not([src])").length;
     const stylesheets = document.querySelectorAll(
       'link[rel="stylesheet"]',
     ).length;
@@ -1116,9 +1122,13 @@ export const uiMethods = {
         const status = item.querySelector(".mageforge-toolbar-menu-status");
         const count = parseInt(status?.textContent || "0", 10) || 0;
         if (count > 0) {
-          if (status.classList.contains("mageforge-toolbar-menu-status--error")) {
+          if (
+            status.classList.contains("mageforge-toolbar-menu-status--error")
+          ) {
             errors = count;
-          } else if (status.classList.contains("mageforge-toolbar-menu-status--warning")) {
+          } else if (
+            status.classList.contains("mageforge-toolbar-menu-status--warning")
+          ) {
             warnings = count;
           }
         }
@@ -1128,8 +1138,10 @@ export const uiMethods = {
       const label =
         item.querySelector(".mageforge-toolbar-menu-label")?.textContent ?? "";
       const groupKey = item.dataset.groupKey ?? null;
-      if (errors) rows.push({ label, count: errors, severity: "error", groupKey });
-      if (warnings) rows.push({ label, count: warnings, severity: "warning", groupKey });
+      if (errors)
+        rows.push({ label, count: errors, severity: "error", groupKey });
+      if (warnings)
+        rows.push({ label, count: warnings, severity: "warning", groupKey });
     });
 
     this.dashboardIssuesEl.innerHTML = "";
@@ -1138,8 +1150,7 @@ export const uiMethods = {
 
     // Errors first, then warnings, each group sorted by count desc
     rows.sort((a, b) => {
-      if (a.severity !== b.severity)
-        return a.severity === "error" ? -1 : 1;
+      if (a.severity !== b.severity) return a.severity === "error" ? -1 : 1;
       return b.count - a.count;
     });
 
@@ -1165,7 +1176,8 @@ export const uiMethods = {
 
       if (groupKey) {
         const groupLabel =
-          this.getAuditGroups().find((g) => g.key === groupKey)?.label ?? groupKey;
+          this.getAuditGroups().find((g) => g.key === groupKey)?.label ??
+          groupKey;
         const badge = document.createElement("button");
         badge.type = "button";
         badge.className = "mageforge-dashboard-issue-group";
@@ -1206,9 +1218,13 @@ export const uiMethods = {
         const status = item.querySelector(".mageforge-toolbar-menu-status");
         const count = parseInt(status?.textContent || "0", 10) || 0;
         if (count > 0) {
-          if (status.classList.contains("mageforge-toolbar-menu-status--error")) {
+          if (
+            status.classList.contains("mageforge-toolbar-menu-status--error")
+          ) {
             errors = count;
-          } else if (status.classList.contains("mageforge-toolbar-menu-status--warning")) {
+          } else if (
+            status.classList.contains("mageforge-toolbar-menu-status--warning")
+          ) {
             warnings = count;
           }
         }
@@ -1359,7 +1375,8 @@ export const uiMethods = {
       ".mageforge-health-gauge-progress",
     );
     const needle = this.menu.querySelector(".mageforge-health-gauge-needle");
-    if (progress) progress.setAttribute("stroke-dasharray", `0 ${GAUGE_ARC_LENGTH}`);
+    if (progress)
+      progress.setAttribute("stroke-dasharray", `0 ${GAUGE_ARC_LENGTH}`);
     if (needle) needle.setAttribute("opacity", "0");
     this.menu
       .querySelectorAll(".mageforge-toolbar-health-score-number")
@@ -1374,12 +1391,10 @@ export const uiMethods = {
     });
 
     // Reset dashboard category badges
-    this.menu
-      .querySelectorAll("[data-dashboard-group-score]")
-      .forEach((el) => {
-        el.textContent = "--";
-        el.classList.remove("mageforge-dashboard-category-score--active");
-      });
+    this.menu.querySelectorAll("[data-dashboard-group-score]").forEach((el) => {
+      el.textContent = "--";
+      el.classList.remove("mageforge-dashboard-category-score--active");
+    });
 
     // Clear dashboard issues list
     if (this.dashboardIssuesEl) this.dashboardIssuesEl.innerHTML = "";

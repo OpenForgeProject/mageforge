@@ -54,9 +54,7 @@ export const auditMethods = {
     let total = 0;
     let max = 0;
     auditList.forEach((audit) => {
-      const item = this.menu?.querySelector(
-        `[data-audit-key="${audit.key}"]`,
-      );
+      const item = this.menu?.querySelector(`[data-audit-key="${audit.key}"]`);
       if (!item) return;
       max += 100;
       const status = item.querySelector(".mageforge-toolbar-menu-status");
@@ -97,7 +95,9 @@ export const auditMethods = {
       });
 
       // Allow async DOM mutations to settle
-      await new Promise((resolve) => setTimeout(resolve, AUDIT_SETTLE_DELAY_MS));
+      await new Promise((resolve) =>
+        setTimeout(resolve, AUDIT_SETTLE_DELAY_MS),
+      );
 
       this.updateHealthScore(this._calcScore(audits));
 
@@ -149,7 +149,9 @@ export const auditMethods = {
       });
 
       // Allow async DOM mutations to settle
-      await new Promise((resolve) => setTimeout(resolve, AUDIT_SETTLE_DELAY_MS));
+      await new Promise((resolve) =>
+        setTimeout(resolve, AUDIT_SETTLE_DELAY_MS),
+      );
 
       this.updateGroupScore(groupKey, this._calcScore(groupAudits));
       this.updateHomeSummary();
