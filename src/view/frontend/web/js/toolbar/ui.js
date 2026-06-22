@@ -193,7 +193,7 @@ export const uiMethods = {
     this.footerActionBar.className = "mageforge-nav-action-bar";
     nav.appendChild(this.footerActionBar);
 
-    nav.appendChild(this._buildNavTab("home", ICON_HOME, "Home", true));
+    nav.appendChild(this._buildNavTab("home", ICON_HOME, "Dashboard", true));
 
     this.getAuditGroups().forEach((group) => {
       nav.appendChild(
