@@ -13,10 +13,11 @@
   padding-top: 6px;
 }
 
-/* ── Footer action bar (dynamic run/reset buttons for current tab) ─── */
+/* ── Nav action bar (run/reset buttons at the bottom of the tab nav) ── */
 
-.mageforge-footer-action-bar {
-  padding: 6px 12px 2px;
+.mageforge-nav-action-bar {
+  border-top: 1px solid var(--mageforge-border-color);
+  padding: 8px 8px 4px;
 }
 
 .mageforge-footer-btn-row {
@@ -24,4 +25,40 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+}
+
+.mageforge-nav-action-bar .mageforge-footer-btn-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* Compact button styles when rendered inside the narrow nav sidebar */
+
+.mageforge-nav-action-bar .mageforge-group-run-btn {
+  font-size: 11px;
+  padding: 8px 8px;
+  letter-spacing: 0.02em;
+  white-space: normal;
+  line-height: 1.3;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.mageforge-nav-action-bar .mageforge-group-reset-btn {
+  width: auto;
+  height: auto;
+  padding: 8px 10px;
+  gap: 6px;
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  justify-content: flex-start;
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass);
+  border-color: var(--mageforge-border-glass);
 }

@@ -6,7 +6,7 @@
  *   _buildMenu()              – Full menu popup container
  *     _buildMenuHeader()      – Sticky title bar (logo + name + close button)
  *     _buildTabLayout()       – Two-column tab container (nav | content)
- *       _buildTabNav()        – Left-side navigation buttons
+ *       _buildTabNav()        – Left-side navigation buttons + action bar at bottom
  *       _buildNavTab()        – Single nav tab button
  *       _buildTabPanels()     – All content panels
  *         _buildPanel()       – Panel shell (role=tabpanel)
@@ -14,7 +14,7 @@
  *         _buildScoreWidget() – Circular score ring (panel headers)
  *         _buildHomePanel()   – Overview panel with half-arc gauge
  *         _buildSettingsPanel() – Settings placeholder
- *     _buildMenuFooter()      – Run All Tests + Reset + credit
+ *     _buildMenuFooter()      – Credit line only (action bar is in nav)
  *   _buildBurgerButton()      – Persistent trigger button
  *
  *   switchTab()               – Activate a tab and show its panel
@@ -187,6 +187,12 @@ export const uiMethods = {
     nav.setAttribute("role", "tablist");
     nav.setAttribute("aria-label", "Audit categories");
 
+    // Action bar pinned to the visual bottom of the nav.
+    // column-reverse means the first DOM child appears at the visual bottom.
+    this.footerActionBar = document.createElement("div");
+    this.footerActionBar.className = "mageforge-nav-action-bar";
+    nav.appendChild(this.footerActionBar);
+
     nav.appendChild(this._buildNavTab("home", ICON_HOME, "Home", true));
 
     this.getAuditGroups().forEach((group) => {
@@ -293,7 +299,7 @@ export const uiMethods = {
       this[`runGroupButton-${group.key}`] = groupBtn;
       groupBtn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        Run ${groupLabel} Checks
+        Run Check
       `;
       groupBtn.onclick = (e) => {
         e.stopPropagation();
@@ -308,7 +314,7 @@ export const uiMethods = {
       groupResetBtn.setAttribute("aria-label", `Reset ${groupLabel} audits`);
       groupResetBtn.title = `Reset ${groupLabel} audits`;
       groupResetBtn.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
       groupResetBtn.onclick = (e) => {
         e.stopPropagation();
         this.resetGroupAudits(group.key);
@@ -523,7 +529,7 @@ export const uiMethods = {
         "Reset score and deactivate all audits",
       );
       this.resetButton.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
       this.resetButton.onclick = (e) => {
         e.stopPropagation();
         this.resetScore();
@@ -573,11 +579,6 @@ export const uiMethods = {
     const footer = document.createElement("div");
     footer.className = "mageforge-toolbar-menu-footer";
 
-    // ── Dynamic action bar (buttons for current tab) ─────────────────────
-    this.footerActionBar = document.createElement("div");
-    this.footerActionBar.className = "mageforge-footer-action-bar";
-    footer.appendChild(this.footerActionBar);
-
     // ── Credit line ─────────────────────────────────────────────────────
     const credit = document.createElement("div");
     credit.className = "mageforge-toolbar-menu-credit";
@@ -585,7 +586,8 @@ export const uiMethods = {
       'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
     footer.appendChild(credit);
 
-    // Populate for the initially active tab (home)
+    // Populate nav action bar for the initially active tab (home).
+    // footerActionBar was already created in _buildTabNav().
     this._updateFooterActions("home");
 
     return footer;
