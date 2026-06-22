@@ -319,6 +319,68 @@
   color: var(--category-color, var(--mageforge-color-white));
 }
 
+/* ── Dashboard issues list ── */
+
+.mageforge-dashboard-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 12px 0;
+}
+
+.mageforge-dashboard-issues-heading {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+  margin: 4px 0 4px;
+}
+
+.mageforge-dashboard-issue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mageforge-dashboard-issue--error {
+  border-left: 2px solid var(--mageforge-color-red);
+}
+
+.mageforge-dashboard-issue--warning {
+  border-left: 2px solid var(--mageforge-color-amber);
+}
+
+.mageforge-dashboard-issue-count {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mageforge-dashboard-issue--error .mageforge-dashboard-issue-count {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-dashboard-issue--warning .mageforge-dashboard-issue-count {
+  color: var(--mageforge-color-amber);
+}
+
+.mageforge-dashboard-issue-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  color: var(--mageforge-color-slate-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ============================================================================
    Tab Panel
    ========================================================================== */

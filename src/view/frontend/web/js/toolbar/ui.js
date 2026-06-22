@@ -630,6 +630,11 @@ export const uiMethods = {
       });
       panel.appendChild(categories);
 
+      // Issues list – populated by updateDashboardIssues()
+      this.dashboardIssuesEl = document.createElement("div");
+      this.dashboardIssuesEl.className = "mageforge-dashboard-issues";
+      panel.appendChild(this.dashboardIssuesEl);
+
       panel.appendChild(
         Object.assign(document.createElement("p"), {
           className: "mageforge-home-hint",
@@ -953,6 +958,48 @@ export const uiMethods = {
   updateToggleAllButton() {},
 
   /**
+   * Rebuild the compact issues list on the Dashboard panel.
+   */
+  updateDashboardIssues() {
+    if (!this.dashboardIssuesEl) return;
+
+    /** @type {Array<{label: string, count: number, severity: string}>} */
+    const rows = [];
+    this.menu?.querySelectorAll("[data-audit-key]").forEach((item) => {
+      const errors = parseInt(item.dataset.findingErrors || "0", 10);
+      const warnings = parseInt(item.dataset.findingWarnings || "0", 10);
+      if (!errors && !warnings) return;
+      const label =
+        item.querySelector(".mageforge-toolbar-menu-label")?.textContent ?? "";
+      if (errors) rows.push({ label, count: errors, severity: "error" });
+      if (warnings) rows.push({ label, count: warnings, severity: "warning" });
+    });
+
+    this.dashboardIssuesEl.innerHTML = "";
+
+    if (!rows.length) return;
+
+    // Errors first, then warnings, each group sorted by count desc
+    rows.sort((a, b) => {
+      if (a.severity !== b.severity)
+        return a.severity === "error" ? -1 : 1;
+      return b.count - a.count;
+    });
+
+    const heading = document.createElement("p");
+    heading.className = "mageforge-dashboard-issues-heading";
+    heading.textContent = "Issues found";
+    this.dashboardIssuesEl.appendChild(heading);
+
+    rows.forEach(({ label, count, severity }) => {
+      const row = document.createElement("div");
+      row.className = `mageforge-dashboard-issue mageforge-dashboard-issue--${severity}`;
+      row.innerHTML = `<span class="mageforge-dashboard-issue-count">${count}</span><span class="mageforge-dashboard-issue-label">${label}</span>`;
+      this.dashboardIssuesEl.appendChild(row);
+    });
+  },
+
+  /**
    * Update error/warning badges on the left navigation tabs.
    * Counts actual findings (affected elements), not just audits.
    */
@@ -991,6 +1038,8 @@ export const uiMethods = {
         warningBadge.style.display = "none";
       }
     });
+
+    this.updateDashboardIssues();
 
     // Update badges for each group tab with findings
     Object.entries(groupCounts).forEach(([groupKey, counts]) => {
@@ -1134,6 +1183,9 @@ export const uiMethods = {
         el.textContent = "--";
         el.classList.remove("mageforge-dashboard-category-score--active");
       });
+
+    // Clear dashboard issues list
+    if (this.dashboardIssuesEl) this.dashboardIssuesEl.innerHTML = "";
 
     // Reset all navigation badges
     this.updateHomeSummary();
