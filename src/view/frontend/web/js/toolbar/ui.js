@@ -341,6 +341,21 @@ export const uiMethods = {
           ),
         );
       });
+
+      if (items.length < 6) {
+        const featureBtn = document.createElement("a");
+        featureBtn.href =
+          "https://github.com/OpenForgeProject/mageforge/issues/new?labels=enhancement&template=feature_request.yml&title=%5BAudit+Request%5D+";
+        featureBtn.target = "_blank";
+        featureBtn.rel = "noopener noreferrer";
+        featureBtn.className = "mageforge-feature-request-btn";
+        featureBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+          Request an Audit
+        `;
+        body.appendChild(featureBtn);
+      }
+
       panel.appendChild(body);
       wrapper.appendChild(panel);
     });
