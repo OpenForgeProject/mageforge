@@ -60,6 +60,11 @@
   transform: none;
 }
 
+.mageforge-toolbar-menu-run-all:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
 .mageforge-toolbar-menu-reset {
   display: flex;
   align-items: center;
@@ -81,6 +86,11 @@
   color: var(--mageforge-color-white);
   background: var(--mageforge-surface-glass-hover);
   border-color: var(--mageforge-border-glass);
+}
+
+.mageforge-toolbar-menu-reset:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
 }
 
 /* ── Home panel: Check Health Score button ─────────────────────────── */
@@ -129,6 +139,11 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.mageforge-home-check-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
 }
 
 /* ── Home panel: Check + Reset button row ──────────────────────────── */
@@ -191,6 +206,11 @@
   color: var(--mageforge-color-white);
   border-color: var(--mageforge-border-glass);
   background: var(--mageforge-surface-glass-hover);
+}
+
+.mageforge-feature-request-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
 }
 
 /* ── Home panel: Error / Warning summary badges ─────────────────────── */
@@ -290,6 +310,11 @@
   transform: none;
 }
 
+.mageforge-group-run-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
 /* ── Group panels: Run + Reset button row ──────────────────────────── */
 
 .mageforge-group-btn-row {
@@ -320,4 +345,16 @@
   color: var(--mageforge-color-white);
   background: var(--mageforge-surface-glass-hover);
   border-color: var(--mageforge-border-glass);
+}
+
+.mageforge-group-reset-btn:disabled,
+.mageforge-group-reset-btn[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.mageforge-group-reset-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
 }

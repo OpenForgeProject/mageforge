@@ -118,6 +118,11 @@
   background: var(--mageforge-surface-glass-hover);
 }
 
+.mageforge-toolbar-menu-close:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
 /* ============================================================================
    Menu Items
    ========================================================================== */
@@ -143,6 +148,11 @@
 
 .mageforge-toolbar-menu-item:hover {
   background: var(--mageforge-surface-glass-hover);
+}
+
+.mageforge-toolbar-menu-item:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
 }
 
 .mageforge-toolbar-menu-item.mageforge-active {

@@ -68,6 +68,11 @@
   background: var(--mageforge-surface-glass-hover);
 }
 
+.mageforge-toolbar-tab-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
 /* Active state – per-group colour accent */
 
 .mageforge-toolbar-tab-btn[data-tab="home"].mageforge-tab-active {
@@ -192,7 +197,6 @@
   max-height: 600px;
   padding: 8px;
   gap: 8px;
-  height: 50%;
 }
 
 .mageforge-tab-panel-body::-webkit-scrollbar {
@@ -218,50 +222,6 @@
   scrollbar-width: thin;
   scrollbar-color: var(--mageforge-scrollbar-thumb-bg)
     var(--mageforge-scrollbar-bg);
-}
-
-/* ── Home panel ── */
-
-.mageforge-home-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0 4px;
-}
-
-.mageforge-home-hint {
-  font-family: var(--mageforge-font-family);
-  font-size: 11px;
-  color: var(--mageforge-color-slate-400);
-  text-align: center;
-  padding: 6px 16px 0;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.mageforge-home-hint strong {
-  color: var(--mageforge-color-white);
-}
-
-/* ── Home panel ── */
-
-.mageforge-home-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0 4px;
-}
-
-.mageforge-home-hint {
-  font-family: var(--mageforge-font-family);
-  font-size: 11px;
-  color: var(--mageforge-color-slate-400);
-  text-align: center;
-  padding: 6px 16px 0;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.mageforge-home-hint strong {
-  color: var(--mageforge-color-white);
 }
 
 /* ── Home panel ── */
