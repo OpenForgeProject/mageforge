@@ -91,6 +91,39 @@ export const auditMethods = {
       const score =
         maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
       this.updateHealthScore(score);
+
+      // Update per-group scores on the dashboard
+      const groupScores = {};
+      audits.forEach((audit) => {
+        if (!audit.group) return;
+        const item = this.menu?.querySelector(
+          `[data-audit-key="${audit.key}"]`,
+        );
+        if (!item) return;
+        if (!groupScores[audit.group]) {
+          groupScores[audit.group] = { total: 0, max: 0 };
+        }
+        groupScores[audit.group].max += 100;
+        const status = item.querySelector(".mageforge-toolbar-menu-status");
+        if (!status || !status.textContent.trim()) {
+          groupScores[audit.group].total += 100;
+        } else if (
+          status.classList.contains("mageforge-toolbar-menu-status--success")
+        ) {
+          groupScores[audit.group].total += 100;
+        } else if (
+          status.classList.contains("mageforge-toolbar-menu-status--warning")
+        ) {
+          groupScores[audit.group].total += 50;
+        }
+      });
+      Object.entries(groupScores).forEach(([groupKey, { total, max }]) => {
+        this.updateGroupScore(
+          groupKey,
+          max > 0 ? Math.round((total / max) * 100) : 100,
+        );
+      });
+
       this.updateHomeSummary();
     } finally {
       this._batchRunning = false;

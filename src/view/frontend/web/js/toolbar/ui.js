@@ -612,6 +612,24 @@ export const uiMethods = {
       btnRow.appendChild(this.resetButton);
       // btnRow held as ref; rendered in footer action bar via _updateFooterActions
 
+      // Category score breakdown
+      const categories = document.createElement("div");
+      categories.className = "mageforge-dashboard-categories";
+      this.getAuditGroups().forEach((group) => {
+        const card = document.createElement("div");
+        card.className = "mageforge-dashboard-category";
+        card.style.setProperty(
+          "--category-color",
+          `var(--mageforge-group-color-${group.key})`,
+        );
+        card.innerHTML = `
+          <span class="mageforge-dashboard-category-label">${group.label}</span>
+          <span class="mageforge-dashboard-category-score" data-dashboard-group-score="${group.key}">--</span>
+        `;
+        categories.appendChild(card);
+      });
+      panel.appendChild(categories);
+
       panel.appendChild(
         Object.assign(document.createElement("p"), {
           className: "mageforge-home-hint",
@@ -1068,6 +1086,18 @@ export const uiMethods = {
     if (number) {
       number.textContent = score;
     }
+
+    // Also update the dashboard category badge
+    const dashboardScore = this.menu.querySelector(
+      `[data-dashboard-group-score="${groupKey}"]`,
+    );
+    if (dashboardScore) {
+      dashboardScore.textContent = score;
+      dashboardScore.classList.toggle(
+        "mageforge-dashboard-category-score--active",
+        score > 0,
+      );
+    }
   },
 
   /**
@@ -1096,6 +1126,14 @@ export const uiMethods = {
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
       el.textContent = "--";
     });
+
+    // Reset dashboard category badges
+    this.menu
+      .querySelectorAll("[data-dashboard-group-score]")
+      .forEach((el) => {
+        el.textContent = "--";
+        el.classList.remove("mageforge-dashboard-category-score--active");
+      });
 
     // Reset all navigation badges
     this.updateHomeSummary();

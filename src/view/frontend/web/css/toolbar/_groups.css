@@ -280,6 +280,45 @@
   color: var(--mageforge-color-white);
 }
 
+/* ── Dashboard category score breakdown ── */
+
+.mageforge-dashboard-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 12px 4px;
+}
+
+.mageforge-dashboard-category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--category-color, var(--mageforge-color-slate-400));
+}
+
+.mageforge-dashboard-category-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mageforge-color-slate-400);
+  letter-spacing: 0.03em;
+}
+
+.mageforge-dashboard-category-score {
+  font-family: var(--mageforge-font-family);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mageforge-color-slate-400);
+  transition: color 0.3s ease;
+}
+
+.mageforge-dashboard-category-score--active {
+  color: var(--category-color, var(--mageforge-color-white));
+}
+
 /* ============================================================================
    Tab Panel
    ========================================================================== */
