@@ -40,6 +40,7 @@ const GROUP_ICONS = {
     '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
   performance:
     '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',
+  seo: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
 };
 
 // ── Module-level helpers ───────────────────────────────────────────────────
@@ -973,8 +974,22 @@ export const uiMethods = {
     /** @type {Array<{label: string, count: number, severity: string}>} */
     const rows = [];
     this.menu?.querySelectorAll("[data-audit-key]").forEach((item) => {
-      const errors = parseInt(item.dataset.findingErrors || "0", 10);
-      const warnings = parseInt(item.dataset.findingWarnings || "0", 10);
+      let errors = parseInt(item.dataset.findingErrors || "0", 10);
+      let warnings = parseInt(item.dataset.findingWarnings || "0", 10);
+
+      // Badge-only audits: fall back to the status badge (same logic as updateHomeSummary)
+      if (!errors && !warnings) {
+        const status = item.querySelector(".mageforge-toolbar-menu-status");
+        const count = parseInt(status?.textContent || "0", 10) || 0;
+        if (count > 0) {
+          if (status.classList.contains("mageforge-toolbar-menu-status--error")) {
+            errors = count;
+          } else if (status.classList.contains("mageforge-toolbar-menu-status--warning")) {
+            warnings = count;
+          }
+        }
+      }
+
       if (!errors && !warnings) return;
       const label =
         item.querySelector(".mageforge-toolbar-menu-label")?.textContent ?? "";
@@ -1016,8 +1031,22 @@ export const uiMethods = {
     // Count actual findings (elements) per group
     const groupCounts = {};
     this.menu.querySelectorAll("[data-audit-key]").forEach((item) => {
-      const errors = parseInt(item.dataset.findingErrors || "0", 10);
-      const warnings = parseInt(item.dataset.findingWarnings || "0", 10);
+      let errors = parseInt(item.dataset.findingErrors || "0", 10);
+      let warnings = parseInt(item.dataset.findingWarnings || "0", 10);
+
+      // Badge-only audits (page-level checks) never call setAuditFindings, so
+      // findingErrors/findingWarnings stay at 0. Fall back to the status badge.
+      if (!errors && !warnings) {
+        const status = item.querySelector(".mageforge-toolbar-menu-status");
+        const count = parseInt(status?.textContent || "0", 10) || 0;
+        if (count > 0) {
+          if (status.classList.contains("mageforge-toolbar-menu-status--error")) {
+            errors = count;
+          } else if (status.classList.contains("mageforge-toolbar-menu-status--warning")) {
+            warnings = count;
+          }
+        }
+      }
 
       if (!errors && !warnings) return;
 

@@ -245,6 +245,16 @@
   background: var(--mageforge-color-green);
 }
 
+.mageforge-toolbar-menu-item.mageforge-active.mageforge-active--error
+  .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-color-red);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active.mageforge-active--warning
+  .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-color-amber);
+}
+
 .mageforge-toolbar-menu-item.mageforge-active
   .mageforge-toolbar-menu-toggle::after {
   transform: translateX(12px);
@@ -305,15 +315,18 @@
 
 .mageforge-toolbar-menu-status--success {
   color: var(--mageforge-color-green);
-  background: transparent;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .mageforge-toolbar-menu-status--error {
   color: var(--mageforge-color-red);
-  background: transparent;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .mageforge-toolbar-menu-status--warning {
   color: var(--mageforge-color-amber);
-  background: transparent;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }

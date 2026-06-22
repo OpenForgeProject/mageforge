@@ -28,9 +28,18 @@ import emptyInteractive from "./empty-interactive.js";
 import imagesWithoutAlt from "./images-without-alt.js";
 import imagesWithoutDimensions from "./images-without-dimensions.js";
 import imagesWithoutLazyLoad from "./images-without-lazy-load.js";
+import inlineEventHandlers from "./inline-event-handlers.js";
 import inputsWithoutLabel from "./inputs-without-label.js";
 import lowContrastText from "./low-contrast-text.js";
 import multipleH1 from "./multiple-h1.js";
+import nestedInteractive from "./nested-interactive.js";
+import renderBlockingScripts from "./render-blocking-scripts.js";
+import seoHeadingHierarchy from "./seo-heading-hierarchy.js";
+import seoMissingCanonical from "./seo-missing-canonical.js";
+import seoMissingJsonLd from "./seo-missing-json-ld.js";
+import seoMissingLang from "./seo-missing-lang.js";
+import seoMissingMetaDescription from "./seo-missing-meta-description.js";
+import seoMissingTitle from "./seo-missing-title.js";
 import smallTouchTargets from "./small-touch-targets.js";
 import tabOrder from "./tab-order.js";
 import unsafeBlankTarget from "./unsafe-blank-target.js";
@@ -40,6 +49,7 @@ export const auditGroups = [
   { key: "html-quality", label: "HTML Quality" },
   { key: "wcag", label: "Accessibility" },
   { key: "performance", label: "Performance" },
+  { key: "seo", label: "SEO" },
 ];
 
 /** @type {AuditDefinition[]} */
@@ -54,6 +64,15 @@ export const audits = [
   { ...smallTouchTargets, group: "wcag" },
   { ...duplicateIds, group: "html-quality" },
   { ...unsafeBlankTarget, group: "html-quality" },
+  { ...inlineEventHandlers, group: "html-quality" },
+  { ...nestedInteractive, group: "html-quality" },
   { ...imagesWithoutDimensions, group: "performance" },
   { ...imagesWithoutLazyLoad, group: "performance" },
+  { ...renderBlockingScripts, group: "performance" },
+  { ...seoMissingTitle, group: "seo" },
+  { ...seoMissingMetaDescription, group: "seo" },
+  { ...seoMissingCanonical, group: "seo" },
+  { ...seoMissingLang, group: "seo" },
+  { ...seoHeadingHierarchy, group: "seo" },
+  { ...seoMissingJsonLd, group: "seo" },
 ];
