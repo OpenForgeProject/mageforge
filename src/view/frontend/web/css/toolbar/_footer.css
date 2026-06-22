@@ -9,6 +9,19 @@
 
 .mageforge-toolbar-menu-footer {
   border-top: 1px solid var(--mageforge-border-color);
-  margin-top: auto; /* pin to bottom of flex container */ /* pin to bottom of flex container */
+  margin-top: auto; /* pin to bottom of flex container */
   padding-top: 6px;
+}
+
+/* ── Footer action bar (dynamic run/reset buttons for current tab) ─── */
+
+.mageforge-footer-action-bar {
+  padding: 6px 12px 2px;
+}
+
+.mageforge-footer-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }

@@ -33,6 +33,7 @@
     0 6px 10px var(--mageforge-shadow-sm);
   padding: 0;
   min-width: 600px;
+  min-height: 700px;
   max-height: min(75vh, 1000px);
   overflow: hidden;
   font-family: var(--mageforge-font-family);

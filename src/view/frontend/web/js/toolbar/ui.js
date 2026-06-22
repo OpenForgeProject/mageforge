@@ -281,18 +281,16 @@ export const uiMethods = {
       const body = document.createElement("div");
       body.className = "mageforge-tab-panel-body";
 
-      // Group-specific run button row at the top of the panel body
-      const groupBtnRow = document.createElement("div");
-      groupBtnRow.className = "mageforge-group-btn-row";
+      const groupLabel =
+        this.getAuditGroups().find((g) => g.key === group.key)?.label ??
+        group.key;
 
+      // Build run button – stored as ref, rendered in footer action bar
       const groupBtn = document.createElement("button");
       groupBtn.type = "button";
       groupBtn.className = "mageforge-group-run-btn";
       groupBtn.dataset.group = group.key;
       this[`runGroupButton-${group.key}`] = groupBtn;
-      const groupLabel =
-        this.getAuditGroups().find((g) => g.key === group.key)?.label ??
-        group.key;
       groupBtn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         Run ${groupLabel} Checks
@@ -301,9 +299,8 @@ export const uiMethods = {
         e.stopPropagation();
         this.runGroupAuditsForScore(group.key);
       };
-      groupBtnRow.appendChild(groupBtn);
 
-      // Reset button (hidden by default, shown after run)
+      // Build reset button – stored as ref, rendered in footer action bar
       const groupResetBtn = document.createElement("div");
       groupResetBtn.setAttribute("role", "button");
       groupResetBtn.setAttribute("tabindex", "0");
@@ -330,12 +327,7 @@ export const uiMethods = {
           this.resetGroupAudits(group.key);
         }
       };
-      groupBtnRow.appendChild(groupResetBtn);
-
-      // Store reference for showing/hiding
       this[`groupResetButton-${group.key}`] = groupResetBtn;
-
-      body.appendChild(groupBtnRow);
 
       items.forEach((audit) => {
         body.appendChild(
@@ -494,7 +486,7 @@ export const uiMethods = {
 
       this.runAllButton = document.createElement("button");
       this.runAllButton.type = "button";
-      this.runAllButton.className = "mageforge-home-check-btn";
+      this.runAllButton.className = "mageforge-group-run-btn";
       this.runAllButton.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         Perform Full Check
@@ -509,7 +501,7 @@ export const uiMethods = {
       this.resetButton = document.createElement("div");
       this.resetButton.setAttribute("role", "button");
       this.resetButton.setAttribute("tabindex", "0");
-      this.resetButton.className = "mageforge-home-reset-btn";
+      this.resetButton.className = "mageforge-group-reset-btn";
       this.resetButton.title = "Reset score and deactivate all audits";
       this.resetButton.setAttribute(
         "aria-label",
@@ -538,8 +530,7 @@ export const uiMethods = {
         }
       };
       btnRow.appendChild(this.resetButton);
-
-      panel.appendChild(btnRow);
+      // btnRow held as ref; rendered in footer action bar via _updateFooterActions
 
       panel.appendChild(
         Object.assign(document.createElement("p"), {
@@ -567,6 +558,11 @@ export const uiMethods = {
     const footer = document.createElement("div");
     footer.className = "mageforge-toolbar-menu-footer";
 
+    // ── Dynamic action bar (buttons for current tab) ─────────────────────
+    this.footerActionBar = document.createElement("div");
+    this.footerActionBar.className = "mageforge-footer-action-bar";
+    footer.appendChild(this.footerActionBar);
+
     // ── Credit line ─────────────────────────────────────────────────────
     const credit = document.createElement("div");
     credit.className = "mageforge-toolbar-menu-credit";
@@ -574,7 +570,37 @@ export const uiMethods = {
       'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
     footer.appendChild(credit);
 
+    // Populate for the initially active tab (home)
+    this._updateFooterActions("home");
+
     return footer;
+  },
+
+  /**
+   * Populate the footer action bar with the run/reset buttons for the given tab.
+   *
+   * @param {string} key  – Tab key ("home" or a group key like "wcag")
+   */
+  _updateFooterActions(key) {
+    if (!this.footerActionBar) return;
+    this.footerActionBar.innerHTML = "";
+
+    const row = document.createElement("div");
+    row.className = "mageforge-footer-btn-row";
+
+    if (key === "home") {
+      if (!this.runAllButton) return;
+      row.appendChild(this.runAllButton);
+      row.appendChild(this.resetButton);
+    } else {
+      const runBtn = this[`runGroupButton-${key}`];
+      const resetBtn = this[`groupResetButton-${key}`];
+      if (!runBtn) return;
+      row.appendChild(runBtn);
+      if (resetBtn) row.appendChild(resetBtn);
+    }
+
+    this.footerActionBar.appendChild(row);
   },
 
   // ────────────────────────────────────────────────────────────────────────
@@ -651,6 +677,8 @@ export const uiMethods = {
           ? panel.removeAttribute("hidden")
           : panel.setAttribute("hidden", "");
       });
+
+    this._updateFooterActions(key);
   },
 
   // ────────────────────────────────────────────────────────────────────────
