@@ -4,6 +4,8 @@
 
 import { audits, auditGroups } from "./audits/index.js";
 
+const AUDIT_SETTLE_DELAY_MS = 200;
+
 export const auditMethods = {
   /**
    * Toggles an audit on/off and updates the menu item state.
@@ -43,6 +45,37 @@ export const auditMethods = {
   },
 
   /**
+   * Calculate a 0–100 score for the given audit list based on current DOM state.
+   *
+   * @param {import('./audits/index.js').AuditDefinition[]} auditList
+   * @returns {number}
+   */
+  _calcScore(auditList) {
+    let total = 0;
+    let max = 0;
+    auditList.forEach((audit) => {
+      const item = this.menu?.querySelector(
+        `[data-audit-key="${audit.key}"]`,
+      );
+      if (!item) return;
+      max += 100;
+      const status = item.querySelector(".mageforge-toolbar-menu-status");
+      if (!status || !status.textContent.trim()) {
+        total += 100;
+      } else if (
+        status.classList.contains("mageforge-toolbar-menu-status--success")
+      ) {
+        total += 100;
+      } else if (
+        status.classList.contains("mageforge-toolbar-menu-status--warning")
+      ) {
+        total += 50;
+      }
+    });
+    return max > 0 ? Math.round((total / max) * 100) : 100;
+  },
+
+  /**
    * Run every audit, wait for the DOM to settle, then compute and display
    * an overall health score (0–100) in the footer gauge.
    */
@@ -64,65 +97,17 @@ export const auditMethods = {
       });
 
       // Allow async DOM mutations to settle
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, AUDIT_SETTLE_DELAY_MS));
 
-      let totalPoints = 0;
-      let maxPoints = 0;
-      audits.forEach((audit) => {
-        const item = this.menu?.querySelector(
-          `[data-audit-key="${audit.key}"]`,
-        );
-        if (!item) return;
-        maxPoints += 100;
-        const status = item.querySelector(".mageforge-toolbar-menu-status");
-        if (!status || !status.textContent.trim()) {
-          totalPoints += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--success")
-        ) {
-          totalPoints += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--warning")
-        ) {
-          totalPoints += 50;
-        }
-        // error = 0 points (default)
-      });
-
-      const score =
-        maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
-      this.updateHealthScore(score);
+      this.updateHealthScore(this._calcScore(audits));
 
       // Update per-group scores on the dashboard
-      const groupScores = {};
-      audits.forEach((audit) => {
-        if (!audit.group) return;
-        const item = this.menu?.querySelector(
-          `[data-audit-key="${audit.key}"]`,
-        );
-        if (!item) return;
-        if (!groupScores[audit.group]) {
-          groupScores[audit.group] = { total: 0, max: 0 };
-        }
-        groupScores[audit.group].max += 100;
-        const status = item.querySelector(".mageforge-toolbar-menu-status");
-        if (!status || !status.textContent.trim()) {
-          groupScores[audit.group].total += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--success")
-        ) {
-          groupScores[audit.group].total += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--warning")
-        ) {
-          groupScores[audit.group].total += 50;
-        }
+      const grouped = {};
+      audits.forEach((a) => {
+        if (a.group) (grouped[a.group] = grouped[a.group] ?? []).push(a);
       });
-      Object.entries(groupScores).forEach(([groupKey, { total, max }]) => {
-        this.updateGroupScore(
-          groupKey,
-          max > 0 ? Math.round((total / max) * 100) : 100,
-        );
+      Object.entries(grouped).forEach(([groupKey, groupAudits]) => {
+        this.updateGroupScore(groupKey, this._calcScore(groupAudits));
       });
 
       this.updateHomeSummary();
@@ -164,33 +149,9 @@ export const auditMethods = {
       });
 
       // Allow async DOM mutations to settle
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, AUDIT_SETTLE_DELAY_MS));
 
-      let totalPoints = 0;
-      let maxPoints = 0;
-      groupAudits.forEach((audit) => {
-        const item = this.menu?.querySelector(
-          `[data-audit-key="${audit.key}"]`,
-        );
-        if (!item) return;
-        maxPoints += 100;
-        const status = item.querySelector(".mageforge-toolbar-menu-status");
-        if (!status || !status.textContent.trim()) {
-          totalPoints += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--success")
-        ) {
-          totalPoints += 100;
-        } else if (
-          status.classList.contains("mageforge-toolbar-menu-status--warning")
-        ) {
-          totalPoints += 50;
-        }
-      });
-
-      const score =
-        maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 100;
-      this.updateGroupScore(groupKey, score);
+      this.updateGroupScore(groupKey, this._calcScore(groupAudits));
       this.updateHomeSummary();
     } finally {
       this._batchRunning = false;

@@ -44,6 +44,9 @@ const GROUP_ICONS = {
 
 // ── Module-level helpers ───────────────────────────────────────────────────
 
+const GAUGE_ARC_LENGTH = 157.08; // π × r(50) — half-arc stroke length
+const SCORE_RING_CIRCUMFERENCE = 113.1; // 2π × r(18) — ring stroke length
+
 function createLogoSvg(fill) {
   return `<svg width="24" height="27" viewBox="0 0 352 399" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="${LOGO_SVG_PATH}" fill="${fill}"></path></svg>`;
 }
@@ -528,7 +531,6 @@ export const uiMethods = {
     panel.className = "mageforge-home-panel";
 
     if (showHealthScore) {
-      const ARC_LENGTH = 157.08;
       const gradId = `mf-gauge-${Math.random().toString(36).slice(2, 8)}`;
       panel.innerHTML = `
         <div class="mageforge-toolbar-health-wrapper">
@@ -544,7 +546,7 @@ export const uiMethods = {
                   fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"></path>
             <path d="M 10 65 A 50 50 0 0 1 110 65"
                   fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="0 ${ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
+                  stroke-dasharray="0 ${GAUGE_ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
             <line class="mageforge-health-gauge-needle"
                   x1="60" y1="65" x2="60" y2="20"
                   stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>
@@ -1079,8 +1081,6 @@ export const uiMethods = {
    */
   updateHealthScore(score) {
     if (!this.menu) return;
-    const ARC_LENGTH = 157.08;
-    const CIRCUMFERENCE = 113.1;
 
     // Half-arc gauge in the Home panel
     const progress = this.menu.querySelector(
@@ -1090,7 +1090,7 @@ export const uiMethods = {
     if (progress)
       progress.setAttribute(
         "stroke-dasharray",
-        `${((score / 100) * ARC_LENGTH).toFixed(2)} ${ARC_LENGTH}`,
+        `${((score / 100) * GAUGE_ARC_LENGTH).toFixed(2)} ${GAUGE_ARC_LENGTH}`,
       );
     if (needle) {
       const rad = (1 - score / 100) * Math.PI;
@@ -1108,7 +1108,7 @@ export const uiMethods = {
     this.menu.querySelectorAll(".mageforge-score-ring").forEach((ring) => {
       ring.setAttribute(
         "stroke-dasharray",
-        `${((score / 100) * CIRCUMFERENCE).toFixed(2)} ${CIRCUMFERENCE}`,
+        `${((score / 100) * SCORE_RING_CIRCUMFERENCE).toFixed(2)} ${SCORE_RING_CIRCUMFERENCE}`,
       );
     });
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
@@ -1124,7 +1124,6 @@ export const uiMethods = {
    */
   updateGroupScore(groupKey, score) {
     if (!this.menu) return;
-    const CIRCUMFERENCE = 113.1;
 
     const panel = this.menu.querySelector(`[data-panel="${groupKey}"]`);
     if (!panel) return;
@@ -1133,7 +1132,7 @@ export const uiMethods = {
     if (ring) {
       ring.setAttribute(
         "stroke-dasharray",
-        `${((score / 100) * CIRCUMFERENCE).toFixed(2)} ${CIRCUMFERENCE}`,
+        `${((score / 100) * SCORE_RING_CIRCUMFERENCE).toFixed(2)} ${SCORE_RING_CIRCUMFERENCE}`,
       );
     }
     const number = panel.querySelector(".mageforge-score-number");
@@ -1160,14 +1159,12 @@ export const uiMethods = {
   resetScore() {
     this.deactivateAllAudits();
     if (!this.menu) return;
-    const ARC_LENGTH = 157.08;
-    const CIRCUMFERENCE = 113.1;
 
     const progress = this.menu.querySelector(
       ".mageforge-health-gauge-progress",
     );
     const needle = this.menu.querySelector(".mageforge-health-gauge-needle");
-    if (progress) progress.setAttribute("stroke-dasharray", `0 ${ARC_LENGTH}`);
+    if (progress) progress.setAttribute("stroke-dasharray", `0 ${GAUGE_ARC_LENGTH}`);
     if (needle) needle.setAttribute("opacity", "0");
     this.menu
       .querySelectorAll(".mageforge-toolbar-health-score-number")
@@ -1175,7 +1172,7 @@ export const uiMethods = {
         el.textContent = "--";
       });
     this.menu.querySelectorAll(".mageforge-score-ring").forEach((ring) => {
-      ring.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`);
+      ring.setAttribute("stroke-dasharray", `0 ${SCORE_RING_CIRCUMFERENCE}`);
     });
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
       el.textContent = "--";
@@ -1209,6 +1206,7 @@ export const uiMethods = {
     this.menu.classList.add("mageforge-menu-open");
     this.burgerButton.classList.add("mageforge-active");
     this.burgerButton.setAttribute("aria-expanded", "true");
+    this._trapFocus();
   },
 
   closeMenu() {
@@ -1216,6 +1214,63 @@ export const uiMethods = {
     this.menu.classList.remove("mageforge-menu-open");
     this.burgerButton.classList.remove("mageforge-active");
     this.burgerButton.setAttribute("aria-expanded", "false");
+    this._releaseFocusTrap();
+    this.burgerButton?.focus();
+  },
+
+  /**
+   * Returns all currently focusable elements within the open menu.
+   *
+   * @returns {HTMLElement[]}
+   */
+  _getFocusableEls() {
+    return Array.from(
+      this.menu.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => !el.closest("[hidden]"));
+  },
+
+  /**
+   * Trap keyboard focus inside the menu and close on Escape.
+   */
+  _trapFocus() {
+    this._focusTrapHandler = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.closeMenu();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusable = this._getFocusableEls();
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    this.menu.addEventListener("keydown", this._focusTrapHandler);
+    const focusable = this._getFocusableEls();
+    if (focusable.length) focusable[0].focus();
+  },
+
+  /**
+   * Remove the focus trap listener and clean up.
+   */
+  _releaseFocusTrap() {
+    if (this._focusTrapHandler) {
+      this.menu?.removeEventListener("keydown", this._focusTrapHandler);
+      this._focusTrapHandler = null;
+    }
   },
 
   destroyToolbar() {
@@ -1223,6 +1278,7 @@ export const uiMethods = {
       document.removeEventListener("click", this._outsideClickHandler);
       this._outsideClickHandler = null;
     }
+    this._releaseFocusTrap();
     if (this.container?.parentNode)
       this.container.parentNode.removeChild(this.container);
     this.container = null;
