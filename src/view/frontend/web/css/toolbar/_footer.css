@@ -13,6 +13,70 @@
   padding-top: 6px;
 }
 
+/* ── Theme toggle ────────────────────────────────────────────────────────── */
+
+.mageforge-footer-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 4px 12px 4px;
+  gap: 8px;
+}
+
+.mageforge-footer-theme-label {
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mageforge-color-slate-400);
+}
+
+.mageforge-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.mageforge-theme-btn {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--mageforge-color-slate-400);
+  font-family: var(--mageforge-font-family);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.mageforge-theme-btn:hover {
+  color: var(--mageforge-color-white);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mageforge-theme-btn--active,
+.mageforge-theme-btn[aria-pressed="true"] {
+  background: var(--mageforge-color-blue);
+  color: var(--mageforge-color-white);
+}
+
+.mageforge-theme-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 1px;
+}
+
+.mageforge-theme-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ── Nav action bar (run/reset buttons at the bottom of the tab nav) ── */
 
 .mageforge-nav-action-bar {

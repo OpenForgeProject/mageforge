@@ -31,6 +31,7 @@
   --mageforge-color-red-alpha-35: rgba(239, 68, 68, 0.35);
   --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
   --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
+  --mageforge-color-blue-alpha-35: rgba(59, 130, 246, 0.35);
 
   /* Audit group colors */
   --mageforge-group-color-wcag: var(--mageforge-color-purple);

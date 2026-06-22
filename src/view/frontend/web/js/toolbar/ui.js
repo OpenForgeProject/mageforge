@@ -197,13 +197,13 @@ export const uiMethods = {
     this.footerActionBar.className = "mageforge-nav-action-bar";
     nav.appendChild(this.footerActionBar);
 
-    nav.appendChild(this._buildNavTab("home", ICON_HOME, "Dashboard", true));
-
     this.getAuditGroups().forEach((group) => {
       nav.appendChild(
         this._buildNavTab(group.key, GROUP_ICONS[group.key] ?? "", group.label),
       );
     });
+
+    nav.appendChild(this._buildNavTab("home", ICON_HOME, "Dashboard", true));
 
     return nav;
   },
@@ -367,9 +367,8 @@ export const uiMethods = {
       };
 
       // Build reset button – stored as ref, rendered in footer action bar
-      const groupResetBtn = document.createElement("div");
-      groupResetBtn.setAttribute("role", "button");
-      groupResetBtn.setAttribute("tabindex", "0");
+      const groupResetBtn = document.createElement("button");
+      groupResetBtn.type = "button";
       groupResetBtn.className = "mageforge-group-reset-btn";
       groupResetBtn.setAttribute("aria-label", `Reset ${groupLabel} audits`);
       groupResetBtn.title = `Reset ${groupLabel} audits`;
@@ -388,20 +387,6 @@ export const uiMethods = {
       groupResetBtn.onclick = (e) => {
         e.stopPropagation();
         handleGroupReset();
-      };
-      groupResetBtn.onkeydown = (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          e.stopPropagation();
-          handleGroupReset();
-        }
-        if (e.key === " ") e.preventDefault();
-      };
-      groupResetBtn.onkeyup = (e) => {
-        if (e.key === " ") {
-          e.stopPropagation();
-          handleGroupReset();
-        }
       };
       this[`groupResetButton-${group.key}`] = groupResetBtn;
 
@@ -426,7 +411,7 @@ export const uiMethods = {
         featureBtn.rel = "noopener noreferrer";
         featureBtn.className = "mageforge-feature-request-btn";
         featureBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7-7 7 7"></path></svg>
           Request an Audit
         `;
         body.appendChild(featureBtn);
@@ -500,8 +485,8 @@ export const uiMethods = {
    * @returns {HTMLDivElement}
    */
   _buildScoreWidget() {
-    const CIRCUMFERENCE = 113.1; // 2pi x r=18
-    const gradId = `mf-sg-${Math.random().toString(36).slice(2, 7)}`;
+    const CIRCUMFERENCE = 113.1; // 2π × r(18) — ring stroke length
+    const gradId = `mf-sg-${crypto.randomUUID().slice(0, 8)}`;
     const widget = document.createElement("div");
     widget.className = "mageforge-score-widget";
     widget.innerHTML = `
@@ -539,7 +524,7 @@ export const uiMethods = {
     panel.className = "mageforge-home-panel";
 
     if (showHealthScore) {
-      const gradId = `mf-gauge-${Math.random().toString(36).slice(2, 8)}`;
+      const gradId = `mf-gauge-${crypto.randomUUID().slice(0, 8)}`;
       panel.innerHTML = `
         <div class="mageforge-toolbar-health-wrapper">
           <svg viewBox="0 0 120 70" class="mageforge-toolbar-health-gauge" aria-hidden="true">
@@ -588,9 +573,8 @@ export const uiMethods = {
       btnRow.appendChild(this.runAllButton);
 
       // Reset button next to Perform Full Check
-      this.resetButton = document.createElement("div");
-      this.resetButton.setAttribute("role", "button");
-      this.resetButton.setAttribute("tabindex", "0");
+      this.resetButton = document.createElement("button");
+      this.resetButton.type = "button";
       this.resetButton.className = "mageforge-group-reset-btn";
       this.resetButton.title = "Reset score and deactivate all audits";
       this.resetButton.setAttribute(
@@ -602,22 +586,6 @@ export const uiMethods = {
       this.resetButton.onclick = (e) => {
         e.stopPropagation();
         this.resetScore();
-      };
-      this.resetButton.onkeydown = (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          e.stopPropagation();
-          this.resetScore();
-        }
-        if (e.key === " ") {
-          e.preventDefault();
-        }
-      };
-      this.resetButton.onkeyup = (e) => {
-        if (e.key === " ") {
-          e.stopPropagation();
-          this.resetScore();
-        }
       };
       btnRow.appendChild(this.resetButton);
       // btnRow held as ref; rendered in footer action bar via _updateFooterActions
@@ -804,7 +772,39 @@ export const uiMethods = {
     const footer = document.createElement("div");
     footer.className = "mageforge-toolbar-menu-footer";
 
-    // ── Credit line ─────────────────────────────────────────────────────
+    // Export format row ──────────────────────────────────────────────────
+    const exportRow = document.createElement("div");
+    exportRow.className = "mageforge-footer-theme-row";
+    this._exportBtnRow = exportRow;
+    const exportLabel = document.createElement("span");
+    exportLabel.className = "mageforge-footer-theme-label";
+    exportLabel.textContent = "Export";
+    exportRow.appendChild(exportLabel);
+    const exportGroup = document.createElement("div");
+    exportGroup.className = "mageforge-theme-toggle";
+    [
+      ["json", "JSON"],
+      ["md", "MD"],
+      ["txt", "TXT"],
+    ].forEach(([fmt, label]) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mageforge-theme-btn mageforge-export-btn--disabled";
+      btn.dataset.exportFormat = fmt;
+      btn.textContent = label;
+      btn.disabled = true;
+      btn.setAttribute("aria-label", `Export findings as ${label}`);
+      btn.title = `Export findings as ${label}`;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        this.exportFindings(fmt);
+      };
+      exportGroup.appendChild(btn);
+    });
+    exportRow.appendChild(exportGroup);
+    footer.appendChild(exportRow);
+
+    // Credit line ─────────────────────────────────────────────────────────
     const credit = document.createElement("div");
     credit.className = "mageforge-toolbar-menu-credit";
     credit.innerHTML =
@@ -856,11 +856,10 @@ export const uiMethods = {
    * @returns {HTMLDivElement}
    */
   _buildBurgerButton() {
-    const btn = document.createElement("div");
+    const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "mageforge-toolbar-burger";
     btn.title = "Audit tools";
-    btn.setAttribute("role", "button");
-    btn.setAttribute("tabindex", "0");
     btn.setAttribute("aria-label", "Open audit tools menu");
     btn.setAttribute("aria-expanded", "false");
     btn.innerHTML = `
@@ -871,22 +870,6 @@ export const uiMethods = {
       e.preventDefault();
       e.stopPropagation();
       this.toggleMenu();
-    };
-    btn.onkeydown = (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        this.toggleMenu();
-      }
-      if (e.key === " ") {
-        e.preventDefault();
-      }
-    };
-    btn.onkeyup = (e) => {
-      if (e.key === " ") {
-        e.stopPropagation();
-        this.toggleMenu();
-      }
     };
     return btn;
   },
@@ -953,7 +936,7 @@ export const uiMethods = {
       <span class="mageforge-toolbar-menu-text">
         <span class="mageforge-toolbar-menu-label-row">
           <span class="mageforge-toolbar-menu-label">${label}</span>
-          <span class="mageforge-toolbar-menu-status"></span>
+          <span class="mageforge-toolbar-menu-status" aria-live="polite" aria-atomic="true"></span>
         </span>
         <span class="mageforge-toolbar-menu-desc">${description}</span>
       </span>
@@ -1028,6 +1011,7 @@ export const uiMethods = {
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className = "mageforge-findings-toggle";
+    toggleBtn.setAttribute("aria-expanded", "false");
     toggleBtn.innerHTML = `
       <svg class="mageforge-findings-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
       <span class="mageforge-findings-toggle-text">Show affected elements (${findings.length})</span>
@@ -1035,6 +1019,7 @@ export const uiMethods = {
     toggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = container.classList.toggle("mageforge-findings-open");
+      toggleBtn.setAttribute("aria-expanded", String(isOpen));
       const textEl = toggleBtn.querySelector(".mageforge-findings-toggle-text");
       if (textEl)
         textEl.textContent = isOpen
@@ -1099,6 +1084,7 @@ export const uiMethods = {
 
     this.updateToggleAllButton();
     this.updateHomeSummary();
+    this.updateExportButton();
     this._updateResetAllButton();
   },
 
@@ -1496,6 +1482,35 @@ export const uiMethods = {
     this.burgerButton = null;
     this.runAllButton = null;
     this.resetButton = null;
+    this._exportBtnRow = null;
     this.menuOpen = false;
+  },
+
+  /**
+   * Apply a colour theme to the toolbar container.
+   *
+   * @param {'dark'|'auto'|'light'} theme
+   */
+  setTheme(theme) {
+    this.currentTheme = theme;
+    try {
+      localStorage.setItem("mageforge-theme", theme);
+    } catch (_) {}
+    if (this.container) this.container.setAttribute("data-theme", theme);
+  },
+
+  /**
+   * Enable or disable the Export JSON button based on whether any audits
+   * are currently active.
+   */
+  updateExportButton() {
+    if (!this._exportBtnRow) return;
+    const hasActive = this.activeAudits.size > 0;
+    this._exportBtnRow
+      .querySelectorAll("[data-export-format]")
+      .forEach((btn) => {
+        btn.disabled = !hasActive;
+        btn.classList.toggle("mageforge-export-btn--disabled", !hasActive);
+      });
   },
 };

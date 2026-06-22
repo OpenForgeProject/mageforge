@@ -33,16 +33,43 @@ function _registerMageforgeToolbar() {
     /** @type {HTMLDivElement|null} */
     resetButton: null,
 
+    /** @type {'dark'|'auto'|'light'} Active colour scheme */
+    currentTheme: (() => {
+      try {
+        return localStorage.getItem("mageforge-theme") || "dark";
+      } catch (_) {
+        return "dark";
+      }
+    })(),
+
+    /** @type {Function|null} Global keydown handler for keyboard shortcuts */
+    _keyboardShortcutHandler: null,
+
     // ====================================================================
     // Lifecycle
     // ====================================================================
 
     init() {
       this.createToolbar();
+      this.setTheme(this.currentTheme);
+
+      // Global keyboard shortcut: Ctrl/Cmd+Shift+A → toggle all audits
+      this._keyboardShortcutHandler = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A") {
+          e.preventDefault();
+          this.toggleAllAudits();
+        }
+      };
+      document.addEventListener("keydown", this._keyboardShortcutHandler);
     },
 
     destroy() {
+      if (this._keyboardShortcutHandler) {
+        document.removeEventListener("keydown", this._keyboardShortcutHandler);
+        this._keyboardShortcutHandler = null;
+      }
       this.deactivateAllAudits();
+      this.activeAudits.clear();
       this.destroyToolbar();
     },
 
