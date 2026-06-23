@@ -43,9 +43,9 @@
   --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
   --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
   --mageforge-border-color: rgba(148, 163, 184, 0.15);
+  --mageforge-surface-glass: rgba(255, 255, 255, 0.05);
   --mageforge-surface-glass-hover: rgba(255, 255, 255, 0.08);
   --mageforge-border-glass: rgba(255, 255, 255, 0.1);
-
   /* Shadows */
   --mageforge-shadow-sm: rgba(0, 0, 0, 0.2);
   --mageforge-shadow-md: rgba(0, 0, 0, 0.3);
