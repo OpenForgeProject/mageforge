@@ -533,7 +533,7 @@ export const uiMethods = {
               </linearGradient>
             </defs>
             <path d="M 10 65 A 50 50 0 0 1 110 65"
-                  fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" stroke-linecap="round"></path>
+                  fill="none" stroke="var(--mageforge-border-color)" stroke-width="10" stroke-linecap="round"></path>
             <path d="M 10 65 A 50 50 0 0 1 110 65"
                   fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
                   stroke-dasharray="0 ${GAUGE_ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
