@@ -761,7 +761,7 @@ export const uiMethods = {
   // ────────────────────────────────────────────────────────────────────────
 
   /**
-   * Footer row: credit line only.
+   * Footer row: export controls + credit line.
    *
    * @returns {HTMLDivElement}
    */
