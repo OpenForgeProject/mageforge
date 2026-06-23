@@ -27,6 +27,12 @@ export function createAudit(meta, detect, onComplete) {
   const run = (context, active) => {
     if (!active) {
       clearHighlight(key);
+      if (typeof context?.setAuditDescription === "function") {
+        context.setAuditDescription(key, description);
+      }
+      if (typeof context?.setAuditFindings === "function") {
+        context.setAuditFindings(key, []);
+      }
       return;
     }
 
