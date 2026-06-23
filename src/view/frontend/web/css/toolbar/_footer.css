@@ -18,8 +18,8 @@
 .mageforge-footer-theme-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 4px 12px 4px;
+  justify-content: space-between;
+  padding: 0 6px 6px 16px;
   gap: 8px;
 }
 
@@ -30,6 +30,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--mageforge-color-slate-400);
+  padding: 3px 6px 3px 8px;
 }
 
 .mageforge-theme-toggle {

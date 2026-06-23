@@ -8,11 +8,10 @@
  */
 
 .mageforge-toolbar-menu-credit {
-  padding-bottom: 4px;
-  text-align: center;
   font-family: var(--mageforge-font-family);
   font-size: 10px;
   color: var(--mageforge-color-slate-400);
+  white-space: nowrap;
 }
 
 .mageforge-toolbar-menu-credit-heart {

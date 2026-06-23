@@ -347,9 +347,7 @@ export const uiMethods = {
       const body = document.createElement("div");
       body.className = "mageforge-tab-panel-body";
 
-      const groupLabel =
-        this.getAuditGroups().find((g) => g.key === group.key)?.label ??
-        group.key;
+      const groupLabel = group.label;
 
       // Build run button – stored as ref, rendered in footer action bar
       const groupBtn = document.createElement("button");
@@ -485,7 +483,6 @@ export const uiMethods = {
    * @returns {HTMLDivElement}
    */
   _buildScoreWidget() {
-    const CIRCUMFERENCE = 113.1; // 2π × r(18) — ring stroke length
     const gradId = `mf-sg-${crypto.randomUUID().slice(0, 8)}`;
     const widget = document.createElement("div");
     widget.className = "mageforge-score-widget";
@@ -500,7 +497,7 @@ export const uiMethods = {
         </defs>
         <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="4"></circle>
         <circle cx="22" cy="22" r="18" fill="none" stroke="url(#${gradId})" stroke-width="4"
-                stroke-dasharray="0 ${CIRCUMFERENCE}" stroke-linecap="round"
+                stroke-dasharray="0 ${SCORE_RING_CIRCUMFERENCE}" stroke-linecap="round"
                 transform="rotate(-90 22 22)" class="mageforge-score-ring"></circle>
       </svg>
       <div class="mageforge-score-overlay">
@@ -776,12 +773,12 @@ export const uiMethods = {
     const exportRow = document.createElement("div");
     exportRow.className = "mageforge-footer-theme-row";
     this._exportBtnRow = exportRow;
+    const exportGroup = document.createElement("div");
+    exportGroup.className = "mageforge-theme-toggle";
     const exportLabel = document.createElement("span");
     exportLabel.className = "mageforge-footer-theme-label";
     exportLabel.textContent = "Export";
-    exportRow.appendChild(exportLabel);
-    const exportGroup = document.createElement("div");
-    exportGroup.className = "mageforge-theme-toggle";
+    exportGroup.appendChild(exportLabel);
     [
       ["json", "JSON"],
       ["md", "MD"],
@@ -804,12 +801,12 @@ export const uiMethods = {
     exportRow.appendChild(exportGroup);
     footer.appendChild(exportRow);
 
-    // Credit line ─────────────────────────────────────────────────────────
+    // Credit line (left side of export row) ─────────────────────────────
     const credit = document.createElement("div");
     credit.className = "mageforge-toolbar-menu-credit";
     credit.innerHTML =
       'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
-    footer.appendChild(credit);
+    exportRow.insertBefore(credit, exportRow.firstChild);
 
     // Populate nav action bar for the initially active tab (home).
     // footerActionBar was already created in _buildTabNav().
@@ -1031,17 +1028,31 @@ export const uiMethods = {
     const list = document.createElement("div");
     list.className = "mageforge-findings-list";
 
-    findings.forEach(({ el, selector, severity = "error", action }, index) => {
+    findings.forEach(({ el, selector, severity = "error" }, index) => {
       const selectorStr = selector ?? getReadableSelector(el);
       const isLast = index === findings.length - 1;
 
       const row = document.createElement("div");
       row.className = `mageforge-audit-finding mageforge-audit-finding--${severity}`;
-      row.innerHTML = `
-        <span class="mageforge-finding-tree" aria-hidden="true">${isLast ? "\u2514" : "\u251C"}\u2500</span>
-        <span class="mageforge-finding-selector" title="${selectorStr}">${selectorStr}</span>
-        <span class="mageforge-finding-action">Show Element</span>
-      `;
+
+      const treeEl = document.createElement("span");
+      treeEl.className = "mageforge-finding-tree";
+      treeEl.setAttribute("aria-hidden", "true");
+      treeEl.textContent = `${isLast ? "\u2514" : "\u251C"}\u2500`;
+
+      const selectorEl = document.createElement("span");
+      selectorEl.className = "mageforge-finding-selector";
+      selectorEl.setAttribute("title", selectorStr);
+      selectorEl.textContent = selectorStr;
+
+      const actionEl = document.createElement("span");
+      actionEl.className = "mageforge-finding-action";
+      actionEl.textContent = "Show Element";
+
+      row.appendChild(treeEl);
+      row.appendChild(selectorEl);
+      row.appendChild(actionEl);
+
       row.addEventListener("click", (e) => {
         e.stopPropagation();
         el.scrollIntoView({ behavior: "smooth", block: "center" });
