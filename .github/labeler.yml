@@ -55,7 +55,7 @@ Inspector:
   - changed-files:
       - any-glob-to-any-file:
           - "src/view/frontend/web/js/inspector.js"
-          - "src/Plugin/Block/Adminhtml/System/Config/Form/Field/InspectorHints.php"
+          - "src/Model/TemplateEngine/Decorator/InspectorHints.php"
 
 Toolbar:
   - changed-files:
