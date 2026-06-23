@@ -61,7 +61,7 @@ Toolbar:
   - changed-files:
       - any-glob-to-any-file:
           - "src/view/frontend/web/js/toolbar/**"
-          - "src/view/frontend/web/css/source/_toolbar.css"
+          - "src/view/frontend/web/css/toolbar.css"
 
 I18n:
   - changed-files:
