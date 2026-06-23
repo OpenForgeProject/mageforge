@@ -155,7 +155,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  justify-self: center;
+  margin-left: auto;
 }
 
 .mageforge-tab-badge {

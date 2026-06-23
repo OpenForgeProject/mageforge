@@ -19,7 +19,7 @@
  */
 .mageforge-toolbar-menu {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 20px);
   left: 0;
   background: linear-gradient(
     135deg,
