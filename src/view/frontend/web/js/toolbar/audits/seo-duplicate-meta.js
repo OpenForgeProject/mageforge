@@ -21,7 +21,10 @@ export default {
   label: "Duplicate Meta Tags",
   description: "Flags duplicate &lt;title&gt;, meta description, or canonical",
   run(context, active) {
-    if (!active) return;
+    if (!active) {
+      context.setAuditDescription(KEY, this.description);
+      return;
+    }
 
     const duplicates = [];
 
@@ -43,6 +46,8 @@ export default {
         KEY,
         `Duplicate${count > 1 ? "s" : ""}: ${duplicates.join(", ")}`,
       );
+    } else {
+      context.setAuditDescription(KEY, this.description);
     }
-  },
+  }
 };
