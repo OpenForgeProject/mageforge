@@ -29,7 +29,10 @@ export default {
   description:
     "Flags missing &lt;main&gt; or &lt;nav&gt; landmark regions (WCAG 2.4.1)",
   run(context, active) {
-    if (!active) return;
+    if (!active) {
+      context.setAuditDescription(KEY, this.description);
+      return;
+    }
 
     const missing = [];
     if (!hasLandmark("main", "main")) missing.push("<main>");
@@ -44,6 +47,9 @@ export default {
         KEY,
         `Missing landmark${count > 1 ? "s" : ""}: ${missing.join(", ")}`,
       );
+    } else {
+      context.setAuditDescription(KEY, this.description);
     }
+  }
   },
 };
