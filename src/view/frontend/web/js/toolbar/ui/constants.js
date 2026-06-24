@@ -32,7 +32,7 @@ export function createLogoSvg(fill) {
  */
 export function generateId(prefix) {
   const rand =
-    crypto.randomUUID?.().slice(0, 8) ??
+    globalThis.crypto?.randomUUID?.()?.slice(0, 8) ??
     Math.random().toString(36).slice(2, 10);
   return `mf-${prefix}-${rand}`;
 }
