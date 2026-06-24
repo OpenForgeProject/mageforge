@@ -31,45 +31,45 @@ Theme-Builder:
 CI/CD:
   - changed-files:
       - any-glob-to-any-file:
-          - ".github/workflows/**"
-          - ".github/actions/**"
-          - ".trunk/**"
+          - .github/workflows/**
+          - .github/actions/**
+          - .trunk/**
 
 Dependencies:
   - changed-files:
       - any-glob-to-any-file:
-          - "composer.json"
-          - "composer.lock"
-          - "package.json"
-          - "package-lock.json"
-          - "yarn.lock"
-          - "pnpm-lock.yaml"
+          - composer.json
+          - composer.lock
+          - package.json
+          - package-lock.json
+          - yarn.lock
+          - pnpm-lock.yaml
 
 Config:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/etc/**"
-          - "src/**/etc/**"
+          - src/etc/**
+          - src/**/etc/**
 
 Inspector:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/view/frontend/web/js/inspector.js"
-          - "src/Model/TemplateEngine/Decorator/InspectorHints.php"
+          - src/view/frontend/web/js/inspector.js
+          - src/Model/TemplateEngine/Decorator/InspectorHints.php
 
 Toolbar:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/view/frontend/web/js/toolbar/**"
-          - "src/view/frontend/web/css/toolbar.css"
+          - src/view/frontend/web/js/toolbar/**
+          - src/view/frontend/web/css/toolbar.css
 
 I18n:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/i18n/*.csv"
+          - src/i18n/*.csv
 
 Styling:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/view/frontend/web/css/**"
+          - src/view/frontend/web/css/**
           - "**/*.css"
