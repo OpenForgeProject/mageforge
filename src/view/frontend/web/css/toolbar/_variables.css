@@ -1,0 +1,81 @@
+/**
+ * MageForge Toolbar - CSS Variables
+ *
+ * All custom properties used across the toolbar component.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+:root {
+  /* Typography */
+  --mageforge-font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* Brand Colors */
+  --mageforge-color-white: #ffffff;
+  --mageforge-color-blue: #3b82f6;
+  --mageforge-color-green: #10b981;
+  --mageforge-color-red: #ef4444;
+  --mageforge-color-slate-400: #94a3b8;
+  --mageforge-color-orange: #fb923c;
+  --mageforge-color-pink: #c850c0;
+  --mageforge-color-purple: #a855f7;
+  --mageforge-color-amber: #edb04d;
+
+  /* Alpha variants */
+  --mageforge-color-green-alpha-15: rgba(16, 185, 129, 0.15);
+  --mageforge-color-green-alpha-35: rgba(16, 185, 129, 0.35);
+  --mageforge-color-red-alpha-15: rgba(239, 68, 68, 0.15);
+  --mageforge-color-red-alpha-35: rgba(239, 68, 68, 0.35);
+  --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
+  --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
+  --mageforge-color-blue-alpha-35: rgba(59, 130, 246, 0.35);
+
+  /* Audit group colors */
+  --mageforge-group-color-wcag: var(--mageforge-color-purple);
+  --mageforge-group-color-html-quality: var(--mageforge-color-blue);
+  --mageforge-group-color-performance: var(--mageforge-color-orange);
+  --mageforge-group-color-seo: #14b8a6;
+
+  /* Backgrounds */
+  --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
+  --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
+  --mageforge-border-color: rgba(148, 163, 184, 0.15);
+  --mageforge-surface-glass: rgba(255, 255, 255, 0.05);
+  --mageforge-surface-glass-hover: rgba(255, 255, 255, 0.08);
+  --mageforge-border-glass: rgba(255, 255, 255, 0.1);
+  /* Shadows */
+  --mageforge-shadow-sm: rgba(0, 0, 0, 0.2);
+  --mageforge-shadow-md: rgba(0, 0, 0, 0.3);
+  --mageforge-shadow-lg: rgba(0, 0, 0, 0.4);
+
+  /* Burger button */
+  --mageforge-burger-bg: rgba(15, 23, 42, 0.85);
+  --mageforge-burger-bg-hover: rgba(30, 41, 59, 0.95);
+
+  /* Toggle switch */
+  --mageforge-toggle-bg-off: rgba(255, 255, 255, 0.15);
+  --mageforge-toggle-bg-off-light: rgba(0, 0, 0, 0.15);
+
+  /* Brand gradients */
+  --gradient-brand: linear-gradient(
+    43deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 50%,
+    var(--mageforge-color-amber) 100%
+  );
+  --gradient-brand-hover: linear-gradient(
+    43deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 70%,
+    var(--mageforge-color-amber) 100%
+  );
+
+  /* Scrollbar */
+  --mageforge-scrollbar-width: 4px;
+  --mageforge-scrollbar-bg: transparent;
+  --mageforge-scrollbar-thumb-bg: var(--mageforge-color-blue);
+  --mageforge-scrollbar-thumb-hover-bg: var(--mageforge-color-blue-alpha-35);
+}

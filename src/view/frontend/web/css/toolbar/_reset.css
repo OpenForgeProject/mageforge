@@ -1,0 +1,16 @@
+/**
+ * MageForge Toolbar - Reset & Base
+ *
+ * Box-sizing, margin/padding resets for namespace isolation.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar *,
+.mageforge-toolbar *::before,
+.mageforge-toolbar *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}

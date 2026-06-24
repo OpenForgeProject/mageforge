@@ -1,0 +1,331 @@
+/**
+ * MageForge Toolbar - Audit Menu
+ *
+ * Styles for the menu popup: container, title bar, items, toggles, labels,
+ * descriptions and status badges.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+/* ============================================================================
+   Audit Menu
+   ========================================================================== */
+
+/*
+ * Menu is hidden by default via display:none and animated open/close with
+ * @starting-style + transition-behavior:allow-discrete (Chrome 117+, Safari 17.5+).
+ * Older browsers get an instant show/hide without animation (graceful degradation).
+ */
+.mageforge-toolbar-menu {
+  position: absolute;
+  bottom: calc(100% + 20px);
+  left: 0;
+  background: linear-gradient(
+    135deg,
+    var(--mageforge-bg-dark) 0%,
+    var(--mageforge-bg-dark-alt) 100%
+  );
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 10px;
+  box-shadow:
+    0 -8px 24px var(--mageforge-shadow-lg),
+    0 6px 10px var(--mageforge-shadow-sm);
+  padding: 0;
+  min-width: 600px;
+  min-height: min(75vh, 700px);
+  overflow: hidden;
+  font-family: var(--mageforge-font-family);
+  /* flex-column keeps the footer pinned; the tab section fills remaining height */
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s ease-out,
+    display 0.15s allow-discrete;
+}
+
+.mageforge-toolbar-menu.mageforge-menu-open {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@starting-style {
+  .mageforge-toolbar-menu.mageforge-menu-open {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* ============================================================================
+   Menu Title Bar
+   ========================================================================== */
+
+.mageforge-toolbar-menu-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--mageforge-border-color);
+  flex-shrink: 0;
+  background: linear-gradient(
+    135deg,
+    var(--mageforge-bg-dark) 0%,
+    var(--mageforge-bg-dark-alt) 100%
+  );
+}
+
+.mageforge-toolbar-menu-title-text {
+  font-family: var(--mageforge-font-family);
+  font-size: 20px;
+  font-weight: 700;
+  padding-bottom: 2px;
+  color: var(--mageforge-color-white);
+  display: block;
+}
+
+.mageforge-toolbar-menu-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mageforge-toolbar-menu-logo svg {
+  height: 24px;
+  width: auto;
+}
+
+.mageforge-toolbar-menu-close {
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  padding: 6px;
+  line-height: 0;
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.mageforge-toolbar-menu-close:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+}
+
+.mageforge-toolbar-menu-close:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Menu Items
+   ========================================================================== */
+
+.mageforge-toolbar-menu-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.mageforge-toolbar-menu-item:hover {
+  background: var(--mageforge-surface-glass-hover);
+}
+
+.mageforge-toolbar-menu-item:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+.mageforge-toolbar-menu-item.mageforge-active {
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-green-alpha-15) 0%,
+    transparent 100px
+  );
+}
+
+.mageforge-toolbar-menu-item.mageforge-active .mageforge-toolbar-menu-label {
+  color: var(--mageforge-color-green);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--error {
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-red-alpha-15) 0%,
+    transparent 100px
+  );
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--error
+  .mageforge-toolbar-menu-label {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--warning {
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-amber-alpha-15) 0%,
+    transparent 100px
+  );
+}
+
+.mageforge-toolbar-menu-item.mageforge-active--warning
+  .mageforge-toolbar-menu-label {
+  color: var(--mageforge-color-amber);
+}
+
+/* ============================================================================
+   Menu Item Content
+   ========================================================================== */
+
+.mageforge-toolbar-menu-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 10%;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mageforge-toolbar-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+/* ============================================================================
+   Toggle Switch
+   ========================================================================== */
+
+.mageforge-toolbar-menu-toggle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--mageforge-toggle-bg-off);
+  position: relative;
+  transition: background 0.2s ease;
+  margin-left: auto;
+}
+
+.mageforge-toolbar-menu-toggle::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mageforge-color-white);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.mageforge-toolbar-menu-item.mageforge-active .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-color-green);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active.mageforge-active--error
+  .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-color-red);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active.mageforge-active--warning
+  .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-color-amber);
+}
+
+.mageforge-toolbar-menu-item.mageforge-active
+  .mageforge-toolbar-menu-toggle::after {
+  transform: translateX(12px);
+}
+
+/* ============================================================================
+   Labels & Descriptions
+   ========================================================================== */
+
+.mageforge-toolbar-menu-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mageforge-color-white);
+}
+
+.mageforge-toolbar-menu-desc {
+  color: var(--mageforge-color-slate-400);
+  font-size: 11px;
+  line-height: 1.3;
+  user-select: text;
+  cursor: default;
+}
+
+.mageforge-toolbar-menu-desc.mageforge-active {
+  color: var(--mageforge-color-orange);
+  font-size: 12px;
+  user-select: text;
+}
+
+.mageforge-toolbar-menu-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================================================
+   Status Badges
+   ========================================================================== */
+
+.mageforge-toolbar-menu-status {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mageforge-toolbar-menu-status:not(:empty) {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.mageforge-toolbar-menu-status--success {
+  color: var(--mageforge-color-green);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.mageforge-toolbar-menu-status--error {
+  color: var(--mageforge-color-red);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.mageforge-toolbar-menu-status--warning {
+  color: var(--mageforge-color-amber);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}

@@ -1,0 +1,168 @@
+/**
+ * MageForge Toolbar - Responsive
+ *
+ * Mobile-first breakpoints for toolbar and menu sizing.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+@media (max-width: 640px) {
+  /* ── Toolbar position ──────────────────────────────────────────────── */
+
+  .mageforge-toolbar {
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .mageforge-toolbar[data-position="bottom-right"] {
+    left: auto;
+    right: 10px;
+  }
+
+  .mageforge-toolbar[data-position="top-left"] {
+    bottom: auto;
+    left: 10px;
+    top: 10px;
+  }
+
+  .mageforge-toolbar[data-position="top-right"] {
+    bottom: auto;
+    left: auto;
+    right: 10px;
+    top: 10px;
+  }
+
+  /* ── Menu: fixed overlay, fills viewport width with 10px margins ─── */
+
+  .mageforge-toolbar-menu {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 62px; /* clear the burger button row */
+    width: auto;
+    min-width: unset;
+    min-height: unset;
+    max-height: calc(100dvh - 90px);
+    z-index: 9999998;
+    border-radius: 8px;
+  }
+
+  /* For top-positioned toolbars the menu opens downward */
+  .mageforge-toolbar[data-position^="top"] .mageforge-toolbar-menu {
+    bottom: auto;
+    top: 62px;
+  }
+
+  /* ── Title bar ─────────────────────────────────────────────────────── */
+
+  .mageforge-toolbar-menu-title {
+    padding: 8px 10px 6px;
+  }
+
+  .mageforge-toolbar-menu-title-text {
+    font-size: 16px;
+  }
+
+  /* ── Icon-only left nav sidebar ────────────────────────────────────── */
+
+  .mageforge-toolbar-tab-nav {
+    width: 52px;
+    padding: 4px 2px;
+  }
+
+  .mageforge-toolbar-tab-btn {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 10px 4px;
+  }
+
+  /* Hide text labels – icons are self-explanatory in icon-only mode */
+  .mageforge-tab-label {
+    display: none;
+  }
+
+  /* Hide count badges – too cramped at 52 px nav width */
+  .mageforge-tab-badges {
+    display: none;
+  }
+
+  /* ── Nav action bar: icon-only run / reset buttons ─────────────────── */
+
+  .mageforge-nav-action-bar {
+    padding: 8px 4px 4px;
+  }
+
+  .mageforge-nav-action-bar .mageforge-footer-btn-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Collapse text to 0, show only the SVG icon */
+  .mageforge-nav-action-bar .mageforge-group-run-btn {
+    font-size: 0;
+    letter-spacing: 0;
+    line-height: 0;
+    padding: 10px;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .mageforge-nav-action-bar .mageforge-group-run-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* Keep spinner visible in running state */
+  .mageforge-nav-action-bar .mageforge-group-run-btn.mageforge-running svg {
+    display: none;
+  }
+
+  .mageforge-nav-action-bar .mageforge-group-reset-btn {
+    font-size: 0;
+    letter-spacing: 0;
+    line-height: 1;
+    padding: 8px;
+    justify-content: center;
+    gap: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .mageforge-nav-action-bar .mageforge-group-reset-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  /* ── Burger button ─────────────────────────────────────────────────── */
+
+  .mageforge-toolbar-burger-label {
+    display: none;
+  }
+
+  .mageforge-toolbar-burger {
+    height: 36px;
+    width: auto;
+  }
+
+  /* ── Content panels ────────────────────────────────────────────────── */
+
+  .mageforge-tab-panel-body {
+    max-height: calc(100dvh - 230px);
+  }
+
+  /* ── Dashboard: tighter gauge ──────────────────────────────────────── */
+
+  .mageforge-toolbar-health-gauge {
+    width: 110px;
+    height: 65px;
+  }
+
+  .mageforge-toolbar-health-score-value {
+    font-size: 16px;
+  }
+}

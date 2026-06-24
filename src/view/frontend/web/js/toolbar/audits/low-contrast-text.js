@@ -6,7 +6,7 @@
  * - 3:1 for large text (>=18pt or >=14pt bold)
  */
 
-import { applyHighlight, clearHighlight } from "./highlight.js";
+import { createAudit } from "./createAudit.js";
 
 const _colorCanvas = document.createElement("canvas");
 _colorCanvas.width = _colorCanvas.height = 1;
@@ -156,22 +156,14 @@ function isLargeText(el) {
 }
 
 /** @type {import('./index.js').AuditDefinition} */
-export default {
-  key: "low-contrast-text",
-  icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336m-9 1.732a8 8 0 0 0 4.001 14.928l-.001 -16a8 8 0 0 0 -4 1.072"></path></svg>',
-  label: "Low Contrast Text",
-  description: "Highlight text failing WCAG AA contrast",
-
-  /**
-   * @param {object} context - Alpine toolbar component instance
-   * @param {boolean} active  - true = activate, false = deactivate
-   */
-  run(context, active) {
-    if (!active) {
-      clearHighlight(this.key);
-      return;
-    }
-
+export default createAudit(
+  {
+    key: "low-contrast-text",
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336m-9 1.732a8 8 0 0 0 4.001 14.928l-.001 -16a8 8 0 0 0 -4 1.072"></path></svg>',
+    label: "Low Contrast Text",
+    description: "Highlight text failing WCAG AA contrast",
+  },
+  () => {
     const candidates = Array.from(
       document.querySelectorAll(
         "p, a, h1, h2, h3, h4, h5, h6, li, td, th, label, button",
@@ -184,7 +176,7 @@ export default {
       return hasDirectText(el);
     });
 
-    const failing = candidates.filter((el) => {
+    return candidates.filter((el) => {
       const style = getComputedStyle(el);
       const fg = parseColor(style.color);
       if (!fg || fg[3] === 0) return false;
@@ -194,7 +186,5 @@ export default {
       const threshold = isLargeText(el) ? 3 : 4.5;
       return ratio < threshold;
     });
-
-    applyHighlight(failing, this.key, context);
   },
-};
+);

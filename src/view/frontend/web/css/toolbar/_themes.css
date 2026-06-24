@@ -1,0 +1,147 @@
+/**
+ * MageForge Toolbar - Theme Overrides
+ *
+ * Light mode and auto mode color scheme overrides for the menu popup.
+ * The burger button intentionally stays dark for visibility.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+/* ============================================================================
+   Light Mode
+   ========================================================================== */
+
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu {
+  --mageforge-bg-dark: #ffffff;
+  --mageforge-bg-dark-alt: #f1f5f9;
+  --mageforge-border-color: rgba(0, 0, 0, 0.1);
+  --mageforge-border-glass: rgba(0, 0, 0, 0.12);
+  --mageforge-surface-glass: rgba(0, 0, 0, 0.04);
+  --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.07);
+  --mageforge-shadow-sm: rgba(0, 0, 0, 0.08);
+  --mageforge-shadow-md: rgba(0, 0, 0, 0.13);
+  --mageforge-shadow-lg: rgba(0, 0, 0, 0.18);
+  --mageforge-color-white: #0f172a;
+  --mageforge-color-slate-400: #64748b;
+}
+
+/* Sidebar: slightly offset from the white content area */
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-tab-nav {
+  background: #f8fafc;
+}
+
+/* Home tab active: white alpha value invisible on light background */
+.mageforge-toolbar[data-theme="light"]
+  .mageforge-toolbar-tab-btn[data-tab="home"].mageforge-tab-active {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* Group tab active: slightly increase alpha for better visibility */
+.mageforge-toolbar[data-theme="light"]
+  .mageforge-toolbar-tab-btn[data-tab="wcag"].mageforge-tab-active {
+  background: rgba(168, 85, 247, 0.14);
+}
+
+.mageforge-toolbar[data-theme="light"]
+  .mageforge-toolbar-tab-btn[data-tab="html-quality"].mageforge-tab-active {
+  background: rgba(59, 130, 246, 0.14);
+}
+
+.mageforge-toolbar[data-theme="light"]
+  .mageforge-toolbar-tab-btn[data-tab="performance"].mageforge-tab-active {
+  background: rgba(251, 146, 60, 0.14);
+}
+
+.mageforge-toolbar[data-theme="light"]
+  .mageforge-toolbar-tab-btn[data-tab="seo"].mageforge-tab-active {
+  background: rgba(20, 184, 166, 0.14);
+}
+
+/* Theme toggle pill: replace hardcoded white alpha with dark */
+.mageforge-toolbar[data-theme="light"] .mageforge-theme-toggle {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.mageforge-toolbar[data-theme="light"] .mageforge-theme-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Gradient buttons: explicitly keep text colour white (do not inherit #0f172a) */
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu-run-all,
+.mageforge-toolbar[data-theme="light"] .mageforge-home-check-btn,
+.mageforge-toolbar[data-theme="light"] .mageforge-group-run-btn {
+  color: #ffffff;
+}
+
+.mageforge-toolbar[data-theme="light"] .mageforge-toolbar-menu-toggle {
+  background: var(--mageforge-toggle-bg-off-light);
+}
+
+/* ============================================================================
+   Auto Mode – Light System Preference
+   * NOTE: Keep these custom-property overrides in sync with the [data-theme="light"] block above.
+   ========================================================================== */
+
+@media (prefers-color-scheme: light) {
+  .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu {
+    --mageforge-bg-dark: #ffffff;
+    --mageforge-bg-dark-alt: #f1f5f9;
+    --mageforge-border-color: rgba(0, 0, 0, 0.1);
+    --mageforge-border-glass: rgba(0, 0, 0, 0.12);
+    --mageforge-surface-glass: rgba(0, 0, 0, 0.04);
+    --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.07);
+    --mageforge-shadow-sm: rgba(0, 0, 0, 0.08);
+    --mageforge-shadow-md: rgba(0, 0, 0, 0.13);
+    --mageforge-shadow-lg: rgba(0, 0, 0, 0.18);
+    --mageforge-color-white: #0f172a;
+    --mageforge-color-slate-400: #64748b;
+  }
+
+  .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-tab-nav {
+    background: #f8fafc;
+  }
+
+  .mageforge-toolbar[data-theme="auto"]
+    .mageforge-toolbar-tab-btn[data-tab="home"].mageforge-tab-active {
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  .mageforge-toolbar[data-theme="auto"]
+    .mageforge-toolbar-tab-btn[data-tab="wcag"].mageforge-tab-active {
+    background: rgba(168, 85, 247, 0.14);
+  }
+
+  .mageforge-toolbar[data-theme="auto"]
+    .mageforge-toolbar-tab-btn[data-tab="html-quality"].mageforge-tab-active {
+    background: rgba(59, 130, 246, 0.14);
+  }
+
+  .mageforge-toolbar[data-theme="auto"]
+    .mageforge-toolbar-tab-btn[data-tab="performance"].mageforge-tab-active {
+    background: rgba(251, 146, 60, 0.14);
+  }
+
+  .mageforge-toolbar[data-theme="auto"]
+    .mageforge-toolbar-tab-btn[data-tab="seo"].mageforge-tab-active {
+    background: rgba(20, 184, 166, 0.14);
+  }
+
+  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-toggle {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu-run-all,
+  .mageforge-toolbar[data-theme="auto"] .mageforge-home-check-btn,
+  .mageforge-toolbar[data-theme="auto"] .mageforge-group-run-btn {
+    color: #ffffff;
+  }
+
+  .mageforge-toolbar[data-theme="auto"] .mageforge-toolbar-menu-toggle {
+    background: var(--mageforge-toggle-bg-off-light);
+  }
+}

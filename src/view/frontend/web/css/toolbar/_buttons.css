@@ -1,0 +1,392 @@
+/**
+ * MageForge Toolbar - Run All Tests Button Row
+ *
+ * Styles for the "Run All" and "Reset" buttons in the menu footer.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-toolbar-menu-button-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 4px 12px;
+}
+
+.mageforge-toolbar-menu-run-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  padding: 9px 16px;
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 100%
+  );
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  font-family: var(--mageforge-font-family);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+
+.mageforge-toolbar-menu-run-all:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+}
+
+.mageforge-toolbar-menu-run-all:active {
+  transform: translateY(0);
+}
+
+.mageforge-toolbar-menu-run-all:disabled,
+.mageforge-toolbar-menu-run-all.mageforge-running {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mageforge-toolbar-menu-run-all.mageforge-running svg:first-child {
+  display: none;
+}
+
+.mageforge-toolbar-menu-run-all.mageforge-running::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--mageforge-color-white);
+  border-radius: 50%;
+  animation: mageforge-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.mageforge-toolbar-menu-run-all:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+.mageforge-toolbar-menu-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 10px;
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  line-height: 0;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mageforge-toolbar-menu-reset:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+  border-color: var(--mageforge-border-glass);
+}
+
+.mageforge-toolbar-menu-reset:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+/* ── Home panel: Check Health Score button ─────────────────────────── */
+
+.mageforge-home-check-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 80%;
+  padding: 12px 20px;
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 100%
+  );
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  font-family: var(--mageforge-font-family);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+
+.mageforge-home-check-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+}
+
+.mageforge-home-check-btn:active {
+  transform: translateY(0);
+}
+
+.mageforge-home-check-btn:disabled,
+.mageforge-home-check-btn.mageforge-running {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mageforge-home-check-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+/* ── Home panel: Check + Reset button row ──────────────────────────── */
+
+.mageforge-home-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+}
+
+.mageforge-home-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mageforge-home-reset-btn:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+  border-color: var(--mageforge-border-glass);
+}
+
+/* ── Feature Request link button ───────────────────────────────────── */
+
+.mageforge-feature-request-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 12px 4px 0;
+  padding: 6px 10px;
+  background: none;
+  border: 1px dashed var(--mageforge-border-color);
+  border-radius: 6px;
+  color: var(--mageforge-color-slate-400);
+  font-family: var(--mageforge-font-family);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.mageforge-feature-request-btn:hover {
+  color: var(--mageforge-color-white);
+  border-color: var(--mageforge-border-glass);
+  background: var(--mageforge-surface-glass-hover);
+}
+
+.mageforge-feature-request-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+/* ── Home panel: Error / Warning summary badges ─────────────────────── */
+
+.mageforge-home-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 16px 4px;
+}
+
+.mageforge-home-summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--mageforge-surface-glass);
+  border: 1px solid var(--mageforge-border-color);
+}
+
+.mageforge-home-summary-errors {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.mageforge-home-summary-warnings {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.mageforge-home-summary-count {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mageforge-home-summary-errors .mageforge-home-summary-count {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-home-summary-warnings .mageforge-home-summary-count {
+  color: var(--mageforge-color-amber);
+}
+
+.mageforge-home-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mageforge-color-slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Group panels: Run [Group] Checks button ───────────────────────── */
+
+.mageforge-group-run-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(
+    90deg,
+    var(--mageforge-color-blue) 0%,
+    var(--mageforge-color-pink) 100%
+  );
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--mageforge-color-white);
+  font-family: var(--mageforge-font-family);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+}
+
+.mageforge-group-run-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(59, 130, 246, 0.35);
+}
+
+.mageforge-group-run-btn:active {
+  transform: translateY(0);
+}
+
+.mageforge-group-run-btn:disabled,
+.mageforge-group-run-btn.mageforge-running {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mageforge-group-run-btn.mageforge-running svg:first-child {
+  display: none;
+}
+
+.mageforge-group-run-btn.mageforge-running::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--mageforge-color-white);
+  border-radius: 50%;
+  animation: mageforge-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.mageforge-group-run-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}
+
+/* ── Group panels: Run + Reset button row ──────────────────────────── */
+
+.mageforge-group-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.mageforge-group-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1px solid var(--mageforge-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--mageforge-color-slate-400);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.mageforge-group-reset-btn:hover {
+  color: var(--mageforge-color-white);
+  background: var(--mageforge-surface-glass-hover);
+  border-color: var(--mageforge-border-glass);
+}
+
+.mageforge-group-reset-btn:disabled,
+.mageforge-group-reset-btn[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.mageforge-group-reset-btn:focus-visible {
+  outline: 2px solid var(--mageforge-color-blue);
+  outline-offset: 2px;
+}

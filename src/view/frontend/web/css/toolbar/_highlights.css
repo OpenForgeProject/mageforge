@@ -1,0 +1,27 @@
+/**
+ * MageForge Toolbar - Audit Highlights
+ *
+ * Fixed-position overlay injected over every highlighted element.
+ * Uses subtle left-border indicators instead of full background fills
+ * to avoid overwhelming the page content.
+ *
+ * @package OpenForgeProject\MageForge
+ * @license GPL-3.0
+ */
+
+.mageforge-audit-overlay {
+  position: fixed;
+  pointer-events: none;
+  background-color: transparent;
+  outline: 2px solid var(--mageforge-color-red);
+  outline-offset: -2px;
+  border-left: 4px solid var(--mageforge-color-red);
+  z-index: 9999997;
+}
+
+.mageforge-audit-overlay--warning {
+  background-color: transparent;
+  outline-color: var(--mageforge-color-amber);
+  outline-style: dashed;
+  border-left-color: var(--mageforge-color-amber);
+}

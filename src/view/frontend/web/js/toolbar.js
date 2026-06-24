@@ -15,8 +15,8 @@ function _registerMageforgeToolbar() {
     /** @type {Set<string>} Keys of currently active audits */
     activeAudits: new Set(),
 
-    /** @type {Set<string>} Keys of currently collapsed groups */
-    collapsedGroups: new Set(),
+    /** @type {string} Key of the currently active tab */
+    activeTab: "home",
 
     /** @type {HTMLDivElement|null} */
     container: null,
@@ -33,26 +33,38 @@ function _registerMageforgeToolbar() {
     /** @type {HTMLDivElement|null} */
     resetButton: null,
 
+    /** @type {'dark'|'auto'|'light'} Active colour scheme */
+    currentTheme: "dark",
+
+    /** @type {Function|null} Global keydown handler for keyboard shortcuts */
+    _keyboardShortcutHandler: null,
+
     // ====================================================================
     // Lifecycle
     // ====================================================================
 
     init() {
-      try {
-        const saved = localStorage.getItem(
-          "mageforge-toolbar-collapsed-groups",
-        );
-        if (saved) {
-          try {
-            JSON.parse(saved).forEach((key) => this.collapsedGroups.add(key));
-          } catch (_) {}
-        }
-      } catch (_) {}
       this.createToolbar();
+      this.currentTheme = this.$el?.getAttribute("data-theme") || "dark";
+      this.setTheme(this.currentTheme);
+
+      // Global keyboard shortcut: Ctrl/Cmd+Shift+A → toggle all audits
+      this._keyboardShortcutHandler = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A") {
+          e.preventDefault();
+          this.toggleAllAudits();
+        }
+      };
+      document.addEventListener("keydown", this._keyboardShortcutHandler);
     },
 
     destroy() {
+      if (this._keyboardShortcutHandler) {
+        document.removeEventListener("keydown", this._keyboardShortcutHandler);
+        this._keyboardShortcutHandler = null;
+      }
       this.deactivateAllAudits();
+      this.activeAudits.clear();
       this.destroyToolbar();
     },
 
