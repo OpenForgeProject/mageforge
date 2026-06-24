@@ -201,7 +201,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 8px 12px 4px;
+  margin: 8px 12px 4px 0;
   padding: 6px 10px;
   background: none;
   border: 1px dashed var(--mageforge-border-color);
