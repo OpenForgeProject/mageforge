@@ -15,6 +15,20 @@ enable-short-tags = false
 inline-empty-constructor-braces = false
 inline-empty-classlike-braces = false
 
+[analyzer]
+# phtml templates rely on variables ($block, $escaper, $secureRenderer, …) that
+# Magento's template engine injects into the render scope at runtime. A static
+# analyzer cannot know them, so every template would report "undefined variable"
+# plus a cascade of mixed-* follow-ups. Exclude templates from `mago analyze`
+# only — `mago lint`/`mago fmt` still cover them (they don't type-check scope).
+excludes = ["**/*.phtml"]
+# Magento framework APIs (ObjectManager, InputInterface::getOption(), collection
+# items, …) are pervasively typed as `mixed`, so `mixed-assignment`/`mixed-operand`
+# fire throughout idiomatic Magento code without pointing at real bugs. PHPStan
+# level 9 (with the Magento extension, see phpstan.neon) is the project's type
+# gate for these; `mago analyze` gates on the higher-confidence type errors.
+ignore = ["mixed-assignment", "mixed-operand"]
+
 [linter.rules]
 # Code-size metrics: Magento CLI commands and services are naturally verbose;
 # refactoring purely to satisfy thresholds is not a goal of this codebase.
