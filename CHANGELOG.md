@@ -17,6 +17,48 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.23.0](https://github.com/OpenForgeProject/mageforge/compare/0.22.0...0.23.0) (2026-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* install module via Composer path repository instead of app/code bind-mount
+* add MageForge bind-mount setup and dependency management ([#198](https://github.com/OpenForgeProject/mageforge/issues/198))
+* improve PHPStan target path and config detection
+* add ddev pre-start hook to mount MageForge source files for local development
+
+### Added
+
+* add ddev pre-start hook to mount MageForge source files for local development ([5682455](https://github.com/OpenForgeProject/mageforge/commit/568245514accf59acfc33f59fdea202c344dcc19))
+* add dev env ([#192](https://github.com/OpenForgeProject/mageforge/issues/192)) ([2e4b5fb](https://github.com/OpenForgeProject/mageforge/commit/2e4b5fba3976333ecfc75033ee16ec53fd334494))
+* add hyva theme install for local dev environment ([#196](https://github.com/OpenForgeProject/mageforge/issues/196)) ([3392557](https://github.com/OpenForgeProject/mageforge/commit/339255768d70fb0c891c0925759bf6fed8f8b642))
+* add MageForge bind-mount setup and dependency management ([#198](https://github.com/OpenForgeProject/mageforge/issues/198)) ([2e0e168](https://github.com/OpenForgeProject/mageforge/commit/2e0e16816832be24c491c916ece1b5bbb1a72026))
+* add MageForge Logo to admin menu ([#197](https://github.com/OpenForgeProject/mageforge/issues/197)) ([a7c2c8a](https://github.com/OpenForgeProject/mageforge/commit/a7c2c8a72c3117da6ee89af85f9422eb448dadc1))
+* add merchandise section to README with promotional image ([8dbcb9a](https://github.com/OpenForgeProject/mageforge/commit/8dbcb9a9d8eaf0b45f934d7f9094ff7fc4f24fcf))
+* add SVG logo and enhance toolbar styles and functionality ([#201](https://github.com/OpenForgeProject/mageforge/issues/201)) ([724c607](https://github.com/OpenForgeProject/mageforge/commit/724c607bf9d122749bd6ac160b1318c0497fc8d0))
+* require Hyvä theme and enable MageForge module during Magento installation ([79a6e00](https://github.com/OpenForgeProject/mageforge/commit/79a6e005d022c2042457e008e0404bb9dd7b18ef))
+* Toolbar redesign ([#202](https://github.com/OpenForgeProject/mageforge/issues/202)) ([fd5854a](https://github.com/OpenForgeProject/mageforge/commit/fd5854aa63e64bb085118cb16e935fd9f4558021))
+* update qa tools ([#200](https://github.com/OpenForgeProject/mageforge/issues/200)) ([e8bbdcd](https://github.com/OpenForgeProject/mageforge/commit/e8bbdcdab5b44c6d99778e961756d49f57c54496))
+* update README and commands documentation ([#194](https://github.com/OpenForgeProject/mageforge/issues/194)) ([526c456](https://github.com/OpenForgeProject/mageforge/commit/526c45601665df32a95c4fbda4780e7869983d80))
+
+
+### Fixed
+
+* audit toggle functionality ([d4bbb3c](https://github.com/OpenForgeProject/mageforge/commit/d4bbb3c9ef8932486a0f62a9c22b6e86c335b2c6))
+* enhance cache cleaning in InspectorCommand to include layout and… ([#195](https://github.com/OpenForgeProject/mageforge/issues/195)) ([f8de418](https://github.com/OpenForgeProject/mageforge/commit/f8de418235d0d65124d8c86c39bc7e8339c28670))
+* image names for CLI chooser, toolbar, and merch in README ([b535622](https://github.com/OpenForgeProject/mageforge/commit/b535622363f9d8f860aa0f5ed4cb524bbacc87e9))
+* improve install-magento script to clean up leftover files from failed installations ([124180a](https://github.com/OpenForgeProject/mageforge/commit/124180a3c7a3ae65fc701524d2ef0d158f2ba73d))
+* improve PHPStan target path and config detection ([e398fc0](https://github.com/OpenForgeProject/mageforge/commit/e398fc05c561f5b93b69c49e158c3d1803aac4ac))
+* install module via Composer path repository instead of app/code bind-mount ([1305ee6](https://github.com/OpenForgeProject/mageforge/commit/1305ee6d7793deee7821489c8924d7b345163d0a))
+* update symlink option in composer path repository configuration ([3ef1c43](https://github.com/OpenForgeProject/mageforge/commit/3ef1c43bf3fd9158acc3200a2f81af1e666f03d1))
+
+
+### Documentation
+
+* enhance development documentation with automated release and changelog generation details ([652f984](https://github.com/OpenForgeProject/mageforge/commit/652f984300abcaddcbfada857cc9044acfb80e30))
+* update contributing guidelines for clarity and best practices ([c108a86](https://github.com/OpenForgeProject/mageforge/commit/c108a861db798cf4e7a3bb59153ca0ab57259f2d))
+* update development documentation to clarify bind-mount setup and module dependency management ([0f279cc](https://github.com/OpenForgeProject/mageforge/commit/0f279cc18da1a579af31bdda8af703531a3f9e34))
+
 ## [0.22.0](https://github.com/OpenForgeProject/mageforge/compare/0.21.1...0.22.0) (2026-06-01)
 
 ### Added
