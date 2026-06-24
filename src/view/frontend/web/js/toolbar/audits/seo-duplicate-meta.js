@@ -49,5 +49,5 @@ export default {
     } else {
       context.setAuditDescription(KEY, this.description);
     }
-  }
+  },
 };

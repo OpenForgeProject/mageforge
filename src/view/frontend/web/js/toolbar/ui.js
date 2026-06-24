@@ -930,7 +930,8 @@ export const uiMethods = {
       </span>
       <span class="mageforge-toolbar-menu-toggle"></span>
     `;
-    item.querySelector(".mageforge-toolbar-menu-desc").textContent = description;
+    item.querySelector(".mageforge-toolbar-menu-desc").textContent =
+      description;
 
     // Findings list – populated by setAuditFindings(); events never bubble to the toggle
     const findings = document.createElement("div");
@@ -1022,39 +1023,47 @@ export const uiMethods = {
     const list = document.createElement("div");
     list.className = "mageforge-findings-list";
 
-    findings.forEach(({ el, selector, severity = "error", action = "Show Element" }, index) => {
-      const selectorStr = selector ?? getReadableSelector(el);
-      const isLast = index === findings.length - 1;
+    findings.forEach(
+      (
+        { el, selector, severity = "error", action = "Show Element" },
+        index,
+      ) => {
+        const selectorStr = selector ?? getReadableSelector(el);
+        const isLast = index === findings.length - 1;
 
-      const row = document.createElement("div");
-      row.className = `mageforge-audit-finding mageforge-audit-finding--${severity}`;
+        const row = document.createElement("div");
+        row.className = `mageforge-audit-finding mageforge-audit-finding--${severity}`;
 
-      const treeEl = document.createElement("span");
-      treeEl.className = "mageforge-finding-tree";
-      treeEl.setAttribute("aria-hidden", "true");
-      treeEl.textContent = `${isLast ? "\u2514" : "\u251C"}\u2500`;
+        const treeEl = document.createElement("span");
+        treeEl.className = "mageforge-finding-tree";
+        treeEl.setAttribute("aria-hidden", "true");
+        treeEl.textContent = `${isLast ? "\u2514" : "\u251C"}\u2500`;
 
-      const selectorEl = document.createElement("span");
-      selectorEl.className = "mageforge-finding-selector";
-      selectorEl.setAttribute("title", selectorStr);
-      selectorEl.textContent = selectorStr;
+        const selectorEl = document.createElement("span");
+        selectorEl.className = "mageforge-finding-selector";
+        selectorEl.setAttribute("title", selectorStr);
+        selectorEl.textContent = selectorStr;
 
-      const actionEl = document.createElement("span");
-      actionEl.className = "mageforge-finding-action";
-      actionEl.textContent = action;
+        const actionEl = document.createElement("span");
+        actionEl.className = "mageforge-finding-action";
+        actionEl.textContent = action;
 
-      row.appendChild(treeEl);
-      row.appendChild(selectorEl);
-      row.appendChild(actionEl);
+        row.appendChild(treeEl);
+        row.appendChild(selectorEl);
+        row.appendChild(actionEl);
 
-      row.addEventListener("click", (e) => {
-        e.stopPropagation();
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("mageforge-finding-flash");
-        setTimeout(() => el.classList.remove("mageforge-finding-flash"), 1200);
-      });
-      list.appendChild(row);
-    });
+        row.addEventListener("click", (e) => {
+          e.stopPropagation();
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("mageforge-finding-flash");
+          setTimeout(
+            () => el.classList.remove("mageforge-finding-flash"),
+            1200,
+          );
+        });
+        list.appendChild(row);
+      },
+    );
 
     container.appendChild(list);
   },
