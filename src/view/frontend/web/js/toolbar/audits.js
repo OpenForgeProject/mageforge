@@ -20,16 +20,17 @@ export const auditMethods = {
 
     const isActive = this.activeAudits.has(auditKey);
     if (isActive) {
-      this.activeAudits.delete(auditKey);
       try {
         audit.run(this, false);
+        this.activeAudits.delete(auditKey);
+        this.setAuditCounterBadge(auditKey, "", "success");
       } catch (err) {
         console.warn(
           `[MageForge] Audit "${auditKey}" failed on deactivate:`,
           err,
         );
+        // Restore prior active state – do not deactivate if cleanup failed
       }
-      this.setAuditCounterBadge(auditKey, "", "success");
     } else {
       this.activeAudits.add(auditKey);
       try {
@@ -42,7 +43,7 @@ export const auditMethods = {
         this.activeAudits.delete(auditKey);
       }
     }
-    this.setAuditActive(auditKey, !isActive);
+    this.setAuditActive(auditKey, this.activeAudits.has(auditKey));
   },
 
   /**

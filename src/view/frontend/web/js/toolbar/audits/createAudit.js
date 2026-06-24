@@ -59,16 +59,32 @@ export function createAudit(meta, detect, onComplete) {
       if (hasErrors) {
         applyHighlight(errors, key, context, {
           severity: "error",
-          autoFindings: true,
-          formatFinding: () => ({ action: "Show affected element" }),
+          skipBadge: true,
+          autoFindings: false,
         });
       }
       if (hasWarnings) {
         applyHighlight(warnings, key, context, {
           severity: "warning",
-          autoFindings: true,
-          formatFinding: () => ({ action: "Show affected element" }),
+          skipBadge: true,
+          autoFindings: false,
         });
+      }
+
+      // Build combined findings list (errors first, then warnings)
+      if (typeof context?.setAuditFindings === "function") {
+        context.setAuditFindings(key, [
+          ...errors.map((el) => ({
+            el,
+            severity: "error",
+            action: "Show affected element",
+          })),
+          ...warnings.map((el) => ({
+            el,
+            severity: "warning",
+            action: "Show affected element",
+          })),
+        ]);
       }
 
       // Scroll to first issue

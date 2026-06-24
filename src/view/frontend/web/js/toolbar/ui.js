@@ -318,9 +318,6 @@ export const uiMethods = {
     const wrapper = document.createElement("div");
     wrapper.className = "mageforge-toolbar-tab-content";
 
-    const showHealthScore =
-      this.$el?.getAttribute("data-show-health-score") !== "0";
-
     const grouped = {};
     const ungrouped = [];
     this.getAudits().forEach((audit) => {
@@ -332,7 +329,7 @@ export const uiMethods = {
     // Home panel – visible by default
     const homePanel = this._buildPanel("home");
     homePanel.classList.add("mageforge-tab-panel-active");
-    homePanel.appendChild(this._buildHomePanel(showHealthScore));
+    homePanel.appendChild(this._buildHomePanel());
     wrapper.appendChild(homePanel);
 
     // One panel per audit group
@@ -342,7 +339,7 @@ export const uiMethods = {
 
       const panel = this._buildPanel(group.key);
       panel.setAttribute("hidden", "");
-      panel.appendChild(this._buildPanelHeader(group.label, false, group.key));
+      panel.appendChild(this._buildPanelHeader(group.label, true, group.key));
 
       const body = document.createElement("div");
       body.className = "mageforge-tab-panel-body";
@@ -473,7 +470,6 @@ export const uiMethods = {
     titleEl.textContent = title;
     header.appendChild(titleEl);
 
-    if (showScore) header.appendChild(this._buildScoreWidget());
     return header;
   },
 
@@ -495,7 +491,7 @@ export const uiMethods = {
             <stop offset="100%" stop-color="#10b981"></stop>
           </linearGradient>
         </defs>
-        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="4"></circle>
+        <circle cx="22" cy="22" r="18" fill="none" stroke="var(--mageforge-border-color, rgba(148,163,184,0.15))" stroke-width="4"></circle>
         <circle cx="22" cy="22" r="18" fill="none" stroke="url(#${gradId})" stroke-width="4"
                 stroke-dasharray="0 ${SCORE_RING_CIRCUMFERENCE}" stroke-linecap="round"
                 transform="rotate(-90 22 22)" class="mageforge-score-ring"></circle>
@@ -513,117 +509,112 @@ export const uiMethods = {
   /**
    * Home panel: half-arc gauge overview + Check Health Score button.
    *
-   * @param {boolean} showHealthScore
    * @returns {HTMLDivElement}
    */
-  _buildHomePanel(showHealthScore) {
+  _buildHomePanel() {
     const panel = document.createElement("div");
     panel.className = "mageforge-home-panel";
 
-    if (showHealthScore) {
-      const gradId = `mf-gauge-${crypto.randomUUID().slice(0, 8)}`;
-      panel.innerHTML = `
-        <div class="mageforge-toolbar-health-wrapper">
-          <svg viewBox="0 0 120 70" class="mageforge-toolbar-health-gauge" aria-hidden="true">
-            <defs>
-              <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%"   stop-color="#ef4444"></stop>
-                <stop offset="50%"  stop-color="#edb04d"></stop>
-                <stop offset="100%" stop-color="#10b981"></stop>
-              </linearGradient>
-            </defs>
-            <path d="M 10 65 A 50 50 0 0 1 110 65"
-                  fill="none" stroke="var(--mageforge-border-color)" stroke-width="10" stroke-linecap="round"></path>
-            <path d="M 10 65 A 50 50 0 0 1 110 65"
-                  fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="0 ${GAUGE_ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
-            <line class="mageforge-health-gauge-needle"
-                  x1="60" y1="65" x2="60" y2="20"
-                  stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>
-            <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"></circle>
-          </svg>
-          <div class="mageforge-toolbar-health-score-text">
-            <div class="mageforge-toolbar-health-score-value">
-              <span class="mageforge-toolbar-health-score-number">--</span>
-              <span class="mageforge-toolbar-health-score-max">/100</span>
-            </div>
-            <div class="mageforge-toolbar-health-score-label">Overall Health Score</div>
+    const gradId = `mf-gauge-${crypto.randomUUID().slice(0, 8)}`;
+    panel.innerHTML = `
+      <div class="mageforge-toolbar-health-wrapper">
+        <svg viewBox="0 0 120 70" class="mageforge-toolbar-health-gauge" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#ef4444"></stop>
+              <stop offset="50%"  stop-color="#edb04d"></stop>
+              <stop offset="100%" stop-color="#10b981"></stop>
+            </linearGradient>
+          </defs>
+          <path d="M 10 65 A 50 50 0 0 1 110 65"
+                fill="none" stroke="var(--mageforge-border-color)" stroke-width="10" stroke-linecap="round"></path>
+          <path d="M 10 65 A 50 50 0 0 1 110 65"
+                fill="none" stroke="url(#${gradId})" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="0 ${GAUGE_ARC_LENGTH}" class="mageforge-health-gauge-progress"></path>
+          <line class="mageforge-health-gauge-needle"
+                x1="60" y1="65" x2="60" y2="20"
+                stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round" opacity="0"></line>
+          <circle cx="60" cy="65" r="4" fill="rgba(255,255,255,0.4)"></circle>
+        </svg>
+        <div class="mageforge-toolbar-health-score-text">
+          <div class="mageforge-toolbar-health-score-value">
+            <span class="mageforge-toolbar-health-score-number">--</span>
+            <span class="mageforge-toolbar-health-score-max">/100</span>
           </div>
+          <div class="mageforge-toolbar-health-score-label">Overall Health Score</div>
         </div>
-      `;
+      </div>
+    `;
 
-      // Check Health Score button + Reset side by side
-      const btnRow = document.createElement("div");
-      btnRow.className = "mageforge-home-btn-row";
+    // Check Health Score button + Reset side by side
+    const btnRow = document.createElement("div");
+    btnRow.className = "mageforge-home-btn-row";
 
-      this.runAllButton = document.createElement("button");
-      this.runAllButton.type = "button";
-      this.runAllButton.className = "mageforge-group-run-btn";
-      this.runAllButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        Perform Full Check
-      `;
-      this.runAllButton.onclick = (e) => {
-        e.stopPropagation();
-        this.runAllAuditsForScore();
-      };
-      btnRow.appendChild(this.runAllButton);
+    this.runAllButton = document.createElement("button");
+    this.runAllButton.type = "button";
+    this.runAllButton.className = "mageforge-group-run-btn";
+    this.runAllButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      Perform Full Check
+    `;
+    this.runAllButton.onclick = (e) => {
+      e.stopPropagation();
+      this.runAllAuditsForScore();
+    };
+    btnRow.appendChild(this.runAllButton);
 
-      // Reset button next to Perform Full Check
-      this.resetButton = document.createElement("button");
-      this.resetButton.type = "button";
-      this.resetButton.className = "mageforge-group-reset-btn";
-      this.resetButton.title = "Reset score and deactivate all audits";
-      this.resetButton.setAttribute(
-        "aria-label",
-        "Reset score and deactivate all audits",
-      );
-      this.resetButton.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
-      this.resetButton.onclick = (e) => {
-        e.stopPropagation();
-        this.resetScore();
-      };
-      btnRow.appendChild(this.resetButton);
-      // btnRow held as ref; rendered in footer action bar via _updateFooterActions
+    // Reset button next to Perform Full Check
+    this.resetButton = document.createElement("button");
+    this.resetButton.type = "button";
+    this.resetButton.className = "mageforge-group-reset-btn";
+    this.resetButton.title = "Reset score and deactivate all audits";
+    this.resetButton.setAttribute(
+      "aria-label",
+      "Reset score and deactivate all audits",
+    );
+    this.resetButton.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset';
+    this.resetButton.onclick = (e) => {
+      e.stopPropagation();
+      this.resetScore();
+    };
+    btnRow.appendChild(this.resetButton);
+    // btnRow held as ref; rendered in footer action bar via _updateFooterActions
 
-      panel.appendChild(this._buildPageContext());
-      panel.appendChild(this._buildQuickStats());
+    panel.appendChild(this._buildPageContext());
+    panel.appendChild(this._buildQuickStats());
 
-      // Category score breakdown
-      const categories = document.createElement("div");
-      categories.className = "mageforge-dashboard-categories";
-      [...this.getAuditGroups()]
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .forEach((group) => {
-          const card = document.createElement("div");
-          card.className = "mageforge-dashboard-category";
-          card.style.setProperty(
-            "--category-color",
-            `var(--mageforge-group-color-${group.key})`,
-          );
-          card.innerHTML = `
+    // Category score breakdown
+    const categories = document.createElement("div");
+    categories.className = "mageforge-dashboard-categories";
+    [...this.getAuditGroups()]
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .forEach((group) => {
+        const card = document.createElement("div");
+        card.className = "mageforge-dashboard-category";
+        card.style.setProperty(
+          "--category-color",
+          `var(--mageforge-group-color-${group.key})`,
+        );
+        card.innerHTML = `
           <span class="mageforge-dashboard-category-label">${group.label}</span>
           <span class="mageforge-dashboard-category-score" data-dashboard-group-score="${group.key}">--</span>
         `;
-          categories.appendChild(card);
-        });
-      panel.appendChild(categories);
+        categories.appendChild(card);
+      });
+    panel.appendChild(categories);
 
-      // Issues list – populated by updateDashboardIssues()
-      this.dashboardIssuesEl = document.createElement("div");
-      this.dashboardIssuesEl.className = "mageforge-dashboard-issues";
-      panel.appendChild(this.dashboardIssuesEl);
+    // Issues list – populated by updateDashboardIssues()
+    this.dashboardIssuesEl = document.createElement("div");
+    this.dashboardIssuesEl.className = "mageforge-dashboard-issues";
+    panel.appendChild(this.dashboardIssuesEl);
 
-      panel.appendChild(
-        Object.assign(document.createElement("p"), {
-          className: "mageforge-home-hint",
-          textContent: "Select a category on the left for detailed checks.",
-        }),
-      );
-    } else {
-      panel.innerHTML = `<p class="mageforge-home-hint">Select a category on the left to run audits.</p>`;
-    }
+    panel.appendChild(
+      Object.assign(document.createElement("p"), {
+        className: "mageforge-home-hint",
+        textContent: "Select a category on the left for detailed checks.",
+      }),
+    );
 
     return panel;
   },
@@ -644,7 +635,7 @@ export const uiMethods = {
     const rawTitle = document.title.split(" - ")[0].trim();
     const title =
       rawTitle.length > 36 ? rawTitle.slice(0, 34) + "\u2026" : rawTitle;
-    const path = location.pathname;
+    const path = location.pathname.replace(/\/+$/, "") || "/";
     const displayPath = path.length > 34 ? "\u2026" + path.slice(-32) : path;
 
     const el = document.createElement("div");
@@ -666,7 +657,7 @@ export const uiMethods = {
 
     el.appendChild(typeBadge);
     el.appendChild(titleEl);
-    el.appendChild(urlEl);
+    if (pageType !== "Homepage" && path !== "/") el.appendChild(urlEl);
     return el;
   },
 
@@ -935,15 +926,18 @@ export const uiMethods = {
           <span class="mageforge-toolbar-menu-label">${label}</span>
           <span class="mageforge-toolbar-menu-status" aria-live="polite" aria-atomic="true"></span>
         </span>
-        <span class="mageforge-toolbar-menu-desc">${description}</span>
+        <span class="mageforge-toolbar-menu-desc"></span>
       </span>
       <span class="mageforge-toolbar-menu-toggle"></span>
     `;
+    item.querySelector(".mageforge-toolbar-menu-desc").textContent = description;
 
-    // Findings list – populated by setAuditFindings(); clicks never bubble to the toggle
+    // Findings list – populated by setAuditFindings(); events never bubble to the toggle
     const findings = document.createElement("div");
     findings.className = "mageforge-audit-findings";
     findings.addEventListener("click", (e) => e.stopPropagation());
+    findings.addEventListener("keydown", (e) => e.stopPropagation());
+    findings.addEventListener("keyup", (e) => e.stopPropagation());
     item.appendChild(findings);
 
     item.onclick = (e) => {
@@ -1028,7 +1022,7 @@ export const uiMethods = {
     const list = document.createElement("div");
     list.className = "mageforge-findings-list";
 
-    findings.forEach(({ el, selector, severity = "error" }, index) => {
+    findings.forEach(({ el, selector, severity = "error", action = "Show Element" }, index) => {
       const selectorStr = selector ?? getReadableSelector(el);
       const isLast = index === findings.length - 1;
 
@@ -1047,7 +1041,7 @@ export const uiMethods = {
 
       const actionEl = document.createElement("span");
       actionEl.className = "mageforge-finding-action";
-      actionEl.textContent = "Show Element";
+      actionEl.textContent = action;
 
       row.appendChild(treeEl);
       row.appendChild(selectorEl);
@@ -1433,7 +1427,7 @@ export const uiMethods = {
   _getFocusableEls() {
     return Array.from(
       this.menu.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])',
       ),
     ).filter((el) => !el.closest("[hidden]"));
   },
