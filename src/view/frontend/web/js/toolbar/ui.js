@@ -1,3 +1,5 @@
+import { getReadableSelector } from "./audits/highlight.js";
+
 /**
  * MageForge Toolbar – DOM construction and menu controls
  *
@@ -53,27 +55,18 @@ function createLogoSvg(fill) {
 }
 
 /**
- * Build a short, human-readable CSS selector for labelling a finding.
+ * Generate a short random ID for use in SVG gradient/clip-path IDs.
+ * Falls back to Math.random() when crypto.randomUUID() is unavailable
+ * (e.g. non-secure contexts).
  *
- * @param {Element} el
+ * @param {string} prefix
  * @returns {string}
  */
-function getReadableSelector(el) {
-  if (el.id) return `#${el.id}`;
-  const tag = el.tagName.toLowerCase();
-  const classes = [...el.classList]
-    .filter((c) => !c.startsWith("mageforge"))
-    .slice(0, 2)
-    .join(".");
-  if (classes) return `${tag}.${classes}`;
-  const ariaLabel = el.getAttribute("aria-label");
-  if (ariaLabel) return `${tag}[aria-label]`;
-  if (el.name) return `${tag}[name="${el.name}"]`;
-  if (tag === "img" && el.src) {
-    const base = el.src.split("/").pop().split("?")[0].slice(0, 24);
-    return `img/${base}`;
-  }
-  return tag;
+function generateId(prefix) {
+  const rand =
+    crypto.randomUUID?.().slice(0, 8) ??
+    Math.random().toString(36).slice(2, 10);
+  return `mf-${prefix}-${rand}`;
 }
 
 // ── Exported mixin ─────────────────────────────────────────────────────────
@@ -470,6 +463,10 @@ export const uiMethods = {
     titleEl.textContent = title;
     header.appendChild(titleEl);
 
+    if (showScore) {
+      header.appendChild(this._buildScoreWidget());
+    }
+
     return header;
   },
 
@@ -479,7 +476,7 @@ export const uiMethods = {
    * @returns {HTMLDivElement}
    */
   _buildScoreWidget() {
-    const gradId = `mf-sg-${crypto.randomUUID().slice(0, 8)}`;
+    const gradId = generateId("sg");
     const widget = document.createElement("div");
     widget.className = "mageforge-score-widget";
     widget.innerHTML = `
@@ -515,7 +512,7 @@ export const uiMethods = {
     const panel = document.createElement("div");
     panel.className = "mageforge-home-panel";
 
-    const gradId = `mf-gauge-${crypto.randomUUID().slice(0, 8)}`;
+    const gradId = generateId("gauge");
     panel.innerHTML = `
       <div class="mageforge-toolbar-health-wrapper">
         <svg viewBox="0 0 120 70" class="mageforge-toolbar-health-gauge" aria-hidden="true">
