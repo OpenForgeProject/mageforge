@@ -54,6 +54,7 @@ Config:
 Inspector:
   - changed-files:
       - any-glob-to-any-file:
+          - src/view/frontend/web/js/inspector/**
           - src/view/frontend/web/js/inspector.js
           - src/Model/TemplateEngine/Decorator/InspectorHints.php
 
@@ -61,6 +62,7 @@ Toolbar:
   - changed-files:
       - any-glob-to-any-file:
           - src/view/frontend/web/js/toolbar/**
+          - src/view/frontend/web/js/toolbar.js
           - src/view/frontend/web/css/toolbar.css
 
 I18n:
