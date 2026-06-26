@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.23.1](https://github.com/OpenForgeProject/mageforge/compare/0.23.0...0.23.1) (2026-06-26)
+
+
+### Fixed
+
+* PHP 8.5 compatibility: Method ReflectionProperty::setAccessible is deprecated ([#206](https://github.com/OpenForgeProject/mageforge/issues/206)) ([e5b5b43](https://github.com/OpenForgeProject/mageforge/commit/e5b5b43ff3a0014e8ca74188a3890ed3486a376d))
+* Validate theme code length in ThemeSuggester to prevent exceeding character limit ([#208](https://github.com/OpenForgeProject/mageforge/issues/208)) ([cfa1f9d](https://github.com/OpenForgeProject/mageforge/commit/cfa1f9d9cdb0722dffe0e84ece87e6b80bed3418))
+
 ## [0.23.0](https://github.com/OpenForgeProject/mageforge/compare/0.22.0...0.23.0) (2026-06-24)
 
 ### ⚠ BREAKING CHANGES
