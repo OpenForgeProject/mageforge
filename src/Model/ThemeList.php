@@ -10,8 +10,6 @@ use Magento\Theme\Model\Theme;
 class ThemeList
 {
     /**
-     * Constructor
-     *
      * @param MagentoThemeList $magentoThemeList
      */
     public function __construct(
