@@ -137,6 +137,11 @@ abstract class AbstractCommand extends Command
         ThemeSuggester $themeSuggester,
         OutputInterface $output,
     ): ?string {
+        if (strlen($invalidTheme) > 255) {
+            $this->io->error("Theme name '$invalidTheme' is too long (max. 255 characters).");
+            return null;
+        }
+
         $suggestions = $themeSuggester->findSimilarThemes($invalidTheme);
 
         // No suggestions found

@@ -43,21 +43,32 @@ class ThemeSuggester
             return [];
         }
 
+        if (strlen($invalidTheme) > 255) {
+            return [];
+        }
+
+        $normalizedInput = strtolower($invalidTheme);
         $themes = $this->themeList->getAllThemes();
-        $threshold = (int) (strlen($invalidTheme) / 3);
+        $threshold = (int) (strlen($normalizedInput) / 3);
         $suggestions = [];
 
         foreach ($themes as $theme) {
             $themeCode = $theme->getCode();
+            $normalizedCode = strtolower($themeCode);
+            $isSubstringMatch = str_contains($normalizedCode, $normalizedInput);
 
+            // Only skip levenshtein for overlong codes, still allow substring match
             if (strlen($themeCode) > 255) {
+                if ($isSubstringMatch) {
+                    $suggestions[$themeCode] = PHP_INT_MAX;
+                }
                 continue;
             }
 
-            $distance = levenshtein(strtolower($invalidTheme), strtolower($themeCode));
+            $distance = levenshtein($normalizedInput, $normalizedCode);
 
             // Accept if: distance ≤ 1/3 of input length OR substring match (case-insensitive)
-            if ($distance <= $threshold || str_contains(strtolower($themeCode), strtolower($invalidTheme))) {
+            if ($distance <= $threshold || $isSubstringMatch) {
                 $suggestions[$themeCode] = $distance;
             }
         }
