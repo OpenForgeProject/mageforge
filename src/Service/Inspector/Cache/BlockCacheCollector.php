@@ -142,7 +142,6 @@ class BlockCacheCollector
         if (property_exists($block, '_isScopePrivate')) {
             try {
                 $reflection = new \ReflectionProperty($block, '_isScopePrivate');
-                $reflection->setAccessible(true);
                 $isScopePrivate = $reflection->getValue($block);
                 if ($isScopePrivate === true) {
                     return true;
