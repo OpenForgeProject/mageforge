@@ -49,6 +49,11 @@ class ThemeSuggester
 
         foreach ($themes as $theme) {
             $themeCode = $theme->getCode();
+
+            if (strlen($themeCode) > 255) {
+                continue;
+            }
+
             $distance = levenshtein(strtolower($invalidTheme), strtolower($themeCode));
 
             // Accept if: distance ≤ 1/3 of input length OR substring match (case-insensitive)
