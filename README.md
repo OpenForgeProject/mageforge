@@ -91,15 +91,14 @@ The MageForge Inspector lets you inspect Magento blocks, templates, and performa
 ```bash
 bin/magento mageforge:theme:inspector enable
 ```
-
-_(Requires Developer Mode. Can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)_
+The Inspector can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)
 
 **Use in Browser:**
 
 - Toggle: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS)
 - Hover over elements to inspect; click to lock on a specific block
 
-> **Note:** Not compatible with Magewire components (automatically excluded).
+> **Note:** Requires Developer Mode. If not already active, run `bin/magento deploy:mode:set developer`.
 
 ## Commands Reference
 
