@@ -39,6 +39,9 @@ function _registerMageforgeToolbar() {
     /** @type {Function|null} Global keydown handler for keyboard shortcuts */
     _keyboardShortcutHandler: null,
 
+    /** @type {Map<string, 'success'|'warning'|'error'>} In-memory audit badge status (avoids DOM reads in score calc) */
+    _auditStatus: new Map(),
+
     // ====================================================================
     // Lifecycle
     // ====================================================================
