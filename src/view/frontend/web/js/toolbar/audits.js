@@ -63,7 +63,8 @@ export const auditMethods = {
   },
 
   /**
-   * Calculate a 0–100 score for the given audit list based on current DOM state.
+   * Calculate a 0–100 score for the given audit list.
+   * Reads from the in-memory _auditStatus map; unrun audits count as perfect (100).
    *
    * @param {import('./audits/index.js').AuditDefinition[]} auditList
    * @returns {number}
@@ -72,21 +73,15 @@ export const auditMethods = {
     let total = 0;
     let max = 0;
     auditList.forEach((audit) => {
-      const item = this.menu?.querySelector(`[data-audit-key="${audit.key}"]`);
-      if (!item) return;
+      if (!this.menu?.querySelector(`[data-audit-key="${audit.key}"]`)) return;
       max += 100;
-      const status = item.querySelector(".mageforge-toolbar-menu-status");
-      if (!status || !status.textContent.trim()) {
+      const status = this._auditStatus.get(audit.key);
+      if (!status || status === "success") {
         total += 100;
-      } else if (
-        status.classList.contains("mageforge-toolbar-menu-status--success")
-      ) {
-        total += 100;
-      } else if (
-        status.classList.contains("mageforge-toolbar-menu-status--warning")
-      ) {
+      } else if (status === "warning") {
         total += 50;
       }
+      // error → 0 pts, nothing added
     });
     return max > 0 ? Math.round((total / max) * 100) : 100;
   },
@@ -471,6 +466,12 @@ export const auditMethods = {
    * @param {'success'|'error'} type
    */
   setAuditCounterBadge(key, message, type = "success") {
+    // Keep in-memory status in sync; delete key when badge is cleared (unrun state)
+    if (message.trim()) {
+      this._auditStatus.set(key, type);
+    } else {
+      this._auditStatus.delete(key);
+    }
     if (!this.menu) return;
     const item = this.menu.querySelector(`[data-audit-key="${key}"]`);
     if (!item) return;
