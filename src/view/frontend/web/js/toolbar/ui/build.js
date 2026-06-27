@@ -83,6 +83,9 @@ export const buildMethods = {
   _buildMenu() {
     const menu = document.createElement("div");
     menu.className = "mageforge-toolbar-menu";
+    menu.setAttribute("role", "dialog");
+    menu.setAttribute("aria-modal", "true");
+    menu.setAttribute("aria-label", "MageForge Toolbar");
     menu.appendChild(this._buildMenuHeader());
     menu.appendChild(this._buildTabLayout());
     menu.appendChild(this._buildMenuFooter());
