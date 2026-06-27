@@ -21,32 +21,117 @@ const overlayRegistry = new WeakMap();
 
 /**
  * Shared update machinery – a single ResizeObserver and capturing scroll
- * listener serve all active overlays, throttled via requestAnimationFrame.
- * Attached on the first overlay, torn down when the last one is removed.
+ * listener serve all active overlays and any registered extra callbacks,
+ * throttled via requestAnimationFrame.
+ * Attached when the first overlay is created or the first extra callback is
+ * registered; torn down when both collections are empty again.
  *
- * @type {Map<HTMLSpanElement, function>}
+ * activeOverlays maps each overlay <span> to its tracked element and cleanup
+ * function so the RAF can perform a single batched read phase followed by a
+ * single write phase, avoiding forced layout reflows between reads and writes.
+ *
+ * @type {Map<HTMLSpanElement, { el: Element, cleanup: function }>}
  */
 const activeOverlays = new Map();
+
+/**
+ * Additional per-frame callbacks registered by other audit modules (e.g.
+ * tab-order) that need to piggyback on the shared scroll/resize listeners.
+ *
+ * @type {Set<function>}
+ */
+const extraCallbacks = new Set();
+
 let rafPending = false;
 let sharedRo = null;
 
+/** Attach the shared ResizeObserver and scroll listener if not already active. */
+function attachSharedListeners() {
+  if (sharedRo) return;
+  sharedRo = new ResizeObserver(scheduleUpdate);
+  sharedRo.observe(document.documentElement);
+  window.addEventListener("scroll", scheduleUpdate, {
+    passive: true,
+    capture: true,
+  });
+}
+
+/** Detach shared listeners once neither overlays nor extra callbacks need them. */
+function detachSharedListeners() {
+  if (activeOverlays.size > 0 || extraCallbacks.size > 0) return;
+  sharedRo?.disconnect();
+  sharedRo = null;
+  window.removeEventListener("scroll", scheduleUpdate, { capture: true });
+}
+
+/**
+ * Schedule a single RAF-throttled update pass that:
+ *   1. Reads  all overlay bounding rects in one batched read  phase
+ *   2. Writes all overlay positions      in one batched write phase
+ *   3. Runs any registered extra callbacks (e.g. tab-order repositioning)
+ *
+ * Separating reads from writes prevents the browser from performing a full
+ * layout reflow between every read–write pair ("layout thrashing").
+ */
 function scheduleUpdate() {
   if (rafPending) return;
   rafPending = true;
   requestAnimationFrame(() => {
     rafPending = false;
-    // Snapshot before iterating: update() calls may delete entries
-    // (image disconnected → cleanup) while we are looping.
-    for (const updateFn of [...activeOverlays.values()]) {
-      updateFn();
+
+    // --- Batched read phase: snapshot all bounding rects before any write ---
+    const entries = [...activeOverlays.entries()];
+    const rects = entries.map(([, { el }]) =>
+      el.isConnected ? el.getBoundingClientRect() : null,
+    );
+
+    // --- Batched write phase: update all overlay positions ---
+    entries.forEach(([overlay, { cleanup }], i) => {
+      const rect = rects[i];
+      if (!rect) {
+        // Element removed from the DOM – clean up its overlay.
+        cleanup();
+        return;
+      }
+      overlay.style.top = `${rect.top}px`;
+      overlay.style.left = `${rect.left}px`;
+      overlay.style.width = `${rect.width}px`;
+      overlay.style.height = `${rect.height}px`;
+    });
+
+    // --- Extra per-frame callbacks (e.g. tab-order badge repositioning) ---
+    for (const cb of extraCallbacks) {
+      cb();
     }
   });
 }
 
 /**
- * Creates a fixed-position overlay <span> that tracks any element's
- * bounding box in the viewport. Shares a single RAF-throttled scroll/resize
- * handler across all active overlays instead of creating one per element.
+ * Register a callback to be invoked every animation frame alongside overlay
+ * updates. The shared scroll / resize listeners are kept alive while at least
+ * one callback is registered, even if no overlay highlights are active.
+ *
+ * @param {function} fn
+ */
+export function addSharedCallback(fn) {
+  extraCallbacks.add(fn);
+  attachSharedListeners();
+}
+
+/**
+ * Remove a previously registered per-frame callback. Tears down shared
+ * listeners when no overlays or callbacks remain.
+ *
+ * @param {function} fn
+ */
+export function removeSharedCallback(fn) {
+  extraCallbacks.delete(fn);
+  detachSharedListeners();
+}
+
+/**
+ * Creates a fixed-position overlay <span> that tracks any element's bounding
+ * box in the viewport. Participates in the shared RAF-throttled update cycle.
  * Returns a cleanup function that removes the overlay and deregisters it.
  *
  * @param {Element} el
@@ -60,12 +145,8 @@ function createOverlay(el, severity = "error") {
     overlay.classList.add("mageforge-audit-overlay--warning");
   document.body.appendChild(overlay);
 
-  function update() {
-    if (!el.isConnected) {
-      cleanup();
-
-      return;
-    }
+  // Set initial position synchronously so the overlay appears immediately.
+  if (el.isConnected) {
     const rect = el.getBoundingClientRect();
     overlay.style.top = `${rect.top}px`;
     overlay.style.left = `${rect.left}px`;
@@ -73,31 +154,14 @@ function createOverlay(el, severity = "error") {
     overlay.style.height = `${rect.height}px`;
   }
 
-  update();
-
-  activeOverlays.set(overlay, update);
-
-  // Attach shared listeners only when the first overlay is created.
-  if (activeOverlays.size === 1) {
-    sharedRo = new ResizeObserver(scheduleUpdate);
-    sharedRo.observe(document.documentElement);
-    window.addEventListener("scroll", scheduleUpdate, {
-      passive: true,
-      capture: true,
-    });
-  }
-
-  // Named so update() can reference it before its var declaration (hoisting).
   function cleanup() {
     activeOverlays.delete(overlay);
-    // Tear down shared listeners once no overlays remain.
-    if (activeOverlays.size === 0) {
-      sharedRo?.disconnect();
-      sharedRo = null;
-      window.removeEventListener("scroll", scheduleUpdate, { capture: true });
-    }
     overlay.remove();
+    detachSharedListeners();
   }
+
+  activeOverlays.set(overlay, { el, cleanup });
+  attachSharedListeners();
 
   return cleanup;
 }

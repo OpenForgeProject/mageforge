@@ -7,6 +7,8 @@
  * Clicking the audit again removes the overlay (toggle).
  */
 
+import { addSharedCallback, removeSharedCallback } from "./highlight.js";
+
 const OVERLAY_ID = "mageforge-tab-order-overlay";
 const CSS_ID = "mageforge-tab-order-css";
 const CSS_URL = new URL("../../../css/audits/tab-order.css", import.meta.url)
@@ -42,11 +44,23 @@ function isVisible(el) {
 }
 
 /**
+ * Cached overlay state: the sorted element list and their corresponding badge
+ * and SVG line DOM nodes, stored after renderOverlay() to enable cheap
+ * repositioning without rebuilding the DOM on scroll/resize.
+ *
+ * @type {{ sorted: Element[], badges: HTMLSpanElement[], lines: SVGLineElement[] } | null}
+ */
+let overlayState = null;
+
+/**
  * Returns true if the element lies completely outside the visible area of an
  * ancestor with overflow:hidden/clip (e.g. a carousel slide that is off-canvas).
+ *
+ * @param {Element} el
+ * @param {DOMRect} [preComputedRect] - Pre-computed bounding rect to avoid a duplicate call
  */
-function isClippedByAncestor(el) {
-  const elRect = el.getBoundingClientRect();
+function isClippedByAncestor(el, preComputedRect) {
+  const elRect = preComputedRect ?? el.getBoundingClientRect();
   let ancestor = el.parentElement;
   while (ancestor && ancestor !== document.documentElement) {
     const style = getComputedStyle(ancestor);
@@ -101,18 +115,17 @@ function sortByTabOrder(elements) {
 }
 
 /**
- * (Re-)renders the overlay: removes any existing overlay and redraws all
- * badges and connecting SVG lines at their current viewport positions.
+ * Builds the full tab-order overlay (badges + SVG lines) from scratch.
+ * Uses a batched read-then-write pattern to avoid layout thrashing.
+ * Stores element → badge/line references in overlayState so that
+ * repositionOverlay() can update positions cheaply on every scroll/resize
+ * frame without rebuilding the DOM.
  *
  * @param {Element[]} sorted - focusable elements in tab order
  */
 function renderOverlay(sorted) {
-  const existing = document.getElementById(OVERLAY_ID);
-  if (existing) {
-    existing.remove();
-  }
+  document.getElementById(OVERLAY_ID)?.remove();
 
-  // Build overlay
   const overlay = document.createElement("div");
   overlay.id = OVERLAY_ID;
   overlay.className = "mageforge-tab-order-overlay";
@@ -125,43 +138,81 @@ function renderOverlay(sorted) {
 
   document.body.appendChild(overlay);
 
-  // Place badges and record centre points
-  const centres = sorted.map((el, index) => {
-    const rect = el.getBoundingClientRect();
-    const cx = Math.round(rect.left + rect.width / 2);
-    const cy = Math.round(rect.top);
+  // --- Batched read phase: all getBoundingClientRect calls before any write ---
+  const rects = sorted.map((el) => el.getBoundingClientRect());
+  const clipped = sorted.map((el, i) => isClippedByAncestor(el, rects[i]));
 
-    const clipped = isClippedByAncestor(el);
+  // --- Batched write phase: create and position all badges ---
+  const badges = sorted.map((el, index) => {
+    const cx = Math.round(rects[index].left + rects[index].width / 2);
+    const cy = Math.round(rects[index].top);
     const badge = document.createElement("span");
     badge.className =
       "mageforge-tab-order-badge" +
       (getTabIndex(el) > 0 ? " mageforge-tab-order-badge--negative" : "") +
-      (clipped ? " mageforge-tab-order-badge--clipped" : "");
+      (clipped[index] ? " mageforge-tab-order-badge--clipped" : "");
     badge.textContent = index + 1;
     badge.style.left = cx + "px";
     badge.style.top = cy + "px";
     overlay.appendChild(badge);
-
-    return { cx, cy, negative: getTabIndex(el) > 0, clipped };
+    return badge;
   });
 
   // Draw connecting lines between consecutive badges
-  for (let i = 0; i < centres.length - 1; i++) {
-    const from = centres[i];
-    const to = centres[i + 1];
+  const lines = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const from = rects[i];
+    const to = rects[i + 1];
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.classList.add("mageforge-tab-order-line");
-    if (from.negative || to.negative) {
+    if (getTabIndex(sorted[i]) > 0 || getTabIndex(sorted[i + 1]) > 0) {
       line.classList.add("mageforge-tab-order-line--negative");
-    } else if (from.clipped || to.clipped) {
+    } else if (clipped[i] || clipped[i + 1]) {
       line.classList.add("mageforge-tab-order-line--clipped");
     }
-    line.setAttribute("x1", from.cx);
-    line.setAttribute("y1", from.cy);
-    line.setAttribute("x2", to.cx);
-    line.setAttribute("y2", to.cy);
+    line.setAttribute("x1", Math.round(from.left + from.width / 2));
+    line.setAttribute("y1", Math.round(from.top));
+    line.setAttribute("x2", Math.round(to.left + to.width / 2));
+    line.setAttribute("y2", Math.round(to.top));
     svg.appendChild(line);
+    lines.push(line);
   }
+
+  overlayState = { sorted, badges, lines };
+}
+
+/**
+ * Updates the position of all tab-order badges and SVG connecting lines to
+ * match the current viewport positions of their elements. Uses a batched
+ * read-then-write pattern to avoid layout thrashing.
+ *
+ * Called via the shared RAF scheduler on every scroll/resize frame instead of
+ * rebuilding the entire overlay DOM from scratch.
+ */
+function repositionOverlay() {
+  if (!overlayState || !document.getElementById(OVERLAY_ID)) return;
+
+  const { sorted, badges, lines } = overlayState;
+
+  // --- Batched read phase ---
+  const rects = sorted.map((el) => el.getBoundingClientRect());
+
+  // --- Batched write phase: badge positions ---
+  badges.forEach((badge, i) => {
+    badge.style.left = Math.round(rects[i].left + rects[i].width / 2) + "px";
+    badge.style.top = Math.round(rects[i].top) + "px";
+  });
+
+  // --- Batched write phase: SVG line endpoints ---
+  lines.forEach((line, i) => {
+    line.setAttribute("x1", Math.round(rects[i].left + rects[i].width / 2));
+    line.setAttribute("y1", Math.round(rects[i].top));
+    line.setAttribute(
+      "x2",
+      Math.round(rects[i + 1].left + rects[i + 1].width / 2),
+    );
+    line.setAttribute("y2", Math.round(rects[i + 1].top));
+  });
 }
 
 /** @type {import('./index.js').AuditDefinition} */
@@ -179,14 +230,8 @@ export default {
     injectCss();
 
     if (!active) {
-      context._tabOrderObserver?.disconnect();
-      context._tabOrderObserver = null;
-      if (context._tabOrderScrollHandler) {
-        document.removeEventListener("scroll", context._tabOrderScrollHandler, {
-          capture: true,
-        });
-        context._tabOrderScrollHandler = null;
-      }
+      removeSharedCallback(repositionOverlay);
+      overlayState = null;
       document.getElementById(OVERLAY_ID)?.remove();
       return;
     }
@@ -207,41 +252,9 @@ export default {
 
     renderOverlay(sorted);
 
-    // Always recompute from the live DOM so detached / newly added elements are handled correctly
-    const rerender = () =>
-      renderOverlay(
-        sortByTabOrder(
-          Array.from(document.querySelectorAll(FOCUSABLE_SELECTOR))
-            .filter((el) => !el.closest(".mageforge-toolbar"))
-            .filter(isVisible),
-        ),
-      );
-
-    // Re-render on resize or scroll (e.g. DevTools panel, page scroll)
-    context._tabOrderObserver = new ResizeObserver(() => {
-      if (!document.getElementById(OVERLAY_ID)) {
-        context._tabOrderObserver?.disconnect();
-        context._tabOrderObserver = null;
-        return;
-      }
-      rerender();
-    });
-    context._tabOrderObserver.observe(document.body);
-
-    let scrollRaf = null;
-    context._tabOrderScrollHandler = () => {
-      if (scrollRaf) return;
-      scrollRaf = requestAnimationFrame(() => {
-        scrollRaf = null;
-        if (document.getElementById(OVERLAY_ID)) {
-          rerender();
-        }
-      });
-    };
-    document.addEventListener("scroll", context._tabOrderScrollHandler, {
-      capture: true,
-      passive: true,
-    });
+    // Register repositionOverlay as a shared per-frame callback so badge
+    // positions are updated on scroll/resize without rebuilding the DOM.
+    addSharedCallback(repositionOverlay);
 
     const type = hasNegative ? "error" : "success";
     context.setAuditCounterBadge("tab-order", `${sorted.length}`, type);
