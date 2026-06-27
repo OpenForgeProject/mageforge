@@ -20,7 +20,7 @@ export default createAudit(
         return (
           style.visibility !== "hidden" &&
           style.display !== "none" &&
-          style.opacity !== "0"
+          parseFloat(style.opacity) !== 0
         );
       },
     );
