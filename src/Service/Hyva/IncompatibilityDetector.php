@@ -35,12 +35,12 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/\bko\.(observable|observableArray|computed|pureComputed)/',
+                'pattern' => '/\bko\.(observable|observableArray|computed|pureComputed)\b/',
                 'description' => 'Knockout.js usage',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/\bko\.(applyBindings|components|bindingHandlers)/',
+                'pattern' => '/\bko\.(applyBindings|components|bindingHandlers)\b/',
                 'description' => 'Knockout.js usage',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
@@ -84,7 +84,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/data-bind\s*=/',
+                'pattern' => '/data-bind\b\s*=/',
                 'description' => 'Knockout.js data-bind attribute',
                 'severity' => self::SEVERITY_CRITICAL,
             ],

@@ -137,6 +137,24 @@ class IncompatibilityDetectorTest extends TestCase
         $this->assertEmpty($issues, '"myko" prefix must not match the Knockout.js word-boundary pattern');
     }
 
+    public function testDoesNotFlagTrailingWordBoundaryFalsePositives(): void
+    {
+        // ko.computedSomething / ko.componentsX must NOT match (trailing boundary)
+        $content = "var a = ko.computedSomething();\nvar b = ko.componentsX.register();\n";
+        $this->fileMock->method('fileGetContents')->willReturn($content);
+        $issues = $this->detector->detectInFile('test.js');
+        $this->assertEmpty($issues, 'ko.computedSomething and ko.componentsX must not trigger KO pattern');
+    }
+
+    public function testDoesNotFlagDataBindingsFalsePositive(): void
+    {
+        // data-bindings= must NOT match, only data-bind= should
+        $content = '<div data-bindings="text: name">';
+        $this->fileMock->method('fileGetContents')->willReturn($content);
+        $issues = $this->detector->detectInFile('template.phtml');
+        $this->assertEmpty($issues, 'data-bindings= must not match the data-bind pattern');
+    }
+
     // -------------------------------------------------------------------------
     // XML patterns
     // -------------------------------------------------------------------------
