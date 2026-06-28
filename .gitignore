@@ -5,6 +5,9 @@
 /vendor/
 /composer.lock
 
+# PHPUnit
+/.phpunit.cache/
+
 .vscode
 /magento/
 /magento-temp/
