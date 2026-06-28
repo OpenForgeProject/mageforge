@@ -200,9 +200,7 @@ class CompatibilityChecker
         $hyvaTag = $moduleData['moduleInfo']['isHyvaAware'] ? ' (Hyvä-Aware)' : '';
 
         if ($moduleData['compatible'] && !$moduleData['hasWarnings']) {
-            return $moduleData['moduleInfo']['isHyvaAware']
-                ? '<fg=green>✓ Hyvä-Aware</>'
-                : '<fg=green>✓ Compatible</>';
+            return $moduleData['moduleInfo']['isHyvaAware'] ? '<fg=green>✓ Hyvä-Aware</>' : '<fg=green>✓ Compatible</>';
         }
 
         if ($moduleData['compatible']) {

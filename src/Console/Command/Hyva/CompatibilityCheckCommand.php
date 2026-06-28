@@ -234,12 +234,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $excludeVendor = false;
 
         // Run the compatibility check
-        $results = $this->compatibilityChecker->check(
-            $this->io,
-            $showAll,
-            $scanThirdPartyOnly,
-            $excludeVendor,
-        );
+        $results = $this->compatibilityChecker->check($this->io, $showAll, $scanThirdPartyOnly, $excludeVendor);
 
         // Determine display mode:
         // showAll = show all modules including compatible ones
