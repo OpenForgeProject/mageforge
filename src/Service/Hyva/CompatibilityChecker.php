@@ -6,7 +6,6 @@ namespace OpenForgeProject\MageForge\Service\Hyva;
 
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
@@ -54,7 +53,6 @@ class CompatibilityChecker
      * Check all modules for Hyvä compatibility
      *
      * @param SymfonyStyle $io Symfony Style IO for output
-     * @param OutputInterface $output Console output interface
      * @param bool $showAll Whether to show all modules (including compatible ones)
      * @param bool $thirdPartyOnly Whether to scan only third-party modules (excludes Magento_* modules)
      * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory
@@ -64,7 +62,6 @@ class CompatibilityChecker
      */
     public function check(
         SymfonyStyle $io,
-        OutputInterface $output,
         bool $showAll = false,
         bool $thirdPartyOnly = false,
         bool $excludeVendor = true,
@@ -116,10 +113,15 @@ class CompatibilityChecker
             ];
 
             // Update summary
-            if ($isCompatible && !$hasWarnings) {
+            if ($isCompatible) {
                 $results['summary']['compatible']++;
             } else {
                 $results['summary']['incompatible']++;
+                $results['hasIncompatibilities'] = true;
+            }
+
+            // Warnings alone still trigger the detail/recommendation display
+            if ($hasWarnings) {
                 $results['hasIncompatibilities'] = true;
             }
 
@@ -195,19 +197,19 @@ class CompatibilityChecker
      */
     private function getStatusDisplay(array $moduleData): string
     {
-        if ($moduleData['moduleInfo']['isHyvaAware']) {
-            return '<fg=green>✓ Hyvä-Aware</>';
-        }
+        $hyvaTag = $moduleData['moduleInfo']['isHyvaAware'] ? ' (Hyvä-Aware)' : '';
 
         if ($moduleData['compatible'] && !$moduleData['hasWarnings']) {
-            return '<fg=green>✓ Compatible</>';
+            return $moduleData['moduleInfo']['isHyvaAware']
+                ? '<fg=green>✓ Hyvä-Aware</>'
+                : '<fg=green>✓ Compatible</>';
         }
 
         if ($moduleData['compatible']) {
-            return '<fg=yellow>⚠ Warnings</>';
+            return sprintf('<fg=yellow>⚠ Warnings%s</>', $hyvaTag);
         }
 
-        return '<fg=red>✗ Incompatible</>';
+        return sprintf('<fg=red>✗ Incompatible%s</>', $hyvaTag);
     }
 
     /**
@@ -243,12 +245,11 @@ class CompatibilityChecker
     /**
      * Get detailed file issues for a module
      *
-     * @param string $moduleName
      * @param array $moduleData
      * @phpstan-param ModuleEntry $moduleData
      * @return array<int, array{file: string, issues: array<int, ScanIssue>}>
      */
-    public function getDetailedIssues(string $moduleName, array $moduleData): array
+    public function getDetailedIssues(array $moduleData): array
     {
         $scanResult = $moduleData['scanResult'];
         $files = $scanResult['files'];

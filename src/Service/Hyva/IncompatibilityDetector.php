@@ -35,7 +35,7 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/ko\.observable|ko\.observableArray|ko\.computed/',
+                'pattern' => '/\bko\.(observable|observableArray|computed|pureComputed|applyBindings|components|bindingHandlers)/',
                 'description' => 'Knockout.js usage',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
@@ -79,6 +79,11 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
+                'pattern' => '/data-bind\s*=/',
+                'description' => 'Knockout.js data-bind attribute',
+                'severity' => self::SEVERITY_CRITICAL,
+            ],
+            [
                 'pattern' => '/x-magento-init/',
                 'description' => 'x-magento-init JavaScript initialization',
                 'severity' => self::SEVERITY_CRITICAL,
@@ -91,6 +96,11 @@ class IncompatibilityDetector
             [
                 'pattern' => '/require\s*\(\s*\[/',
                 'description' => 'RequireJS in template',
+                'severity' => self::SEVERITY_CRITICAL,
+            ],
+            [
+                'pattern' => '/<!--\s*ko\s/',
+                'description' => 'Knockout.js virtual element binding',
                 'severity' => self::SEVERITY_CRITICAL,
             ],
         ],
@@ -129,7 +139,7 @@ class IncompatibilityDetector
             $lines = explode("\n", $content);
 
             return $this->scanContentForPatterns($lines, self::INCOMPATIBLE_PATTERNS[$fileType]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [];
         }
     }
@@ -145,7 +155,7 @@ class IncompatibilityDetector
         return match ($extension) {
             'js' => 'js',
             'xml' => 'xml',
-            'phtml' => 'phtml',
+            'phtml', 'html' => 'phtml',
             default => 'unknown',
         };
     }
@@ -181,42 +191,12 @@ class IncompatibilityDetector
     }
 
     /**
-     * Get severity color for console output
-     *
-     * @param string $severity
-     * @return string
-     */
-    public function getSeverityColor(string $severity): string
-    {
-        return match ($severity) {
-            self::SEVERITY_CRITICAL => 'red',
-            self::SEVERITY_WARNING => 'yellow',
-            default => 'white',
-        };
-    }
-
-    /**
-     * Get severity symbol
-     *
-     * @param string $severity
-     * @return string
-     */
-    public function getSeveritySymbol(string $severity): string
-    {
-        return match ($severity) {
-            self::SEVERITY_CRITICAL => '✗',
-            self::SEVERITY_WARNING => '⚠',
-            default => 'ℹ',
-        };
-    }
-
-    /**
      * Get file extension without using pathinfo().
      *
      * @param string $path
      * @return string
      */
-    private function getExtensionFromPath(string $path): string
+    public function getExtensionFromPath(string $path): string
     {
         $normalized = str_replace('\\', '/', $path);
         $trimmed = rtrim($normalized, '/');

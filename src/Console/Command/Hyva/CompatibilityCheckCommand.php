@@ -236,7 +236,6 @@ class CompatibilityCheckCommand extends AbstractCommand
         // Run the compatibility check
         $results = $this->compatibilityChecker->check(
             $this->io,
-            $output,
             $showAll,
             $scanThirdPartyOnly,
             $excludeVendor,
@@ -310,7 +309,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             $this->io->text(sprintf('<fg=cyan>%s</>', $moduleName));
 
-            $detailedIssues = $this->compatibilityChecker->getDetailedIssues($moduleName, $moduleData);
+            $detailedIssues = $this->compatibilityChecker->getDetailedIssues($moduleData);
 
             foreach ($detailedIssues as $fileData) {
                 $this->io->text(sprintf('  <fg=yellow>%s</>', $fileData['file']));

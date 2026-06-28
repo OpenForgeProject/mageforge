@@ -18,7 +18,7 @@ use Magento\Framework\Filesystem\Driver\File;
  */
 class ModuleScanner
 {
-    private const SCAN_EXTENSIONS = ['js', 'xml', 'phtml'];
+    private const SCAN_EXTENSIONS = ['js', 'xml', 'phtml', 'html'];
     private const EXCLUDE_DIRECTORIES = ['Test', 'tests', 'node_modules', 'vendor'];
 
     /**
@@ -102,12 +102,12 @@ class ModuleScanner
                 }
 
                 // Check if file has relevant extension
-                $extension = $this->getExtensionFromPath($item);
+                $extension = $this->incompatibilityDetector->getExtensionFromPath($item);
                 if (in_array($extension, self::SCAN_EXTENSIONS, true)) {
                     $relevantFiles[] = $item;
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Skip directories that can't be read
             return $relevantFiles;
         }
@@ -148,35 +148,6 @@ class ModuleScanner
     }
 
     /**
-     * Check if module has Hyvä compatibility package (public wrapper)
-     *
-     * @param string $modulePath
-     * @return bool
-     */
-    public function hasHyvaCompatibilityPackage(string $modulePath): bool
-    {
-        $composerPath = $modulePath . '/composer.json';
-
-        if (!$this->fileDriver->isExists($composerPath)) {
-            return false;
-        }
-
-        try {
-            $content = $this->fileDriver->fileGetContents($composerPath);
-            $composerData = json_decode($content, true);
-
-            if (!is_array($composerData)) {
-                return false;
-            }
-
-            /** @var array<string, mixed> $composerData */
-            return $this->isHyvaCompatibilityPackage($composerData);
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
      * Get module info from composer.json
      *
      * @param string $modulePath
@@ -205,7 +176,7 @@ class ModuleScanner
                 'version' => is_string($composerData['version'] ?? null) ? $composerData['version'] : 'Unknown',
                 'isHyvaAware' => $this->isHyvaCompatibilityPackage($composerData),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
         }
     }
@@ -227,19 +198,4 @@ class ModuleScanner
         return substr($trimmed, $pos + 1);
     }
 
-    /**
-     * Get file extension without using pathinfo().
-     *
-     * @param string $path
-     * @return string
-     */
-    private function getExtensionFromPath(string $path): string
-    {
-        $basename = $this->getBasename($path);
-        $pos = strrpos($basename, '.');
-        if ($pos === false) {
-            return '';
-        }
-        return strtolower(substr($basename, $pos + 1));
-    }
 }
