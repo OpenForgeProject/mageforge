@@ -1,0 +1,37 @@
+name: PHPUnit
+
+on: [pull_request]
+
+permissions:
+  contents: read
+
+env:
+  PHP_VERSION: "8.4"
+
+jobs:
+  phpunit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-phpunit-${{ hashFiles('composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-phpunit
+
+      - name: Install dev dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit

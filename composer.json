@@ -19,7 +19,13 @@
   },
   "require-dev": {
     "carthage-software/mago": "^1.30",
-    "magento/magento-coding-standard": "^40"
+    "magento/magento-coding-standard": "^40",
+    "phpunit/phpunit": "^11.0"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OpenForgeProject\\MageForge\\Test\\": "tests/"
+    }
   },
   "repositories": [
     {

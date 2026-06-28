@@ -176,7 +176,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->newLine();
 
             // Run scan with selected options
-            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly, $output);
+            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly);
         } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             $this->io->info('Falling back to default scan (third-party modules only)...');
@@ -204,7 +204,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
-        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false, $output);
+        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false);
     }
 
     /**
@@ -215,7 +215,6 @@ class CompatibilityCheckCommand extends AbstractCommand
      * @param bool $includeVendor
      * @param bool $detailed
      * @param bool $incompatibleOnly
-     * @param OutputInterface $output
      * @return int
      */
     private function runScan(
@@ -224,7 +223,6 @@ class CompatibilityCheckCommand extends AbstractCommand
         bool $includeVendor,
         bool $detailed,
         bool $incompatibleOnly,
-        OutputInterface $output,
     ): int {
         // Determine filter logic:
         // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
@@ -234,13 +232,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $excludeVendor = false;
 
         // Run the compatibility check
-        $results = $this->compatibilityChecker->check(
-            $this->io,
-            $output,
-            $showAll,
-            $scanThirdPartyOnly,
-            $excludeVendor,
-        );
+        $results = $this->compatibilityChecker->check($this->io, $showAll, $scanThirdPartyOnly, $excludeVendor);
 
         // Determine display mode:
         // showAll = show all modules including compatible ones
@@ -310,7 +302,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             $this->io->text(sprintf('<fg=cyan>%s</>', $moduleName));
 
-            $detailedIssues = $this->compatibilityChecker->getDetailedIssues($moduleName, $moduleData);
+            $detailedIssues = $this->compatibilityChecker->getDetailedIssues($moduleData);
 
             foreach ($detailedIssues as $fileData) {
                 $this->io->text(sprintf('  <fg=yellow>%s</>', $fileData['file']));
