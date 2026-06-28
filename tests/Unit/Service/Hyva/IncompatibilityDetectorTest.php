@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\Hyva;
 
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\Hyva\IncompatibilityDetector;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -25,9 +26,7 @@ class IncompatibilityDetectorTest extends TestCase
     // JS patterns
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider incompatibleJsProvider
-     */
+    #[DataProvider('incompatibleJsProvider')]
     public function testDetectsIncompatibleJsPattern(
         string $content,
         string $expectedDescription,
@@ -159,9 +158,7 @@ class IncompatibilityDetectorTest extends TestCase
     // XML patterns
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider incompatibleXmlProvider
-     */
+    #[DataProvider('incompatibleXmlProvider')]
     public function testDetectsIncompatibleXmlPattern(
         string $content,
         string $expectedDescription,
@@ -226,9 +223,7 @@ class IncompatibilityDetectorTest extends TestCase
     // PHTML patterns
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider incompatiblePhtmlProvider
-     */
+    #[DataProvider('incompatiblePhtmlProvider')]
     public function testDetectsIncompatiblePhtmlPattern(
         string $content,
         string $expectedDescription,
@@ -317,9 +312,7 @@ class IncompatibilityDetectorTest extends TestCase
     // HTML template patterns (Knockout component templates)
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider incompatibleHtmlProvider
-     */
+    #[DataProvider('incompatibleHtmlProvider')]
     public function testDetectsIncompatibleHtmlPattern(
         string $content,
         string $expectedDescription,
