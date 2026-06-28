@@ -176,7 +176,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->newLine();
 
             // Run scan with selected options
-            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly, $output);
+            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly);
         } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             $this->io->info('Falling back to default scan (third-party modules only)...');
@@ -204,7 +204,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
-        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false, $output);
+        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false);
     }
 
     /**
@@ -215,7 +215,6 @@ class CompatibilityCheckCommand extends AbstractCommand
      * @param bool $includeVendor
      * @param bool $detailed
      * @param bool $incompatibleOnly
-     * @param OutputInterface $output
      * @return int
      */
     private function runScan(
@@ -224,7 +223,6 @@ class CompatibilityCheckCommand extends AbstractCommand
         bool $includeVendor,
         bool $detailed,
         bool $incompatibleOnly,
-        OutputInterface $output,
     ): int {
         // Determine filter logic:
         // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
