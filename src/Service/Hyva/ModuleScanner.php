@@ -197,5 +197,4 @@ class ModuleScanner
         }
         return substr($trimmed, $pos + 1);
     }
-
 }

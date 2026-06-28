@@ -35,7 +35,12 @@ class IncompatibilityDetector
                 'severity' => self::SEVERITY_CRITICAL,
             ],
             [
-                'pattern' => '/\bko\.(observable|observableArray|computed|pureComputed|applyBindings|components|bindingHandlers)/',
+                'pattern' => '/\bko\.(observable|observableArray|computed|pureComputed)/',
+                'description' => 'Knockout.js usage',
+                'severity' => self::SEVERITY_CRITICAL,
+            ],
+            [
+                'pattern' => '/\bko\.(applyBindings|components|bindingHandlers)/',
                 'description' => 'Knockout.js usage',
                 'severity' => self::SEVERITY_CRITICAL,
             ],

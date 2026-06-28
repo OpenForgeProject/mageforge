@@ -392,14 +392,14 @@ class IncompatibilityDetectorTest extends TestCase
             sprintf(
                 'Expected issue "%s" not found. Detected: %s',
                 $description,
-                implode(', ', array_column($issues, 'description')),
+                implode(', ', array_map('strval', array_column($issues, 'description'))),
             ),
         );
 
-        $issue = reset($found);
+        $issue = array_values($found)[0];
         $this->assertSame(
             $severity,
-            $issue['severity'],
+            (string) $issue['severity'],
             sprintf('Issue "%s" expected severity "%s" but got "%s"', $description, $severity, $issue['severity']),
         );
     }

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+## Description: Run PHPUnit tests for the MageForge module
+## Usage: phpunit [options]
+## Example: ddev phpunit
+## Example: ddev phpunit --testdox
+## Example: ddev phpunit tests/Unit/Service/Hyva/
+
+cd /var/www/html
+
+if [[ ! -x vendor/bin/phpunit ]]; then
+	echo "phpunit not found. Installing module dev dependencies..."
+	composer install --no-interaction
+fi
+
+vendor/bin/phpunit "$@"
