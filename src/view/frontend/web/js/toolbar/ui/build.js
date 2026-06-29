@@ -239,7 +239,7 @@ export const buildMethods = {
     btn.dataset.tab = key;
     btn.innerHTML = `
       <span class="mageforge-tab-icon" aria-hidden="true">${icon}</span>
-      <span class="mageforge-tab-label">${label.split(" ")[0]}</span>
+      <span class="mageforge-tab-label">${label}</span>
       <span class="mageforge-tab-badges" data-tab-badges-for="${key}">
         <span class="mageforge-tab-badge mageforge-tab-badge--errors" data-type="errors"></span>
         <span class="mageforge-tab-badge mageforge-tab-badge--warnings" data-type="warnings"></span>
