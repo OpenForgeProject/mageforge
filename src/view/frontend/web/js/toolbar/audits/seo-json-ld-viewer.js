@@ -408,6 +408,175 @@ const ICON_ERROR =
 const ICON_WARN =
   '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
 
+/** Extract a display label from a parsed JSON-LD object. */
+function buildTypeLabel(parsed) {
+  const type =
+    parsed?.["@type"] ??
+    (Array.isArray(parsed)
+      ? parsed
+          .map((b) => b?.["@type"])
+          .filter(Boolean)
+          .join(", ") || "Array"
+      : "Unknown");
+  const name = typeof parsed?.name === "string" ? parsed.name.trim() : null;
+  const nameLabel = name
+    ? " \u2014 " + (name.length > 75 ? name.slice(0, 74) + "\u2026" : name)
+    : "";
+  return type + nameLabel;
+}
+
+/** Build the collapsible block header button (XSS-safe). */
+function buildBlockHeader(titleText, issues, parseError) {
+  const hasErrors = issues.some((i) => i.severity === "error");
+  const hasWarnings = issues.some((i) => i.severity === "warning");
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "mageforge-jsonld-block-header";
+  header.setAttribute("aria-expanded", "false");
+  header.innerHTML = `
+    <span class="mageforge-jsonld-block-type">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+      <span class="mageforge-jsonld-block-title"></span>
+      <span class="mageforge-jsonld-badge-slot"></span>
+    </span>
+    <svg class="mageforge-jsonld-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+  `;
+  header.querySelector(".mageforge-jsonld-block-title").textContent = titleText;
+
+  if (parseError || hasErrors || hasWarnings) {
+    const errCount = issues.filter((i) => i.severity === "error").length;
+    const warnCount = issues.filter((i) => i.severity === "warning").length;
+    const isError = parseError || hasErrors;
+    const badgeEl = document.createElement("span");
+    badgeEl.className =
+      "mageforge-jsonld-val-badge " +
+      (isError
+        ? "mageforge-jsonld-val-badge--error"
+        : "mageforge-jsonld-val-badge--warning");
+    badgeEl.innerHTML = isError ? ICON_ERROR : ICON_WARN;
+    badgeEl.appendChild(
+      document.createTextNode(
+        isError
+          ? ` ${parseError ? "Invalid JSON" : `${errCount} error${errCount !== 1 ? "s" : ""}`}`
+          : ` ${warnCount} warning${warnCount !== 1 ? "s" : ""}`,
+      ),
+    );
+    header.querySelector(".mageforge-jsonld-badge-slot").appendChild(badgeEl);
+  }
+
+  return header;
+}
+
+/** Build the issues list shown above the JSON code. */
+function buildIssueList(issues) {
+  const list = document.createElement("ul");
+  list.className = "mageforge-jsonld-issues";
+  issues.forEach(({ severity, message }) => {
+    const li = document.createElement("li");
+    li.className = `mageforge-jsonld-issue mageforge-jsonld-issue--${severity}`;
+    li.innerHTML = severity === "error" ? ICON_ERROR : ICON_WARN;
+    li.appendChild(document.createTextNode(` ${message}`));
+    list.appendChild(li);
+  });
+  return list;
+}
+
+/** Build the copy button for a parsed JSON-LD block. */
+function buildCopyButton(parsed) {
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "mageforge-jsonld-copy-btn";
+  copyBtn.textContent = "Copy";
+  copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    if (!navigator.clipboard?.writeText) {
+      copyBtn.textContent = "Not available";
+      setTimeout(() => {
+        copyBtn.textContent = "Copy";
+      }, 1500);
+      return;
+    }
+    navigator.clipboard
+      .writeText(JSON.stringify(parsed, null, 2))
+      .then(() => {
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => {
+          copyBtn.textContent = "Copy";
+        }, 1500);
+      })
+      .catch(() => {
+        copyBtn.textContent = "Failed";
+        setTimeout(() => {
+          copyBtn.textContent = "Copy";
+        }, 1500);
+      });
+  };
+  return copyBtn;
+}
+
+/** Build the expandable content area for one JSON-LD block. */
+function buildBlockContent(parsed, parseError, issues) {
+  const content = document.createElement("div");
+  content.className = "mageforge-jsonld-block-content";
+  content.hidden = true;
+
+  if (parseError) {
+    const errorMsg = document.createElement("p");
+    errorMsg.className = "mageforge-jsonld-parse-error";
+    errorMsg.textContent = `Parse error: ${parseError}`;
+    content.appendChild(errorMsg);
+    return content;
+  }
+
+  if (issues.length > 0) content.appendChild(buildIssueList(issues));
+
+  const pre = document.createElement("pre");
+  pre.className = "mageforge-jsonld-pre";
+  const code = document.createElement("code");
+  code.textContent = JSON.stringify(parsed, null, 2);
+  pre.appendChild(code);
+  content.appendChild(pre);
+  content.appendChild(buildCopyButton(parsed));
+
+  return content;
+}
+
+/** Build a complete collapsible block for one JSON-LD script. */
+function buildBlock({ index, parsed, parseError, issues }) {
+  const hasErrors = issues.some((i) => i.severity === "error");
+  const hasWarnings = issues.some((i) => i.severity === "warning");
+
+  const titleText = parseError
+    ? `Block ${index + 1} \u2014 Invalid JSON`
+    : buildTypeLabel(parsed);
+
+  const block = document.createElement("div");
+  block.className =
+    "mageforge-jsonld-block" +
+    (parseError || hasErrors ? " mageforge-jsonld-block--error" : "") +
+    (!parseError && !hasErrors && hasWarnings
+      ? " mageforge-jsonld-block--warning"
+      : "");
+
+  const header = buildBlockHeader(titleText, issues, parseError);
+  const content = buildBlockContent(parsed, parseError, issues);
+
+  header.onclick = (e) => {
+    e.stopPropagation();
+    const isOpen = !content.hidden;
+    content.hidden = isOpen;
+    header.setAttribute("aria-expanded", String(!isOpen));
+    header
+      .querySelector(".mageforge-jsonld-chevron")
+      .classList.toggle("mageforge-jsonld-chevron--open", !isOpen);
+  };
+
+  block.appendChild(header);
+  block.appendChild(content);
+  return block;
+}
+
 export default {
   key: KEY,
   icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 4a2 2 0 0 0 -2 2v3a2 3 0 0 1 -2 3a2 3 0 0 1 2 3v3a2 2 0 0 0 2 2"></path><path d="M17 4a2 2 0 0 1 2 2v3a2 3 0 0 1 2 3a2 3 0 0 1 -2 3v3a2 2 0 0 1 -2 2"></path><path d="M11 12h1l1 3"></path><circle cx="11" cy="9" r=".5" fill="currentColor"></circle></svg>',
@@ -505,121 +674,8 @@ export default {
     `;
     findingsContainer.appendChild(summary);
 
-    blocks.forEach(({ index, parsed, parseError, issues }) => {
-      const hasErrors = issues.some((i) => i.severity === "error");
-      const hasWarnings = issues.some((i) => i.severity === "warning");
-
-      const type =
-        parsed?.["@type"] ??
-        (Array.isArray(parsed)
-          ? parsed
-              .map((b) => b?.["@type"])
-              .filter(Boolean)
-              .join(", ") || "Array"
-          : "Unknown");
-
-      const name = typeof parsed?.name === "string" ? parsed.name.trim() : null;
-      const nameLabel = name
-        ? " — " + (name.length > 75 ? name.slice(0, 74) + "…" : name)
-        : "";
-      const typeLabel = type + nameLabel;
-
-      const block = document.createElement("div");
-      block.className =
-        "mageforge-jsonld-block" +
-        (parseError || hasErrors ? " mageforge-jsonld-block--error" : "") +
-        (!parseError && !hasErrors && hasWarnings
-          ? " mageforge-jsonld-block--warning"
-          : "");
-
-      // Validation badge for header
-      const validationBadge =
-        parseError || hasErrors
-          ? `<span class="mageforge-jsonld-val-badge mageforge-jsonld-val-badge--error">${ICON_ERROR} ${parseError ? "Invalid JSON" : `${issues.filter((i) => i.severity === "error").length} error${issues.filter((i) => i.severity === "error").length !== 1 ? "s" : ""}`}</span>`
-          : hasWarnings
-            ? `<span class="mageforge-jsonld-val-badge mageforge-jsonld-val-badge--warning">${ICON_WARN} ${issues.filter((i) => i.severity === "warning").length} warning${issues.filter((i) => i.severity === "warning").length !== 1 ? "s" : ""}</span>`
-            : "";
-
-      const header = document.createElement("button");
-      header.type = "button";
-      header.className = "mageforge-jsonld-block-header";
-      header.setAttribute("aria-expanded", "false");
-      header.innerHTML = `
-        <span class="mageforge-jsonld-block-type">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-          ${parseError ? `Block ${index + 1} — Invalid JSON` : typeLabel}
-          ${validationBadge}
-        </span>
-        <svg class="mageforge-jsonld-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
-      `;
-
-      const content = document.createElement("div");
-      content.className = "mageforge-jsonld-block-content";
-      content.hidden = true;
-
-      if (parseError) {
-        const errorMsg = document.createElement("p");
-        errorMsg.className = "mageforge-jsonld-parse-error";
-        errorMsg.textContent = `Parse error: ${parseError}`;
-        content.appendChild(errorMsg);
-      } else {
-        // Validation issues list
-        if (issues.length > 0) {
-          const issueList = document.createElement("ul");
-          issueList.className = "mageforge-jsonld-issues";
-          issues.forEach(({ severity, message }) => {
-            const li = document.createElement("li");
-            li.className = `mageforge-jsonld-issue mageforge-jsonld-issue--${severity}`;
-            li.innerHTML = `${severity === "error" ? ICON_ERROR : ICON_WARN} ${message}`;
-            issueList.appendChild(li);
-          });
-          content.appendChild(issueList);
-        }
-
-        const pre = document.createElement("pre");
-        pre.className = "mageforge-jsonld-pre";
-        const code = document.createElement("code");
-        code.textContent = JSON.stringify(parsed, null, 2);
-        pre.appendChild(code);
-        content.appendChild(pre);
-
-        const copyBtn = document.createElement("button");
-        copyBtn.type = "button";
-        copyBtn.className = "mageforge-jsonld-copy-btn";
-        copyBtn.textContent = "Copy";
-        copyBtn.onclick = (e) => {
-          e.stopPropagation();
-          navigator.clipboard
-            .writeText(JSON.stringify(parsed, null, 2))
-            .then(() => {
-              copyBtn.textContent = "Copied!";
-              setTimeout(() => {
-                copyBtn.textContent = "Copy";
-              }, 1500);
-            })
-            .catch(() => {
-              copyBtn.textContent = "Failed";
-              setTimeout(() => {
-                copyBtn.textContent = "Copy";
-              }, 1500);
-            });
-        };
-        content.appendChild(copyBtn);
-      }
-
-      header.onclick = (e) => {
-        e.stopPropagation();
-        const isOpen = content.hidden === false;
-        content.hidden = isOpen;
-        header.setAttribute("aria-expanded", String(!isOpen));
-        header
-          .querySelector(".mageforge-jsonld-chevron")
-          .classList.toggle("mageforge-jsonld-chevron--open", !isOpen);
-      };
-
-      block.appendChild(header);
-      block.appendChild(content);
-      findingsContainer.appendChild(block);
+    blocks.forEach((blockData) => {
+      findingsContainer.appendChild(buildBlock(blockData));
     });
   },
 };

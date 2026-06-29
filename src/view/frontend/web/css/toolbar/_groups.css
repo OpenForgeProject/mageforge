@@ -102,6 +102,11 @@
   background: rgba(20, 184, 166, 0.1);
 }
 
+.mageforge-toolbar-tab-btn[data-tab="structured-data"].mageforge-tab-active {
+  color: var(--mageforge-group-color-structured-data);
+  background: rgba(99, 102, 241, 0.1);
+}
+
 /* Left-edge indicator bar on active tab */
 
 .mageforge-toolbar-tab-btn.mageforge-tab-active::before {

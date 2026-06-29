@@ -82,14 +82,18 @@ function buildBlockDOM(item, badgeLabel) {
   header.type = "button";
   header.className = "mageforge-jsonld-block-header";
   header.setAttribute("aria-expanded", "false");
+  // Static SVG only – dynamic text set via textContent (XSS-safe)
   header.innerHTML = `
     <span class="mageforge-jsonld-block-type">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-      ${typeShort || "Unknown Type"}
-      <span class="mageforge-schema-badge">${badgeLabel}</span>
+      <span class="mageforge-schema-type"></span>
+      <span class="mageforge-schema-badge"></span>
     </span>
     <svg class="mageforge-jsonld-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
   `;
+  header.querySelector(".mageforge-schema-type").textContent =
+    typeShort || "Unknown Type";
+  header.querySelector(".mageforge-schema-badge").textContent = badgeLabel;
 
   const content = document.createElement("div");
   content.className = "mageforge-jsonld-block-content";
@@ -98,7 +102,25 @@ function buildBlockDOM(item, badgeLabel) {
   if (item.type) {
     const typeRow = document.createElement("div");
     typeRow.className = "mageforge-schema-type-row";
-    typeRow.innerHTML = `<span class="mageforge-schema-prop-name">@type</span><a class="mageforge-schema-type-link" href="${item.type}" target="_blank" rel="noopener noreferrer">${item.type}</a>`;
+    const typePropName = document.createElement("span");
+    typePropName.className = "mageforge-schema-prop-name";
+    typePropName.textContent = "@type";
+    typeRow.appendChild(typePropName);
+    // Only linkify http(s) URLs to prevent javascript: injection
+    if (/^https?:\/\//i.test(item.type)) {
+      const typeLink = document.createElement("a");
+      typeLink.className = "mageforge-schema-type-link";
+      typeLink.href = item.type;
+      typeLink.target = "_blank";
+      typeLink.rel = "noopener noreferrer";
+      typeLink.textContent = item.type;
+      typeRow.appendChild(typeLink);
+    } else {
+      const typeText = document.createElement("span");
+      typeText.className = "mageforge-schema-type-link";
+      typeText.textContent = item.type;
+      typeRow.appendChild(typeText);
+    }
     content.appendChild(typeRow);
   }
 

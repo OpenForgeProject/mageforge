@@ -39,6 +39,10 @@
   --mageforge-group-color-performance: var(--mageforge-color-orange);
   --mageforge-group-color-seo: #14b8a6;
   --mageforge-group-color-structured-data: #6366f1;
+  --mageforge-color-indigo: #6366f1;
+  --mageforge-color-indigo-alpha-15: rgba(99, 102, 241, 0.15);
+  --mageforge-color-indigo-alpha-30: rgba(99, 102, 241, 0.3);
+  --mageforge-color-indigo-light: #818cf8;
 
   /* Backgrounds */
   --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
