@@ -53,7 +53,7 @@ class InspectorHints implements TemplateEngineInterface
     private function resolveMagentoRoot(): string
     {
         if (defined('BP')) {
-            return BP;
+            return (string) BP;
         }
 
         // vendor/openforgeproject/mageforge/src/Model/TemplateEngine/Decorator/InspectorHints.php
@@ -106,14 +106,14 @@ class InspectorHints implements TemplateEngineInterface
      * @param BlockInterface $block
      * @param string $templateFile
      * @param array $dictionary
-     * @phpstan-param array<string, mixed> $dictionary
+     * @phpstan-param array<array-key, mixed> $dictionary
      * @return string
      */
     public function render(BlockInterface $block, $templateFile, array $dictionary = []): string
     {
         // Measure render time
         $startTime = hrtime(true);
-        $result = (string) $this->subject->render($block, $templateFile, $dictionary);
+        $result = $this->subject->render($block, $templateFile, $dictionary);
         $endTime = hrtime(true);
 
         if (!$this->showBlockHints) {
@@ -141,8 +141,8 @@ class InspectorHints implements TemplateEngineInterface
 
         $renderMetrics = [
             'renderTimeMs' => round($renderTimeMs, 2),
-            'startTime' => $startTime,
-            'endTime' => $endTime,
+            'startTime' => (int) $startTime,
+            'endTime' => (int) $endTime,
         ];
 
         return $this->injectInspectorAttributes($result, $block, $templateFile, $renderMetrics);

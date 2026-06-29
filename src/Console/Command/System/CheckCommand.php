@@ -62,13 +62,12 @@ class CheckCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
-        $phpVersion = phpversion();
+        $phpVersion = PHP_VERSION;
         $nodeVersion = $this->getNodeVersion();
         $mysqlVersion = $this->getShortMysqlVersion();
         $dbType = $this->getDatabaseType();
         $osInfo = $this->getShortOsInfo();
         $magentoVersion = $this->productMetadata->getVersion();
-        /** @var string $latestLtsNodeVersion */
         $latestLtsNodeVersion = $this->escaper->escapeHtml($this->getLatestLtsNodeVersion());
         $composerVersion = $this->getComposerVersion();
         $npmVersion = $this->getNpmVersion();
@@ -212,8 +211,7 @@ class CheckCommand extends AbstractCommand
     {
         try {
             $connection = $this->resourceConnection->getConnection();
-            $select = $connection->select()->from(null, new \Zend_Db_Expr('VERSION()'));
-            $version = $connection->fetchOne($select);
+            $version = $connection->fetchOne('SELECT VERSION()');
 
             return !empty($version) ? $version : null;
         } catch (\Exception $e) {
@@ -661,7 +659,7 @@ class CheckCommand extends AbstractCommand
      */
     private function getPhpMemoryLimit(): string
     {
-        return ini_get('memory_limit');
+        return (string) ini_get('memory_limit');
     }
 
     /**
