@@ -38,7 +38,9 @@ import renderBlockingScripts from "./render-blocking-scripts.js";
 import seoDuplicateMeta from "./seo-duplicate-meta.js";
 import seoHeadingHierarchy from "./seo-heading-hierarchy.js";
 import seoMissingCanonical from "./seo-missing-canonical.js";
-import seoMissingJsonLd from "./seo-missing-json-ld.js";
+import structuredMissingJsonLd from "./seo-missing-json-ld.js";
+import structuredJsonLdViewer from "./seo-json-ld-viewer.js";
+import schemaOrgViewer from "./schema-org-viewer.js";
 import seoMissingLang from "./seo-missing-lang.js";
 import seoMissingMetaDescription from "./seo-missing-meta-description.js";
 import seoMissingTitle from "./seo-missing-title.js";
@@ -50,6 +52,7 @@ import unsafeBlankTarget from "./unsafe-blank-target.js";
 /** @type {AuditGroup[]} */
 export const auditGroups = [
   { key: "seo", label: "SEO" },
+  { key: "structured-data", label: "Structured Data" },
   { key: "performance", label: "Performance" },
   { key: "html-quality", label: "HTML Quality" },
   { key: "wcag", label: "Accessibility" },
@@ -79,6 +82,8 @@ export const audits = [
   { ...seoMissingCanonical, group: "seo" },
   { ...seoMissingLang, group: "seo" },
   { ...seoHeadingHierarchy, group: "seo" },
-  { ...seoMissingJsonLd, group: "seo" },
   { ...seoDuplicateMeta, group: "seo" },
+  { ...structuredMissingJsonLd, group: "structured-data" },
+  { ...structuredJsonLdViewer, group: "structured-data" },
+  { ...schemaOrgViewer, group: "structured-data" },
 ];
