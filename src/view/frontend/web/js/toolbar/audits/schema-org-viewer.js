@@ -237,7 +237,15 @@ export default {
     });
 
     rdfaRoots.forEach(({ type, el }) => {
-      const typeShort = type.replace(/https?:\/\/schema\.org\//i, "");
+      // Normalise to a full schema.org URL only when the value is already one;
+      // CURIEs (e.g. "schema:Product") or plain names are passed through as-is
+      // to avoid producing broken URLs like https://schema.org/schema:Product.
+      const normalizedType = /^https?:\/\//i.test(type)
+        ? type
+        : type.includes(":")
+          ? type // CURIE – leave untouched
+          : `https://schema.org/${type}`;
+
       const props = Array.from(el.querySelectorAll("[property]"))
         .filter(
           (p) =>
@@ -254,10 +262,7 @@ export default {
         }));
 
       findingsContainer.appendChild(
-        buildBlockDOM(
-          { type: `https://schema.org/${typeShort}`, props },
-          "RDFa",
-        ),
+        buildBlockDOM({ type: normalizedType, props }, "RDFa"),
       );
     });
   },

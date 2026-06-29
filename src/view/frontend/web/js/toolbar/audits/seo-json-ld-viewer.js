@@ -353,9 +353,11 @@ function hasField(obj, path) {
   let current = obj;
   for (const part of parts) {
     if (current == null) return false;
-    // If it's an array, check the first element
-    if (Array.isArray(current)) current = current[0];
-    if (current == null) return false;
+    // If it's an array, succeed if any element satisfies the remaining path
+    if (Array.isArray(current)) {
+      const remaining = parts.slice(parts.indexOf(part)).join(".");
+      return current.some((el) => hasField(el, remaining));
+    }
     current = current[part];
   }
   if (current == null) return false;
@@ -667,7 +669,7 @@ export default {
       let parseError = null;
       let issues = [];
       try {
-        parsed = JSON.parse(script.textContent.trim());
+        parsed = JSON.parse((script.textContent ?? "").trim());
         issues = validate(parsed);
         validationErrorCount += issues.filter(
           (i) => i.severity === "error",
