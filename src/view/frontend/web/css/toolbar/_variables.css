@@ -38,11 +38,11 @@
   --mageforge-group-color-html-quality: var(--mageforge-color-blue);
   --mageforge-group-color-performance: var(--mageforge-color-orange);
   --mageforge-group-color-seo: #14b8a6;
-  --mageforge-group-color-structured-data: #6366f1;
-  --mageforge-color-indigo: #6366f1;
-  --mageforge-color-indigo-alpha-15: rgba(99, 102, 241, 0.15);
-  --mageforge-color-indigo-alpha-30: rgba(99, 102, 241, 0.3);
-  --mageforge-color-indigo-light: #818cf8;
+  --mageforge-group-color-structured-data: #d946ef;
+  --mageforge-color-fuchsia: #d946ef;
+  --mageforge-color-fuchsia-alpha-15: rgba(217, 70, 239, 0.15);
+  --mageforge-color-fuchsia-alpha-30: rgba(217, 70, 239, 0.3);
+  --mageforge-color-fuchsia-light: #e879f9;
 
   /* Backgrounds */
   --mageforge-bg-dark: rgba(15, 23, 42, 0.98);

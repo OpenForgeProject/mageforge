@@ -104,7 +104,7 @@
 
 .mageforge-toolbar-tab-btn[data-tab="structured-data"].mageforge-tab-active {
   color: var(--mageforge-group-color-structured-data);
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(217, 70, 239, 0.1);
 }
 
 /* Left-edge indicator bar on active tab */
@@ -147,6 +147,10 @@
 
 .mageforge-toolbar-tab-btn[data-tab="seo"] .mageforge-tab-icon {
   color: var(--mageforge-group-color-seo);
+}
+
+.mageforge-toolbar-tab-btn[data-tab="structured-data"] .mageforge-tab-icon {
+  color: var(--mageforge-group-color-structured-data);
 }
 
 .mageforge-tab-label {
@@ -582,4 +586,9 @@
 .mageforge-toolbar-menu-item[data-group-key="seo"]
   .mageforge-toolbar-menu-icon {
   color: var(--mageforge-group-color-seo);
+}
+
+.mageforge-toolbar-menu-item[data-group-key="structured-data"]
+  .mageforge-toolbar-menu-icon {
+  color: var(--mageforge-group-color-structured-data);
 }

@@ -225,9 +225,9 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  background: var(--mageforge-color-indigo-alpha-15);
-  color: var(--mageforge-color-indigo-light);
-  border: 1px solid var(--mageforge-color-indigo-alpha-30);
+  background: var(--mageforge-color-fuchsia-alpha-15);
+  color: var(--mageforge-color-fuchsia-light);
+  border: 1px solid var(--mageforge-color-fuchsia-alpha-30);
   line-height: 1.5;
 }
 
@@ -248,7 +248,7 @@
 
 .mageforge-schema-type-link {
   font-size: 10px;
-  color: var(--mageforge-color-indigo-light);
+  color: var(--mageforge-color-fuchsia-light);
   text-decoration: none;
   word-break: break-all;
 }
@@ -268,7 +268,7 @@
 .mageforge-schema-prop-name {
   font-size: 10px;
   font-weight: 600;
-  color: var(--mageforge-color-indigo-light);
+  color: var(--mageforge-color-fuchsia-light);
   white-space: nowrap;
   padding: 2px 0;
 }
