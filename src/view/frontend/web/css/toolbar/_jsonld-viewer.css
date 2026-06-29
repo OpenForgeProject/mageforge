@@ -31,6 +31,13 @@
   border-radius: 4px;
 }
 
+.mageforge-jsonld-warnings {
+  color: var(--mageforge-color-amber);
+  background: var(--mageforge-color-amber-alpha-15);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
 .mageforge-jsonld-empty {
   padding: 12px;
   margin: 0;
@@ -49,6 +56,68 @@
 
 .mageforge-jsonld-block--error .mageforge-jsonld-block-header {
   color: var(--mageforge-color-red);
+}
+
+.mageforge-jsonld-block--warning .mageforge-jsonld-block-header {
+  color: var(--mageforge-color-amber);
+}
+
+/* Validation badge in block header */
+.mageforge-jsonld-val-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.mageforge-jsonld-val-badge--error {
+  background: var(--mageforge-color-red-alpha-15);
+  color: var(--mageforge-color-red);
+  border: 1px solid var(--mageforge-color-red-alpha-35);
+}
+
+.mageforge-jsonld-val-badge--warning {
+  background: var(--mageforge-color-amber-alpha-15);
+  color: var(--mageforge-color-amber);
+  border: 1px solid var(--mageforge-color-amber-alpha-35);
+}
+
+/* Validation issues list */
+.mageforge-jsonld-issues {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mageforge-jsonld-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.mageforge-jsonld-issue svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.mageforge-jsonld-issue--error {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-jsonld-issue--warning {
+  color: var(--mageforge-color-amber);
 }
 
 .mageforge-jsonld-block-header {

@@ -2,13 +2,411 @@
  * MageForge Toolbar Audit – JSON-LD Viewer
  *
  * Reads all <script type="application/ld+json"> blocks from the current page,
- * parses them, and renders a formatted viewer in the audit findings panel.
- * Invalid JSON blocks are flagged as errors.
+ * parses them, renders a formatted viewer and validates required fields based
+ * on Google Rich Results requirements.
  *
  * Page-level audit: no DOM element highlighting, findings panel shows the data.
  */
 
 const KEY = "seo-json-ld-viewer";
+
+/**
+ * Required/recommended field rules per @type.
+ * Based on Google Rich Results requirements:
+ * https://developers.google.com/search/docs/appearance/structured-data
+ *
+ * Each entry has:
+ *   fields: Array<{ path, severity, message }> — dot-notation field checks
+ *   extra?: (parsed) => Array<{ severity, message }> — custom logic for nested/conditional checks
+ */
+const VALIDATION_RULES = {
+  Product: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "image",
+        severity: "error",
+        message: 'Missing required field "image"',
+      },
+      {
+        path: "offers",
+        severity: "error",
+        message: 'Missing required field "offers"',
+      },
+      {
+        path: "offers.price",
+        severity: "error",
+        message: 'Offer missing "price" (required for rich results)',
+      },
+      {
+        path: "offers.priceCurrency",
+        severity: "error",
+        message: 'Offer missing "priceCurrency"',
+      },
+      {
+        path: "offers.availability",
+        severity: "error",
+        message: 'Offer missing "availability" (required by Google)',
+      },
+      {
+        path: "brand",
+        severity: "warning",
+        message: 'Missing "brand" (required for Google Merchant Center)',
+      },
+      {
+        path: "sku",
+        severity: "warning",
+        message: 'Missing "sku" or "gtin" (recommended for Google Shopping)',
+      },
+      {
+        path: "description",
+        severity: "warning",
+        message: 'Missing recommended field "description"',
+      },
+    ],
+    extra(parsed) {
+      const issues = [];
+      if (parsed.aggregateRating) {
+        if (!hasField(parsed, "aggregateRating.ratingValue")) {
+          issues.push({
+            severity: "error",
+            message: '"aggregateRating" missing required "ratingValue"',
+          });
+        }
+        const hasCount =
+          hasField(parsed, "aggregateRating.reviewCount") ||
+          hasField(parsed, "aggregateRating.ratingCount");
+        if (!hasCount) {
+          issues.push({
+            severity: "error",
+            message: '"aggregateRating" missing "reviewCount" or "ratingCount"',
+          });
+        }
+      }
+      if (parsed.brand && !hasField(parsed, "brand.name")) {
+        issues.push({
+          severity: "error",
+          message: '"brand" object missing "name"',
+        });
+      }
+      return issues;
+    },
+  },
+  BreadcrumbList: {
+    fields: [
+      {
+        path: "itemListElement",
+        severity: "error",
+        message: 'Missing required field "itemListElement"',
+      },
+    ],
+    extra(parsed) {
+      const issues = [];
+      const items = parsed.itemListElement;
+      if (!Array.isArray(items)) return issues;
+      items.forEach((item, i) => {
+        const n = i + 1;
+        if (item.position == null) {
+          issues.push({
+            severity: "error",
+            message: `ListItem[${n}] missing "position"`,
+          });
+        }
+        if (!item.name) {
+          issues.push({
+            severity: "error",
+            message: `ListItem[${n}] missing "name"`,
+          });
+        }
+        if (!item.item) {
+          issues.push({
+            severity: "warning",
+            message: `ListItem[${n}] missing "item" (URL)`,
+          });
+        }
+      });
+      return issues;
+    },
+  },
+  Organization: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "url",
+        severity: "warning",
+        message: 'Missing recommended field "url"',
+      },
+      {
+        path: "logo",
+        severity: "warning",
+        message: 'Missing recommended field "logo"',
+      },
+    ],
+  },
+  WebSite: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "url",
+        severity: "error",
+        message: 'Missing required field "url"',
+      },
+    ],
+  },
+  Article: {
+    fields: [
+      {
+        path: "headline",
+        severity: "error",
+        message: 'Missing required field "headline"',
+      },
+      {
+        path: "author",
+        severity: "error",
+        message: 'Missing required field "author"',
+      },
+      {
+        path: "datePublished",
+        severity: "error",
+        message: 'Missing required field "datePublished"',
+      },
+      {
+        path: "image",
+        severity: "error",
+        message: 'Missing required field "image"',
+      },
+    ],
+  },
+  NewsArticle: {
+    fields: [
+      {
+        path: "headline",
+        severity: "error",
+        message: 'Missing required field "headline"',
+      },
+      {
+        path: "author",
+        severity: "error",
+        message: 'Missing required field "author"',
+      },
+      {
+        path: "datePublished",
+        severity: "error",
+        message: 'Missing required field "datePublished"',
+      },
+      {
+        path: "image",
+        severity: "error",
+        message: 'Missing required field "image"',
+      },
+    ],
+  },
+  FAQPage: {
+    fields: [
+      {
+        path: "mainEntity",
+        severity: "error",
+        message: 'Missing required field "mainEntity"',
+      },
+    ],
+    extra(parsed) {
+      const issues = [];
+      const items = parsed.mainEntity;
+      if (!Array.isArray(items)) return issues;
+      items.forEach((item, i) => {
+        const n = i + 1;
+        if (!item.name) {
+          issues.push({
+            severity: "error",
+            message: `Question[${n}] missing "name" (the question text)`,
+          });
+        }
+        if (!hasField(item, "acceptedAnswer.text")) {
+          issues.push({
+            severity: "error",
+            message: `Question[${n}] missing "acceptedAnswer.text"`,
+          });
+        }
+      });
+      return issues;
+    },
+  },
+  LocalBusiness: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "address",
+        severity: "error",
+        message: 'Missing required field "address"',
+      },
+      {
+        path: "telephone",
+        severity: "warning",
+        message: 'Missing recommended field "telephone"',
+      },
+    ],
+  },
+  Event: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "startDate",
+        severity: "error",
+        message: 'Missing required field "startDate"',
+      },
+      {
+        path: "location",
+        severity: "error",
+        message: 'Missing required field "location"',
+      },
+    ],
+  },
+  Recipe: {
+    fields: [
+      {
+        path: "name",
+        severity: "error",
+        message: 'Missing required field "name"',
+      },
+      {
+        path: "image",
+        severity: "error",
+        message: 'Missing required field "image"',
+      },
+      {
+        path: "author",
+        severity: "error",
+        message: 'Missing required field "author"',
+      },
+    ],
+  },
+  Order: {
+    fields: [
+      {
+        path: "orderNumber",
+        severity: "error",
+        message: 'Missing required field "orderNumber"',
+      },
+      {
+        path: "orderStatus",
+        severity: "error",
+        message: 'Missing required field "orderStatus"',
+      },
+      {
+        path: "merchant",
+        severity: "error",
+        message: 'Missing required field "merchant" (seller/Organization)',
+      },
+      {
+        path: "orderedItem",
+        severity: "error",
+        message: 'Missing required field "orderedItem"',
+      },
+      {
+        path: "priceCurrency",
+        severity: "warning",
+        message: 'Missing recommended field "priceCurrency"',
+      },
+      {
+        path: "price",
+        severity: "warning",
+        message: 'Missing recommended field "price" (order total)',
+      },
+      {
+        path: "customer",
+        severity: "warning",
+        message: 'Missing recommended field "customer"',
+      },
+    ],
+  },
+};
+
+/**
+ * Resolve a dot-notation path on an object, traversing arrays if needed.
+ *
+ * @param {object} obj
+ * @param {string} path
+ * @returns {boolean} true if value exists and is non-empty
+ */
+function hasField(obj, path) {
+  const parts = path.split(".");
+  let current = obj;
+  for (const part of parts) {
+    if (current == null) return false;
+    // If it's an array, check the first element
+    if (Array.isArray(current)) current = current[0];
+    if (current == null) return false;
+    current = current[part];
+  }
+  if (current == null) return false;
+  if (typeof current === "string") return current.trim().length > 0;
+  return true;
+}
+
+/**
+ * Validate a parsed JSON-LD object against known rules.
+ *
+ * @param {object} parsed
+ * @returns {Array<{severity: string, message: string}>}
+ */
+function validate(parsed) {
+  if (!parsed || typeof parsed !== "object") return [];
+
+  const issues = [];
+
+  if (!parsed["@context"]) {
+    issues.push({
+      severity: "error",
+      message: 'Missing "@context" (should be "https://schema.org")',
+    });
+  }
+
+  const type = parsed["@type"];
+  if (!type) {
+    issues.push({ severity: "warning", message: 'Missing "@type"' });
+    return issues;
+  }
+
+  const config = VALIDATION_RULES[type];
+  if (!config) return issues;
+
+  (config.fields ?? []).forEach(({ path, severity, message }) => {
+    if (!hasField(parsed, path)) {
+      issues.push({ severity, message });
+    }
+  });
+
+  if (typeof config.extra === "function") {
+    issues.push(...config.extra(parsed));
+  }
+
+  return issues;
+}
+
+const ICON_ERROR =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+const ICON_WARN =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
 
 export default {
   key: KEY,
@@ -55,20 +453,37 @@ export default {
       return;
     }
 
-    let errorCount = 0;
+    let parseErrorCount = 0;
+    let validationErrorCount = 0;
+    let validationWarningCount = 0;
+
     const blocks = scripts.map((script, index) => {
       let parsed = null;
       let parseError = null;
+      let issues = [];
       try {
         parsed = JSON.parse(script.textContent.trim());
+        issues = validate(parsed);
+        validationErrorCount += issues.filter(
+          (i) => i.severity === "error",
+        ).length;
+        validationWarningCount += issues.filter(
+          (i) => i.severity === "warning",
+        ).length;
       } catch (e) {
         parseError = e.message;
-        errorCount++;
+        parseErrorCount++;
       }
-      return { index, parsed, parseError, raw: script.textContent.trim() };
+      return { index, parsed, parseError, issues };
     });
 
-    const severity = errorCount > 0 ? "error" : "success";
+    const totalIssues = parseErrorCount + validationErrorCount;
+    const severity =
+      parseErrorCount > 0 || validationErrorCount > 0
+        ? "error"
+        : validationWarningCount > 0
+          ? "warning"
+          : "success";
     context.setAuditCounterBadge(KEY, String(scripts.length), severity);
 
     if (!findingsContainer) return;
@@ -84,11 +499,16 @@ export default {
     summary.className = "mageforge-jsonld-summary";
     summary.innerHTML = `
       <span class="mageforge-jsonld-count">${scripts.length} block${scripts.length !== 1 ? "s" : ""} found</span>
-      ${errorCount > 0 ? `<span class="mageforge-jsonld-errors">${errorCount} invalid</span>` : ""}
+      ${parseErrorCount > 0 ? `<span class="mageforge-jsonld-errors">${parseErrorCount} invalid JSON</span>` : ""}
+      ${validationErrorCount > 0 ? `<span class="mageforge-jsonld-errors">${validationErrorCount} missing required</span>` : ""}
+      ${validationWarningCount > 0 ? `<span class="mageforge-jsonld-warnings">${validationWarningCount} warnings</span>` : ""}
     `;
     findingsContainer.appendChild(summary);
 
-    blocks.forEach(({ index, parsed, parseError }) => {
+    blocks.forEach(({ index, parsed, parseError, issues }) => {
+      const hasErrors = issues.some((i) => i.severity === "error");
+      const hasWarnings = issues.some((i) => i.severity === "warning");
+
       const type =
         parsed?.["@type"] ??
         (Array.isArray(parsed)
@@ -107,7 +527,18 @@ export default {
       const block = document.createElement("div");
       block.className =
         "mageforge-jsonld-block" +
-        (parseError ? " mageforge-jsonld-block--error" : "");
+        (parseError || hasErrors ? " mageforge-jsonld-block--error" : "") +
+        (!parseError && !hasErrors && hasWarnings
+          ? " mageforge-jsonld-block--warning"
+          : "");
+
+      // Validation badge for header
+      const validationBadge =
+        parseError || hasErrors
+          ? `<span class="mageforge-jsonld-val-badge mageforge-jsonld-val-badge--error">${ICON_ERROR} ${parseError ? "Invalid JSON" : `${issues.filter((i) => i.severity === "error").length} error${issues.filter((i) => i.severity === "error").length !== 1 ? "s" : ""}`}</span>`
+          : hasWarnings
+            ? `<span class="mageforge-jsonld-val-badge mageforge-jsonld-val-badge--warning">${ICON_WARN} ${issues.filter((i) => i.severity === "warning").length} warning${issues.filter((i) => i.severity === "warning").length !== 1 ? "s" : ""}</span>`
+            : "";
 
       const header = document.createElement("button");
       header.type = "button";
@@ -115,12 +546,9 @@ export default {
       header.setAttribute("aria-expanded", "false");
       header.innerHTML = `
         <span class="mageforge-jsonld-block-type">
-          ${
-            parseError
-              ? '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
-              : '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>'
-          }
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
           ${parseError ? `Block ${index + 1} — Invalid JSON` : typeLabel}
+          ${validationBadge}
         </span>
         <svg class="mageforge-jsonld-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
       `;
@@ -135,6 +563,19 @@ export default {
         errorMsg.textContent = `Parse error: ${parseError}`;
         content.appendChild(errorMsg);
       } else {
+        // Validation issues list
+        if (issues.length > 0) {
+          const issueList = document.createElement("ul");
+          issueList.className = "mageforge-jsonld-issues";
+          issues.forEach(({ severity, message }) => {
+            const li = document.createElement("li");
+            li.className = `mageforge-jsonld-issue mageforge-jsonld-issue--${severity}`;
+            li.innerHTML = `${severity === "error" ? ICON_ERROR : ICON_WARN} ${message}`;
+            issueList.appendChild(li);
+          });
+          content.appendChild(issueList);
+        }
+
         const pre = document.createElement("pre");
         pre.className = "mageforge-jsonld-pre";
         const code = document.createElement("code");
