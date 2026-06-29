@@ -369,19 +369,25 @@ function hasField(obj, path) {
  * @param {object} parsed
  * @returns {Array<{severity: string, message: string}>}
  */
-function validate(parsed) {
-  if (!parsed || typeof parsed !== "object") return [];
+/**
+ * Validate a single JSON-LD node object against known rules.
+ *
+ * @param {object} node
+ * @returns {Array<{severity: string, message: string}>}
+ */
+function validateNode(node) {
+  if (!node || typeof node !== "object" || Array.isArray(node)) return [];
 
   const issues = [];
 
-  if (!parsed["@context"]) {
+  if (!node["@context"]) {
     issues.push({
       severity: "error",
       message: 'Missing "@context" (should be "https://schema.org")',
     });
   }
 
-  const type = parsed["@type"];
+  const type = node["@type"];
   if (!type) {
     issues.push({ severity: "warning", message: 'Missing "@type"' });
     return issues;
@@ -391,16 +397,46 @@ function validate(parsed) {
   if (!config) return issues;
 
   (config.fields ?? []).forEach(({ path, severity, message }) => {
-    if (!hasField(parsed, path)) {
+    if (!hasField(node, path)) {
       issues.push({ severity, message });
     }
   });
 
   if (typeof config.extra === "function") {
-    issues.push(...config.extra(parsed));
+    issues.push(...config.extra(node));
   }
 
   return issues;
+}
+
+/**
+ * Validate a parsed JSON-LD value, handling top-level arrays and @graph wrappers.
+ *
+ * @param {unknown} parsed
+ * @returns {Array<{severity: string, message: string}>}
+ */
+function validate(parsed) {
+  if (!parsed || typeof parsed !== "object") return [];
+
+  // Top-level array: validate each node individually
+  if (Array.isArray(parsed)) {
+    return parsed.flatMap((node) => validateNode(node));
+  }
+
+  // @graph wrapper: the outer object carries @context; propagate it to each node
+  if (Array.isArray(parsed["@graph"])) {
+    const outerContext = parsed["@context"];
+    return parsed["@graph"].flatMap((node) => {
+      // Inherit outer @context when the node omits it
+      const effective =
+        outerContext && !node["@context"]
+          ? { "@context": outerContext, ...node }
+          : node;
+      return validateNode(effective);
+    });
+  }
+
+  return validateNode(parsed);
 }
 
 const ICON_ERROR =
@@ -646,7 +682,6 @@ export default {
       return { index, parsed, parseError, issues };
     });
 
-    const totalIssues = parseErrorCount + validationErrorCount;
     const severity =
       parseErrorCount > 0 || validationErrorCount > 0
         ? "error"
