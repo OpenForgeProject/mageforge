@@ -351,26 +351,20 @@ const VALIDATION_RULES = {
 function hasField(obj, path) {
   const parts = path.split(".");
   let current = obj;
-  for (const part of parts) {
+  for (let i = 0; i < parts.length; i++) {
     if (current == null) return false;
     // If it's an array, succeed if any element satisfies the remaining path
     if (Array.isArray(current)) {
-      const remaining = parts.slice(parts.indexOf(part)).join(".");
+      const remaining = parts.slice(i).join(".");
       return current.some((el) => hasField(el, remaining));
     }
-    current = current[part];
+    current = current[parts[i]];
   }
   if (current == null) return false;
   if (typeof current === "string") return current.trim().length > 0;
   return true;
 }
 
-/**
- * Validate a parsed JSON-LD object against known rules.
- *
- * @param {object} parsed
- * @returns {Array<{severity: string, message: string}>}
- */
 /**
  * Validate a single JSON-LD node object against known rules.
  *
@@ -429,6 +423,7 @@ function validate(parsed) {
   if (Array.isArray(parsed["@graph"])) {
     const outerContext = parsed["@context"];
     return parsed["@graph"].flatMap((node) => {
+      if (!node || typeof node !== "object" || Array.isArray(node)) return [];
       // Inherit outer @context when the node omits it
       const effective =
         outerContext && !node["@context"]
@@ -678,7 +673,7 @@ export default {
           (i) => i.severity === "warning",
         ).length;
       } catch (e) {
-        parseError = e.message;
+        parseError = String(e?.message ?? e);
         parseErrorCount++;
       }
       return { index, parsed, parseError, issues };
