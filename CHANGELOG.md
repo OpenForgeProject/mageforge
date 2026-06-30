@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.24.0](https://github.com/OpenForgeProject/mageforge/compare/0.23.1...0.24.0) (2026-06-29)
+
+
+### Added
+
+* Add PHPUnit configuration and unit tests for Hyvä compatibility… ([#212](https://github.com/OpenForgeProject/mageforge/issues/212)) ([b72c7c1](https://github.com/OpenForgeProject/mageforge/commit/b72c7c1164b9d99fd945e040c27aa0a9318b1c3b))
+* Add structured data audit features including JSON-LD and Schema… ([#213](https://github.com/OpenForgeProject/mageforge/issues/213)) ([7e17433](https://github.com/OpenForgeProject/mageforge/commit/7e17433241c7e32e726f1bfc01104d16aefd5c4e))
+
+
+### Fixed
+
+* Add ARIA attributes for improved accessibility in menu dialog ([0ba1cfa](https://github.com/OpenForgeProject/mageforge/commit/0ba1cfaf67c31c795cd9a414c98bb07584275a6a))
+* Add aria-label and aria-hidden attributes to close button for accessibility ([7a4cbb7](https://github.com/OpenForgeProject/mageforge/commit/7a4cbb75cf414db64d192ee4d3fdd6b777823ba3))
+* Correct opacity check in images without ALT audit ([2d2c1f1](https://github.com/OpenForgeProject/mageforge/commit/2d2c1f13e0999ce913772daa45abf227dae404c0))
+* Enhance audit scoring logic and maintain in-memory status for improved performance ([fb83919](https://github.com/OpenForgeProject/mageforge/commit/fb83919efb5c3c6afd70a05a94c008ec48ba10da))
+* Optimize audit overlay rendering and position updates for better scroll performance ([a0f598f](https://github.com/OpenForgeProject/mageforge/commit/a0f598fcc3a7bfdf6b23b1ad19d0c06cf8b094b4))
+* Update Inspector instructions for clarity and compatibility notes ([025cae3](https://github.com/OpenForgeProject/mageforge/commit/025cae3207fa8051d2884601ea851367b968902c))
+
 ## [0.23.1](https://github.com/OpenForgeProject/mageforge/compare/0.23.0...0.23.1) (2026-06-26)
 
 
