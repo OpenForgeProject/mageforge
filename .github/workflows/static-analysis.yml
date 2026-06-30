@@ -1,0 +1,217 @@
+name: Static Analysis
+
+# Builds a full Magento install ONCE (build-magento) and shares it via an
+# artifact, so multiple static-analysis tools (PHPStan, Mago analyze) run
+# against the same Magento codebase instead of each rebuilding it. The analysis
+# jobs need no live database — they only read code — so they run in parallel
+# without service containers.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-magento:
+    name: Build Magento (shared)
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MYSQL_ROOT_PASSWORD: magento
+          MYSQL_DATABASE: magento
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      opensearch:
+        image: opensearchproject/opensearch:3
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          path: mageforge
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-2.4.8-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-2.4.8
+
+      - name: Download Magento
+        run: |
+          composer create-project \
+            --repository-url=https://mirror.mage-os.org/ \
+            magento/project-community-edition \
+            magento2
+
+      - name: Install Magento
+        working-directory: magento2
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: |
+          composer config minimum-stability stable
+          composer config prefer-stable true
+          composer install --no-interaction --no-progress
+          bin/magento setup:install \
+            --base-url=http://localhost \
+            --db-host=127.0.0.1 \
+            --db-name=magento \
+            --db-user=root \
+            --db-password=magento \
+            --admin-firstname=Admin \
+            --admin-lastname=User \
+            --admin-email=admin@example.com \
+            --admin-user=admin \
+            --admin-password=admin12345 \
+            --language=en_US \
+            --currency=USD \
+            --timezone=Europe/Berlin \
+            --use-rewrites=1 \
+            --backend-frontname=admin \
+            --search-engine=opensearch \
+            --opensearch-host=localhost \
+            --opensearch-port=9200 \
+            --opensearch-index-prefix=magento \
+            --cleanup-database
+
+      - name: Install MageForge module and PHPStan tooling
+        working-directory: magento2
+        run: |
+          # Add the module from the current checkout as a copied (non-symlinked)
+          # path repository so its source ends up inside the shared artifact.
+          composer config repositories.mageforge-local '{"type": "path", "url": "../mageforge", "options": {"symlink": false}}'
+          composer require --no-update openforgeproject/mageforge:@dev
+
+          # Allow the PHPStan extension installer plugin
+          composer config --no-plugins allow-plugins.phpstan/extension-installer true
+
+          # PHPStan + Magento extension (consumed by the phpstan job)
+          composer require --dev --no-update bitexpert/phpstan-magento "phpstan/phpstan:^2.0" phpstan/extension-installer
+
+          composer update --with-dependencies
+          bin/magento setup:upgrade
+
+          # phpstan.neon is export-ignored, so the copied path repository omits
+          # it; place it next to the analysed source for the phpstan job.
+          cp ../mageforge/phpstan.neon vendor/openforgeproject/mageforge/phpstan.neon
+
+      - name: Pack Magento install
+        run: |
+          # Exclude runtime-only/disposable dirs to keep the artifact small;
+          # static analysis only needs vendor/, app/, generated/ and app/etc/.
+          tar czf magento.tar.gz \
+            --exclude='magento2/var' \
+            --exclude='magento2/pub/static' \
+            --exclude='magento2/pub/media' \
+            --exclude='magento2/.git' \
+            --exclude='magento2/dev/tests' \
+            magento2
+
+      - name: Upload Magento artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: magento-build
+          path: magento.tar.gz
+          retention-days: 1
+          compression-level: 0 # already gzipped
+
+  phpstan:
+    name: PHPStan Analysis
+    runs-on: ubuntu-latest
+    needs: build-magento
+
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+          tools: composer:v2
+
+      - name: Download Magento artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: magento-build
+
+      - name: Unpack Magento install
+        run: tar xzf magento.tar.gz
+
+      - name: Run PHPStan
+        working-directory: magento2
+        run: |
+          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
+
+  mago-analyze:
+    name: Mago Analyze
+    runs-on: ubuntu-latest
+    needs: build-magento
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          path: mageforge
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-mago-${{ hashFiles('mageforge/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-mago
+
+      - name: Install module dev dependencies (Mago binary)
+        working-directory: mageforge
+        run: composer install --no-interaction --no-progress
+
+      - name: Download Magento artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: magento-build
+
+      - name: Unpack Magento install
+        run: tar xzf magento.tar.gz
+
+      # Run Mago from inside the built Magento (workspace = magento2), so the
+      # `includes = ["vendor"]` from mago.toml resolves the full Magento class
+      # graph. Only the module source is analyzed; phtml templates and the
+      # Magento-idiomatic `mixed-*` codes are filtered via mago.toml. The Mago
+      # binary and config come from the separate module checkout (its
+      # require-dev isn't part of the artifact).
+      - name: Mago analyze
+        working-directory: magento2
+        run: |
+          ../mageforge/vendor/bin/mago \
+            --config ../mageforge/mago.toml \
+            analyze vendor/openforgeproject/mageforge/src \
+            --reporting-format=github

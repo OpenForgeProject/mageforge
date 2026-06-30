@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-## Description: Run Mago (PHP linter and formatter)
+## Description: Run Mago (PHP linter, formatter and static analyzer)
 ## Usage: mago <command> [options]
 ## Example: ddev mago lint
-## Example: ddev mago fmt
 ## Example: ddev mago fmt --dry-run
+## Example: ddev mago analyze
 
 cd /var/www/html
 
@@ -14,6 +14,21 @@ cd /var/www/html
 if [[ ! -x vendor/bin/mago ]]; then
 	echo "mago not found. Installing module dev dependencies..."
 	composer install --no-interaction
+fi
+
+# `analyze` needs the full Magento class graph to resolve framework/module
+# classes. Run it against the installed Magento (workspace = magento/), with the
+# module source as the target, so it matches what CI analyzes. lint/fmt operate
+# on the module source directly and run from the repo root.
+if [[ ${1-} == "analyze" ]]; then
+	shift
+	target="vendor/openforgeproject/mageforge/src"
+	# Optional explicit path override (must be relative to magento/).
+	if [[ $# -gt 0 && ! ${1} =~ ^- ]]; then
+		target="${1}"
+		shift
+	fi
+	exec vendor/bin/mago --workspace magento --config mago.toml analyze "${target}" "$@"
 fi
 
 vendor/bin/mago "$@"

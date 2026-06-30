@@ -98,10 +98,7 @@ class BuildCommand extends AbstractCommand
                 label: 'Select themes to build',
                 options: static fn(string $value) => empty($value)
                     ? $options
-                    : array_values(array_filter(
-                        $options,
-                        static fn($option) => stripos((string) $option, $value) !== false,
-                    )),
+                    : array_values(array_filter($options, static fn($option) => stripos($option, $value) !== false)),
                 placeholder: 'Type to search theme...',
                 hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
                 required: false,
@@ -185,7 +182,7 @@ class BuildCommand extends AbstractCommand
         } else {
             // Use the existing spinner with a customized message
             foreach ($themeCodes as $index => $themeCode) {
-                $currentTheme = $index + 1;
+                $currentTheme = (int) $index + 1;
 
                 // Validate theme and handle suggestions BEFORE showing spinner
                 $validatedTheme = $this->validateAndCorrectTheme($themeCode, $io, $output);

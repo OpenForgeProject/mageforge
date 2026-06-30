@@ -66,6 +66,7 @@ class CompatibilityChecker
         bool $thirdPartyOnly = false,
         bool $excludeVendor = true,
     ): array {
+        /** @var array<string, string> $modules */
         $modules = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         $results = [
             'modules' => [],

@@ -201,10 +201,7 @@ class CleanCommand extends AbstractCommand
             label: 'Select themes to clean',
             options: static fn(string $value) => empty($value)
                 ? $options
-                : array_values(array_filter(
-                    $options,
-                    static fn($option) => stripos((string) $option, $value) !== false,
-                )),
+                : array_values(array_filter($options, static fn($option) => stripos($option, $value) !== false)),
             placeholder: 'Type to search theme...',
             hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
             required: false,
@@ -245,7 +242,7 @@ class CleanCommand extends AbstractCommand
         $failedThemes = [];
 
         foreach ($themeCodes as $index => $themeName) {
-            $currentTheme = $index + 1;
+            $currentTheme = (int) $index + 1;
 
             // Validate and potentially correct theme name
             $validatedTheme = $this->validateTheme($themeName, $failedThemes, $output);

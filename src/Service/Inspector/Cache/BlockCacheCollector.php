@@ -207,9 +207,15 @@ class BlockCacheCollector
             $allBlocks = $this->layout->getAllBlocks();
 
             foreach ($allBlocks as $block) {
+                // getAllBlocks() has no element type; skip non-objects so the
+                // method_exists() guards below cannot raise a TypeError and so
+                // both static analyzers see a known object type.
+                if (!is_object($block)) {
+                    continue;
+                }
+
                 // Check if block has isCacheable method (added by layout processor)
                 if (method_exists($block, 'isCacheable')) {
-                    // @phpstan-ignore-next-line
                     if (!$block->isCacheable()) {
                         return false;
                     }
@@ -217,7 +223,6 @@ class BlockCacheCollector
 
                 // Check data key 'cacheable' set by layout XML
                 if (method_exists($block, 'getData')) {
-                    // @phpstan-ignore-next-line
                     $cacheableData = $block->getData('cacheable');
                     if ($cacheableData === false || $cacheableData === 'false') {
                         return false;

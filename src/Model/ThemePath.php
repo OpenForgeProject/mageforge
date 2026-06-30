@@ -25,6 +25,7 @@ class ThemePath
      */
     public function getPath(string $themeCode): ?string
     {
+        /** @var array<string, string> $registeredThemes */
         $registeredThemes = $this->componentRegistrar->getPaths(ComponentRegistrar::THEME);
 
         return $registeredThemes['frontend/' . $themeCode] ?? $registeredThemes['adminhtml/' . $themeCode] ?? null;

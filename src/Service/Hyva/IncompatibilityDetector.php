@@ -143,6 +143,9 @@ class IncompatibilityDetector
             $content = $this->fileDriver->fileGetContents($filePath);
             $lines = explode("\n", $content);
 
+            // mago resolves the const-array `severity` to its constant ref, not `string`;
+            // the shape is correct (verified by PHPStan against scanContentForPatterns()).
+            // @mago-expect analysis:possibly-invalid-argument
             return $this->scanContentForPatterns($lines, self::INCOMPATIBLE_PATTERNS[$fileType]);
         } catch (\Throwable $e) {
             return [];

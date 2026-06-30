@@ -95,10 +95,10 @@ class CompatibilityCheckCommand extends AbstractCommand
     {
         // Check if we're in interactive mode (no options provided)
         $hasOptions =
-            $input->getOption(self::OPTION_SHOW_ALL)
-            || $input->getOption(self::OPTION_THIRD_PARTY_ONLY)
-            || $input->getOption(self::OPTION_INCLUDE_VENDOR)
-            || $input->getOption(self::OPTION_DETAILED);
+            (bool) $input->getOption(self::OPTION_SHOW_ALL)
+            || (bool) $input->getOption(self::OPTION_THIRD_PARTY_ONLY)
+            || (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR)
+            || (bool) $input->getOption(self::OPTION_DETAILED);
 
         if (!$hasOptions && $this->isInteractiveTerminal($output)) {
             return $this->runInteractiveMode($input, $output);
