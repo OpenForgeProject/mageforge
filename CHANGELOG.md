@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.25.0](https://github.com/OpenForgeProject/mageforge/compare/0.24.0...0.25.0) (2026-06-30)
+
+
+### Added
+
+* add mago analyze ([#205](https://github.com/OpenForgeProject/mageforge/issues/205)) ([773bdf3](https://github.com/OpenForgeProject/mageforge/commit/773bdf3f3a83e00d5b1b138b927c432ae5398f64))
+
 ## [0.24.0](https://github.com/OpenForgeProject/mageforge/compare/0.23.1...0.24.0) (2026-06-29)
 
 
