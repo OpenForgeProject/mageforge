@@ -20,14 +20,14 @@ fi
 coverage=false
 args=()
 for arg in "$@"; do
-	if [[ "$arg" == "--coverage" ]]; then
+	if [[ $arg == "--coverage" ]]; then
 		coverage=true
 	else
 		args+=("$arg")
 	fi
 done
 
-if [[ "$coverage" == true ]]; then
+if [[ $coverage == true ]]; then
 	if ! php -m | grep -qi '^pcov$'; then
 		echo "PCOV extension not loaded. Run 'ddev restart' to rebuild the web image" >&2
 		echo "(.ddev/web-build/Dockerfile.pcov installs it)." >&2
