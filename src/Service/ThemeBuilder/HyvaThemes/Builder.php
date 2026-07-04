@@ -68,12 +68,8 @@ class Builder implements BuilderInterface
         if ($this->fileDriver->isExists($themePath . '/composer.json')) {
             $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
             $composerJson = json_decode($composerContent, true);
-            if (
-                is_array($composerJson)
-                && isset($composerJson['name'])
-                && is_string($composerJson['name'])
-                && str_contains($composerJson['name'], 'hyva')
-            ) {
+            $packageName = is_array($composerJson) ? $composerJson['name'] ?? null : null;
+            if (is_string($packageName) && str_contains($packageName, 'hyva')) {
                 return true;
             }
         }
