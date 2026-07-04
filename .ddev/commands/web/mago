@@ -34,7 +34,12 @@ if [[ ${1-} == "analyze" ]]; then
 	# are unaffected. Override with e.g. MAGO_LOG=warn when debugging.
 	export MAGO_LOG="${MAGO_LOG:-error}"
 	vendor/bin/mago --workspace magento --config mago.toml analyze "${target}" "$@"
-	echo "mago analyze: no issues found."
+	# At MAGO_LOG=error mago suppresses its own (stderr) "No issues found" log
+	# line, so a clean run would be fully silent. Note success on stderr — same
+	# stream mago logs to — keeping stdout machine-readable (json/github/…).
+	echo "mago analyze: no issues found." >&2
+	# set -e aborts above on findings; exit here so a successful analyze does
+	# not fall through to the plain `mago "$@"` invocation below.
 	exit 0
 fi
 
