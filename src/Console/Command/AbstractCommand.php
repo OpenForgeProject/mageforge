@@ -209,8 +209,8 @@ abstract class AbstractCommand extends Command
             return false;
         }
 
-        // Check if STDIN is available
-        if (!defined('STDIN') || !is_resource(STDIN)) {
+        // Check if STDIN is available (undefined outside the CLI SAPI)
+        if (!defined('STDIN')) {
             return false;
         }
 

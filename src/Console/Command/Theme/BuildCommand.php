@@ -375,6 +375,7 @@ class BuildCommand extends AbstractCommand
                 $themeName = $parts[0];
                 $details = $parts[1];
                 // Color the builder name in magenta
+                $matches = [];
                 if (preg_match('/(using\s+)([^\s]+)(\s+builder)/', $details, $matches)) {
                     $details = str_replace(
                         $matches[0],

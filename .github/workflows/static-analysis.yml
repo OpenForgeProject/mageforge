@@ -207,7 +207,9 @@ jobs:
       # graph. Only the module source is analyzed; phtml templates and the
       # Magento-idiomatic `mixed-*` codes are filtered via mago.toml. The Mago
       # binary and config come from the separate module checkout (its
-      # require-dev isn't part of the artifact).
+      # require-dev isn't part of the artifact). mago.toml sets
+      # `minimum-fail-level = "note"`, so any finding (including warnings and
+      # help messages) fails this job — green means a completely clean report.
       - name: Mago analyze
         working-directory: magento2
         run: |

@@ -10,6 +10,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class StandardThemeBuilder
 {
     /**
+     * Tracks whether the global Grunt tasks were already executed in this build process.
+     *
+     * @var bool
+     */
+    private bool $gruntTasksRun = false;
+
+    /**
      * Create a standard theme builder.
      *
      * @param DependencyChecker $dependencyChecker
@@ -47,13 +54,12 @@ class StandardThemeBuilder
         $successList[] = "$themeCode: Dependencies checked";
 
         // Run Grunt tasks (only once per build process)
-        static $gruntTasksRun = false;
-        if (!$gruntTasksRun) {
+        if (!$this->gruntTasksRun) {
             if (!$this->gruntTaskRunner->runTasks($io, $output, $isVerbose)) {
                 return false;
             }
             $successList[] = 'Global: Grunt tasks executed';
-            $gruntTasksRun = true;
+            $this->gruntTasksRun = true;
         }
 
         // Deploy static content

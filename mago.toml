@@ -16,6 +16,10 @@ inline-empty-constructor-braces = false
 inline-empty-classlike-braces = false
 
 [analyzer]
+# Fail on every reported finding (notes, help, warnings, errors) — not just
+# errors. Keeps `ddev mago analyze` and the CI job red until the report is
+# completely clean instead of silently passing with warnings.
+minimum-fail-level = "note"
 # phtml templates rely on variables ($block, $escaper, $secureRenderer, …) that
 # Magento's template engine injects into the render scope at runtime. A static
 # analyzer cannot know them, so every template would report "undefined variable"

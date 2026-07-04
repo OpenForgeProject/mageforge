@@ -258,7 +258,7 @@ class TokensCommand extends AbstractCommand
      */
     private function copyToVarGenerated(string $sourceFilePath, string $themeCode): string
     {
-        $currentDir = getcwd();
+        $currentDir = getcwd() ?: '.';
         $varGeneratedPath = $currentDir . '/var/generated/hyva-token/' . str_replace('/', '/', $themeCode);
 
         if (!$this->fileDriver->isDirectory($varGeneratedPath)) {
