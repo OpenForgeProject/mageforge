@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+## Description: Run Infection mutation testing for the MageForge module
+## Usage: infection [infection-options]
+## Example: ddev infection
+## Example: ddev infection --show-mutations
+## Example: ddev infection --filter=src/Service/Hyva/
+
+cd /var/www/html
+
+if [[ ! -x vendor/bin/infection ]]; then
+	echo "infection not found. Installing module dev dependencies..."
+	composer install --no-interaction
+fi
+
+if ! php -m | grep -qi '^pcov$'; then
+	echo "PCOV extension not loaded. Run 'ddev restart' to rebuild the web image" >&2
+	echo "(.ddev/web-build/Dockerfile.pcov installs it)." >&2
+	exit 1
+fi
+
+echo "Mutation report: reports/infection/infection.html"
+# The initial PHPUnit run needs PCOV for coverage (globally off, see
+# .ddev/php/pcov.ini); opcache.jit=off avoids the JIT warning PCOV triggers.
+exec vendor/bin/infection \
+	--threads=max \
+	--initial-tests-php-options="-d pcov.enabled=1 -d opcache.jit=off -d opcache.jit_buffer_size=0" \
+	"$@"

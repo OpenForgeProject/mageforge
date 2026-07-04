@@ -30,6 +30,12 @@ lint:
     - linters: [checkov]
       paths:
         - .ddev/**
+    # DDEV web-build files are Dockerfile *fragments* concatenated into DDEV's
+    # generated Dockerfile: they have no FROM, and sudo is the documented DDEV
+    # mechanism since the build runs as the non-root web user.
+    - linters: [hadolint]
+      paths:
+        - .ddev/web-build/**
   enabled:
     - pinact@4.1.0
     - svgo@4.0.1

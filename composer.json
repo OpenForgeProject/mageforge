@@ -19,6 +19,7 @@
   },
   "require-dev": {
     "carthage-software/mago": "^1.30",
+    "infection/infection": "^0.34.0",
     "magento/magento-coding-standard": "^40",
     "phpunit/phpunit": "^11.0"
   },
@@ -37,6 +38,7 @@
     "sort-packages": true,
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true,
+      "infection/extension-installer": true,
       "magento/composer-dependency-version-audit-plugin": true
     }
   },
@@ -45,6 +47,9 @@
     "fmt": "mago fmt",
     "fmt:check": "mago fmt --dry-run",
     "phpcs": "phpcs -p -s",
-    "phpcbf": "phpcbf -p"
+    "phpcbf": "phpcbf -p",
+    "test": "phpunit",
+    "test:coverage": "phpunit --coverage-text --coverage-html reports/coverage --coverage-clover reports/clover.xml",
+    "test:mutation": "infection --threads=max --initial-tests-php-options='-d pcov.enabled=1'"
   }
 }
