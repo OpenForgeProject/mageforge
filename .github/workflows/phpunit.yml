@@ -45,11 +45,14 @@ jobs:
 
       - name: Run PHPUnit with coverage
         if: ${{ matrix.coverage }}
-        run: >
-          vendor/bin/phpunit
-          --coverage-text=reports/coverage.txt
-          --coverage-html reports/coverage
-          --coverage-clover reports/clover.xml
+        # mkdir: the text report is written with a bare file_put_contents and
+        # relies on the Clover/HTML writers having created reports/ first.
+        run: |
+          mkdir -p reports
+          vendor/bin/phpunit \
+            --coverage-text=reports/coverage.txt \
+            --coverage-html reports/coverage \
+            --coverage-clover reports/clover.xml
 
       - name: Publish coverage summary
         if: ${{ matrix.coverage && always() }}
