@@ -10,7 +10,10 @@ extensions = ["php", "phtml"]
 # .trunk contains symlinks into the developer's host cache (~/.cache/trunk)
 # that are dangling inside the ddev container and would log walk warnings.
 # The astock phpcs-psr2-stock dir ships legacy sniffs with real parse errors.
-excludes = ["**/.trunk/**", "**/astock/stock-api-libphp/libs/phpcs-psr2-stock/**"]
+excludes = [
+  "**/.trunk/**",
+  "**/astock/stock-api-libphp/libs/phpcs-psr2-stock/**",
+]
 
 [parser]
 enable-short-tags = false
