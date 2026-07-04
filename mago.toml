@@ -7,6 +7,13 @@ php-version = "8.3"
 paths = ["src"]
 includes = ["vendor"]
 extensions = ["php", "phtml"]
+# .trunk contains symlinks into the developer's host cache (~/.cache/trunk)
+# that are dangling inside the ddev container and would log walk warnings.
+# The astock phpcs-psr2-stock dir ships legacy sniffs with real parse errors.
+excludes = [
+  "**/.trunk/**",
+  "**/astock/stock-api-libphp/libs/phpcs-psr2-stock/**",
+]
 
 [parser]
 enable-short-tags = false
@@ -16,6 +23,10 @@ inline-empty-constructor-braces = false
 inline-empty-classlike-braces = false
 
 [analyzer]
+# Fail on every reported finding (notes, help, warnings, errors) — not just
+# errors. Keeps `ddev mago analyze` and the CI job red until the report is
+# completely clean instead of silently passing with warnings.
+minimum-fail-level = "note"
 # phtml templates rely on variables ($block, $escaper, $secureRenderer, …) that
 # Magento's template engine injects into the render scope at runtime. A static
 # analyzer cannot know them, so every template would report "undefined variable"

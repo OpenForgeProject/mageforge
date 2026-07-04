@@ -207,9 +207,18 @@ jobs:
       # graph. Only the module source is analyzed; phtml templates and the
       # Magento-idiomatic `mixed-*` codes are filtered via mago.toml. The Mago
       # binary and config come from the separate module checkout (its
-      # require-dev isn't part of the artifact).
+      # require-dev isn't part of the artifact). mago.toml sets
+      # `minimum-fail-level = "note"`, so any finding (including warnings and
+      # help messages) fails this job — green means a completely clean report.
       - name: Mago analyze
         working-directory: magento2
+        env:
+          # `paths = ["src"]` from mago.toml has no match under this workspace
+          # (module source is analyzed via the vendor copy), which logs a
+          # harmless "Failed to walk" warning. Log only real errors — findings
+          # and the exit code are unaffected. Raise to `warn` when debugging
+          # incomplete-analysis problems (e.g. vendor files that fail to parse).
+          MAGO_LOG: error
         run: |
           ../mageforge/vendor/bin/mago \
             --config ../mageforge/mago.toml \

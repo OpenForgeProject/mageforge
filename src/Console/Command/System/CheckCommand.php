@@ -235,6 +235,7 @@ class CheckCommand extends AbstractCommand
         }
 
         if ($output !== '') {
+            $matches = [];
             preg_match('/Distrib ([0-9.]+)/', $output, $matches);
             return isset($matches[1]) ? $matches[1] : null;
         }
@@ -279,6 +280,7 @@ class CheckCommand extends AbstractCommand
             return 'Not installed';
         }
 
+        $matches = [];
         preg_match('/Composer version ([^ ]+)/', $output, $matches);
         return isset($matches[1]) ? $matches[1] : 'Unknown';
     }
@@ -316,6 +318,7 @@ class CheckCommand extends AbstractCommand
             return 'Not installed';
         }
 
+        $matches = [];
         preg_match('/git version (.+)/', $output, $matches);
         return isset($matches[1]) ? $matches[1] : 'Unknown';
     }
@@ -780,8 +783,9 @@ class CheckCommand extends AbstractCommand
         try {
             $environmentService = $objectManager->get(\Magento\Framework\App\EnvironmentInterface::class);
             $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($name))));
-            if (is_object($environmentService) && method_exists($environmentService, $method)) {
-                $value = $environmentService->$method();
+            $getter = [$environmentService, $method];
+            if (is_callable($getter)) {
+                $value = $getter();
                 if ($value !== null) {
                     return (string) $value;
                 }

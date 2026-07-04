@@ -22,6 +22,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CleanCommand extends AbstractCommand
 {
     /**
+     * Tracks whether the theme-independent directories were already cleaned in this run.
+     *
+     * @var bool
+     */
+    private bool $globalCleaned = false;
+
+    /**
      * @param ThemeCleaner $themeCleaner
      * @param ThemeList $themeList
      * @param ThemePath $themePath
@@ -329,17 +336,15 @@ class CleanCommand extends AbstractCommand
      */
     private function cleanThemeDirectories(string $themeName, bool $dryRun): int
     {
-        static $globalCleaned = false;
-
         $cleaned = 0;
         $cleaned += $this->themeCleaner->cleanViewPreprocessed($themeName, $this->io, $dryRun, true);
         $cleaned += $this->themeCleaner->cleanPubStatic($themeName, $this->io, $dryRun, true);
 
-        if (!$globalCleaned) {
+        if (!$this->globalCleaned) {
             $cleaned += $this->themeCleaner->cleanPageCache($this->io, $dryRun, true);
             $cleaned += $this->themeCleaner->cleanVarTmp($this->io, $dryRun, true);
             $cleaned += $this->themeCleaner->cleanGenerated($this->io, $dryRun, true);
-            $globalCleaned = true;
+            $this->globalCleaned = true;
         }
         return $cleaned;
     }
