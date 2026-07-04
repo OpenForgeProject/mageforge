@@ -5,12 +5,76 @@ on: [pull_request]
 permissions:
   contents: read
 
-env:
-  PHP_VERSION: "8.4"
-
 jobs:
   phpunit:
-    name: Unit Tests
+    name: Unit Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ["8.3", "8.4"]
+        include:
+          - php-version: "8.4"
+            coverage: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2
+          coverage: ${{ matrix.coverage && 'pcov' || 'none' }}
+
+      - name: Cache Composer packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-phpunit-${{ matrix.php-version }}-${{ hashFiles('composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-phpunit-${{ matrix.php-version }}
+
+      - name: Install dev dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Run PHPUnit
+        if: ${{ !matrix.coverage }}
+        run: vendor/bin/phpunit
+
+      - name: Run PHPUnit with coverage
+        if: ${{ matrix.coverage }}
+        run: >
+          vendor/bin/phpunit
+          --coverage-text=reports/coverage.txt
+          --coverage-html reports/coverage
+          --coverage-clover reports/clover.xml
+
+      - name: Publish coverage summary
+        if: ${{ matrix.coverage && always() }}
+        run: |
+          if [[ -f reports/coverage.txt ]]; then
+            {
+              echo '## Code Coverage'
+              echo '```'
+              cat reports/coverage.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report
+        if: ${{ matrix.coverage && always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage-report
+          path: |
+            reports/coverage
+            reports/clover.xml
+          if-no-files-found: ignore
+
+  mutation:
+    name: Mutation Tests (Infection)
     runs-on: ubuntu-latest
 
     steps:
@@ -20,18 +84,39 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
-          php-version: ${{ env.PHP_VERSION }}
+          php-version: "8.4"
           tools: composer:v2
+          coverage: pcov
 
       - name: Cache Composer packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.composer/cache/files
-          key: ${{ runner.os }}-composer-phpunit-${{ hashFiles('composer.json') }}
-          restore-keys: ${{ runner.os }}-composer-phpunit
+          key: ${{ runner.os }}-composer-phpunit-8.4-${{ hashFiles('composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-phpunit-8.4
 
       - name: Install dev dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit
+      - name: Run Infection
+        run: vendor/bin/infection --threads=max --logger-github --no-progress
+
+      - name: Publish mutation summary
+        if: always()
+        run: |
+          if [[ -f reports/infection/summary.log ]]; then
+            {
+              echo '## Mutation Testing'
+              echo '```'
+              cat reports/infection/summary.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mutation-report
+          path: reports/infection
+          if-no-files-found: ignore

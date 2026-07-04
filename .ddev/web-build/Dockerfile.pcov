@@ -1,0 +1,3 @@
+# PCOV provides fast code coverage for PHPUnit (used by `ddev phpunit --coverage`).
+# It is disabled by default via .ddev/php/pcov.ini and enabled per-run.
+RUN sudo apt-get update && sudo apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests php${DDEV_PHP_VERSION}-pcov

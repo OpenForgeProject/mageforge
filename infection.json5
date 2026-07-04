@@ -1,0 +1,16 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"],
+        "excludes": ["registration.php"],
+    },
+    "timeout": 10,
+    "logs": {
+        "text": "reports/infection/infection.log",
+        "html": "reports/infection/infection.html",
+        "summary": "reports/infection/summary.log",
+    },
+    "mutators": {
+        "@default": true,
+    },
+}
