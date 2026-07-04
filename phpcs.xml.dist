@@ -6,9 +6,11 @@
 
     <arg name="extensions" value="php,phtml"/>
 
-    <rule ref="Magento2">
-        <!-- Mago formats multi-line conditions PSR-12 style (newline after the
-             opening parenthesis); this PSR-2-era sniff would flag that. -->
-        <exclude name="PSR2.ControlStructures.ControlStructureSpacing"/>
-    </rule>
+    <!-- Full Magento2 standard, no exclusions: external package checkers run the
+         plain standard against the published package, so any local exclusion would
+         hide findings that still fail there. Multi-line conditions conflict with
+         Mago's PSR-12 wrapping (newline after the opening parenthesis, flagged by
+         PSR2.ControlStructures.ControlStructureSpacing) — keep conditions on one
+         line by extracting sub-expressions into variables instead. -->
+    <rule ref="Magento2"/>
 </ruleset>
