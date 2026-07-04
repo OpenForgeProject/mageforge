@@ -28,7 +28,14 @@ if [[ ${1-} == "analyze" ]]; then
 		target="${1}"
 		shift
 	fi
-	exec vendor/bin/mago --workspace magento --config mago.toml analyze "${target}" "$@"
+	# `paths = ["src"]` from mago.toml has no match under the magento workspace,
+	# which logs a harmless "Failed to walk" warning; symbols come from
+	# `includes = ["vendor"]`. Log only real errors — findings and the exit code
+	# are unaffected. Override with e.g. MAGO_LOG=warn when debugging.
+	export MAGO_LOG="${MAGO_LOG:-error}"
+	vendor/bin/mago --workspace magento --config mago.toml analyze "${target}" "$@"
+	echo "mago analyze: no issues found."
+	exit 0
 fi
 
 vendor/bin/mago "$@"
