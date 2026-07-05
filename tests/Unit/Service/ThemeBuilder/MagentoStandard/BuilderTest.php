@@ -163,13 +163,24 @@ class BuilderTest extends TestCase
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
-        $this->shell->method('execute')->willReturn('');
-        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
-        $this->gruntTaskRunner->method('runTasks')->willReturn(true);
+        $executedCommands = [];
+        $this->shell->method('execute')->willReturnCallback(function (string $command) use (&$executedCommands) {
+            $executedCommands[] = $command;
+            return '';
+        });
+        $this->symlinkCleaner->expects($this->once())
+            ->method('cleanSymlinks')
+            ->with($this->themePath, $this->io, false)
+            ->willReturn(true);
+        $this->gruntTaskRunner->expects($this->once())
+            ->method('runTasks')
+            ->with($this->io, $this->output, false)
+            ->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
 
         $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertSame(['which grunt'], $executedCommands);
     }
 
     public function testBuildReturnsFalseWhenNodeSetupProcessingFails(): void

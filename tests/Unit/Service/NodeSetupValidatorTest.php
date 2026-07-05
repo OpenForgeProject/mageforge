@@ -29,8 +29,16 @@ class NodeSetupValidatorTest extends TestCase
 
     private function markAllRequiredFilesPresent(): void
     {
-        $this->fileDriver->method('isExists')->willReturn(true);
-        $this->fileDriver->method('isDirectory')->willReturn(true);
+        // Exact-path whitelists (rather than a blanket willReturn(true)) so that a mutation to
+        // the path concatenation (wrong separator, wrong operand order, etc.) produces a path
+        // that doesn't match and is treated as "missing", changing the test's outcome.
+        $expectedFiles = ['./package.json', './Gruntfile.js', './grunt-config.json', './package-lock.json'];
+        $this->fileDriver->method('isExists')->willReturnCallback(
+            static fn (string $path): bool => in_array($path, $expectedFiles, true),
+        );
+        $this->fileDriver->method('isDirectory')->willReturnCallback(
+            static fn (string $path): bool => $path === './node_modules',
+        );
     }
 
     public function testValidateAndRestoreReturnsTrueWhenNothingIsMissing(): void
@@ -51,12 +59,17 @@ class NodeSetupValidatorTest extends TestCase
 
     public function testValidateAndRestoreAutomaticallyRestoresOnlyMissingGeneratedFiles(): void
     {
-        // Everything present except the generated package-lock.json file.
+        // Everything present except the generated package-lock.json file. Generated files are
+        // never copied from Magento base (they're only ever produced by npm install), so no
+        // copy() call is expected here.
+        $expectedFiles = ['./package.json', './Gruntfile.js', './grunt-config.json'];
         $this->fileDriver->method('isExists')->willReturnCallback(
-            static fn (string $path): bool => !str_ends_with($path, 'package-lock.json'),
+            static fn (string $path): bool => in_array($path, $expectedFiles, true),
         );
-        $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->fileDriver->method('copy')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturnCallback(
+            static fn (string $path): bool => $path === './node_modules' || $path === 'vendor/magento/magento2-base',
+        );
+        $this->fileDriver->expects($this->never())->method('copy');
 
         $result = $this->validator->validateAndRestore('.', $this->io, true);
 
@@ -67,9 +80,12 @@ class NodeSetupValidatorTest extends TestCase
     public function testValidateAndRestoreInstallsNodeModulesWhenDirectoryMissing(): void
     {
         // Every required/generated file present, but node_modules directory missing.
-        $this->fileDriver->method('isExists')->willReturn(true);
+        $expectedFiles = ['./package.json', './Gruntfile.js', './grunt-config.json', './package-lock.json'];
+        $this->fileDriver->method('isExists')->willReturnCallback(
+            static fn (string $path): bool => in_array($path, $expectedFiles, true),
+        );
         $this->fileDriver->method('isDirectory')->willReturnCallback(
-            static fn (string $path): bool => !str_ends_with(rtrim($path, '/'), 'node_modules'),
+            static fn (string $path): bool => $path === 'vendor/magento/magento2-base',
         );
         $this->nodePackageManager->expects($this->once())
             ->method('installNodeModules')
@@ -83,9 +99,12 @@ class NodeSetupValidatorTest extends TestCase
 
     public function testValidateAndRestoreReturnsFalseWhenNpmInstallFails(): void
     {
-        $this->fileDriver->method('isExists')->willReturn(true);
+        $expectedFiles = ['./package.json', './Gruntfile.js', './grunt-config.json', './package-lock.json'];
+        $this->fileDriver->method('isExists')->willReturnCallback(
+            static fn (string $path): bool => in_array($path, $expectedFiles, true),
+        );
         $this->fileDriver->method('isDirectory')->willReturnCallback(
-            static fn (string $path): bool => !str_ends_with(rtrim($path, '/'), 'node_modules'),
+            static fn (string $path): bool => $path === 'vendor/magento/magento2-base',
         );
         $this->nodePackageManager->method('installNodeModules')->willReturn(false);
 

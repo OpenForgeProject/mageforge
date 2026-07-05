@@ -19,6 +19,7 @@ class ConcreteTestCommand extends AbstractCommand
 {
     private int $executeCommandReturn = Cli::RETURN_SUCCESS;
     private ?\Throwable $throwOnExecute = null;
+    private ?bool $realTtyAvailableOverride = null;
 
     protected function configure(): void
     {
@@ -32,6 +33,16 @@ class ConcreteTestCommand extends AbstractCommand
         }
 
         return $this->executeCommandReturn;
+    }
+
+    protected function isRealTtyAvailable(): bool
+    {
+        return $this->realTtyAvailableOverride ?? parent::isRealTtyAvailable();
+    }
+
+    public function setRealTtyAvailable(?bool $available): void
+    {
+        $this->realTtyAvailableOverride = $available;
     }
 
     public function setExecuteCommandReturn(int $code): void

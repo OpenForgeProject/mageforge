@@ -177,7 +177,14 @@ class BuilderTest extends TestCase
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
         $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
-        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->shell->method('execute')->willReturn('');
+        $this->fileDriver->expects($this->once())
+            ->method('isDirectory')
+            ->with($this->themePath . '/web/tailwind')
+            ->willReturn(false);
+        $this->io->expects($this->once())
+            ->method('error')
+            ->with('Tailwind directory not found in: ' . $this->themePath . '/web/tailwind');
 
         $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
     }
@@ -210,12 +217,41 @@ class BuilderTest extends TestCase
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
         $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
-        $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->shell->expects($this->exactly(2))->method('execute');
+        $this->fileDriver->expects($this->once())
+            ->method('isDirectory')
+            ->with($this->themePath . '/web/tailwind')
+            ->willReturn(true);
+        $executedCommands = [];
+        $this->shell->expects($this->exactly(2))
+            ->method('execute')
+            ->willReturnCallback(function (string $command, array $args = []) use (&$executedCommands): string {
+                $executedCommands[] = [$command, $args];
+                return '';
+            });
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
+        $successMessages = [];
+        $this->io->method('success')->willReturnCallback(function (string $message) use (&$successMessages): void {
+            $successMessages[] = $message;
+        });
+        $textMessages = [];
+        $this->io->method('text')->willReturnCallback(function (string $message) use (&$textMessages): void {
+            $textMessages[] = $message;
+        });
 
         $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
+        $this->assertSame(
+            [
+                ['bin/magento hyva:config:generate', []],
+                ['cd %s && npm run build', [$this->themePath . '/web/tailwind']],
+            ],
+            $executedCommands,
+        );
+        $this->assertSame(['Generating Hyvä configuration...', 'Running npm build...'], $textMessages);
+        $this->assertSame(
+            ['Hyvä configuration generated successfully.', 'Hyvä theme build completed successfully.'],
+            $successMessages,
+        );
     }
 
     public function testBuildReturnsFalseWhenDeployFails(): void
