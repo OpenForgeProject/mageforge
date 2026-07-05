@@ -60,7 +60,7 @@ jobs:
       - name: Enforce minimum line coverage
         if: ${{ matrix.coverage }}
         # Quality ratchet — raise the threshold as coverage grows.
-        run: php tests/coverage-checker.php reports/clover.xml 38
+        run: php tests/coverage-checker.php reports/clover.xml 50
 
       - name: Publish coverage summary
         if: ${{ matrix.coverage && always() }}
