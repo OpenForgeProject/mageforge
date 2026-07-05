@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.26.0](https://github.com/OpenForgeProject/mageforge/compare/0.25.0...0.26.0) (2026-07-05)
+
+
+### Added
+
+* add badges for PHPUnit and code quality checks ([#220](https://github.com/OpenForgeProject/mageforge/issues/220)) ([f76a7d5](https://github.com/OpenForgeProject/mageforge/commit/f76a7d51fb4b0c414b6d85f26cb03c986337fde1))
+* improve coverage ([#221](https://github.com/OpenForgeProject/mageforge/issues/221)) ([bde4acd](https://github.com/OpenForgeProject/mageforge/commit/bde4acd00a437e8a9c346672c2e4b26cc19f5578))
+* improve unit tests ([#219](https://github.com/OpenForgeProject/mageforge/issues/219)) ([408e8a1](https://github.com/OpenForgeProject/mageforge/commit/408e8a13753b7cefb287ff36e91ead697f91d696))
+* update mago analyze ([#217](https://github.com/OpenForgeProject/mageforge/issues/217)) ([c25ac12](https://github.com/OpenForgeProject/mageforge/commit/c25ac126de7afc58fef16144d312c5b24952202a))
+
+
+### Changed
+
+* simplify condition checks in various files ([#215](https://github.com/OpenForgeProject/mageforge/issues/215)) ([89bd44c](https://github.com/OpenForgeProject/mageforge/commit/89bd44c77bc3f67652f7121a5dd4fdb190c54695))
+
 ## [0.25.0](https://github.com/OpenForgeProject/mageforge/compare/0.24.0...0.25.0) (2026-06-30)
 
 
