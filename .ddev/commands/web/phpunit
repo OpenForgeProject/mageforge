@@ -46,6 +46,7 @@ if [[ ${coverage} == true ]]; then
 	if [[ ${#args[@]} -eq 0 ]]; then
 		exec php tests/coverage-checker.php reports/clover.xml 20
 	fi
+	exit 0
 fi
 
 exec vendor/bin/phpunit "${args[@]}"
