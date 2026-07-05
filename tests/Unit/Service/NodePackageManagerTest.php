@@ -83,6 +83,44 @@ class NodePackageManagerTest extends TestCase
         $this->assertFalse($this->packageManager->installNodeModules('/theme', $this->io, false));
     }
 
+    public function testWarnsAndReportsSuccessInVerboseModeWhenNpmCiFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(true);
+        $this->shell
+            ->method('execute')
+            ->willReturnCallback(function (string $command): string {
+                if (str_contains($command, 'npm ci')) {
+                    throw new \RuntimeException('lock file out of sync');
+                }
+                return '';
+            });
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with('npm ci failed, falling back to npm install...');
+        $this->io
+            ->expects($this->once())
+            ->method('success')
+            ->with('Node modules installed successfully.');
+
+        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, true));
+    }
+
+    public function testWarnsInVerboseModeWhenLockFileIsMissing(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with('No package-lock.json found, running npm install...');
+        $this->io
+            ->expects($this->once())
+            ->method('success')
+            ->with('Node modules installed successfully.');
+
+        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, true));
+    }
+
     // -------------------------------------------------------------------------
     // isNodeModulesInSync
     // -------------------------------------------------------------------------

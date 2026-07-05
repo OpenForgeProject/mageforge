@@ -349,8 +349,15 @@ class IncompatibilityDetectorTest extends TestCase
 
     public function testReturnsEmptyArrayWhenFileNotExists(): void
     {
-        $this->fileMock->method('isExists')->willReturn(false);
-        $issues = $this->detector->detectInFile('nonexistent.js');
+        // Uses its own mock (rather than the shared $this->fileMock, which the setUp() method
+        // already stubs with isExists() => true) since a second `method('isExists')` stub
+        // does not override the first one registered for the same method.
+        $fileMock = $this->createMock(File::class);
+        $fileMock->method('isExists')->willReturn(false);
+        $fileMock->expects($this->never())->method('fileGetContents');
+        $detector = new IncompatibilityDetector($fileMock);
+
+        $issues = $detector->detectInFile('nonexistent.js');
         $this->assertEmpty($issues);
     }
 

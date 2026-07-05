@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Model\TemplateEngine\Plugin;
 
-use Magento\Developer\Helper\Data as DevHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\View\TemplateEngineFactory;
 use Magento\Framework\View\TemplateEngineInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHintsFactory;
+use OpenForgeProject\MageForge\Service\DeveloperAccessChecker;
 
 /**
  * Plugin for the template engine factory to activate MageForge Inspector hints
@@ -23,15 +21,13 @@ class InspectorHints
 {
     /**
      * @param ScopeConfigInterface $scopeConfig
-     * @param StoreManagerInterface $storeManager
-     * @param DevHelper $devHelper
+     * @param DeveloperAccessChecker $developerAccessChecker
      * @param InspectorHintsFactory $inspectorHintsFactory
      * @param State $state
      */
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly DevHelper $devHelper,
+        private readonly DeveloperAccessChecker $developerAccessChecker,
         private readonly InspectorHintsFactory $inspectorHintsFactory,
         private readonly State $state,
     ) {
@@ -54,19 +50,14 @@ class InspectorHints
             return $invocationResult;
         }
 
-        // Check if inspector is enabled in configuration
-        $storeCode = $this->storeManager->getStore()->getCode();
-        $isEnabled = $this->scopeConfig->isSetFlag(
-            InspectorConfig::XML_PATH_ENABLED,
-            ScopeInterface::SCOPE_STORE,
-            $storeCode,
-        );
+        // Check if inspector is enabled in configuration for the current scope
+        $isEnabled = $this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, InspectorConfig::SCOPE_STORE);
         if (!$isEnabled) {
             return $invocationResult;
         }
 
         // Check if current IP is allowed
-        if (!$this->devHelper->isDevAllowed()) {
+        if (!$this->developerAccessChecker->isDevAllowed()) {
             return $invocationResult;
         }
 

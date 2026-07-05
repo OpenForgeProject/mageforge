@@ -21,9 +21,11 @@ class VersionCommand extends AbstractCommand
 
     /**
      * @param File $fileDriver
+     * @param Client|null $httpClient Guzzle client, injectable for tests
      */
     public function __construct(
         private readonly File $fileDriver,
+        private readonly ?Client $httpClient = null,
     ) {
         parent::__construct();
     }
@@ -90,11 +92,13 @@ class VersionCommand extends AbstractCommand
     private function getLatestVersion(): string
     {
         try {
-            $client = new Client();
+            $client = $this->httpClient ?? new Client();
             $response = $client->get(self::API_URL, [
                 'headers' => [
                     'User-Agent' => 'MageForge-Version-Check',
                 ],
+                'timeout' => 2,
+                'connect_timeout' => 2,
             ]);
 
             if ($response->getStatusCode() === 200) {

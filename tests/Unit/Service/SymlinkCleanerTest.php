@@ -109,4 +109,15 @@ class SymlinkCleanerTest extends TestCase
 
         $this->assertTrue($this->cleaner->cleanSymlinks('/theme', $this->io, true));
     }
+
+    public function testReportsBasenameForItemWithoutDirectorySeparator(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('readDirectory')->willReturn(['link.css']);
+        $this->fileDriver->method('stat')->willReturn(['mode' => self::SYMLINK_MODE]);
+        $this->io->expects($this->once())->method('writeln')->with('  <fg=yellow>⚠</> Removed symlink: link.css');
+
+        $this->assertTrue($this->cleaner->cleanSymlinks('/theme', $this->io, true));
+    }
 }

@@ -229,7 +229,19 @@ abstract class AbstractCommand extends Command
             }
         }
 
-        // Check if TTY is available
+        return $this->isRealTtyAvailable();
+    }
+
+    /**
+     * Check if a real, usable TTY is attached to the current process.
+     *
+     * Extracted into its own method (rather than inlined in isInteractiveTerminal()) so it
+     * can be overridden in tests, since its result otherwise depends on the invoking shell.
+     *
+     * @return bool
+     */
+    protected function isRealTtyAvailable(): bool
+    {
         // phpcs:ignore Magento2.Security.InsecureFunction.Found -- shell_exec required for TTY detection
         $sttyOutput = shell_exec('stty -g 2>/dev/null');
         return !empty($sttyOutput);

@@ -28,4 +28,9 @@
             <file>src/registration.php</file>
         </exclude>
     </source>
+    <php>
+        <!-- Fix the terminal width so SymfonyStyle wraps output identically
+             everywhere (local, CI, Infection); display assertions depend on it. -->
+        <env name="COLUMNS" value="120" force="true"/>
+    </php>
 </phpunit>

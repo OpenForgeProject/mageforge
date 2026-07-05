@@ -156,6 +156,24 @@ class CompatibilityCheckerTest extends TestCase
         $this->assertSame(1, $results['summary']['hyvaAware']);
     }
 
+    public function testShowAllPrintsScanningLineForEachModule(): void
+    {
+        $this->givenModules(['Vendor_Module' => '/app/code/Vendor/Module']);
+        $this->givenScanResults(['/app/code/Vendor/Module' => $this->scanResult(critical: 0, total: 0)]);
+        $this->givenModuleInfo(hyvaAware: false);
+        $textCalls = [];
+        $this->io->method('text')->willReturnCallback(function (string $message) use (&$textCalls): void {
+            $textCalls[] = $message;
+        });
+
+        $this->checker->check($this->io, showAll: true);
+
+        $this->assertSame(
+            ['Scanning 1 modules for Hyvä compatibility...', '  Scanning: <fg=cyan>Vendor_Module</>'],
+            $textCalls,
+        );
+    }
+
     // -------------------------------------------------------------------------
     // formatResultsForDisplay
     // -------------------------------------------------------------------------

@@ -43,25 +43,31 @@ class ModuleScannerTest extends TestCase
         $this->fileDriver->method('readDirectory')->with('/module')->willReturn([
             '/module/view.js',
             '/module/layout.xml',
+            '/module/clean.js',
         ]);
         $this->detector->method('getExtensionFromPath')->willReturnMap([
             ['/module/view.js', 'js'],
             ['/module/layout.xml', 'xml'],
+            ['/module/clean.js', 'js'],
         ]);
         $this->detector->method('detectInFile')->willReturnMap([
             ['/module/view.js', [
                 ['description' => 'RequireJS define() usage', 'severity' => 'critical', 'line' => 1],
                 ['description' => 'jQuery AJAX direct usage', 'severity' => 'warning', 'line' => 5],
             ]],
-            ['/module/layout.xml', []],
+            ['/module/layout.xml', [
+                ['description' => 'UI Component usage', 'severity' => 'critical', 'line' => 3],
+            ]],
+            ['/module/clean.js', []],
         ]);
 
         $result = $this->scanner->scanModule('/module');
 
-        $this->assertSame(2, $result['totalIssues']);
-        $this->assertSame(1, $result['criticalIssues']);
+        $this->assertSame(3, $result['totalIssues']);
+        $this->assertSame(2, $result['criticalIssues']);
         $this->assertArrayHasKey('view.js', $result['files']);
-        $this->assertCount(1, $result['files']);
+        $this->assertArrayHasKey('layout.xml', $result['files']);
+        $this->assertCount(2, $result['files']);
     }
 
     public function testSkipsExcludedDirectoriesAndIrrelevantExtensions(): void
@@ -69,11 +75,12 @@ class ModuleScannerTest extends TestCase
         $this->givenDirectories(['/module', '/module/Test', '/module/node_modules', '/module/src']);
         $this->fileDriver->method('readDirectory')->willReturnMap([
             ['/module', ['/module/Test', '/module/node_modules', '/module/src', '/module/readme.md']],
-            ['/module/src', ['/module/src/widget.js']],
+            ['/module/src', ['/module/src/widget.js', '/module/src/grid.js']],
         ]);
         $this->detector->method('getExtensionFromPath')->willReturnMap([
             ['/module/readme.md', 'md'],
             ['/module/src/widget.js', 'js'],
+            ['/module/src/grid.js', 'js'],
         ]);
 
         $scannedFiles = [];
@@ -86,7 +93,7 @@ class ModuleScannerTest extends TestCase
 
         $this->scanner->scanModule('/module');
 
-        $this->assertSame(['/module/src/widget.js'], $scannedFiles);
+        $this->assertSame(['/module/src/widget.js', '/module/src/grid.js'], $scannedFiles);
     }
 
     public function testSkipsUnreadableDirectories(): void
@@ -98,6 +105,20 @@ class ModuleScannerTest extends TestCase
             ['files' => [], 'totalIssues' => 0, 'criticalIssues' => 0],
             $this->scanner->scanModule('/module'),
         );
+    }
+
+    public function testHandlesDirectoryEntryWithoutPathSeparator(): void
+    {
+        $this->givenDirectories(['/module']);
+        $this->fileDriver->method('readDirectory')->willReturnMap([
+            ['/module', ['widget.js']],
+        ]);
+        $this->detector->method('getExtensionFromPath')->with('widget.js')->willReturn('js');
+        $this->detector->method('detectInFile')->willReturn([]);
+
+        $result = $this->scanner->scanModule('/module');
+
+        $this->assertSame(['files' => [], 'totalIssues' => 0, 'criticalIssues' => 0], $result);
     }
 
     // -------------------------------------------------------------------------
@@ -170,6 +191,13 @@ class ModuleScannerTest extends TestCase
         $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
     }
 
+    public function testNonArrayRequireIsNotHyvaAware(): void
+    {
+        $this->givenComposerJson(['name' => 'vendor/module', 'require' => 'not-an-array']);
+
+        $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -191,5 +219,15 @@ class ModuleScannerTest extends TestCase
     {
         $this->fileDriver->method('isExists')->with('/module/composer.json')->willReturn(true);
         $this->fileDriver->method('fileGetContents')->willReturn(json_encode($composerData));
+    }
+
+    public function testNonHyvaRequirementsAreNotHyvaAware(): void
+    {
+        $this->givenComposerJson([
+            'name' => 'vendor/module',
+            'require' => ['php' => '^8.3', 'magento/framework' => '*'],
+        ]);
+
+        $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
     }
 }

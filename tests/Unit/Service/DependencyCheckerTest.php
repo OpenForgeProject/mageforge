@@ -193,4 +193,82 @@ class DependencyCheckerTest extends TestCase
             ->method('isFile')
             ->willReturnCallback(static fn(string $path): bool => $files[$path] ?? false);
     }
+
+    public function testVerboseSampleCopyFlowReportsEachStep(): void
+    {
+        $this->givenFiles([
+            'package.json' => false,
+            'package.json.sample' => true,
+            'Gruntfile.js' => true,
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->io->method('confirm')->willReturn(true);
+
+        $successMessages = [];
+        $this->io
+            ->method('success')
+            ->willReturnCallback(function (string $message) use (&$successMessages): void {
+                $successMessages[] = $message;
+            });
+
+        $this->assertTrue($this->checker->checkDependencies($this->io, true));
+        $this->assertSame(
+            [
+                "The 'package.json.sample' file found.",
+                "'package.json.sample' has been copied to 'package.json'.",
+                "The 'node_modules' folder found.",
+                "The 'Gruntfile.js' file found.",
+            ],
+            $successMessages,
+        );
+    }
+
+    public function testVerboseNpmInstallFlowReportsEachStep(): void
+    {
+        $this->givenFiles(['package.json' => true, 'Gruntfile.js' => true]);
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->io->method('confirm')->willReturn(true);
+        $this->shell->method('execute')->with('npm install --quiet')->willReturn('added 120 packages');
+        $this->io->expects($this->once())->method('section')->with("Running 'npm install'... Please wait.");
+        $this->io->expects($this->once())->method('writeln')->with('added 120 packages');
+
+        $warnings = [];
+        $this->io
+            ->method('warning')
+            ->willReturnCallback(function (string $message) use (&$warnings): void {
+                $warnings[] = $message;
+            });
+
+        $this->assertTrue($this->checker->checkDependencies($this->io, true));
+        $this->assertSame(["The 'node_modules' folder does not exist in the Magento root path."], $warnings);
+    }
+
+    public function testVerboseGruntfileSampleCopyReportsEachStep(): void
+    {
+        $this->givenFiles([
+            'package.json' => true,
+            'Gruntfile.js' => false,
+            'Gruntfile.js.sample' => true,
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->io->method('confirm')->willReturn(true);
+
+        $successMessages = [];
+        $this->io
+            ->method('success')
+            ->willReturnCallback(function (string $message) use (&$successMessages): void {
+                $successMessages[] = $message;
+            });
+
+        $this->assertTrue($this->checker->checkDependencies($this->io, true));
+        $this->assertSame(
+            [
+                "The 'package.json' file found.",
+                "The 'node_modules' folder found.",
+                "The 'Gruntfile.js.sample' file found.",
+                "'Gruntfile.js.sample' has been copied to 'Gruntfile.js'.",
+            ],
+            $successMessages,
+        );
+    }
 }

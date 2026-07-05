@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Block;
 
-use Magento\Developer\Helper\Data as DevHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
-use Magento\Store\Model\ScopeInterface;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
+use OpenForgeProject\MageForge\Service\DeveloperAccessChecker;
 
 /**
  * Block for MageForge Inspector
@@ -23,7 +22,7 @@ class Inspector extends Template
      * @param Context $context
      * @param State $state
      * @param ScopeConfigInterface $scopeConfig
-     * @param DevHelper $devHelper
+     * @param DeveloperAccessChecker $developerAccessChecker
      * @param array $data
      * @phpstan-param array<string, mixed> $data
      */
@@ -31,7 +30,7 @@ class Inspector extends Template
         Context $context,
         private readonly State $state,
         private readonly ScopeConfigInterface $scopeConfig,
-        private readonly DevHelper $devHelper,
+        private readonly DeveloperAccessChecker $developerAccessChecker,
         array $data = [],
     ) {
         parent::__construct($context, $data);
@@ -50,12 +49,12 @@ class Inspector extends Template
         }
 
         // Check if inspector is enabled in configuration
-        if (!$this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, ScopeInterface::SCOPE_STORE)) {
+        if (!$this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, InspectorConfig::SCOPE_STORE)) {
             return false;
         }
 
         // Check if current IP is allowed
-        if (!$this->devHelper->isDevAllowed()) {
+        if (!$this->developerAccessChecker->isDevAllowed()) {
             return false;
         }
 
@@ -111,7 +110,7 @@ class Inspector extends Template
     {
         $value = $this->scopeConfig->getValue(
             InspectorConfig::XML_PATH_SHOW_BUTTON_LABELS,
-            ScopeInterface::SCOPE_STORE,
+            InspectorConfig::SCOPE_STORE,
         );
         // Default to true when not explicitly set to '0'
         return !is_string($value) || $value !== '0';
@@ -124,7 +123,7 @@ class Inspector extends Template
      */
     public function getTheme(): string
     {
-        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_THEME, ScopeInterface::SCOPE_STORE);
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_THEME, InspectorConfig::SCOPE_STORE);
         return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_THEME;
     }
 
@@ -135,7 +134,7 @@ class Inspector extends Template
      */
     public function getPosition(): string
     {
-        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_POSITION, ScopeInterface::SCOPE_STORE);
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_POSITION, InspectorConfig::SCOPE_STORE);
         return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_POSITION;
     }
 
