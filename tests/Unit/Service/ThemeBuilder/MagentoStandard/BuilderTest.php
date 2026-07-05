@@ -1,0 +1,304 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder\MagentoStandard;
+
+use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\Shell;
+use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\GruntTaskRunner;
+use OpenForgeProject\MageForge\Service\NodePackageManager;
+use OpenForgeProject\MageForge\Service\StaticContentCleaner;
+use OpenForgeProject\MageForge\Service\StaticContentDeployer;
+use OpenForgeProject\MageForge\Service\SymlinkCleaner;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+class BuilderTest extends TestCase
+{
+    private Shell&MockObject $shell;
+    private File&MockObject $fileDriver;
+    private StaticContentDeployer&MockObject $staticContentDeployer;
+    private StaticContentCleaner&MockObject $staticContentCleaner;
+    private CacheCleaner&MockObject $cacheCleaner;
+    private SymlinkCleaner&MockObject $symlinkCleaner;
+    private NodePackageManager&MockObject $nodePackageManager;
+    private GruntTaskRunner&MockObject $gruntTaskRunner;
+    private SymfonyStyle&MockObject $io;
+    private OutputInterface&MockObject $output;
+    private Builder $builder;
+    private string $themePath = 'app/design/frontend/Vendor/theme';
+
+    protected function setUp(): void
+    {
+        $this->shell = $this->createMock(Shell::class);
+        $this->fileDriver = $this->createMock(File::class);
+        $this->staticContentDeployer = $this->createMock(StaticContentDeployer::class);
+        $this->staticContentCleaner = $this->createMock(StaticContentCleaner::class);
+        $this->cacheCleaner = $this->createMock(CacheCleaner::class);
+        $this->symlinkCleaner = $this->createMock(SymlinkCleaner::class);
+        $this->nodePackageManager = $this->createMock(NodePackageManager::class);
+        $this->gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $this->io = $this->createMock(SymfonyStyle::class);
+        $this->output = $this->createMock(OutputInterface::class);
+
+        $this->builder = new Builder(
+            $this->shell,
+            $this->fileDriver,
+            $this->staticContentDeployer,
+            $this->staticContentCleaner,
+            $this->cacheCleaner,
+            $this->symlinkCleaner,
+            $this->nodePackageManager,
+            $this->gruntTaskRunner,
+        );
+    }
+
+    public function testGetNameReturnsThemeName(): void
+    {
+        $this->assertSame('MagentoStandard', $this->builder->getName());
+    }
+
+    public function testDetectReturnsTrueForStandardTheme(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+        ]);
+
+        $this->assertTrue($this->builder->detect($this->themePath));
+    }
+
+    public function testDetectReturnsFalseWhenThemeXmlMissing(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', false],
+            [$this->themePath . '/web/tailwind', false],
+        ]);
+
+        $this->assertFalse($this->builder->detect($this->themePath));
+    }
+
+    public function testDetectReturnsFalseWhenTailwindDirectoryPresent(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', true],
+        ]);
+
+        $this->assertFalse($this->builder->detect($this->themePath));
+    }
+
+    private function configureSuccessfulDetection(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+        ]);
+    }
+
+    public function testBuildReturnsFalseWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testBuildReturnsFalseWhenStaticContentCleanFails(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testBuildSkipsGruntStepsForVendorTheme(): void
+    {
+        $vendorThemePath = 'root/vendor/some-vendor/theme';
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$vendorThemePath . '/theme.xml', true],
+            [$vendorThemePath . '/web/tailwind', false],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->io->expects($this->once())->method('warning')
+            ->with('Vendor theme detected. Skipping Grunt steps.');
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+
+        $this->assertTrue(
+            $this->builder->build('Vendor/theme', $vendorThemePath, $this->io, $this->output, false),
+        );
+    }
+
+    public function testBuildSkipsGruntStepsWhenNoNodeSetupDetected(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', false],
+            ['./package-lock.json', false],
+            ['./gruntfile.js', false],
+            ['./grunt-config.json', false],
+        ]);
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
+    }
+
+    public function testBuildRunsNodeSetupWhenDetected(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->shell->method('execute')->willReturn('');
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->gruntTaskRunner->method('runTasks')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testBuildReturnsFalseWhenNodeSetupProcessingFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->shell->method('execute')->willReturn('');
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(false);
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testBuildReturnsFalseWhenDeployFails(): void
+    {
+        $vendorThemePath = 'root/vendor/some-vendor/theme';
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$vendorThemePath . '/theme.xml', true],
+            [$vendorThemePath . '/web/tailwind', false],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(false);
+        $this->cacheCleaner->expects($this->never())->method('clean');
+
+        $this->assertFalse(
+            $this->builder->build('Vendor/theme', $vendorThemePath, $this->io, $this->output, false),
+        );
+    }
+
+    public function testAutoRepairInstallsWhenOutOfSync(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
+        $this->shell->method('execute')->willReturn('');
+
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+    }
+
+    public function testAutoRepairReturnsFalseWhenInstallFails(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->method('installNodeModules')->willReturn(false);
+
+        $this->assertFalse($this->builder->autoRepair($this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testAutoRepairInstallsGruntWhenMissing(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $callCount = 0;
+        $this->shell->method('execute')->willReturnCallback(function (string $command) use (&$callCount) {
+            $callCount++;
+            if ($command === 'which grunt') {
+                throw new \RuntimeException('not found');
+            }
+            return '';
+        });
+        $this->io->expects($this->atLeastOnce())->method('success');
+
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+    }
+
+    public function testAutoRepairReturnsFalseWhenGruntInstallFails(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('failed'));
+
+        $this->assertFalse($this->builder->autoRepair($this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReturnsFalseWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReturnsFalseForVendorTheme(): void
+    {
+        $vendorThemePath = 'root/vendor/some-vendor/theme';
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$vendorThemePath . '/theme.xml', true],
+            [$vendorThemePath . '/web/tailwind', false],
+        ]);
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $vendorThemePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReturnsFalseWhenNoNodeSetupDetected(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', false],
+            ['./package-lock.json', false],
+            ['./gruntfile.js', false],
+            ['./grunt-config.json', false],
+        ]);
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReturnsFalseWhenStaticContentCleanFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReturnsFalseWhenAutoRepairFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['./package.json', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->method('installNodeModules')->willReturn(false);
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+}
