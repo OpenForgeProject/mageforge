@@ -2,7 +2,20 @@
 
 ![Mageforge Hero](./.github/assets/MageForge-Header.png)
 
-[![Release](https://img.shields.io/github/v/release/OpenForgeProject/mageforge)](https://github.com/OpenForgeProject/mageforge/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/OpenForgeProject/mageforge)](https://github.com/OpenForgeProject/mageforge/releases)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
+[![Downloads](https://img.shields.io/packagist/dt/openforgeproject/mageforge)](https://packagist.org/packages/openforgeproject/mageforge)
+[![PHP](https://img.shields.io/packagist/dependency-v/openforgeproject/mageforge/php?logo=php&logoColor=white)](composer.json)
+
+[![PHPUnit](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpunit.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpunit.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FOpenForgeProject%2Fmageforge%2Fbadges%2Fcoverage.json)](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpunit.yml)
+[![Mutation Score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FOpenForgeProject%2Fmageforge%2Fbadges%2Fmsi.json)](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpunit.yml)
+[![Functional Tests](https://github.com/OpenForgeProject/mageforge/actions/workflows/functional-tests.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/functional-tests.yml)
+[![Magento Compatibility](https://github.com/OpenForgeProject/mageforge/actions/workflows/magento-compatibility.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/magento-compatibility.yml)
+
+[![PHPCS](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpcs.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/phpcs.yml)
+[![Static Analysis](https://github.com/OpenForgeProject/mageforge/actions/workflows/static-analysis.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/static-analysis.yml)
+[![Lint](https://github.com/OpenForgeProject/mageforge/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/OpenForgeProject/mageforge/actions/workflows/lint.yml)
 
 MageForge is a powerful CLI toolkit for Magento 2 front-end development. It simplifies theme building workflows, supports multiple theme types (Magento Standard, Hyvä, TailwindCSS, custom), and includes developer tools like the Frontend Inspector.
 
@@ -91,6 +104,7 @@ The MageForge Inspector lets you inspect Magento blocks, templates, and performa
 ```bash
 bin/magento mageforge:theme:inspector enable
 ```
+
 The Inspector can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)
 
 **Use in Browser:**
