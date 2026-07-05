@@ -12,4 +12,13 @@ class Inspector
     public const XML_PATH_POSITION = 'mageforge/inspector/position';
     public const DEFAULT_THEME = 'dark';
     public const DEFAULT_POSITION = 'bottom-left';
+
+    /**
+     * Store scope type.
+     *
+     * Equivalent to \Magento\Store\Model\ScopeInterface::SCOPE_STORE, duplicated here so
+     * MageForge does not need a hard dependency on the Magento_Store module just for this
+     * string constant.
+     */
+    public const SCOPE_STORE = 'store';
 }

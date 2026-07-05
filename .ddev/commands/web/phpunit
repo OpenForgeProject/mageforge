@@ -44,7 +44,7 @@ if [[ ${coverage} == true ]]; then
 	# Quality ratchet, only meaningful for a full-suite run; keep the threshold
 	# in sync with .github/workflows/phpunit.yml.
 	if [[ ${#args[@]} -eq 0 ]]; then
-		exec php tests/coverage-checker.php reports/clover.xml 35
+		exec php tests/coverage-checker.php reports/clover.xml 38
 	fi
 	exit 0
 fi
