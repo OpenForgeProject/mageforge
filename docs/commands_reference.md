@@ -4,17 +4,18 @@ Complete reference of all CLI commands provided by the MageForge module.
 
 ## Quick Overview
 
-| Group      | Command                              | Description                                         | Aliases          |
-| ---------- | ------------------------------------ | --------------------------------------------------- | ---------------- |
-| **Theme**  | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`  |
-| **Theme**  | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build` |
-| **Theme**  | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch` |
-| **Theme**  | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean` |
-| **Theme**  | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                |
-| **Hyvä**   | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`    |
-| **Hyvä**   | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues         | `hyva:check`     |
-| **System** | `mageforge:system:version`           | Show current and latest module version              | `system:version` |
-| **System** | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`   |
+| Group            | Command                              | Description                                         | Aliases               |
+| ---------------- | ------------------------------------ | --------------------------------------------------- | --------------------- |
+| **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`       |
+| **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`      |
+| **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`      |
+| **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
+| **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                     |
+| **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
+| **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
+| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues         | `hyva:check`          |
+| **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`      |
+| **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`        |
 
 ---
 
@@ -124,6 +125,39 @@ bin/magento mageforge:theme:inspector status
 
 ---
 
+## Dependencies Commands
+
+### `mageforge:dependencies:update`
+
+Updates the Node.js dependencies (npm packages) of one or more themes. Works with all themes that ship their own `package.json`, e.g. Hyvä and TailwindCSS themes (`web/tailwind/package.json`).
+
+```bash
+bin/magento mageforge:dependencies:update <theme-code> [<theme-code> ...]
+bin/magento mageforge:dependencies:update Vendor/theme
+bin/magento mageforge:dependencies:update Vendor/theme --dry-run
+bin/magento mageforge:dependencies:update Vendor/theme --latest
+```
+
+**Arguments:**
+
+- `themeCodes` — One or more theme codes in format `Vendor/theme`. Accepts wildcards like `Vendor/*`. If omitted, an interactive prompt lets you select themes.
+
+**Options:**
+
+- `--dry-run` — Only show the outdated packages without changing anything.
+- `-l, --latest` — Update packages beyond their semver ranges to the latest available versions. This rewrites `package.json` and may pull in breaking changes.
+
+**Behavior:**
+
+- Shows a table of all outdated packages (current, wanted, latest version and dependency type) per theme.
+- By default runs a safe `npm update`: packages are only updated within the semver ranges defined in `package.json` (`package.json` itself stays untouched).
+- With `--latest`, outdated packages are updated to their latest released versions, grouped by dependency type (`dependencies`, `devDependencies`, ...).
+- Installs `node_modules` first if missing, so the report is meaningful.
+- Themes installed in `vendor/` (managed by Composer) and themes without their own `package.json` (e.g. standard Magento themes built from the Magento root Node.js setup) are skipped with an explanation.
+- After a successful update, a hint reminds you to rebuild the affected themes with `mageforge:theme:build`.
+
+---
+
 ## Hyvä Commands
 
 ### `mageforge:hyva:tokens`
@@ -210,6 +244,7 @@ mageforge:theme:build         → Build theme assets
 mageforge:theme:watch         → Watch & auto-rebuild
 mageforge:theme:clean         → Clean static files
 mageforge:theme:inspector     → Manage inspector tool
+mageforge:dependencies:update → Update theme Node.js dependencies
 mageforge:hyva:tokens         → Generate Hyvä design tokens
 mageforge:hyva:compatibility:check → Check Hyvä compatibility
 mageforge:system:version      → Show module version

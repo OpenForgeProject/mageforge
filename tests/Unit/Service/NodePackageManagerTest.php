@@ -211,4 +211,194 @@ class NodePackageManagerTest extends TestCase
 
         $this->packageManager->checkOutdatedPackages('/theme', $this->io);
     }
+
+    // -------------------------------------------------------------------------
+    // getOutdatedPackages
+    // -------------------------------------------------------------------------
+
+    public function testParsesOutdatedPackagesFromNpmJsonOutput(): void
+    {
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('cd %s && npm outdated --json --long 2>/dev/null; true', ['/theme'])
+            ->willReturn(json_encode([
+                'tailwindcss' => [
+                    'current' => '3.4.1',
+                    'wanted' => '3.4.17',
+                    'latest' => '4.1.5',
+                    'type' => 'devDependencies',
+                ],
+                'alpinejs' => [
+                    'current' => '3.13.0',
+                    'wanted' => '3.14.9',
+                    'latest' => '3.14.9',
+                    'type' => 'dependencies',
+                ],
+            ], JSON_THROW_ON_ERROR));
+
+        $packages = $this->packageManager->getOutdatedPackages('/theme');
+
+        $this->assertSame([
+            [
+                'name' => 'tailwindcss',
+                'current' => '3.4.1',
+                'wanted' => '3.4.17',
+                'latest' => '4.1.5',
+                'type' => 'devDependencies',
+            ],
+            [
+                'name' => 'alpinejs',
+                'current' => '3.13.0',
+                'wanted' => '3.14.9',
+                'latest' => '3.14.9',
+                'type' => 'dependencies',
+            ],
+        ], $packages);
+    }
+
+    public function testNormalizesListEntriesAndMissingFields(): void
+    {
+        $this->shell->method('execute')->willReturn(json_encode([
+            'postcss' => [
+                ['wanted' => '8.5.0', 'latest' => '8.5.0'],
+                ['wanted' => '8.4.0', 'latest' => '8.5.0'],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $packages = $this->packageManager->getOutdatedPackages('/theme');
+
+        $this->assertSame([
+            [
+                'name' => 'postcss',
+                'current' => '-',
+                'wanted' => '8.5.0',
+                'latest' => '8.5.0',
+                'type' => 'dependencies',
+            ],
+        ], $packages);
+    }
+
+    public function testReturnsEmptyListWhenEverythingIsUpToDate(): void
+    {
+        $this->shell->method('execute')->willReturn('');
+
+        $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
+    }
+
+    public function testReturnsEmptyListOnInvalidJsonOutput(): void
+    {
+        $this->shell->method('execute')->willReturn('npm ERR! something went wrong');
+
+        $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
+    }
+
+    public function testReturnsEmptyListWhenShellExecutionFails(): void
+    {
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('npm not found'));
+
+        $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
+    }
+
+    // -------------------------------------------------------------------------
+    // updatePackages
+    // -------------------------------------------------------------------------
+
+    public function testRunsNpmUpdate(): void
+    {
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('cd %s && npm update --quiet', ['/theme']);
+
+        $this->assertTrue($this->packageManager->updatePackages('/theme', $this->io, false));
+    }
+
+    public function testReportsSuccessInVerboseModeAfterUpdate(): void
+    {
+        $this->io->expects($this->once())->method('text')->with('Running npm update...');
+        $this->io->expects($this->once())->method('success')->with('Packages updated within their semver ranges.');
+
+        $this->assertTrue($this->packageManager->updatePackages('/theme', $this->io, true));
+    }
+
+    public function testReturnsFalseAndPrintsErrorWhenUpdateFails(): void
+    {
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('registry unreachable'));
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Failed to update packages: registry unreachable');
+
+        $this->assertFalse($this->packageManager->updatePackages('/theme', $this->io, false));
+    }
+
+    // -------------------------------------------------------------------------
+    // installPackageVersions
+    // -------------------------------------------------------------------------
+
+    public function testInstallsPackagesWithSaveDevFlagForDevDependencies(): void
+    {
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with(
+                'cd %s && npm install --save-dev --quiet %s %s',
+                ['/theme', 'tailwindcss@4.1.5', 'postcss@8.5.0'],
+            );
+
+        $this->assertTrue($this->packageManager->installPackageVersions(
+            '/theme',
+            'devDependencies',
+            ['tailwindcss' => '4.1.5', 'postcss' => '8.5.0'],
+            $this->io,
+            false,
+        ));
+    }
+
+    public function testInstallsPackagesWithSaveFlagForUnknownDependencyType(): void
+    {
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('cd %s && npm install --save --quiet %s', ['/theme', 'alpinejs@3.14.9']);
+
+        $this->assertTrue($this->packageManager->installPackageVersions(
+            '/theme',
+            'somethingUnknown',
+            ['alpinejs' => '3.14.9'],
+            $this->io,
+            false,
+        ));
+    }
+
+    public function testSkipsShellExecutionForEmptyPackageList(): void
+    {
+        $this->shell->expects($this->never())->method('execute');
+
+        $this->assertTrue($this->packageManager->installPackageVersions(
+            '/theme',
+            'dependencies',
+            [],
+            $this->io,
+            false,
+        ));
+    }
+
+    public function testReturnsFalseAndPrintsErrorWhenInstallOfVersionsFails(): void
+    {
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('E404 not found'));
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Failed to install packages: E404 not found');
+
+        $this->assertFalse($this->packageManager->installPackageVersions(
+            '/theme',
+            'dependencies',
+            ['alpinejs' => '3.14.9'],
+            $this->io,
+            false,
+        ));
+    }
 }
