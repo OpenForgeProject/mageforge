@@ -105,7 +105,7 @@ The MageForge Inspector lets you inspect Magento blocks, templates, and performa
 bin/magento mageforge:theme:inspector enable
 ```
 
-The Inspector can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`)
+The Inspector can also be enabled in Admin: `Stores > Configuration > MageForge > Frontend Inspector`
 
 **Use in Browser:**
 
