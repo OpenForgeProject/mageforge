@@ -368,6 +368,25 @@ class IncompatibilityDetectorTest extends TestCase
         $this->assertEmpty($issues, 'File read errors must be handled gracefully');
     }
 
+    public function testGetExtensionFromPathHandlesCaseSlashesAndMissingExtensions(): void
+    {
+        $this->assertSame('js', $this->detector->getExtensionFromPath('view/frontend/web/js/widget.JS'));
+        $this->assertSame('phtml', $this->detector->getExtensionFromPath('templates\\product\\view.phtml'));
+        $this->assertSame('xml', $this->detector->getExtensionFromPath('layout/default.xml/'));
+        $this->assertSame('js', $this->detector->getExtensionFromPath('script.js'));
+        $this->assertSame('', $this->detector->getExtensionFromPath('Makefile'));
+        $this->assertSame('', $this->detector->getExtensionFromPath('dir.name\\Makefile'));
+    }
+
+    public function testDetectsUppercaseFileExtensions(): void
+    {
+        $this->fileMock->method('fileGetContents')->willReturn('var qty = ko.observable(1);');
+
+        $issues = $this->detector->detectInFile('legacy/WIDGET.JS');
+
+        $this->assertNotEmpty($issues, 'Uppercase file extensions must be scanned like lowercase ones');
+    }
+
     public function testReportsCorrectLineNumbers(): void
     {
         $content = "const x = 1;\nconst y = 2;\nko.applyBindings(viewModel);\nconst z = 3;";

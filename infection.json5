@@ -5,6 +5,9 @@
         "excludes": ["registration.php"],
     },
     "timeout": 10,
+    // Quality ratchet: fails the run (locally and in CI) when the covered-code
+    // MSI drops below this floor. Raise it as the test suite improves.
+    "minCoveredMsi": 90,
     "logs": {
         "text": "reports/infection/infection.log",
         "html": "reports/infection/infection.html",
