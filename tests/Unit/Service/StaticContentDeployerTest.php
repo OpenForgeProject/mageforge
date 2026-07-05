@@ -37,6 +37,17 @@ class StaticContentDeployerTest extends TestCase
         $this->assertTrue($this->deployer->deploy('Vendor/theme', $this->io, $this->output, false));
     }
 
+    public function testReportsSkipInVerboseModeWhenInDeveloperMode(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->io
+            ->expects($this->once())
+            ->method('info')
+            ->with('Skipping static content deployment in developer mode.');
+
+        $this->assertTrue($this->deployer->deploy('Vendor/theme', $this->io, $this->output, true));
+    }
+
     public function testDeploysThemeInProductionMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_PRODUCTION);

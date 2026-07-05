@@ -100,6 +100,20 @@ class ModuleScannerTest extends TestCase
         );
     }
 
+    public function testHandlesDirectoryEntryWithoutPathSeparator(): void
+    {
+        $this->givenDirectories(['/module']);
+        $this->fileDriver->method('readDirectory')->willReturnMap([
+            ['/module', ['widget.js']],
+        ]);
+        $this->detector->method('getExtensionFromPath')->with('widget.js')->willReturn('js');
+        $this->detector->method('detectInFile')->willReturn([]);
+
+        $result = $this->scanner->scanModule('/module');
+
+        $this->assertSame(['files' => [], 'totalIssues' => 0, 'criticalIssues' => 0], $result);
+    }
+
     // -------------------------------------------------------------------------
     // getModuleInfo
     // -------------------------------------------------------------------------
@@ -166,6 +180,13 @@ class ModuleScannerTest extends TestCase
     public function testPlainHyvaThemesPackageWithoutCompatSuffixIsNotHyvaAware(): void
     {
         $this->givenComposerJson(['name' => 'hyva-themes/magento2-theme-module']);
+
+        $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
+    }
+
+    public function testNonArrayRequireIsNotHyvaAware(): void
+    {
+        $this->givenComposerJson(['name' => 'vendor/module', 'require' => 'not-an-array']);
 
         $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
     }
