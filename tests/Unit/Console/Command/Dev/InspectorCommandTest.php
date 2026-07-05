@@ -130,4 +130,87 @@ class InspectorCommandTest extends TestCase
     {
         $this->assertSame('mageforge:theme:inspector', $this->command->getName());
     }
+
+    // -------------------------------------------------------------------------
+    // Mutation hardening: exact messages and cache interactions
+    // -------------------------------------------------------------------------
+
+    public function testEnableFailureListsCurrentModeAndRemedy(): void
+    {
+        $this->state->method('getMode')->willReturn('production');
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['action' => 'enable']);
+
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('Inspector can only be enabled/disabled in developer mode.', $display);
+        $this->assertStringContainsString('Current mode: production', $display);
+        $this->assertStringContainsString('bin/magento deploy:mode:set developer', $display);
+    }
+
+    public function testEnableAnnouncesUsageAndCleansExactCacheTypes(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->cacheManager
+            ->expects($this->once())
+            ->method('clean')
+            ->with(['config', 'layout', 'full_page', 'block_html']);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['action' => 'enable']);
+
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('MageForge Inspector has been enabled!', $display);
+        $this->assertStringContainsString('The inspector will now be active on the frontend for allowed IPs.', $display);
+        $this->assertStringContainsString('Press Ctrl+Shift+I (or Cmd+Option+I on macOS)', $display);
+        $this->assertStringContainsString('Hover over elements to see their template information', $display);
+        $this->assertStringContainsString('Click to pin the inspector panel', $display);
+        $this->assertStringContainsString('Inspector only works in developer mode and for allowed IPs', $display);
+        $this->assertStringContainsString('Config, layout, full page & block HTML caches cleaned', $display);
+    }
+
+    public function testStatusShowsModeAndEnabledState(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['action' => 'status']);
+
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('MageForge Inspector Status', $display);
+        $this->assertStringContainsString('Mode: developer', $display);
+        $this->assertStringContainsString('Inspector: Enabled', $display);
+        $this->assertStringContainsString('Inspector is active and ready to use!', $display);
+        $this->assertStringNotContainsString('Inspector is disabled.', $display);
+    }
+
+    public function testDisabledStatusShowsDisabledState(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->scopeConfig->method('isSetFlag')->willReturn(false);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['action' => 'status']);
+
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('Inspector: Disabled', $display);
+        $this->assertStringContainsString(
+            'Inspector is disabled. Run "bin/magento mageforge:theme:inspector enable" to activate it.',
+            $display,
+        );
+        $this->assertStringNotContainsString('ready to use', $display);
+    }
+
+    public function testStatusUppercasesActionArgument(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['action' => 'STATUS']);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('MageForge Inspector Status', $tester->getDisplay());
+    }
 }

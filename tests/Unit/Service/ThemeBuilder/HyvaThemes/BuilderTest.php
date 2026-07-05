@@ -317,4 +317,256 @@ class BuilderTest extends TestCase
 
         $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
     }
+
+    // -------------------------------------------------------------------------
+    // Mutation hardening: exact messages, commands and branch boundaries
+    // -------------------------------------------------------------------------
+
+    public function testDetectMatchesHyvaCaseInsensitivelyAndNormalizesSlash(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/web/tailwind', true],
+            [$this->themePath . '/theme.xml', true],
+        ]);
+        $this->fileDriver->method('fileGetContents')->willReturn('<theme><title>HYVA Default</title></theme>');
+
+        $this->assertTrue($this->builder->detect($this->themePath . '/'));
+    }
+
+    public function testGeneratesHyvaConfigWithExactCommandAndVerboseMessages(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+
+        $executedCommands = [];
+        $this->shell
+            ->method('execute')
+            ->willReturnCallback(function (string $command) use (&$executedCommands): string {
+                $executedCommands[] = $command;
+                return '';
+            });
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+
+        $texts = [];
+        $this->io
+            ->method('text')
+            ->willReturnCallback(function (string $message) use (&$texts): void {
+                $texts[] = $message;
+            });
+        $successes = [];
+        $this->io
+            ->method('success')
+            ->willReturnCallback(function (string $message) use (&$successes): void {
+                $successes[] = $message;
+            });
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
+        $this->assertSame('bin/magento hyva:config:generate', $executedCommands[0]);
+        $this->assertSame('cd %s && npm run build', $executedCommands[1]);
+        $this->assertSame(['Generating Hyvä configuration...', 'Running npm build...'], $texts);
+        $this->assertSame(
+            ['Hyvä configuration generated successfully.', 'Hyvä theme build completed successfully.'],
+            $successes,
+        );
+    }
+
+    public function testQuietBuildUsesQuietNpmCommandAndStaysSilent(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+
+        $executedCommands = [];
+        $this->shell
+            ->method('execute')
+            ->willReturnCallback(function (string $command) use (&$executedCommands): string {
+                $executedCommands[] = $command;
+                return '';
+            });
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+        $this->io->expects($this->never())->method('text');
+        $this->io->expects($this->never())->method('success');
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertSame('cd %s && npm run build --quiet', $executedCommands[1]);
+    }
+
+    public function testConfigGenerationFailureReportsExactError(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('config error'));
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Failed to generate Hyvä configuration: config error');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testMissingTailwindDirectoryReportsExactError(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Tailwind directory not found in: ' . $this->themePath . '/web/tailwind');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testNpmBuildFailureReportsExactError(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->shell
+            ->method('execute')
+            ->willReturnCallback(static function (string $command): string {
+                if (str_contains($command, 'npm run build')) {
+                    throw new \RuntimeException('npm exploded');
+                }
+                return '';
+            });
+        $this->io->expects($this->once())->method('error')->with('Failed to build Hyvä theme: npm exploded');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testAutoRepairUsesTailwindPathAndExactWarning(): void
+    {
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('isNodeModulesInSync')
+            ->with($this->themePath . '/web/tailwind')
+            ->willReturn(false);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('installNodeModules')
+            ->with($this->themePath . '/web/tailwind')
+            ->willReturn(true);
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with('Node modules out of sync or missing. Installing dependencies...');
+
+        $this->assertTrue($this->builder->autoRepair($this->themePath . '/', $this->io, $this->output, true));
+    }
+
+    public function testAutoRepairChecksOutdatedPackagesOnlyInVerboseMode(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('checkOutdatedPackages')
+            ->with($this->themePath . '/web/tailwind');
+
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+    }
+
+    public function testQuietAutoRepairSkipsOutdatedCheckAndWarning(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->method('installNodeModules')->willReturn(true);
+        $this->nodePackageManager->expects($this->never())->method('checkOutdatedPackages');
+        $this->io->expects($this->never())->method('warning');
+
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, false));
+    }
+
+    /**
+     * Static content and symlink cleaning succeed so the build reaches config generation.
+     */
+    private function givenPipelineUpToConfigGeneration(): void
+    {
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+    }
+
+    public function testDetectRequiresTailwindDirectoryEvenForHyvaThemeXml(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/web/tailwind', false],
+            [$this->themePath . '/theme.xml', true],
+        ]);
+        $this->fileDriver->method('fileGetContents')->willReturn('<theme><title>Hyva</title></theme>');
+
+        $this->assertFalse($this->builder->detect($this->themePath));
+    }
+
+    public function testBuildStopsBeforeCleaningWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testMissingTailwindDirectorySkipsNpmBuild(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->givenPipelineUpToConfigGeneration();
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $executedCommands = [];
+        $this->shell
+            ->method('execute')
+            ->willReturnCallback(function (string $command) use (&$executedCommands): string {
+                $executedCommands[] = $command;
+                return '';
+            });
+        $this->staticContentDeployer->expects($this->never())->method('deploy');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertSame(['bin/magento hyva:config:generate'], $executedCommands, 'npm build must not run');
+    }
+
+    public function testWatchStopsBeforeCleaningWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchStopsBeforeAutoRepairWhenCleaningFails(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchStopsBeforeDirectoryCheckWhenAutoRepairFails(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->method('installNodeModules')->willReturn(false);
+        $this->fileDriver->expects($this->never())->method('isDirectory');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReportsExactErrorForMissingTailwindDirectory(): void
+    {
+        $this->configureSuccessfulDetection();
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Tailwind directory not found in: ' . $this->themePath . '/web/tailwind');
+        $this->io->expects($this->never())->method('text');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath . '/', $this->io, $this->output, false));
+    }
 }

@@ -60,7 +60,8 @@ class DeveloperAccessChecker
 
         $allowedIps = preg_split('#\s*,\s*#', $allowedIpsValue, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
-        return in_array($remoteAddr, $allowedIps, true)
-            || in_array($this->httpHeader->getHttpHost(), $allowedIps, true);
+        return (
+            in_array($remoteAddr, $allowedIps, true) || in_array($this->httpHeader->getHttpHost(), $allowedIps, true)
+        );
     }
 }

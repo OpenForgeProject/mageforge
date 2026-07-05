@@ -326,4 +326,203 @@ class BuilderTest extends TestCase
 
         $this->assertFalse($this->builder->watch('Vendor/theme', $themePath, $this->io, $this->output, false));
     }
+
+    // -------------------------------------------------------------------------
+    // Mutation hardening: exact messages, commands and branch boundaries
+    // -------------------------------------------------------------------------
+
+    public function testBuildUsesVerboseNpmCommandWithExactMessages(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('cd %s && npm run build', [$themePath . '/web/tailwind']);
+        $this->io->expects($this->once())->method('text')->with('Running npm build...');
+        $this->io
+            ->expects($this->once())
+            ->method('success')
+            ->with('Custom TailwindCSS theme build completed successfully.');
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $themePath, $this->io, $this->output, true));
+    }
+
+    public function testQuietBuildUsesQuietNpmCommandAndStaysSilent(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+        $this->shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('cd %s && npm run build --quiet', [$themePath . '/web/tailwind']);
+        $this->io->expects($this->never())->method('text');
+        $this->io->expects($this->never())->method('success');
+
+        $this->assertTrue($this->builder->build('Vendor/theme', $themePath, $this->io, $this->output, false));
+    }
+
+    public function testMissingTailwindBuildDirectoryReportsExactError(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Tailwind directory not found in: ' . $themePath . '/web/tailwind');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $themePath, $this->io, $this->output, false));
+    }
+
+    public function testNpmBuildFailureReportsExactError(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('npm exploded'));
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Failed to build custom TailwindCSS theme: npm exploded');
+        $this->staticContentDeployer->expects($this->never())->method('deploy');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $themePath, $this->io, $this->output, false));
+    }
+
+    public function testAutoRepairUsesTailwindPathAndExactWarning(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('isNodeModulesInSync')
+            ->with($themePath . '/web/tailwind')
+            ->willReturn(false);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('installNodeModules')
+            ->with($themePath . '/web/tailwind')
+            ->willReturn(true);
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with('Node modules out of sync or missing. Installing npm dependencies...');
+
+        $this->assertTrue($this->builder->autoRepair($themePath . '/', $this->io, $this->output, true));
+    }
+
+    public function testAutoRepairChecksOutdatedPackagesOnlyInVerboseMode(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('checkOutdatedPackages')
+            ->with($themePath . '/web/tailwind');
+
+        $this->assertTrue($this->builder->autoRepair($themePath, $this->io, $this->output, true));
+    }
+
+    public function testQuietAutoRepairSkipsOutdatedCheckAndWarning(): void
+    {
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $this->nodePackageManager->method('installNodeModules')->willReturn(true);
+        $this->nodePackageManager->expects($this->never())->method('checkOutdatedPackages');
+        $this->io->expects($this->never())->method('warning');
+
+        $this->assertTrue(
+            $this->builder->autoRepair('app/design/frontend/Vendor/theme', $this->io, $this->output, false),
+        );
+    }
+
+    public function testDetectNormalizesTrailingSlashAndRequiresTailwindDirectory(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$themePath . '/web/tailwind', false],
+            [$themePath . '/theme.xml', true],
+        ]);
+        $this->fileDriver->method('fileGetContents')->willReturn('<theme><title>Custom</title></theme>');
+
+        $this->assertFalse($this->builder->detect($themePath . '/'));
+    }
+
+    public function testBuildStopsBeforeCleaningWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+
+        $this->assertFalse(
+            $this->builder->build('Vendor/theme', 'app/design/frontend/Vendor/theme', $this->io, $this->output, false),
+        );
+    }
+
+    public function testMissingTailwindDirectorySkipsNpmBuild(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->shell->expects($this->never())->method('execute');
+        $this->staticContentDeployer->expects($this->never())->method('deploy');
+
+        $this->assertFalse($this->builder->build('Vendor/theme', $themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchStopsBeforeCleaningWhenDetectFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+
+        $this->assertFalse(
+            $this->builder->watch('Vendor/theme', 'app/design/frontend/Vendor/theme', $this->io, $this->output, false),
+        );
+    }
+
+    public function testWatchStopsBeforeDirectoryCheckWhenCleaningFails(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
+        $this->fileDriver->expects($this->never())->method('isDirectory');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $themePath, $this->io, $this->output, false));
+    }
+
+    public function testWatchReportsExactErrorForMissingTailwindDirectory(): void
+    {
+        $themePath = 'app/design/frontend/Vendor/theme';
+        $this->configureSuccessfulDetection($themePath);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->fileDriver->method('isDirectory')->willReturn(false);
+        $this->io
+            ->expects($this->once())
+            ->method('error')
+            ->with('Tailwind directory not found in: ' . $themePath . '/web/tailwind');
+        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $this->io->expects($this->never())->method('text');
+
+        $this->assertFalse($this->builder->watch('Vendor/theme', $themePath . '/', $this->io, $this->output, false));
+    }
 }

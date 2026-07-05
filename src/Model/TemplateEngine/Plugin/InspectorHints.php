@@ -51,10 +51,7 @@ class InspectorHints
         }
 
         // Check if inspector is enabled in configuration for the current scope
-        $isEnabled = $this->scopeConfig->isSetFlag(
-            InspectorConfig::XML_PATH_ENABLED,
-            InspectorConfig::SCOPE_STORE,
-        );
+        $isEnabled = $this->scopeConfig->isSetFlag(InspectorConfig::XML_PATH_ENABLED, InspectorConfig::SCOPE_STORE);
         if (!$isEnabled) {
             return $invocationResult;
         }
