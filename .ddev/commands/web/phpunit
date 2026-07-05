@@ -36,11 +36,16 @@ if [[ ${coverage} == true ]]; then
 	echo "Coverage reports: reports/coverage/index.html (HTML), reports/clover.xml (Clover)"
 	# pcov.enabled=1: opt in per-run (globally off, see .ddev/php/pcov.ini).
 	# opcache.jit=off: avoid the "JIT is incompatible" warning PCOV would trigger.
-	exec php -d pcov.enabled=1 -d opcache.jit=off -d opcache.jit_buffer_size=0 vendor/bin/phpunit \
+	php -d pcov.enabled=1 -d opcache.jit=off -d opcache.jit_buffer_size=0 vendor/bin/phpunit \
 		--coverage-text \
 		--coverage-html reports/coverage \
 		--coverage-clover reports/clover.xml \
 		"${args[@]}"
+	# Quality ratchet, only meaningful for a full-suite run; keep the threshold
+	# in sync with .github/workflows/phpunit.yml.
+	if [[ ${#args[@]} -eq 0 ]]; then
+		exec php tests/coverage-checker.php reports/clover.xml 20
+	fi
 fi
 
 exec vendor/bin/phpunit "${args[@]}"
