@@ -70,11 +70,9 @@ class NodeSetupValidatorTest extends TestCase
             static fn (string $path): bool => $path === './node_modules' || $path === 'vendor/magento/magento2-base',
         );
         $this->fileDriver->expects($this->never())->method('copy');
-
-        $result = $this->validator->validateAndRestore('.', $this->io, true);
-
-        $this->assertTrue($result);
         $this->nodePackageManager->expects($this->never())->method('installNodeModules');
+
+        $this->assertTrue($this->validator->validateAndRestore('.', $this->io, true));
     }
 
     public function testValidateAndRestoreInstallsNodeModulesWhenDirectoryMissing(): void
