@@ -281,23 +281,39 @@ class NodePackageManagerTest extends TestCase
 
     public function testReturnsEmptyListWhenEverythingIsUpToDate(): void
     {
-        $this->shell->method('execute')->willReturn('');
+        $this->shell->method('execute')->willReturn('{}');
 
         $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
     }
 
-    public function testReturnsEmptyListOnInvalidJsonOutput(): void
+    public function testReturnsNullOnEmptyOutput(): void
+    {
+        $this->shell->method('execute')->willReturn('');
+
+        $this->assertNull($this->packageManager->getOutdatedPackages('/theme'));
+    }
+
+    public function testReturnsNullOnInvalidJsonOutput(): void
     {
         $this->shell->method('execute')->willReturn('npm ERR! something went wrong');
 
-        $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
+        $this->assertNull($this->packageManager->getOutdatedPackages('/theme'));
     }
 
-    public function testReturnsEmptyListWhenShellExecutionFails(): void
+    public function testReturnsNullOnNpmErrorJsonOutput(): void
+    {
+        $this->shell->method('execute')->willReturn(json_encode([
+            'error' => ['code' => 'ENOTFOUND', 'summary' => 'registry unreachable'],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->assertNull($this->packageManager->getOutdatedPackages('/theme'));
+    }
+
+    public function testReturnsNullWhenShellExecutionFails(): void
     {
         $this->shell->method('execute')->willThrowException(new \RuntimeException('npm not found'));
 
-        $this->assertSame([], $this->packageManager->getOutdatedPackages('/theme'));
+        $this->assertNull($this->packageManager->getOutdatedPackages('/theme'));
     }
 
     // -------------------------------------------------------------------------

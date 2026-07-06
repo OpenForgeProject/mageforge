@@ -10,6 +10,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\DependencyUpdater;
+use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -85,9 +86,9 @@ class UpdateCommand extends AbstractCommand
 
         $startTime = microtime(true);
 
-        [$updatedThemes, $failedThemes] = $this->processThemes($themeCodes, $latest, $dryRun, $output);
+        [$updatedThemes, $skippedThemes, $failedThemes] = $this->processThemes($themeCodes, $latest, $dryRun, $output);
 
-        $this->displaySummary($updatedThemes, $failedThemes, $dryRun, microtime(true) - $startTime);
+        $this->displaySummary($updatedThemes, $skippedThemes, $failedThemes, $dryRun, microtime(true) - $startTime);
 
         if (empty($updatedThemes) && !empty($failedThemes)) {
             return Cli::RETURN_FAILURE;
@@ -213,13 +214,14 @@ class UpdateCommand extends AbstractCommand
      * @param bool $latest
      * @param bool $dryRun
      * @param OutputInterface $output
-     * @return array{array<string>, array<string>} [updatedThemes, failedThemes]
+     * @return array{array<string>, array<string>, array<string>} [updatedThemes, skippedThemes, failedThemes]
      */
     private function processThemes(array $themeCodes, bool $latest, bool $dryRun, OutputInterface $output): array
     {
         $isVerbose = $this->isVerbose($output);
         $totalThemes = count($themeCodes);
         $updatedThemes = [];
+        $skippedThemes = [];
         $failedThemes = [];
 
         foreach ($themeCodes as $index => $themeCode) {
@@ -244,7 +246,7 @@ class UpdateCommand extends AbstractCommand
 
             $themePath = (string) $this->themePath->getPath($validatedTheme);
 
-            $success = $this->dependencyUpdater->updateThemeDependencies(
+            $result = $this->dependencyUpdater->updateThemeDependencies(
                 $validatedTheme,
                 $themePath,
                 $this->io,
@@ -253,14 +255,14 @@ class UpdateCommand extends AbstractCommand
                 $dryRun,
             );
 
-            if ($success) {
-                $updatedThemes[] = $validatedTheme;
-            } else {
-                $failedThemes[] = $validatedTheme;
-            }
+            match ($result) {
+                DependencyUpdateResult::Updated => $updatedThemes[] = $validatedTheme,
+                DependencyUpdateResult::Skipped => $skippedThemes[] = $validatedTheme,
+                DependencyUpdateResult::Failed => $failedThemes[] = $validatedTheme,
+            };
         }
 
-        return [$updatedThemes, $failedThemes];
+        return [$updatedThemes, $skippedThemes, $failedThemes];
     }
 
     /**
@@ -303,13 +305,19 @@ class UpdateCommand extends AbstractCommand
      * Display summary of the update operation
      *
      * @param array<string> $updatedThemes
+     * @param array<string> $skippedThemes
      * @param array<string> $failedThemes
      * @param bool $dryRun
      * @param float $duration
      * @return void
      */
-    private function displaySummary(array $updatedThemes, array $failedThemes, bool $dryRun, float $duration): void
-    {
+    private function displaySummary(
+        array $updatedThemes,
+        array $skippedThemes,
+        array $failedThemes,
+        bool $dryRun,
+        float $duration,
+    ): void {
         $this->io->newLine();
 
         if (!empty($updatedThemes)) {
@@ -328,6 +336,10 @@ class UpdateCommand extends AbstractCommand
             }
         } else {
             $this->io->info('No theme dependencies were updated.');
+        }
+
+        if (!empty($skippedThemes)) {
+            $this->io->note(sprintf('Skipped %d theme(s): %s', count($skippedThemes), implode(', ', $skippedThemes)));
         }
 
         if (!empty($failedThemes)) {

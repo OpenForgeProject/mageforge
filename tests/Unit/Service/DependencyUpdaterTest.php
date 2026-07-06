@@ -6,6 +6,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service;
 
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\DependencyUpdater;
+use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -87,7 +88,7 @@ class DependencyUpdaterTest extends TestCase
             ->with($this->stringContains('managed by Composer'));
         $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
-        $this->assertFalse($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
             'Hyva/default',
             '/var/www/vendor/hyva-themes/magento2-default-theme',
             $this->io,
@@ -105,7 +106,7 @@ class DependencyUpdaterTest extends TestCase
             ->method('warning')
             ->with($this->stringContains('has no own package.json'));
 
-        $this->assertFalse($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
             'Magento/luma',
             '/theme',
             $this->io,
@@ -129,7 +130,7 @@ class DependencyUpdaterTest extends TestCase
             ->method('writeln')
             ->with($this->stringContains('are up to date'));
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -149,11 +150,11 @@ class DependencyUpdaterTest extends TestCase
         $this->nodePackageManager
             ->expects($this->once())
             ->method('installNodeModules')
-            ->with('/theme/web/tailwind')
+            ->with('/theme/web/tailwind', $this->io, false)
             ->willReturn(true);
         $this->nodePackageManager->method('getOutdatedPackages')->willReturn([]);
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -173,7 +174,7 @@ class DependencyUpdaterTest extends TestCase
         $this->nodePackageManager->method('installNodeModules')->willReturn(false);
         $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
-        $this->assertFalse($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -200,7 +201,7 @@ class DependencyUpdaterTest extends TestCase
             ->willReturn(true);
         $this->nodePackageManager->expects($this->never())->method('installPackageVersions');
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -226,7 +227,7 @@ class DependencyUpdaterTest extends TestCase
             ->method('note')
             ->with($this->stringContains('--latest'));
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -251,7 +252,7 @@ class DependencyUpdaterTest extends TestCase
             ->method('note')
             ->with($this->stringContains('Dry run: would update 1 package(s)'));
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -290,7 +291,7 @@ class DependencyUpdaterTest extends TestCase
             );
         $this->nodePackageManager->expects($this->never())->method('updatePackages');
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -326,7 +327,7 @@ class DependencyUpdaterTest extends TestCase
             ->method('warning')
             ->with($this->stringContains('unexpected name or version'));
 
-        $this->assertTrue($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -346,7 +347,57 @@ class DependencyUpdaterTest extends TestCase
         $this->nodePackageManager->method('getOutdatedPackages')->willReturn([$this->outdatedPackage()]);
         $this->nodePackageManager->method('updatePackages')->willReturn(false);
 
-        $this->assertFalse($this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+            'Vendor/theme',
+            '/theme',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    public function testFailsWhenOutdatedCheckFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/theme/web/tailwind/package.json', true],
+            ['/theme/package.json', false],
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->nodePackageManager->method('getOutdatedPackages')->willReturn(null);
+        $this->nodePackageManager->expects($this->never())->method('updatePackages');
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Could not check for outdated packages'));
+
+        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+            'Vendor/theme',
+            '/theme',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    public function testWarnsWhenPostUpdateCheckFails(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/theme/web/tailwind/package.json', true],
+            ['/theme/package.json', false],
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->nodePackageManager
+            ->method('getOutdatedPackages')
+            ->willReturnOnConsecutiveCalls([$this->outdatedPackage()], null);
+        $this->nodePackageManager->method('updatePackages')->willReturn(true);
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Could not verify the update result'));
+
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,

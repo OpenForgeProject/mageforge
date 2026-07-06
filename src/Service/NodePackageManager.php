@@ -106,28 +106,26 @@ class NodePackageManager
      * Get a normalized list of outdated npm packages for the given directory
      *
      * The npm process exits with a non-zero code when outdated packages exist, so the
-     * exit code is neutralized with a trailing "true" and an empty output is treated as
-     * "everything up to date". A "|| true" must not be used here because the Magento
-     * shell command renderer converts "||" into a pipe that swallows the npm output.
+     * exit code is neutralized with a trailing "true". A "|| true" must not be used here
+     * because the Magento shell command renderer converts "||" into a pipe that swallows
+     * the npm output. npm always prints a JSON object ("{}" when everything is up to
+     * date), so empty or invalid output signals a failed check rather than "up to date".
      *
      * @param string $path
-     * @return array<int,array{name:string,current:string,wanted:string,latest:string,type:string}>
+     * @return array<int,array{name:string,current:string,wanted:string,latest:string,type:string}>|null
+     *         Null when the outdated check itself failed
      */
-    public function getOutdatedPackages(string $path): array
+    public function getOutdatedPackages(string $path): ?array
     {
         try {
             $output = $this->shell->execute('cd %s && npm outdated --json --long 2>/dev/null; true', [$path]);
         } catch (\Exception $e) {
-            return [];
-        }
-
-        if (trim($output) === '') {
-            return [];
+            return null;
         }
 
         $decoded = json_decode($output, true);
-        if (!is_array($decoded)) {
-            return [];
+        if (!is_array($decoded) || isset($decoded['error'])) {
+            return null;
         }
 
         $packages = [];

@@ -49,7 +49,7 @@ class DependencyUpdater
      * @param bool $isVerbose
      * @param bool $latest Update beyond semver ranges to the latest versions
      * @param bool $dryRun Only report outdated packages without changing anything
-     * @return bool
+     * @return DependencyUpdateResult
      */
     public function updateThemeDependencies(
         string $themeCode,
@@ -58,7 +58,7 @@ class DependencyUpdater
         bool $isVerbose,
         bool $latest,
         bool $dryRun,
-    ): bool {
+    ): DependencyUpdateResult {
         $themePath = rtrim($themePath, '/');
 
         if ($this->isVendorTheme($themePath)) {
@@ -66,7 +66,7 @@ class DependencyUpdater
                 "Theme '%s' is installed in the vendor directory and is managed by Composer. Skipping.",
                 $themeCode,
             ));
-            return false;
+            return DependencyUpdateResult::Skipped;
         }
 
         $packageDirectories = $this->getPackageDirectories($themePath);
@@ -76,7 +76,7 @@ class DependencyUpdater
                 . 'root Node.js setup, which is not updated by this command.',
                 $themeCode,
             ));
-            return false;
+            return DependencyUpdateResult::Skipped;
         }
 
         $result = true;
@@ -86,7 +86,7 @@ class DependencyUpdater
             }
         }
 
-        return $result;
+        return $result ? DependencyUpdateResult::Updated : DependencyUpdateResult::Failed;
     }
 
     /**
@@ -149,6 +149,14 @@ class DependencyUpdater
         }
 
         $outdated = $this->nodePackageManager->getOutdatedPackages($directory);
+        if ($outdated === null) {
+            $io->warning(sprintf(
+                'Could not check for outdated packages in %s. Make sure Node.js and npm are available.',
+                $directory,
+            ));
+            return false;
+        }
+
         if (empty($outdated)) {
             $io->writeln(sprintf('  <fg=green>✓</> All packages in %s are up to date.', $directory));
             return true;
@@ -228,6 +236,11 @@ class DependencyUpdater
     private function reportRemainingOutdatedPackages(string $directory, bool $latest, SymfonyStyle $io): void
     {
         $remaining = $this->nodePackageManager->getOutdatedPackages($directory);
+
+        if ($remaining === null) {
+            $io->warning(sprintf('Could not verify the update result for %s.', $directory));
+            return;
+        }
 
         if (empty($remaining)) {
             $io->writeln(sprintf('  <fg=green>✓</> All packages in %s are now up to date.', $directory));

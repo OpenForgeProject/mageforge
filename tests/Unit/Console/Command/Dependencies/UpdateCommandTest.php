@@ -8,6 +8,7 @@ use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Dependencies\UpdateCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\DependencyUpdater;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use OpenForgeProject\MageForge\Test\Unit\Console\Command\Theme\FakeThemeWithTitle;
@@ -50,7 +51,7 @@ class UpdateCommandTest extends TestCase
             ->expects($this->once())
             ->method('updateThemeDependencies')
             ->with('Vendor/theme', '/path', $this->anything(), false, false, false)
-            ->willReturn(true);
+            ->willReturn(DependencyUpdateResult::Updated);
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
@@ -69,7 +70,7 @@ class UpdateCommandTest extends TestCase
             ->expects($this->once())
             ->method('updateThemeDependencies')
             ->with('Vendor/theme', '/path', $this->anything(), false, true, true)
-            ->willReturn(true);
+            ->willReturn(DependencyUpdateResult::Updated);
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute([
@@ -88,7 +89,7 @@ class UpdateCommandTest extends TestCase
     public function testProcessesMultipleThemesWithSectionsPerTheme(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->dependencyUpdater->method('updateThemeDependencies')->willReturn(true);
+        $this->dependencyUpdater->method('updateThemeDependencies')->willReturn(DependencyUpdateResult::Updated);
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/one', 'Vendor/two']]);
@@ -103,7 +104,7 @@ class UpdateCommandTest extends TestCase
     public function testReturnsFailureWhenAllThemesFail(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->dependencyUpdater->method('updateThemeDependencies')->willReturn(false);
+        $this->dependencyUpdater->method('updateThemeDependencies')->willReturn(DependencyUpdateResult::Failed);
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
@@ -112,6 +113,20 @@ class UpdateCommandTest extends TestCase
         $display = $tester->getDisplay();
         $this->assertStringContainsString('No theme dependencies were updated.', $display);
         $this->assertStringContainsString('Failed to process 1 theme(s): Vendor/theme', $display);
+    }
+
+    public function testReturnsSuccessWhenAllThemesAreSkipped(): void
+    {
+        $this->themePath->method('getPath')->willReturn('/path');
+        $this->dependencyUpdater->method('updateThemeDependencies')->willReturn(DependencyUpdateResult::Skipped);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Skipped 1 theme(s): Vendor/theme', $display);
+        $this->assertStringNotContainsString('Failed to process', $display);
     }
 
     public function testReportsInvalidThemeWithoutCallingService(): void
@@ -150,7 +165,7 @@ class UpdateCommandTest extends TestCase
         $this->themePath->method('getPath')->willReturn('/path');
         $this->dependencyUpdater
             ->method('updateThemeDependencies')
-            ->willReturnOnConsecutiveCalls(false, true);
+            ->willReturnOnConsecutiveCalls(DependencyUpdateResult::Failed, DependencyUpdateResult::Updated);
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/broken', 'Vendor/fine']]);
