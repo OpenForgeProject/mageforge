@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder as MagentoStandardBuilder;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
@@ -13,6 +16,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * Locates the theme-owned package.json files (e.g. web/tailwind for Hyva and
  * TailwindCSS themes), reports outdated packages and updates them either within
  * their semver ranges (default) or to the latest available versions (--latest).
+ * Standard Magento themes (e.g. Magento/luma) have no own package.json; for them
+ * the Node.js setup in the Magento root is updated instead, at most once per run.
  */
 class DependencyUpdater
 {
@@ -31,12 +36,23 @@ class DependencyUpdater
     private const VERSION_PATTERN = '/^[0-9a-zA-Z.+\-]+$/';
 
     /**
+     * Result of the Magento root update in this run, null while not yet processed
+     *
+     * @var DependencyUpdateResult|null
+     */
+    private ?DependencyUpdateResult $magentoRootResult = null;
+
+    /**
      * @param File $fileDriver
      * @param NodePackageManager $nodePackageManager
+     * @param BuilderPool $builderPool
+     * @param DirectoryList $directoryList
      */
     public function __construct(
         private readonly File $fileDriver,
         private readonly NodePackageManager $nodePackageManager,
+        private readonly BuilderPool $builderPool,
+        private readonly DirectoryList $directoryList,
     ) {
     }
 
@@ -71,12 +87,7 @@ class DependencyUpdater
 
         $packageDirectories = $this->getPackageDirectories($themePath);
         if (empty($packageDirectories)) {
-            $io->warning(sprintf(
-                "Theme '%s' has no own package.json. Standard Magento themes are built from the Magento "
-                . 'root Node.js setup, which is not updated by this command.',
-                $themeCode,
-            ));
-            return DependencyUpdateResult::Skipped;
+            return $this->updateMagentoRootDependencies($themeCode, $themePath, $io, $isVerbose, $latest, $dryRun);
         }
 
         $result = true;
@@ -87,6 +98,65 @@ class DependencyUpdater
         }
 
         return $result ? DependencyUpdateResult::Updated : DependencyUpdateResult::Failed;
+    }
+
+    /**
+     * Update the Magento root Node.js setup used to build standard Magento themes
+     *
+     * Standard Magento themes (e.g. Magento/luma) ship no own package.json; their
+     * assets are built with Grunt from the Node.js setup in the Magento root. That
+     * setup is shared by all standard themes, so it is processed at most once per
+     * run and the result is replayed for further standard themes.
+     *
+     * @param string $themeCode
+     * @param string $themePath
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @param bool $latest
+     * @param bool $dryRun
+     * @return DependencyUpdateResult
+     */
+    private function updateMagentoRootDependencies(
+        string $themeCode,
+        string $themePath,
+        SymfonyStyle $io,
+        bool $isVerbose,
+        bool $latest,
+        bool $dryRun,
+    ): DependencyUpdateResult {
+        if (!$this->builderPool->getBuilder($themePath) instanceof MagentoStandardBuilder) {
+            $io->warning(sprintf("Theme '%s' has no own package.json. Skipping.", $themeCode));
+            return DependencyUpdateResult::Skipped;
+        }
+
+        $rootPath = rtrim($this->directoryList->getRoot(), '/');
+        if (!$this->fileDriver->isExists($rootPath . '/' . self::PACKAGE_JSON)) {
+            $io->warning(sprintf(
+                "Theme '%s' is built from the Node.js setup in the Magento root, but the Magento root has "
+                . 'no package.json. Copy package.json.sample to package.json to set it up.',
+                $themeCode,
+            ));
+            return DependencyUpdateResult::Skipped;
+        }
+
+        if ($this->magentoRootResult !== null) {
+            $io->writeln(sprintf(
+                "  Theme '%s' uses the Magento root Node.js setup, which was already processed in this run.",
+                $themeCode,
+            ));
+            return $this->magentoRootResult;
+        }
+
+        $io->text(sprintf(
+            "Theme '%s' has no own package.json. Updating the Magento root Node.js setup it is built from.",
+            $themeCode,
+        ));
+
+        $this->magentoRootResult = $this->processPackageDirectory($rootPath, $io, $isVerbose, $latest, $dryRun)
+            ? DependencyUpdateResult::Updated
+            : DependencyUpdateResult::Failed;
+
+        return $this->magentoRootResult;
     }
 
     /**

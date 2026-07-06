@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Test\Unit\Service;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\DependencyUpdater;
 use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder as MagentoStandardBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -16,6 +19,8 @@ class DependencyUpdaterTest extends TestCase
 {
     private File&MockObject $fileDriver;
     private NodePackageManager&MockObject $nodePackageManager;
+    private BuilderPool&MockObject $builderPool;
+    private DirectoryList&MockObject $directoryList;
     private SymfonyStyle&MockObject $io;
     private DependencyUpdater $updater;
 
@@ -23,8 +28,21 @@ class DependencyUpdaterTest extends TestCase
     {
         $this->fileDriver = $this->createMock(File::class);
         $this->nodePackageManager = $this->createMock(NodePackageManager::class);
+        $this->builderPool = $this->createMock(BuilderPool::class);
+        $this->directoryList = $this->createMock(DirectoryList::class);
+        $this->directoryList->method('getRoot')->willReturn('/magento-root');
         $this->io = $this->createMock(SymfonyStyle::class);
-        $this->updater = new DependencyUpdater($this->fileDriver, $this->nodePackageManager);
+        $this->updater = new DependencyUpdater(
+            $this->fileDriver,
+            $this->nodePackageManager,
+            $this->builderPool,
+            $this->directoryList,
+        );
+    }
+
+    private function actAsMagentoStandardTheme(): void
+    {
+        $this->builderPool->method('getBuilder')->willReturn($this->createMock(MagentoStandardBuilder::class));
     }
 
     /**
@@ -98,16 +116,18 @@ class DependencyUpdaterTest extends TestCase
         ));
     }
 
-    public function testWarnsWhenThemeHasNoOwnPackageJson(): void
+    public function testSkipsNonStandardThemesWithoutOwnPackageJson(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
+        $this->builderPool->method('getBuilder')->willReturn(null);
         $this->io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('has no own package.json'));
+        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
         $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
-            'Magento/luma',
+            'Vendor/csstheme',
             '/theme',
             $this->io,
             false,
@@ -400,6 +420,125 @@ class DependencyUpdaterTest extends TestCase
         $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    // -------------------------------------------------------------------------
+    // Magento root fallback for standard themes (Magento/luma, Magento/blank)
+    // -------------------------------------------------------------------------
+
+    public function testUpdatesMagentoRootForStandardThemes(): void
+    {
+        $this->actAsMagentoStandardTheme();
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/luma/web/tailwind/package.json', false],
+            ['/luma/package.json', false],
+            ['/magento-root/package.json', true],
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('getOutdatedPackages')
+            ->with('/magento-root')
+            ->willReturn([]);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+            'Magento/luma',
+            '/luma',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    public function testSkipsStandardThemeWhenMagentoRootHasNoPackageJson(): void
+    {
+        $this->actAsMagentoStandardTheme();
+        $this->fileDriver->method('isExists')->willReturn(false);
+        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
+        $this->io
+            ->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('package.json.sample'));
+
+        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
+            'Magento/luma',
+            '/luma',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    public function testUpdatesMagentoRootOnlyOncePerRun(): void
+    {
+        $this->actAsMagentoStandardTheme();
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/luma/web/tailwind/package.json', false],
+            ['/luma/package.json', false],
+            ['/blank/web/tailwind/package.json', false],
+            ['/blank/package.json', false],
+            ['/magento-root/package.json', true],
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('getOutdatedPackages')
+            ->with('/magento-root')
+            ->willReturn([]);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+            'Magento/luma',
+            '/luma',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+            'Magento/blank',
+            '/blank',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+    }
+
+    public function testReplaysMagentoRootFailureForSubsequentStandardThemes(): void
+    {
+        $this->actAsMagentoStandardTheme();
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/luma/web/tailwind/package.json', false],
+            ['/luma/package.json', false],
+            ['/blank/web/tailwind/package.json', false],
+            ['/blank/package.json', false],
+            ['/magento-root/package.json', true],
+        ]);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->nodePackageManager
+            ->expects($this->once())
+            ->method('getOutdatedPackages')
+            ->with('/magento-root')
+            ->willReturn(null);
+
+        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+            'Magento/luma',
+            '/luma',
+            $this->io,
+            false,
+            false,
+            false,
+        ));
+        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+            'Magento/blank',
+            '/blank',
             $this->io,
             false,
             false,

@@ -129,7 +129,7 @@ bin/magento mageforge:theme:inspector status
 
 ### `mageforge:dependencies:update`
 
-Updates the Node.js dependencies (npm packages) of one or more themes. Works with all themes that ship their own `package.json`, e.g. Hyvä and TailwindCSS themes (`web/tailwind/package.json`).
+Updates the Node.js dependencies (npm packages) of one or more themes. Works with all themes that ship their own `package.json`, e.g. Hyvä and TailwindCSS themes (`web/tailwind/package.json`). For standard Magento themes (e.g. `Magento/luma`) the Node.js setup in the Magento root is updated instead, since that is what builds their assets.
 
 ```bash
 bin/magento mageforge:dependencies:update <theme-code> [<theme-code> ...]
@@ -153,7 +153,9 @@ bin/magento mageforge:dependencies:update Vendor/theme --latest
 - By default runs a safe `npm update`: packages are only updated within the semver ranges defined in `package.json` (`package.json` itself stays untouched).
 - With `--latest`, outdated packages are updated to their latest released versions, grouped by dependency type (`dependencies`, `devDependencies`, ...).
 - Installs `node_modules` first if missing, so the report is meaningful.
-- Themes installed in `vendor/` (managed by Composer) and themes without their own `package.json` (e.g. standard Magento themes built from the Magento root Node.js setup) are skipped with an explanation.
+- Themes installed in `vendor/` (managed by Composer) are skipped with an explanation.
+- Standard Magento themes (Luma-based, no own `package.json`) fall back to the `package.json` in the Magento root (copied from `package.json.sample`), which powers their Grunt build. The root setup is shared, so it is updated at most once per run; if the Magento root has no `package.json`, the theme is skipped with a setup hint. Note that with `--latest` this major-bumps Grunt tooling used by **all** standard themes.
+- Other themes without their own `package.json` are skipped.
 - After a successful update, a hint reminds you to rebuild the affected themes with `mageforge:theme:build`.
 
 ---
