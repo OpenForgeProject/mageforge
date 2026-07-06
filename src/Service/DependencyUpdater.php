@@ -181,14 +181,18 @@ class DependencyUpdater
     }
 
     /**
-     * Check if the theme is installed in the vendor directory (managed by Composer)
+     * Check if the theme is installed in the Composer vendor directory
+     *
+     * Anchored to the vendor directory in the Magento root so that themes whose
+     * vendor name is literally "vendor" (e.g. app/design/frontend/vendor/theme)
+     * are not mistaken for Composer-managed themes.
      *
      * @param string $themePath
      * @return bool
      */
     public function isVendorTheme(string $themePath): bool
     {
-        return str_contains($themePath, '/vendor/');
+        return str_starts_with($themePath, rtrim($this->directoryList->getRoot(), '/') . '/vendor/');
     }
 
     /**

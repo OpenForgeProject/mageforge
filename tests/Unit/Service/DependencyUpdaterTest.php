@@ -90,8 +90,9 @@ class DependencyUpdaterTest extends TestCase
 
     public function testDetectsVendorThemes(): void
     {
-        $this->assertTrue($this->updater->isVendorTheme('/var/www/vendor/hyva-themes/magento2-default-theme'));
-        $this->assertFalse($this->updater->isVendorTheme('/var/www/app/design/frontend/Vendor/theme'));
+        $this->assertTrue($this->updater->isVendorTheme('/magento-root/vendor/hyva-themes/magento2-default-theme'));
+        $this->assertFalse($this->updater->isVendorTheme('/magento-root/app/design/frontend/Vendor/theme'));
+        $this->assertFalse($this->updater->isVendorTheme('/magento-root/app/design/frontend/vendor/theme'));
     }
 
     // -------------------------------------------------------------------------
@@ -108,7 +109,7 @@ class DependencyUpdaterTest extends TestCase
 
         $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
             'Hyva/default',
-            '/var/www/vendor/hyva-themes/magento2-default-theme',
+            '/magento-root/vendor/hyva-themes/magento2-default-theme',
             $this->io,
             false,
             false,
