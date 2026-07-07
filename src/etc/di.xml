@@ -25,6 +25,8 @@
                               OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
                         <item name="mageforge_dev_inspector" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand</item>
+                        <item name="mageforge_template_override" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Template\OverrideCommand</item>
                         <item name="mageforge_dependencies_update" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dependencies\UpdateCommand</item>
                   </argument>
