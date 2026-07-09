@@ -38,12 +38,11 @@ if [[ $# -gt 0 ]] && [[ ! $1 =~ ^- ]]; then
 	fi
 fi
 
-
 PHPSTAN_CONFIG="vendor/openforgeproject/mageforge/phpstan.neon"
 
 # Run PHPStan with the same configuration as CI pipeline
 echo "Running PHPStan analysis..."
-if [[ -n "${TARGET_PATH}" ]]; then
+if [[ -n ${TARGET_PATH} ]]; then
 	vendor/bin/phpstan analyse -c "${PHPSTAN_CONFIG}" "$@" "${TARGET_PATH}"
 else
 	vendor/bin/phpstan analyse -c "${PHPSTAN_CONFIG}" "$@"
