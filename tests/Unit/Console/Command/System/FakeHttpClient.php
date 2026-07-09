@@ -137,16 +137,6 @@ class FakeHttpClient implements ClientInterface
     }
 
     /**
-     * No-op stub for setting a single cookie.
-     *
-     * @param string $name
-     * @param string $value
-     */
-    public function setCookie(string $name, string $value): void
-    {
-    }
-
-    /**
      * No-op stub for adding a request cookie.
      *
      * @param string $name
