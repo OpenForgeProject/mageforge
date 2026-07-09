@@ -246,6 +246,30 @@ class OverrideCommandTest extends TestCase
         $this->assertStringContainsString('Template override created:', $display);
     }
 
+    public function testFailsWithWarningWhenCacheCleaningFails(): void
+    {
+        $this->setUpResolvableTemplate();
+        $this->fallbackResolver
+            ->method('findFirstExistingFile')
+            ->willReturnOnConsecutiveCalls(
+                self::MODULE_DIR . '/product/view/details.phtml',
+                self::THEME_DIR . '/product/view/details.phtml',
+            );
+        $this->templateCopier->expects($this->once())->method('copy');
+        $this->cacheCleaner->method('clean')->willReturn(false);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            'template' => 'Magento_Catalog::product/view/details.phtml',
+            '--theme' => 'Vendor/theme',
+        ]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('cleaning the caches failed', $display);
+        $this->assertStringNotContainsString('Template override created:', $display);
+    }
+
     public function testFailsWhenTemplateIsNotFoundInAnyFallbackLocation(): void
     {
         $this->setUpResolvableTemplate();

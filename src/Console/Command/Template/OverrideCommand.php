@@ -200,7 +200,14 @@ class OverrideCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
 
-        $this->cacheCleaner->clean($this->io, $this->isVerbose($output));
+        if (!$this->cacheCleaner->clean($this->io, $this->isVerbose($output))) {
+            $this->io->warning(sprintf(
+                'Template override created at %s, but cleaning the caches failed. '
+                . "Run 'bin/magento cache:clean full_page block_html layout translate' manually.",
+                $this->toRelativePath($targetFile),
+            ));
+            return Cli::RETURN_FAILURE;
+        }
 
         $this->io->success(sprintf('Template override created: %s', $this->toRelativePath($targetFile)));
         return Cli::RETURN_SUCCESS;

@@ -94,6 +94,32 @@ class TemplatePathParserTest extends TestCase
         $this->parser->parse('Magento_Catalog::../../../etc/env.phtml');
     }
 
+    public function testRejectsTrailingParentDirectorySegment(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must not contain relative path segments');
+
+        $this->parser->parse('Magento_Catalog::product/..');
+    }
+
+    public function testRejectsCurrentDirectorySegment(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must not contain relative path segments');
+
+        $this->parser->parse('Magento_Catalog::product/./details.phtml');
+    }
+
+    public function testCollapsesRepeatedSlashesInTemplatePath(): void
+    {
+        $this->componentRegistrar->method('getPath')->willReturn('/path/to/module');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse('Magento_Catalog::product//view///details.phtml');
+
+        $this->assertSame('product/view/details.phtml', $reference->getTemplatePath());
+    }
+
     public function testMapsCompatModuleNotationToOriginalModule(): void
     {
         $this->componentRegistrar->method('getPath')->willReturn('/path/to/compat-module');

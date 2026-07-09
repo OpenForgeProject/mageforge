@@ -273,17 +273,26 @@ class TemplatePathParser
     /**
      * Normalize a template path and reject relative path segments
      *
+     * The path is later concatenated into a filesystem target, so any "." or ".." segment
+     * is rejected explicitly to prevent directory traversal; repeated slashes are collapsed.
+     *
      * @param string $path
      * @return string
      * @throws \InvalidArgumentException
      */
     private function normalizeTemplatePath(string $path): string
     {
-        $normalized = ltrim(trim(str_replace('\\', '/', $path)), '/');
-        if (str_contains($normalized, './')) {
-            throw new \InvalidArgumentException("Template path '$path' must not contain relative path segments.");
+        $segments = [];
+        foreach (explode('/', trim(str_replace('\\', '/', $path))) as $segment) {
+            if ($segment === '') {
+                continue;
+            }
+            if ($segment === '.' || $segment === '..') {
+                throw new \InvalidArgumentException("Template path '$path' must not contain relative path segments.");
+            }
+            $segments[] = $segment;
         }
 
-        return $normalized;
+        return implode('/', $segments);
     }
 }
