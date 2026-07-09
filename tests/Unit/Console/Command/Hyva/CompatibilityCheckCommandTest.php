@@ -359,7 +359,6 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
     }
 
-
     public function testIncludeVendorOptionIsPassedToChecker(): void
     {
         $this->compatibilityChecker->expects($this->once())

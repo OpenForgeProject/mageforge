@@ -223,7 +223,8 @@ class CleanCommandTest extends TestCase
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/*']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
-        $this->assertStringContainsString("Resolved vendor 'Vendor/*' to 1 theme(s): Vendor/one", $tester->getDisplay());
+        $expected = "Resolved vendor 'Vendor/*' to 1 theme(s): Vendor/one";
+        $this->assertStringContainsString($expected, $tester->getDisplay());
     }
 
     public function testMixedSuccessAndFailureSummaryCountsCorrectly(): void

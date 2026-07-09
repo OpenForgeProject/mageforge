@@ -3,6 +3,7 @@
     <description>Magento2 coding standard with Mago-formatter compatibility.</description>
 
     <file>src/</file>
+    <file>tests/</file>
 
     <arg name="extensions" value="php,phtml"/>
 

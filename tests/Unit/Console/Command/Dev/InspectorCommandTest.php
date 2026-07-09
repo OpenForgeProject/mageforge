@@ -161,7 +161,8 @@ class InspectorCommandTest extends TestCase
 
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString('MageForge Inspector has been enabled!', $display);
-        $this->assertStringContainsString('The inspector will now be active on the frontend for allowed IPs.', $display);
+        $activeHint = 'The inspector will now be active on the frontend for allowed IPs.';
+        $this->assertStringContainsString($activeHint, $display);
         $this->assertStringContainsString('Press Ctrl+Shift+I (or Cmd+Option+I on macOS)', $display);
         $this->assertStringContainsString('Hover over elements to see their template information', $display);
         $this->assertStringContainsString('Click to pin the inspector panel', $display);

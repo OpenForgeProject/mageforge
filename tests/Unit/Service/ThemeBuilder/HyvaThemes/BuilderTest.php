@@ -567,6 +567,7 @@ class BuilderTest extends TestCase
             ->with('Tailwind directory not found in: ' . $this->themePath . '/web/tailwind');
         $this->io->expects($this->never())->method('text');
 
-        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath . '/', $this->io, $this->output, false));
+        $result = $this->builder->watch('Vendor/theme', $this->themePath . '/', $this->io, $this->output, false);
+        $this->assertFalse($result);
     }
 }

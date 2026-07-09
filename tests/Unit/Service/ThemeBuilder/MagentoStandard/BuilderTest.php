@@ -357,7 +357,8 @@ class BuilderTest extends TestCase
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
         $this->gruntTaskRunner->expects($this->never())->method('runTasks');
-        $this->io->expects($this->once())->method('note')->with('No Node.js/Grunt setup detected. Skipping Grunt steps.');
+        $noteMessage = 'No Node.js/Grunt setup detected. Skipping Grunt steps.';
+        $this->io->expects($this->once())->method('note')->with($noteMessage);
 
         $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
     }
