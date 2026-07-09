@@ -23,6 +23,10 @@ class FakeHttpClient implements ClientInterface
     }
 
     /**
+     * ClientInterface::get() is declared `@return array`, so PHPStan requires a return value
+     * here — even though the real clients (e.g. Curl) return void and the response is read via
+     * getStatus()/getBody(). An empty array is a neutral stub; the tests never use it.
+     *
      * @return array<mixed>
      */
     public function get($uri)

@@ -26,6 +26,9 @@ class InspectorThemeTest extends TestCase
     {
         foreach ((new InspectorTheme())->toOptionArray() as $option) {
             $this->assertArrayHasKey('label', $option);
+            // Runtime guard: toOptionArray() is statically typed string, but assert it anyway.
+            // @phpstan-ignore method.alreadyNarrowedType
+            $this->assertIsString($option['label']);
             $this->assertNotSame('', $option['label']);
         }
     }
