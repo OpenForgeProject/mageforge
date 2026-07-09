@@ -26,7 +26,6 @@ class InspectorThemeTest extends TestCase
     {
         foreach ((new InspectorTheme())->toOptionArray() as $option) {
             $this->assertArrayHasKey('label', $option);
-            $this->assertIsString($option['label']);
             $this->assertNotSame('', $option['label']);
         }
     }

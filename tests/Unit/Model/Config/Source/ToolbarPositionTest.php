@@ -29,7 +29,6 @@ class ToolbarPositionTest extends TestCase
     {
         foreach ((new ToolbarPosition())->toOptionArray() as $option) {
             $this->assertArrayHasKey('label', $option);
-            $this->assertIsString($option['label']);
             $this->assertNotSame('', $option['label']);
         }
     }

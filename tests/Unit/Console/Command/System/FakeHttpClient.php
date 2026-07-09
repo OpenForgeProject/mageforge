@@ -22,9 +22,14 @@ class FakeHttpClient implements ClientInterface
     ) {
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function get($uri)
     {
         $this->lastUrl = (string) $uri;
+
+        return [];
     }
 
     public function getStatus()
@@ -37,16 +42,25 @@ class FakeHttpClient implements ClientInterface
         return $this->responsesByUrl[$this->lastUrl][1] ?? '';
     }
 
+    /**
+     * @param array<mixed>|string $params
+     */
     public function post($uri, $params)
     {
         $this->lastUrl = (string) $uri;
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getHeaders()
     {
         return [];
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getCookies()
     {
         return [];
@@ -56,6 +70,9 @@ class FakeHttpClient implements ClientInterface
     {
     }
 
+    /**
+     * @param array<mixed> $headers
+     */
     public function setHeaders($headers)
     {
     }
@@ -72,7 +89,7 @@ class FakeHttpClient implements ClientInterface
     {
     }
 
-    public function setCookie($name, $value)
+    public function setCookie(string $name, string $value): void
     {
     }
 
@@ -80,6 +97,9 @@ class FakeHttpClient implements ClientInterface
     {
     }
 
+    /**
+     * @param array<mixed> $cookies
+     */
     public function setCookies($cookies)
     {
     }
@@ -96,6 +116,9 @@ class FakeHttpClient implements ClientInterface
     {
     }
 
+    /**
+     * @param array<mixed> $arr
+     */
     public function setOptions($arr)
     {
     }

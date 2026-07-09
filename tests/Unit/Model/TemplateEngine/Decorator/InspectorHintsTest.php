@@ -50,6 +50,10 @@ class InspectorHintsTest extends TestCase
         );
     }
 
+    /**
+     * @param string[] $excludedClassPrefixes
+     * @param string[] $excludedTemplatePaths
+     */
     private function createInspectorHints(
         array $excludedClassPrefixes = [],
         array $excludedTemplatePaths = [],
@@ -159,8 +163,9 @@ class InspectorHintsTest extends TestCase
 
         preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
         $this->assertNotEmpty($matches);
-        $decodedJson = html_entity_decode($matches[1], ENT_QUOTES);
+        $decodedJson = html_entity_decode($matches[1] ?? '', ENT_QUOTES);
         $metadata = json_decode($decodedJson, true);
+        $this->assertIsArray($metadata);
 
         $this->assertSame('mageforge-xyz', $metadata['id']);
         $this->assertSame('some/template.phtml', $metadata['template']);
@@ -180,7 +185,8 @@ class InspectorHintsTest extends TestCase
         $result = $inspector->render($block, '/var/www/html/template.phtml');
 
         preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
-        $metadata = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+        $metadata = json_decode(html_entity_decode($matches[1] ?? '', ENT_QUOTES), true);
+        $this->assertIsArray($metadata);
 
         $this->assertSame('OpenForgeProject_MageForge', $metadata['module']);
     }
@@ -207,7 +213,8 @@ class InspectorHintsTest extends TestCase
         $result = $inspector->render($block, '/var/www/html/template.phtml');
 
         preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
-        $metadata = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+        $metadata = json_decode(html_entity_decode($matches[1] ?? '', ENT_QUOTES), true);
+        $this->assertIsArray($metadata);
 
         $this->assertSame('parent.block', $metadata['parent']);
         $this->assertSame('child.block', $metadata['alias']);
