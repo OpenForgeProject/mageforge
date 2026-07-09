@@ -12,8 +12,17 @@ use PHPUnit\Framework\TestCase;
 
 class ModuleScannerTest extends TestCase
 {
-    private File&MockObject $fileDriver;
-    private IncompatibilityDetector&MockObject $detector;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var IncompatibilityDetector&MockObject
+     */
+    private $detector;
+    /**
+     * @var ModuleScanner
+     */
     private ModuleScanner $scanner;
 
     protected function setUp(): void

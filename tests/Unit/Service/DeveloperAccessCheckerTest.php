@@ -14,9 +14,21 @@ use PHPUnit\Framework\TestCase;
 
 class DeveloperAccessCheckerTest extends TestCase
 {
-    private ScopeConfigInterface&MockObject $scopeConfig;
-    private RemoteAddress&MockObject $remoteAddress;
-    private Header&MockObject $httpHeader;
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private $scopeConfig;
+    /**
+     * @var RemoteAddress&MockObject
+     */
+    private $remoteAddress;
+    /**
+     * @var Header&MockObject
+     */
+    private $httpHeader;
+    /**
+     * @var DeveloperAccessChecker
+     */
     private DeveloperAccessChecker $checker;
 
     protected function setUp(): void

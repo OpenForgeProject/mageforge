@@ -12,7 +12,13 @@ use PHPUnit\Framework\TestCase;
 
 class ThemePathTest extends TestCase
 {
-    private ComponentRegistrarInterface&MockObject $componentRegistrar;
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private $componentRegistrar;
+    /**
+     * @var ThemePath
+     */
     private ThemePath $themePath;
 
     protected function setUp(): void

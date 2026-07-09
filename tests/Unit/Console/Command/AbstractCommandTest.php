@@ -17,6 +17,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class AbstractCommandTest extends TestCase
 {
+    /**
+     * @var ConcreteTestCommand
+     */
     private ConcreteTestCommand $command;
 
     protected function setUp(): void

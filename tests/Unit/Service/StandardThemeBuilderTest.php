@@ -15,11 +15,29 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StandardThemeBuilderTest extends TestCase
 {
-    private DependencyChecker&MockObject $dependencyChecker;
-    private GruntTaskRunner&MockObject $gruntTaskRunner;
-    private StaticContentDeployer&MockObject $staticContentDeployer;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var DependencyChecker&MockObject
+     */
+    private $dependencyChecker;
+    /**
+     * @var GruntTaskRunner&MockObject
+     */
+    private $gruntTaskRunner;
+    /**
+     * @var StaticContentDeployer&MockObject
+     */
+    private $staticContentDeployer;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var StandardThemeBuilder
+     */
     private StandardThemeBuilder $builder;
 
     protected function setUp(): void

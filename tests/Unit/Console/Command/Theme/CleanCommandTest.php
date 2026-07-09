@@ -16,10 +16,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class CleanCommandTest extends TestCase
 {
-    private ThemeCleaner&MockObject $themeCleaner;
-    private ThemeList&MockObject $themeList;
-    private ThemePath&MockObject $themePath;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var ThemeCleaner&MockObject
+     */
+    private $themeCleaner;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var CleanCommand
+     */
     private CleanCommand $command;
 
     protected function setUp(): void

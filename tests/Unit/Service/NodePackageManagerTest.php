@@ -13,9 +13,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodePackageManagerTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private FileDriver&MockObject $fileDriver;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var FileDriver&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var NodePackageManager
+     */
     private NodePackageManager $packageManager;
 
     protected function setUp(): void

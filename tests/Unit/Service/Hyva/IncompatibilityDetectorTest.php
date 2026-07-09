@@ -15,8 +15,15 @@ use PHPUnit\Framework\TestCase;
  */
 class IncompatibilityDetectorTest extends TestCase
 {
-    private File&MockObject $fileMock;
-    private IncompatibilityDetector $detector;
+    /**
+     * @var File&MockObject
+     */
+    private $fileMock;
+
+    /**
+     * @var IncompatibilityDetector
+     */
+    private $detector;
 
     protected function setUp(): void
     {

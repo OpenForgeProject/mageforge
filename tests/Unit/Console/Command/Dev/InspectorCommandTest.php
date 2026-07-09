@@ -17,10 +17,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class InspectorCommandTest extends TestCase
 {
-    private WriterInterface&MockObject $configWriter;
-    private State&MockObject $state;
-    private CacheManager&MockObject $cacheManager;
-    private ScopeConfigInterface&MockObject $scopeConfig;
+    /**
+     * @var WriterInterface&MockObject
+     */
+    private $configWriter;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var CacheManager&MockObject
+     */
+    private $cacheManager;
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private $scopeConfig;
+    /**
+     * @var InspectorCommand
+     */
     private InspectorCommand $command;
 
     protected function setUp(): void

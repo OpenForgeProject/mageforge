@@ -12,8 +12,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class CacheCleanerTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var CacheCleaner
+     */
     private CacheCleaner $cacheCleaner;
 
     protected function setUp(): void

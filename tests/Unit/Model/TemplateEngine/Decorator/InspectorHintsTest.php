@@ -17,11 +17,26 @@ use PHPUnit\Framework\TestCase;
 
 class InspectorHintsTest extends TestCase
 {
-    private TemplateEngineInterface&MockObject $subject;
-    private Random&MockObject $random;
-    private BlockCacheCollector&MockObject $cacheCollector;
-    private File&MockObject $fileDriver;
-    private Escaper&MockObject $escaper;
+    /**
+     * @var TemplateEngineInterface&MockObject
+     */
+    private $subject;
+    /**
+     * @var Random&MockObject
+     */
+    private $random;
+    /**
+     * @var BlockCacheCollector&MockObject
+     */
+    private $cacheCollector;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var Escaper&MockObject
+     */
+    private $escaper;
 
     protected function setUp(): void
     {

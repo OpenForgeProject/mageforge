@@ -16,9 +16,21 @@ class SymlinkCleanerTest extends TestCase
     private const SYMLINK_MODE = 0o12_0777;
     private const REGULAR_FILE_MODE = 0o10_0644;
 
-    private File&MockObject $fileDriver;
-    private State&MockObject $state;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var SymlinkCleaner
+     */
     private SymlinkCleaner $cleaner;
 
     protected function setUp(): void

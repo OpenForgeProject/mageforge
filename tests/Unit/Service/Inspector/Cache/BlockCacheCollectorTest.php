@@ -12,7 +12,13 @@ use PHPUnit\Framework\TestCase;
 
 class BlockCacheCollectorTest extends TestCase
 {
-    private LayoutInterface&MockObject $layout;
+    /**
+     * @var LayoutInterface&MockObject
+     */
+    private $layout;
+    /**
+     * @var BlockCacheCollector
+     */
     private BlockCacheCollector $collector;
 
     protected function setUp(): void

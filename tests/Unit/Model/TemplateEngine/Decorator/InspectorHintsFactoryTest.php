@@ -12,7 +12,13 @@ use PHPUnit\Framework\TestCase;
 
 class InspectorHintsFactoryTest extends TestCase
 {
-    private ObjectManagerInterface&MockObject $objectManager;
+    /**
+     * @var ObjectManagerInterface&MockObject
+     */
+    private $objectManager;
+    /**
+     * @var InspectorHintsFactory
+     */
     private InspectorHintsFactory $factory;
 
     protected function setUp(): void

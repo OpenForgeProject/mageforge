@@ -14,10 +14,25 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StaticContentCleanerTest extends TestCase
 {
-    private State&MockObject $state;
-    private ThemeCleaner&MockObject $themeCleaner;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var ThemeCleaner&MockObject
+     */
+    private $themeCleaner;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var StaticContentCleaner
+     */
     private StaticContentCleaner $cleaner;
 
     protected function setUp(): void

@@ -18,12 +18,33 @@ use PHPUnit\Framework\TestCase;
 
 class InspectorHintsTest extends TestCase
 {
-    private ScopeConfigInterface&MockObject $scopeConfig;
-    private DeveloperAccessChecker&MockObject $developerAccessChecker;
-    private InspectorHintsFactory&MockObject $inspectorHintsFactory;
-    private State&MockObject $state;
-    private TemplateEngineFactory&MockObject $subject;
-    private TemplateEngineInterface&MockObject $invocationResult;
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private $scopeConfig;
+    /**
+     * @var DeveloperAccessChecker&MockObject
+     */
+    private $developerAccessChecker;
+    /**
+     * @var InspectorHintsFactory&MockObject
+     */
+    private $inspectorHintsFactory;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var TemplateEngineFactory&MockObject
+     */
+    private $subject;
+    /**
+     * @var TemplateEngineInterface&MockObject
+     */
+    private $invocationResult;
+    /**
+     * @var InspectorHints
+     */
     private InspectorHints $plugin;
 
     protected function setUp(): void

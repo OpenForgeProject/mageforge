@@ -19,9 +19,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class CompatibilityCheckerTest extends TestCase
 {
-    private ComponentRegistrarInterface&MockObject $componentRegistrar;
-    private ModuleScanner&MockObject $moduleScanner;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private $componentRegistrar;
+    /**
+     * @var ModuleScanner&MockObject
+     */
+    private $moduleScanner;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var CompatibilityChecker
+     */
     private CompatibilityChecker $checker;
 
     protected function setUp(): void

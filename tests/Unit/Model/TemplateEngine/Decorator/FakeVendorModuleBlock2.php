@@ -13,6 +13,9 @@ use Magento\Framework\View\Element\BlockInterface;
  */
 class FakeVendorModuleBlock2 implements BlockInterface
 {
+    /**
+     * Returns the (empty) rendered block HTML.
+     */
     public function toHtml()
     {
         return '';

@@ -20,17 +20,53 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BuilderTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private File&MockObject $fileDriver;
-    private StaticContentDeployer&MockObject $staticContentDeployer;
-    private StaticContentCleaner&MockObject $staticContentCleaner;
-    private CacheCleaner&MockObject $cacheCleaner;
-    private SymlinkCleaner&MockObject $symlinkCleaner;
-    private NodePackageManager&MockObject $nodePackageManager;
-    private GruntTaskRunner&MockObject $gruntTaskRunner;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var StaticContentDeployer&MockObject
+     */
+    private $staticContentDeployer;
+    /**
+     * @var StaticContentCleaner&MockObject
+     */
+    private $staticContentCleaner;
+    /**
+     * @var CacheCleaner&MockObject
+     */
+    private $cacheCleaner;
+    /**
+     * @var SymlinkCleaner&MockObject
+     */
+    private $symlinkCleaner;
+    /**
+     * @var NodePackageManager&MockObject
+     */
+    private $nodePackageManager;
+    /**
+     * @var GruntTaskRunner&MockObject
+     */
+    private $gruntTaskRunner;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var Builder
+     */
     private Builder $builder;
+    /**
+     * @var string
+     */
     private string $themePath = 'app/design/frontend/Vendor/theme';
 
     protected function setUp(): void

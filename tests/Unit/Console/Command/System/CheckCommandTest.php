@@ -21,10 +21,22 @@ class CheckCommandTest extends TestCase
     private const NODE_LTS_URL = 'https://nodejs.org/dist/index.json';
     private const NODE_LTS_BODY = '[{"version": "v23.1.0", "lts": false}, {"version": "v22.13.0", "lts": "Jod"}]';
 
-    private ProductMetadataInterface&MockObject $productMetadata;
-    private ResourceConnection&MockObject $resourceConnection;
-    private ClientFactory&MockObject $httpClientFactory;
-    private Shell&MockObject $shell;
+    /**
+     * @var ProductMetadataInterface&MockObject
+     */
+    private $productMetadata;
+    /**
+     * @var ResourceConnection&MockObject
+     */
+    private $resourceConnection;
+    /**
+     * @var ClientFactory&MockObject
+     */
+    private $httpClientFactory;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
 
     protected function setUp(): void
     {

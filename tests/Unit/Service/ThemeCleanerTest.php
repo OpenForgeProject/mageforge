@@ -15,9 +15,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ThemeCleanerTest extends TestCase
 {
-    private Filesystem&MockObject $filesystem;
-    private WriteInterface&MockObject $writeDirectory;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var Filesystem&MockObject
+     */
+    private $filesystem;
+    /**
+     * @var WriteInterface&MockObject
+     */
+    private $writeDirectory;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var ThemeCleaner
+     */
     private ThemeCleaner $cleaner;
 
     protected function setUp(): void

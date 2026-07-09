@@ -20,12 +20,33 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class TokensCommandTest extends TestCase
 {
-    private ThemeList&MockObject $themeList;
-    private ThemePath&MockObject $themePath;
-    private BuilderPool&MockObject $builderPool;
-    private File&MockObject $fileDriver;
-    private Shell&MockObject $shell;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var BuilderPool&MockObject
+     */
+    private $builderPool;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var TokensCommand
+     */
     private TokensCommand $command;
 
     protected function setUp(): void
