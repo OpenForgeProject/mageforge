@@ -2,10 +2,15 @@ name: Magento Compatibility Test
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  # Heavy Magento matrix — cancel superseded PR runs to save CI minutes;
+  # let push/main runs finish so main is always validated directly.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -20,13 +25,10 @@ jobs:
         include:
           - magento-version: 2.4.7-p10
             php-version: "8.3"
-            search-engine-name: opensearch
           - magento-version: 2.4.8-p5
             php-version: "8.4"
-            search-engine-name: opensearch
           - magento-version: 2.4.9
             php-version: "8.5"
-            search-engine-name: opensearch
 
     services:
       mysql:
@@ -55,62 +57,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           path: mageforge
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f
+      - name: Set up Magento
+        uses: ./mageforge/.github/actions/setup-magento
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
-          tools: composer:v2
-
-      - name: Cache Composer packages
-        id: composer-cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: ~/.composer/cache/files
-          key: ${{ runner.os }}-composer-${{ matrix.magento-version }}-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ runner.os }}-composer-${{ matrix.magento-version }}
-
-      - name: Clone Magento
-        run: |
-          git clone --depth=1 --branch=${{ matrix.magento-version }} https://github.com/magento/magento2.git magento2
-
-      - name: Check Search Engine status
-        run: |
-          curl -s http://localhost:9200/_cluster/health
-
-      - name: Install Magento
-        working-directory: magento2
-        env:
-          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
-        run: |
-          composer config minimum-stability stable
-          composer config prefer-stable true
-          composer install --no-interaction --no-progress
-          bin/magento setup:install \
-            --base-url=http://localhost \
-            --db-host=127.0.0.1 \
-            --db-name=magento \
-            --db-user=root \
-            --db-password=magento \
-            --admin-firstname=Admin \
-            --admin-lastname=User \
-            --admin-email=admin@example.com \
-            --admin-user=admin \
-            --admin-password=admin12345 \
-            --language=en_US \
-            --currency=USD \
-            --timezone=Europe/Berlin \
-            --use-rewrites=1 \
-            --backend-frontname=admin \
-            --search-engine=opensearch \
-            --opensearch-host=localhost \
-            --opensearch-port=9200 \
-            --opensearch-index-prefix=magento \
-            --cleanup-database
+          magento-version: ${{ matrix.magento-version }}
+          magento-source: git
+          composer-auth: ${{ secrets.COMPOSER_AUTH }}
 
       - name: Install MageForge Module from current commit
         working-directory: magento2
@@ -165,4 +122,4 @@ jobs:
 
       - name: Test Summary
         run: |
-          echo "MageForge module compatibility test with Magento 2.4.8 completed"
+          echo "MageForge module compatibility test with Magento ${{ matrix.magento-version }} (PHP ${{ matrix.php-version }}) completed"

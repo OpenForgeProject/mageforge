@@ -276,7 +276,7 @@ class Builder implements BuilderInterface
                 }
             }
 
-            $exitCode = $process->run(static function ($type, $buffer) use ($output): void {
+            $exitCode = $process->run(static function (string $type, string $buffer) use ($output): void {
                 $output->write($buffer);
             });
 

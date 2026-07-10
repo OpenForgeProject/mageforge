@@ -4,6 +4,13 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Cancel superseded PR runs to save CI minutes; let push/main runs finish so
+  # main is always validated directly (catches anything pushed straight to main).
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -15,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Set up PHP
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
@@ -24,7 +31,7 @@ jobs:
           tools: composer:v2
 
       - name: Cache Composer packages
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.composer/cache/files
           key: ${{ runner.os }}-composer-lint-${{ hashFiles('composer.json') }}
@@ -44,11 +51,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      checks: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # save-annotations stores findings as an artifact instead of posting them
+      # to the GitHub Checks API. That avoids the *second* check-run that used to
+      # duplicate this job's red status — and the 403 it would otherwise throw
+      # without `checks: write`. Findings still print in the job log and fail
+      # this job via its exit code; grant `checks: write` + drop this only if you
+      # want inline PR annotations (and the extra check-run) back.
       - name: Trunk Check
         uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
+        with:
+          save-annotations: true

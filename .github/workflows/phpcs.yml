@@ -4,6 +4,13 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Cancel superseded PR runs to save CI minutes; let push/main runs finish so
+  # main is always validated directly (catches anything pushed straight to main).
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -13,6 +20,7 @@ env:
 
 jobs:
   check-phpcs:
+    name: PHPCS
     runs-on: ubuntu-latest
 
     steps:

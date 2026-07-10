@@ -2,8 +2,17 @@ name: PHPUnit
 
 on:
   pull_request:
+  # Runs on main too — the badges job needs the coverage + mutation artifacts
+  # produced by the phpunit/mutation jobs to publish the badge data.
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Cancel superseded PR runs; let main pushes finish so the badges job
+  # (publishes coverage/MSI to the badges branch) is never cut off.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
