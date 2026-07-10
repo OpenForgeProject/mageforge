@@ -1,0 +1,98 @@
+name: Set up Magento
+description: >-
+  Provisions a Magento install for CI: sets up PHP + Composer, restores the
+  Composer download cache, fetches Magento (git clone or the Mage-OS mirror) and
+  runs `bin/magento setup:install`. The calling job must provide the MySQL/MariaDB
+  and OpenSearch service containers (reachable at 127.0.0.1:3306 / localhost:9200).
+  Leaves a ready install in ./magento2 next to the checked-out module.
+
+inputs:
+  php-version:
+    description: PHP version passed to shivammathur/setup-php.
+    required: true
+  magento-version:
+    description: >-
+      Magento version. With magento-source=git it is the branch/tag to clone;
+      with magento-source=mage-os it is only used to namespace the Composer cache
+      (create-project always pulls the latest stable).
+    required: true
+  magento-source:
+    description: >-
+      How to fetch Magento: "git" (github.com/magento/magento2) or "mage-os"
+      (composer create-project via the Mage-OS mirror).
+    required: false
+    default: git
+  php-extensions:
+    description: PHP extensions to install.
+    required: false
+    default: mbstring, intl, gd, xml, soap, zip, bcmath, pdo_mysql, curl, sockets
+  composer-auth:
+    description: >-
+      COMPOSER_AUTH JSON (Magento Marketplace keys) for authenticated Composer
+      downloads. Pass ${{ secrets.COMPOSER_AUTH }}.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.php-extensions }}
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/.composer/cache/files
+        key: ${{ runner.os }}-composer-${{ inputs.magento-version }}-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-${{ inputs.magento-version }}
+
+    - name: Download Magento (git clone)
+      if: ${{ inputs.magento-source == 'git' }}
+      shell: bash
+      run: |
+        git clone --depth=1 --branch=${{ inputs.magento-version }} \
+          https://github.com/magento/magento2.git magento2
+
+    - name: Download Magento (Mage-OS mirror)
+      if: ${{ inputs.magento-source == 'mage-os' }}
+      shell: bash
+      run: |
+        composer create-project \
+          --repository-url=https://mirror.mage-os.org/ \
+          magento/project-community-edition \
+          magento2
+
+    - name: Install Magento
+      working-directory: magento2
+      shell: bash
+      env:
+        COMPOSER_AUTH: ${{ inputs.composer-auth }}
+      run: |
+        composer config minimum-stability stable
+        composer config prefer-stable true
+        composer install --no-interaction --no-progress
+        bin/magento setup:install \
+          --base-url=http://localhost \
+          --db-host=127.0.0.1 \
+          --db-name=magento \
+          --db-user=root \
+          --db-password=magento \
+          --admin-firstname=Admin \
+          --admin-lastname=User \
+          --admin-email=admin@example.com \
+          --admin-user=admin \
+          --admin-password=admin12345 \
+          --language=en_US \
+          --currency=USD \
+          --timezone=Europe/Berlin \
+          --use-rewrites=1 \
+          --backend-frontname=admin \
+          --search-engine=opensearch \
+          --opensearch-host=localhost \
+          --opensearch-port=9200 \
+          --opensearch-index-prefix=magento \
+          --cleanup-database
