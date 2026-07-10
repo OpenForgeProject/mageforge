@@ -14,3 +14,8 @@
 /.release-please-manifest.json    export-ignore
 /skills-lock.json                 export-ignore
 /.trunkignore                     export-ignore
+/tests/                           export-ignore
+/phpunit.xml.dist                 export-ignore
+/infection.json5                  export-ignore
+/.gitignore                       export-ignore
+/.gitattributes                   export-ignore
