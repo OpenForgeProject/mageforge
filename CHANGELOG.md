@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.27.0](https://github.com/OpenForgeProject/mageforge/compare/0.26.1...0.27.0) (2026-07-10)
+
+
+### Added
+
+* update actions ([#226](https://github.com/OpenForgeProject/mageforge/issues/226)) ([08d8d08](https://github.com/OpenForgeProject/mageforge/commit/08d8d08986884150b0695c2bf0af67201b11129d))
+
+
+### Fixed
+
+* update export-ignore rules in .gitattributes ([#228](https://github.com/OpenForgeProject/mageforge/issues/228)) ([05d4d17](https://github.com/OpenForgeProject/mageforge/commit/05d4d17f04c6b8a461565acaf126a79574480bcc))
+
 ## [0.26.1](https://github.com/OpenForgeProject/mageforge/compare/0.26.0...0.26.1) (2026-07-10)
 
 
