@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.26.1](https://github.com/OpenForgeProject/mageforge/compare/0.26.0...0.26.1) (2026-07-10)
+
+
+### Fixed
+
+* update static analysis ([#224](https://github.com/OpenForgeProject/mageforge/issues/224)) ([6925382](https://github.com/OpenForgeProject/mageforge/commit/6925382d67d00ab2bc252f6a9b410efac958ab71))
+
 ## [0.26.0](https://github.com/OpenForgeProject/mageforge/compare/0.25.0...0.26.0) (2026-07-05)
 
 
