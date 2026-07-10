@@ -39,7 +39,7 @@ if [[ $# -gt 0 ]] && [[ ! $1 =~ ^- ]]; then
 fi
 
 PHPSTAN_CONFIG="vendor/openforgeproject/mageforge/phpstan.neon"
-if [[ ! -f "${PHPSTAN_CONFIG}" ]]; then
+if [[ ! -f ${PHPSTAN_CONFIG} ]]; then
 	echo "PHPStan config not found at ${PHPSTAN_CONFIG}. Run 'ddev install-magento' first."
 	exit 1
 fi
