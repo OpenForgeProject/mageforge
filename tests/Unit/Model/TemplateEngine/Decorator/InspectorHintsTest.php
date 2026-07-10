@@ -90,6 +90,28 @@ class InspectorHintsTest extends TestCase
         return $this->createMock(BlockInterface::class);
     }
 
+    /**
+     * Extracts and JSON-decodes the metadata embedded in the
+     * data-mageforge-block attribute of rendered inspector output.
+     *
+     * @return array<array-key, mixed>
+     */
+    private function decodeBlockMetadata(string $result): array
+    {
+        // Guarding on the preg_match return value narrows $matches to the
+        // matched shape for every PHPStan version: capture group 1 is then
+        // known to exist, so no null-coalesce fallback is needed (which newer
+        // PHPStan/bleedingEdge flags as redundant via nullCoalesce.offset).
+        if (preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches) !== 1) {
+            $this->fail('render output should contain a data-mageforge-block attribute');
+        }
+
+        $metadata = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+        $this->assertIsArray($metadata);
+
+        return $metadata;
+    }
+
     public function testRenderReturnsSubjectResultWhenShowBlockHintsDisabled(): void
     {
         $block = $this->createBlock();
@@ -176,11 +198,7 @@ class InspectorHintsTest extends TestCase
         $inspector = $this->createInspectorHints();
         $result = $inspector->render($block, '/var/www/html/some/template.phtml');
 
-        preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
-        $this->assertNotEmpty($matches);
-        $decodedJson = html_entity_decode($matches[1] ?? '', ENT_QUOTES);
-        $metadata = json_decode($decodedJson, true);
-        $this->assertIsArray($metadata);
+        $metadata = $this->decodeBlockMetadata($result);
 
         $this->assertSame('mageforge-xyz', $metadata['id']);
         $this->assertSame('some/template.phtml', $metadata['template']);
@@ -199,9 +217,7 @@ class InspectorHintsTest extends TestCase
         $inspector = $this->createInspectorHints();
         $result = $inspector->render($block, '/var/www/html/template.phtml');
 
-        preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
-        $metadata = json_decode(html_entity_decode($matches[1] ?? '', ENT_QUOTES), true);
-        $this->assertIsArray($metadata);
+        $metadata = $this->decodeBlockMetadata($result);
 
         $this->assertSame('OpenForgeProject_MageForge', $metadata['module']);
     }
@@ -227,9 +243,7 @@ class InspectorHintsTest extends TestCase
         $inspector = $this->createInspectorHints();
         $result = $inspector->render($block, '/var/www/html/template.phtml');
 
-        preg_match('/data-mageforge-block="([^"]*)"/', $result, $matches);
-        $metadata = json_decode(html_entity_decode($matches[1] ?? '', ENT_QUOTES), true);
-        $this->assertIsArray($metadata);
+        $metadata = $this->decodeBlockMetadata($result);
 
         $this->assertSame('parent.block', $metadata['parent']);
         $this->assertSame('child.block', $metadata['alias']);
