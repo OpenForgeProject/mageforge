@@ -81,9 +81,11 @@ jobs:
           composer update --with-dependencies
           bin/magento setup:upgrade
 
-          # phpstan.neon is export-ignored, so the copied path repository omits
-          # it; place it next to the analysed source for the phpstan job.
+          # phpstan.neon and tests/ are export-ignored, so the copied path
+          # repository omits them; place them next to the analysed source so the
+          # phpstan job can analyse both `src` and `tests` (per phpstan.neon).
           cp ../mageforge/phpstan.neon vendor/openforgeproject/mageforge/phpstan.neon
+          cp -r ../mageforge/tests vendor/openforgeproject/mageforge/tests
 
       - name: Pack Magento install
         run: |
