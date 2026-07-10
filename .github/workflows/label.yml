@@ -6,6 +6,12 @@
 name: Labeler
 on: [pull_request_target]
 
+concurrency:
+  # One labeling run per PR; a newer event on the same PR supersedes an
+  # in-flight one so labels can't race each other.
+  group: labeler-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

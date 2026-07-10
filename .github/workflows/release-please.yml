@@ -5,6 +5,12 @@ on:
     branches:
       - main
 
+concurrency:
+  # Serialize releases: never run two passes at once and never cancel one
+  # mid-flight — it may be cutting a release or (re)opening the release PR.
+  group: release-please
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
