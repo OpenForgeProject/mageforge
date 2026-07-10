@@ -71,8 +71,12 @@ jobs:
           # Allow the PHPStan extension installer plugin
           composer config --no-plugins allow-plugins.phpstan/extension-installer true
 
-          # PHPStan + Magento extension (consumed by the phpstan job)
-          composer require --dev --no-update bitexpert/phpstan-magento "phpstan/phpstan:^2.0" phpstan/extension-installer
+          # PHPStan + Magento extension (consumed by the phpstan job). Pinned to
+          # exact versions: phpstan.neon opts into bleedingEdge, whose rules
+          # change between releases, so an unpinned `^2.0` lets a new PHPStan
+          # release fail unrelated PRs. Bump these deliberately (keep in sync
+          # with the locally installed PHPStan) instead of floating.
+          composer require --dev --no-update "bitexpert/phpstan-magento:0.43.0" "phpstan/phpstan:2.2.2" phpstan/extension-installer
 
           composer update --with-dependencies
           bin/magento setup:upgrade

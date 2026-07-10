@@ -44,6 +44,11 @@ runs:
         extensions: ${{ inputs.php-extensions }}
         tools: composer:v2
 
+    # Caches ~/.composer/cache/files — Composer's content-addressed download
+    # cache, not a resolved dependency set. If the mage-os fallback installs a
+    # different release than magento-version implies, a mismatched key only
+    # causes cache misses (re-downloads), never an incorrect install: Composer
+    # always installs exactly what composer.json resolves to.
     - name: Cache Composer packages
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
@@ -55,7 +60,10 @@ runs:
       if: ${{ inputs.magento-source == 'git' }}
       shell: bash
       run: |
-        git clone --depth=1 --branch=${{ inputs.magento-version }} \
+        # Assign to a shell variable and quote it so an unexpected value can't
+        # word-split or glob into extra git arguments.
+        version="${{ inputs.magento-version }}"
+        git clone --depth=1 --branch="$version" \
           https://github.com/magento/magento2.git magento2
 
     - name: Download Magento (Mage-OS mirror)
