@@ -37,6 +37,22 @@ inputs:
 runs:
   using: composite
   steps:
+    # Fail fast on a bad magento-source: otherwise both download steps' `if`
+    # conditions are false, no magento2/ is created, and the failure only
+    # surfaces later as a confusing "working-directory magento2 not found".
+    - name: Validate inputs
+      shell: bash
+      env:
+        MAGENTO_SOURCE: ${{ inputs.magento-source }}
+      run: |
+        case "$MAGENTO_SOURCE" in
+          git | mage-os) ;;
+          *)
+            echo "::error::Invalid magento-source '${MAGENTO_SOURCE}' (expected 'git' or 'mage-os')"
+            exit 1
+            ;;
+        esac
+
     - name: Setup PHP
       uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
       with:
