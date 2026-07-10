@@ -60,9 +60,16 @@ runs:
     - name: Download Magento (Mage-OS mirror)
       if: ${{ inputs.magento-source == 'mage-os' }}
       shell: bash
+      env:
+        COMPOSER_AUTH: ${{ inputs.composer-auth }}
       run: |
+        # --no-install: only scaffold the project here. The dedicated "Install
+        # Magento" step below installs dependencies exactly once (with
+        # COMPOSER_AUTH available), instead of create-project installing them
+        # unauthenticated and the install step installing them a second time.
         composer create-project \
           --repository-url=https://mirror.mage-os.org/ \
+          --no-install \
           magento/project-community-edition \
           magento2
 
