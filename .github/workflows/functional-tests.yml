@@ -2,11 +2,13 @@ name: Functional Tests
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
   # Heavy Magento bootstrap — cancel superseded PR runs to save CI minutes;
-  # manual (workflow_dispatch) runs are left to finish.
+  # let push/main runs finish so main is always validated directly.
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 

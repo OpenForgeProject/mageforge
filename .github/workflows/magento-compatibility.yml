@@ -2,11 +2,13 @@ name: Magento Compatibility Test
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
   # Heavy Magento matrix — cancel superseded PR runs to save CI minutes;
-  # manual (workflow_dispatch) runs are left to finish.
+  # let push/main runs finish so main is always validated directly.
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
