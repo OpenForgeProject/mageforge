@@ -29,7 +29,7 @@ inputs:
   composer-auth:
     description: >-
       COMPOSER_AUTH JSON (Magento Marketplace keys) for authenticated Composer
-      downloads. Pass ${{ secrets.COMPOSER_AUTH }}.
+      downloads. Pass the calling workflow's secrets.COMPOSER_AUTH secret.
     required: false
     default: ""
 
