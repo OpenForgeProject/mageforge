@@ -15,10 +15,25 @@ use PHPUnit\Framework\TestCase;
 
 class InspectorTest extends TestCase
 {
-    private Context&MockObject $context;
-    private State&MockObject $state;
-    private ScopeConfigInterface&MockObject $scopeConfig;
-    private DeveloperAccessChecker&MockObject $developerAccessChecker;
+    /**
+     * @var Context&MockObject
+     */
+    private $context;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private $scopeConfig;
+    /**
+     * @var DeveloperAccessChecker&MockObject
+     */
+    private $developerAccessChecker;
+    /**
+     * @var Inspector
+     */
     private Inspector $block;
 
     protected function setUp(): void

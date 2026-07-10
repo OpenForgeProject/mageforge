@@ -20,10 +20,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class BuildCommandTest extends TestCase
 {
-    private ThemePath&MockObject $themePath;
-    private ThemeList&MockObject $themeList;
-    private BuilderPool&MockObject $builderPool;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var BuilderPool&MockObject
+     */
+    private $builderPool;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var BuildCommand
+     */
     private BuildCommand $command;
 
     protected function setUp(): void

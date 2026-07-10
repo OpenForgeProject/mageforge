@@ -1,7 +1,0 @@
-{
-    "gitPrefix.pattern": "(\\d+)",
-    "gitPrefix.replacement #1": "#$1 - ",
-    "gitPrefix.replacement #2": "#$1 - update",
-    "gitPrefix.replacement #3": "#$1 - fix",
-    "gitPrefix.replacement #4": "#$1 - remove"
-}

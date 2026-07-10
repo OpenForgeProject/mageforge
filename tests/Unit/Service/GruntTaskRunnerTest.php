@@ -13,9 +13,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class GruntTaskRunnerTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var GruntTaskRunner
+     */
     private GruntTaskRunner $taskRunner;
 
     protected function setUp(): void

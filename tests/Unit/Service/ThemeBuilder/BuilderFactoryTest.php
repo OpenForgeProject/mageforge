@@ -11,6 +11,9 @@ use PHPUnit\Framework\TestCase;
 
 class BuilderFactoryTest extends TestCase
 {
+    /**
+     * @var BuilderFactory
+     */
     private BuilderFactory $factory;
 
     protected function setUp(): void

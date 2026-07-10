@@ -17,7 +17,10 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class VersionCommandTest extends TestCase
 {
-    private File&MockObject $fileDriver;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
 
     protected function setUp(): void
     {

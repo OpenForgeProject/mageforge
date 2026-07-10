@@ -9,7 +9,7 @@
 /.phpunit.cache/
 /reports/
 
-.vscode
+/.vscode/
 /magento/
 /magento-temp/
 

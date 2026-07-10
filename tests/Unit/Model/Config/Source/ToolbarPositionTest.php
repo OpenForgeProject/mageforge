@@ -25,12 +25,10 @@ class ToolbarPositionTest extends TestCase
         );
     }
 
-    public function testEveryOptionHasNonEmptyLabel(): void
+    public function testReturnsExpectedLabels(): void
     {
-        foreach ((new ToolbarPosition())->toOptionArray() as $option) {
-            $this->assertArrayHasKey('label', $option);
-            $this->assertIsString($option['label']);
-            $this->assertNotSame('', $option['label']);
-        }
+        $labels = array_column((new ToolbarPosition())->toOptionArray(), 'label');
+
+        $this->assertSame(['Bottom Left', 'Bottom Right', 'Top Left', 'Top Right'], $labels);
     }
 }

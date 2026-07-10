@@ -164,7 +164,7 @@ jobs:
       - name: Run PHPStan
         working-directory: magento2
         run: |
-          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon vendor/openforgeproject/mageforge/src
+          vendor/bin/phpstan analyse -c vendor/openforgeproject/mageforge/phpstan.neon
 
   mago-analyze:
     name: Mago Analyze

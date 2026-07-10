@@ -14,10 +14,25 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class StaticContentDeployerTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private State&MockObject $state;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var StaticContentDeployer
+     */
     private StaticContentDeployer $deployer;
 
     protected function setUp(): void

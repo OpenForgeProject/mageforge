@@ -17,10 +17,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class WatchCommandTest extends TestCase
 {
-    private BuilderPool&MockObject $builderPool;
-    private ThemeList&MockObject $themeList;
-    private ThemePath&MockObject $themePath;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var BuilderPool&MockObject
+     */
+    private $builderPool;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var WatchCommand
+     */
     private WatchCommand $command;
 
     protected function setUp(): void

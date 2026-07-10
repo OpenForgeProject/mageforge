@@ -17,6 +17,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class AbstractCommandTest extends TestCase
 {
+    /**
+     * @var ConcreteTestCommand
+     */
     private ConcreteTestCommand $command;
 
     protected function setUp(): void
@@ -280,6 +283,7 @@ class AbstractCommandTest extends TestCase
         // setPromptEnvironment() itself triggers to capture the "original" values), so a
         // second getEnvVar() call would not reliably reflect writes made afterwards.
         $storage = $this->readPrivateProperty('secureEnvStorage');
+        $this->assertIsArray($storage);
         $this->assertSame('100', $storage['COLUMNS']);
         $this->assertSame('40', $storage['LINES']);
         $this->assertSame('xterm-256color', $storage['TERM']);
@@ -305,7 +309,9 @@ class AbstractCommandTest extends TestCase
 
         $this->command->callResetPromptEnvironment();
 
-        $this->assertArrayNotHasKey('COLUMNS', $this->readPrivateProperty('secureEnvStorage'));
+        $storage = $this->readPrivateProperty('secureEnvStorage');
+        $this->assertIsArray($storage);
+        $this->assertArrayNotHasKey('COLUMNS', $storage);
         $this->assertNull($this->readPrivateProperty('cachedEnv'));
     }
 
@@ -316,7 +322,9 @@ class AbstractCommandTest extends TestCase
 
         $this->command->callResetPromptEnvironment();
 
-        $this->assertSame('75', $this->readPrivateProperty('secureEnvStorage')['COLUMNS']);
+        $storage = $this->readPrivateProperty('secureEnvStorage');
+        $this->assertIsArray($storage);
+        $this->assertSame('75', $storage['COLUMNS']);
     }
 
     public function testGetSecureEnvironmentValueShortCircuitsForNamesFailingTheAnchoredPattern(): void
@@ -365,7 +373,9 @@ class AbstractCommandTest extends TestCase
     {
         $this->callPrivate('setEnvVar', ['TERM', 'xterm!256@color']);
 
-        $this->assertSame('xterm256color', $this->readPrivateProperty('secureEnvStorage')['TERM']);
+        $storage = $this->readPrivateProperty('secureEnvStorage');
+        $this->assertIsArray($storage);
+        $this->assertSame('xterm256color', $storage['TERM']);
     }
 
     public function testGetEnvVarReturnsSanitizedStoredValue(): void

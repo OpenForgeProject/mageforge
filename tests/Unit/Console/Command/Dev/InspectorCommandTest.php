@@ -17,10 +17,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class InspectorCommandTest extends TestCase
 {
-    private WriterInterface&MockObject $configWriter;
-    private State&MockObject $state;
-    private CacheManager&MockObject $cacheManager;
-    private ScopeConfigInterface&MockObject $scopeConfig;
+    /**
+     * @var WriterInterface&MockObject
+     */
+    private $configWriter;
+    /**
+     * @var State&MockObject
+     */
+    private $state;
+    /**
+     * @var CacheManager&MockObject
+     */
+    private $cacheManager;
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private $scopeConfig;
+    /**
+     * @var InspectorCommand
+     */
     private InspectorCommand $command;
 
     protected function setUp(): void
@@ -161,7 +176,8 @@ class InspectorCommandTest extends TestCase
 
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString('MageForge Inspector has been enabled!', $display);
-        $this->assertStringContainsString('The inspector will now be active on the frontend for allowed IPs.', $display);
+        $activeHint = 'The inspector will now be active on the frontend for allowed IPs.';
+        $this->assertStringContainsString($activeHint, $display);
         $this->assertStringContainsString('Press Ctrl+Shift+I (or Cmd+Option+I on macOS)', $display);
         $this->assertStringContainsString('Hover over elements to see their template information', $display);
         $this->assertStringContainsString('Click to pin the inspector panel', $display);

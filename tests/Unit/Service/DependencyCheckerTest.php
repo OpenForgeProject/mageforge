@@ -13,9 +13,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DependencyCheckerTest extends TestCase
 {
-    private File&MockObject $fileDriver;
-    private Shell&MockObject $shell;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var DependencyChecker
+     */
     private DependencyChecker $checker;
 
     protected function setUp(): void

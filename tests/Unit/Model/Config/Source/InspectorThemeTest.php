@@ -22,12 +22,10 @@ class InspectorThemeTest extends TestCase
         $this->assertSame(['dark', 'light', 'auto'], array_column($options, 'value'));
     }
 
-    public function testEveryOptionHasNonEmptyLabel(): void
+    public function testReturnsExpectedLabels(): void
     {
-        foreach ((new InspectorTheme())->toOptionArray() as $option) {
-            $this->assertArrayHasKey('label', $option);
-            $this->assertIsString($option['label']);
-            $this->assertNotSame('', $option['label']);
-        }
+        $labels = array_column((new InspectorTheme())->toOptionArray(), 'label');
+
+        $this->assertSame(['Dark', 'Light', 'Auto (System Preference)'], $labels);
     }
 }

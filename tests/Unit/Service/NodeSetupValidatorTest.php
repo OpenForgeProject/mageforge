@@ -13,9 +13,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodeSetupValidatorTest extends TestCase
 {
-    private FileDriver&MockObject $fileDriver;
-    private NodePackageManager&MockObject $nodePackageManager;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var FileDriver&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var NodePackageManager&MockObject
+     */
+    private $nodePackageManager;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var NodeSetupValidator
+     */
     private NodeSetupValidator $validator;
 
     protected function setUp(): void

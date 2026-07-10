@@ -16,10 +16,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class CleanCommandTest extends TestCase
 {
-    private ThemeCleaner&MockObject $themeCleaner;
-    private ThemeList&MockObject $themeList;
-    private ThemePath&MockObject $themePath;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var ThemeCleaner&MockObject
+     */
+    private $themeCleaner;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var CleanCommand
+     */
     private CleanCommand $command;
 
     protected function setUp(): void
@@ -223,7 +238,8 @@ class CleanCommandTest extends TestCase
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/*']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
-        $this->assertStringContainsString("Resolved vendor 'Vendor/*' to 1 theme(s): Vendor/one", $tester->getDisplay());
+        $expected = "Resolved vendor 'Vendor/*' to 1 theme(s): Vendor/one";
+        $this->assertStringContainsString($expected, $tester->getDisplay());
     }
 
     public function testMixedSuccessAndFailureSummaryCountsCorrectly(): void

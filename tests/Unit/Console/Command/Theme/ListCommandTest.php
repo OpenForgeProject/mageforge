@@ -13,7 +13,13 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class ListCommandTest extends TestCase
 {
-    private ThemeList&MockObject $themeList;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ListCommand
+     */
     private ListCommand $command;
 
     protected function setUp(): void

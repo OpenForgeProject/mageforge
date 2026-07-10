@@ -19,16 +19,49 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BuilderTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private File&MockObject $fileDriver;
-    private StaticContentDeployer&MockObject $staticContentDeployer;
-    private StaticContentCleaner&MockObject $staticContentCleaner;
-    private CacheCleaner&MockObject $cacheCleaner;
-    private SymlinkCleaner&MockObject $symlinkCleaner;
-    private NodePackageManager&MockObject $nodePackageManager;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var StaticContentDeployer&MockObject
+     */
+    private $staticContentDeployer;
+    /**
+     * @var StaticContentCleaner&MockObject
+     */
+    private $staticContentCleaner;
+    /**
+     * @var CacheCleaner&MockObject
+     */
+    private $cacheCleaner;
+    /**
+     * @var SymlinkCleaner&MockObject
+     */
+    private $symlinkCleaner;
+    /**
+     * @var NodePackageManager&MockObject
+     */
+    private $nodePackageManager;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var Builder
+     */
     private Builder $builder;
+    /**
+     * @var string
+     */
     private string $themePath = 'app/design/frontend/Vendor/hyva-theme';
 
     protected function setUp(): void
@@ -567,6 +600,7 @@ class BuilderTest extends TestCase
             ->with('Tailwind directory not found in: ' . $this->themePath . '/web/tailwind');
         $this->io->expects($this->never())->method('text');
 
-        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath . '/', $this->io, $this->output, false));
+        $result = $this->builder->watch('Vendor/theme', $this->themePath . '/', $this->io, $this->output, false);
+        $this->assertFalse($result);
     }
 }

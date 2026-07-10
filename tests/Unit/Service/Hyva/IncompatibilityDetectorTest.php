@@ -10,10 +10,20 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @phpstan-import-type ScanIssue from IncompatibilityDetector
+ */
 class IncompatibilityDetectorTest extends TestCase
 {
-    private File&MockObject $fileMock;
-    private IncompatibilityDetector $detector;
+    /**
+     * @var File&MockObject
+     */
+    private $fileMock;
+
+    /**
+     * @var IncompatibilityDetector
+     */
+    private $detector;
 
     protected function setUp(): void
     {
@@ -410,7 +420,7 @@ class IncompatibilityDetectorTest extends TestCase
     // -------------------------------------------------------------------------
 
     /**
-     * @param array<int, array<string, mixed>> $issues
+     * @param array<int, ScanIssue> $issues
      */
     private function assertIssueFound(array $issues, string $description, string $severity): void
     {

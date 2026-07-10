@@ -20,17 +20,53 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class BuilderTest extends TestCase
 {
-    private Shell&MockObject $shell;
-    private File&MockObject $fileDriver;
-    private StaticContentDeployer&MockObject $staticContentDeployer;
-    private StaticContentCleaner&MockObject $staticContentCleaner;
-    private CacheCleaner&MockObject $cacheCleaner;
-    private SymlinkCleaner&MockObject $symlinkCleaner;
-    private NodePackageManager&MockObject $nodePackageManager;
-    private GruntTaskRunner&MockObject $gruntTaskRunner;
-    private SymfonyStyle&MockObject $io;
-    private OutputInterface&MockObject $output;
+    /**
+     * @var Shell&MockObject
+     */
+    private $shell;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var StaticContentDeployer&MockObject
+     */
+    private $staticContentDeployer;
+    /**
+     * @var StaticContentCleaner&MockObject
+     */
+    private $staticContentCleaner;
+    /**
+     * @var CacheCleaner&MockObject
+     */
+    private $cacheCleaner;
+    /**
+     * @var SymlinkCleaner&MockObject
+     */
+    private $symlinkCleaner;
+    /**
+     * @var NodePackageManager&MockObject
+     */
+    private $nodePackageManager;
+    /**
+     * @var GruntTaskRunner&MockObject
+     */
+    private $gruntTaskRunner;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var OutputInterface&MockObject
+     */
+    private $output;
+    /**
+     * @var Builder
+     */
     private Builder $builder;
+    /**
+     * @var string
+     */
     private string $themePath = 'app/design/frontend/Vendor/theme';
 
     protected function setUp(): void
@@ -357,7 +393,8 @@ class BuilderTest extends TestCase
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
         $this->gruntTaskRunner->expects($this->never())->method('runTasks');
-        $this->io->expects($this->once())->method('note')->with('No Node.js/Grunt setup detected. Skipping Grunt steps.');
+        $noteMessage = 'No Node.js/Grunt setup detected. Skipping Grunt steps.';
+        $this->io->expects($this->once())->method('note')->with($noteMessage);
 
         $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
     }

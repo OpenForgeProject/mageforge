@@ -12,11 +12,28 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * @phpstan-import-type ModuleEntry from CompatibilityChecker
+ * @phpstan-import-type CheckResults from CompatibilityChecker
+ * @phpstan-import-type ScanResult from ModuleScanner
+ */
 class CompatibilityCheckerTest extends TestCase
 {
-    private ComponentRegistrarInterface&MockObject $componentRegistrar;
-    private ModuleScanner&MockObject $moduleScanner;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private $componentRegistrar;
+    /**
+     * @var ModuleScanner&MockObject
+     */
+    private $moduleScanner;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var CompatibilityChecker
+     */
     private CompatibilityChecker $checker;
 
     protected function setUp(): void
@@ -180,15 +197,11 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testDisplaysOnlyProblematicModulesByDefault(): void
     {
-        $results = [
-            'modules' => [
-                'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
-                'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
-                'Vendor_Warned' => $this->moduleEntry(compatible: true, hasWarnings: true, critical: 0, total: 1),
-            ],
-            'summary' => [],
-            'hasIncompatibilities' => true,
-        ];
+        $results = $this->checkResults([
+            'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
+            'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
+            'Vendor_Warned' => $this->moduleEntry(compatible: true, hasWarnings: true, critical: 0, total: 1),
+        ], hasIncompatibilities: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results);
 
@@ -199,14 +212,10 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testDisplaysAllModulesWhenRequested(): void
     {
-        $results = [
-            'modules' => [
-                'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
-                'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
-            ],
-            'summary' => [],
-            'hasIncompatibilities' => true,
-        ];
+        $results = $this->checkResults([
+            'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
+            'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
+        ], hasIncompatibilities: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results, true);
 
@@ -219,19 +228,15 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testFormatsMixedIssuesAndHyvaAwareStatus(): void
     {
-        $results = [
-            'modules' => [
-                'Vendor_Mixed' => $this->moduleEntry(
-                    compatible: false,
-                    hasWarnings: true,
-                    critical: 1,
-                    total: 3,
-                    hyvaAware: true,
-                ),
-            ],
-            'summary' => [],
-            'hasIncompatibilities' => true,
-        ];
+        $results = $this->checkResults([
+            'Vendor_Mixed' => $this->moduleEntry(
+                compatible: false,
+                hasWarnings: true,
+                critical: 1,
+                total: 3,
+                hyvaAware: true,
+            ),
+        ], hasIncompatibilities: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results);
 
@@ -241,19 +246,15 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testHyvaAwareCompatibleModuleGetsDedicatedStatus(): void
     {
-        $results = [
-            'modules' => [
-                'Vendor_Aware' => $this->moduleEntry(
-                    compatible: true,
-                    hasWarnings: false,
-                    critical: 0,
-                    total: 0,
-                    hyvaAware: true,
-                ),
-            ],
-            'summary' => [],
-            'hasIncompatibilities' => false,
-        ];
+        $results = $this->checkResults([
+            'Vendor_Aware' => $this->moduleEntry(
+                compatible: true,
+                hasWarnings: false,
+                critical: 0,
+                total: 0,
+                hyvaAware: true,
+            ),
+        ], hasIncompatibilities: false);
 
         $tableData = $this->checker->formatResultsForDisplay($results, true);
 
@@ -266,8 +267,18 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testReturnsIssuesGroupedByFile(): void
     {
-        $jsIssue = ['description' => 'RequireJS define() usage', 'severity' => 'critical', 'line' => 3];
-        $xmlIssue = ['description' => 'UI Component usage', 'severity' => 'critical', 'line' => 7];
+        $jsIssue = [
+            'description' => 'RequireJS define() usage',
+            'severity' => 'critical',
+            'line' => 3,
+            'pattern' => 'define(',
+        ];
+        $xmlIssue = [
+            'description' => 'UI Component usage',
+            'severity' => 'critical',
+            'line' => 7,
+            'pattern' => '<uiComponent',
+        ];
         $moduleData = $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2);
         $moduleData['scanResult']['files'] = [
             'view/frontend/web/js/widget.js' => [$jsIssue],
@@ -319,7 +330,27 @@ class CompatibilityCheckerTest extends TestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @param array<string, ModuleEntry> $modules
+     * @return CheckResults
+     */
+    private function checkResults(array $modules, bool $hasIncompatibilities): array
+    {
+        return [
+            'modules' => $modules,
+            'summary' => [
+                'total' => count($modules),
+                'compatible' => 0,
+                'incompatible' => 0,
+                'hyvaAware' => 0,
+                'criticalIssues' => 0,
+                'warningIssues' => 0,
+            ],
+            'hasIncompatibilities' => $hasIncompatibilities,
+        ];
+    }
+
+    /**
+     * @return ScanResult
      */
     private function scanResult(int $critical, int $total): array
     {
@@ -327,7 +358,7 @@ class CompatibilityCheckerTest extends TestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ModuleEntry
      */
     private function moduleEntry(
         bool $compatible,

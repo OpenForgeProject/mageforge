@@ -13,7 +13,13 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class CompatibilityCheckCommandTest extends TestCase
 {
-    private CompatibilityChecker&MockObject $compatibilityChecker;
+    /**
+     * @var CompatibilityChecker&MockObject
+     */
+    private $compatibilityChecker;
+    /**
+     * @var CompatibilityCheckCommand
+     */
     private CompatibilityCheckCommand $command;
 
     protected function setUp(): void
@@ -358,7 +364,6 @@ class CompatibilityCheckCommandTest extends TestCase
 
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
     }
-
 
     public function testIncludeVendorOptionIsPassedToChecker(): void
     {

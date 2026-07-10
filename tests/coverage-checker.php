@@ -10,6 +10,10 @@
 
 declare(strict_types=1);
 
+// Standalone CLI script (not Magento application code): process exit codes and direct
+// stdout are the intended interface, so the Magento2 security sniffs don't apply here.
+// phpcs:disable Magento2.Security.LanguageConstruct.ExitUsage, Magento2.Security.LanguageConstruct.DirectOutput
+
 if ($argc !== 3) {
     fwrite(STDERR, "Usage: php tests/coverage-checker.php <clover.xml> <min-line-coverage-percent>\n");
     exit(2);
