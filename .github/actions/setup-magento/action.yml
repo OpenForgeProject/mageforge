@@ -12,9 +12,10 @@ inputs:
     required: true
   magento-version:
     description: >-
-      Magento version. With magento-source=git it is the branch/tag to clone;
-      with magento-source=mage-os it is only used to namespace the Composer cache
-      (create-project always pulls the latest stable).
+      Magento version. With magento-source=git it is the branch/tag to clone.
+      With magento-source=mage-os it pins `composer create-project` to that
+      release (falling back to the latest stable only if the mirror lacks that
+      exact version). Also namespaces the Composer cache.
     required: true
   magento-source:
     description: >-
@@ -63,15 +64,21 @@ runs:
       env:
         COMPOSER_AUTH: ${{ inputs.composer-auth }}
       run: |
-        # --no-install: only scaffold the project here. The dedicated "Install
-        # Magento" step below installs dependencies exactly once (with
-        # COMPOSER_AUTH available), instead of create-project installing them
-        # unauthenticated and the install step installing them a second time.
-        composer create-project \
-          --repository-url=https://mirror.mage-os.org/ \
-          --no-install \
-          magento/project-community-edition \
-          magento2
+        # Pin create-project to the requested version so runs are reproducible,
+        # falling back to the latest stable only if the mirror lacks that exact
+        # release. --no-install: scaffold only here; the "Install Magento" step
+        # below installs dependencies exactly once (with COMPOSER_AUTH), instead
+        # of create-project installing them unauthenticated and the install step
+        # installing them a second time.
+        mirror=https://mirror.mage-os.org/
+        version="${{ inputs.magento-version }}"
+        if ! composer create-project --no-install --repository-url="$mirror" \
+          magento/project-community-edition magento2 "$version"; then
+          echo "::warning::Mage-OS mirror has no project-community-edition ${version}; using latest stable"
+          rm -rf magento2
+          composer create-project --no-install --repository-url="$mirror" \
+            magento/project-community-edition magento2
+        fi
 
     - name: Install Magento
       working-directory: magento2
