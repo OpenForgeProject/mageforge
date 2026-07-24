@@ -104,6 +104,7 @@ jobs:
           bin/magento mageforge:theme:inspector --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
+          bin/magento mageforge:dependencies:update --help
 
           echo "Verify command aliases work:"
           bin/magento m:s:v --help
@@ -119,6 +120,7 @@ jobs:
           bin/magento frontend:clean --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
+          bin/magento dependencies:update --help
 
       - name: Test Summary
         run: |
