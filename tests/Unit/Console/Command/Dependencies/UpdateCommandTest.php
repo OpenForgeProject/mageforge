@@ -18,10 +18,25 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class UpdateCommandTest extends TestCase
 {
-    private DependencyUpdater&MockObject $dependencyUpdater;
-    private ThemePath&MockObject $themePath;
-    private ThemeList&MockObject $themeList;
-    private ThemeSuggester&MockObject $themeSuggester;
+    /**
+     * @var DependencyUpdater&MockObject
+     */
+    private $dependencyUpdater;
+    /**
+     * @var ThemePath&MockObject
+     */
+    private $themePath;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private $themeList;
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private $themeSuggester;
+    /**
+     * @var UpdateCommand
+     */
     private UpdateCommand $command;
 
     protected function setUp(): void

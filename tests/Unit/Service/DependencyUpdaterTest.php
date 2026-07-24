@@ -17,11 +17,29 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DependencyUpdaterTest extends TestCase
 {
-    private File&MockObject $fileDriver;
-    private NodePackageManager&MockObject $nodePackageManager;
-    private BuilderPool&MockObject $builderPool;
-    private DirectoryList&MockObject $directoryList;
-    private SymfonyStyle&MockObject $io;
+    /**
+     * @var File&MockObject
+     */
+    private $fileDriver;
+    /**
+     * @var NodePackageManager&MockObject
+     */
+    private $nodePackageManager;
+    /**
+     * @var BuilderPool&MockObject
+     */
+    private $builderPool;
+    /**
+     * @var DirectoryList&MockObject
+     */
+    private $directoryList;
+    /**
+     * @var SymfonyStyle&MockObject
+     */
+    private $io;
+    /**
+     * @var DependencyUpdater
+     */
     private DependencyUpdater $updater;
 
     protected function setUp(): void
