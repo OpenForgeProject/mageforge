@@ -250,7 +250,7 @@ class NodePackageManager
     /**
      * Read a string value from decoded npm JSON output
      *
-     * @param array<mixed> $info
+     * @param array<string, mixed> $info
      * @param string $key
      * @param string $default
      * @return string
