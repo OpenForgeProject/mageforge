@@ -12,10 +12,12 @@ class TemplateReference
     /**
      * @param string $moduleName Module name in Vendor_Module notation
      * @param string $templatePath Path relative to the module's templates directory
+     * @param TemplateType $type Whether this is a block template or an email template
      */
     public function __construct(
         private readonly string $moduleName,
         private readonly string $templatePath,
+        private readonly TemplateType $type = TemplateType::TEMPLATE,
     ) {
     }
 
@@ -37,6 +39,16 @@ class TemplateReference
     public function getTemplatePath(): string
     {
         return $this->templatePath;
+    }
+
+    /**
+     * Get the template type (block template or email template)
+     *
+     * @return TemplateType
+     */
+    public function getType(): TemplateType
+    {
+        return $this->type;
     }
 
     /**

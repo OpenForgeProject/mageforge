@@ -8,6 +8,7 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Filesystem\Driver\File;
+use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Service\TemplateOverride\CompatModuleResolver;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplatePathParser;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -266,6 +267,78 @@ class TemplatePathParserTest extends TestCase
         $this->assertSame('Magento_Catalog::product/view/details.phtml', $reference->getTemplateId());
     }
 
+    public function testParsesEmailTemplateFromModuleNotation(): void
+    {
+        $this->componentRegistrar->method('getPath')->willReturn('/path/to/module');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse('Magento_Sales::order/new.html');
+
+        $this->assertSame('Magento_Sales', $reference->getModuleName());
+        $this->assertSame('order/new.html', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
+    }
+
+    public function testParsesPhtmlAsBlockTemplateInModuleNotation(): void
+    {
+        $this->componentRegistrar->method('getPath')->willReturn('/path/to/module');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse('Magento_Sales::order/success.phtml');
+
+        $this->assertSame(TemplateType::TEMPLATE, $reference->getType());
+    }
+
+    public function testParsesStaticFileFromModuleNotation(): void
+    {
+        $this->componentRegistrar->method('getPath')->willReturn('/path/to/module');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse('Magento_Theme::css/source/_module.less');
+
+        $this->assertSame('Magento_Theme', $reference->getModuleName());
+        $this->assertSame('css/source/_module.less', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::STATIC, $reference->getType());
+    }
+
+    public function testParsesEmailModuleFilePath(): void
+    {
+        $file = '/magento/vendor/magento/module-sales/view/frontend/email/order/new.html';
+        $this->fileDriver->method('isFile')->with($file)->willReturn(true);
+        $this->fileDriver->method('getRealPath')->with($file)->willReturn($file);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Sales' => '/magento/vendor/magento/module-sales']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Sales', $reference->getModuleName());
+        $this->assertSame('order/new.html', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
+    }
+
+    public function testParsesEmailThemeFilePath(): void
+    {
+        $file = '/magento/app/design/frontend/Vendor/theme/Magento_Sales/email/order/new.html';
+        $this->fileDriver->method('isFile')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($file);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, []],
+                [ComponentRegistrar::THEME, ['frontend/Vendor/theme' => '/magento/app/design/frontend/Vendor/theme']],
+            ]);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Sales', $reference->getModuleName());
+        $this->assertSame('order/new.html', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
+    }
+
     public function testRejectsMissingFile(): void
     {
         $this->fileDriver->method('isFile')->willReturn(false);
@@ -274,6 +347,44 @@ class TemplatePathParserTest extends TestCase
         $this->expectExceptionMessage("Template file '/nowhere/file.phtml' not found");
 
         $this->parser->parse('/nowhere/file.phtml');
+    }
+
+    public function testParsesStaticModuleFilePath(): void
+    {
+        $file = '/magento/vendor/magento/module-theme/view/frontend/web/css/source/_module.less';
+        $this->fileDriver->method('isFile')->with($file)->willReturn(true);
+        $this->fileDriver->method('getRealPath')->with($file)->willReturn($file);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Theme' => '/magento/vendor/magento/module-theme']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Theme', $reference->getModuleName());
+        $this->assertSame('css/source/_module.less', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::STATIC, $reference->getType());
+    }
+
+    public function testParsesStaticThemeFilePath(): void
+    {
+        $file = '/magento/app/design/frontend/Vendor/theme/Magento_Theme/web/css/source/_module.less';
+        $this->fileDriver->method('isFile')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($file);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, []],
+                [ComponentRegistrar::THEME, ['frontend/Vendor/theme' => '/magento/app/design/frontend/Vendor/theme']],
+            ]);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Theme', $reference->getModuleName());
+        $this->assertSame('css/source/_module.less', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::STATIC, $reference->getType());
     }
 
     public function testRejectsModuleFileOutsideTemplatesDirectory(): void
@@ -287,7 +398,7 @@ class TemplatePathParserTest extends TestCase
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('not inside a view/<area>/templates directory');
+        $this->expectExceptionMessage('not inside a view/<area>/templates, view/<area>/email or view/<area>/web directory');
 
         $this->parser->parse($file);
     }

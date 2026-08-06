@@ -11,6 +11,7 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\View\Design\ThemeInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
+use OpenForgeProject\MageForge\Model\TemplateReference;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\TemplateOverride\AreaEmulator;
@@ -188,7 +189,8 @@ class OverrideCommand extends AbstractCommand
             $this->io->text('Replacing the existing override (--force).');
         }
 
-        $this->templateCopier->copy($sourceFile, $targetFile);
+        $sourceModuleName = $this->resolveSourceModuleName($sourceFile, $fallbackDirs, $reference);
+        $this->templateCopier->copy($sourceFile, $targetFile, $sourceModuleName);
 
         // Verify that Magento's fallback now resolves the template to the new override
         $resolved = $this->fallbackResolver->findFirstExistingFile($fallbackDirs, $templatePath);
@@ -252,6 +254,40 @@ class OverrideCommand extends AbstractCommand
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Determine the module name the source file belongs to, falling back to the reference
+     *
+     * @param string $sourceFile
+     * @param string[] $fallbackDirs
+     * @param TemplateReference $reference
+     * @return string
+     */
+    private function resolveSourceModuleName(
+        string $sourceFile,
+        array $fallbackDirs,
+        TemplateReference $reference,
+    ): string {
+        foreach ($fallbackDirs as $dir) {
+            $normalizedDir = str_replace('\\', '/', $dir);
+            $dirWithTrailingSlash = rtrim($normalizedDir, '/') . '/';
+            if (!str_starts_with(str_replace('\\', '/', $sourceFile), $dirWithTrailingSlash)) {
+                continue;
+            }
+
+            $relativePath = substr(str_replace('\\', '/', $sourceFile), strlen($dirWithTrailingSlash));
+            if (!str_contains($relativePath, '/')) {
+                continue;
+            }
+
+            $firstSegment = explode('/', $relativePath)[0];
+            if (str_contains($firstSegment, '_')) {
+                return $firstSegment;
+            }
+        }
+
+        return $reference->getModuleName();
     }
 
     /**

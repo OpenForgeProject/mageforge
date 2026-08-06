@@ -12,6 +12,7 @@ use Magento\Framework\View\Design\Fallback\Rule\RuleInterface;
 use Magento\Framework\View\Design\Fallback\RulePool;
 use Magento\Framework\View\DesignInterface;
 use OpenForgeProject\MageForge\Model\TemplateReference;
+use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplateFallbackResolver;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -75,6 +76,78 @@ class TemplateFallbackResolverTest extends TestCase
             ],
             $dirs,
             'Duplicate directories must be removed while preserving the fallback order',
+        );
+    }
+
+    public function testGetFallbackDirsUsesEmailRuleForEmailTemplates(): void
+    {
+        $theme = new FakeTheme('Vendor/theme');
+        $reference = new TemplateReference('Magento_Sales', 'order/new.html', TemplateType::EMAIL);
+
+        $rule = $this->createMock(RuleInterface::class);
+        $rule->expects($this->once())
+            ->method('getPatternDirs')
+            ->with([
+                'area' => 'frontend',
+                'theme' => $theme,
+                'module_name' => 'Magento_Sales',
+                'file' => 'order/new.html',
+            ])
+            ->willReturn([
+                '/theme/Magento_Sales/email',
+                '/module/view/frontend/email',
+            ]);
+
+        $rulePool = $this->createMock(RulePool::class);
+        $rulePool->method('getRule')->with(RulePool::TYPE_EMAIL_TEMPLATE)->willReturn($rule);
+
+        $this->objectManager->method('create')->with(RulePool::class)->willReturn($rulePool);
+        $this->design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+
+        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+
+        $this->assertSame(
+            [
+                '/theme/Magento_Sales/email',
+                '/module/view/frontend/email',
+            ],
+            $dirs,
+        );
+    }
+
+    public function testGetFallbackDirsUsesStaticRuleForStaticFiles(): void
+    {
+        $theme = new FakeTheme('Vendor/theme');
+        $reference = new TemplateReference('Magento_Theme', 'css/source/_module.less', TemplateType::STATIC);
+
+        $rule = $this->createMock(RuleInterface::class);
+        $rule->expects($this->once())
+            ->method('getPatternDirs')
+            ->with([
+                'area' => 'frontend',
+                'theme' => $theme,
+                'module_name' => 'Magento_Theme',
+                'file' => 'css/source/_module.less',
+            ])
+            ->willReturn([
+                '/theme/Magento_Theme/web',
+                '/module/view/frontend/web',
+            ]);
+
+        $rulePool = $this->createMock(RulePool::class);
+        $rulePool->method('getRule')->with(RulePool::TYPE_STATIC_FILE)->willReturn($rule);
+
+        $this->objectManager->method('create')->with(RulePool::class)->willReturn($rulePool);
+        $this->design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+
+        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+
+        $this->assertSame(
+            [
+                '/theme/Magento_Theme/web',
+                '/module/view/frontend/web',
+            ],
+            $dirs,
         );
     }
 

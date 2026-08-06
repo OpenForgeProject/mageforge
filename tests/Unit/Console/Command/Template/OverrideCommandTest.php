@@ -150,6 +150,7 @@ class OverrideCommandTest extends TestCase
             ->with(
                 self::MODULE_DIR . '/product/view/details.phtml',
                 self::THEME_DIR . '/product/view/details.phtml',
+                'Magento_Catalog',
             );
         $this->areaEmulator->expects($this->once())->method('emulate')->with('frontend');
         $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
@@ -230,6 +231,7 @@ class OverrideCommandTest extends TestCase
             ->with(
                 self::MODULE_DIR . '/product/view/details.phtml',
                 self::THEME_DIR . '/product/view/details.phtml',
+                'Magento_Catalog',
             );
         $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 

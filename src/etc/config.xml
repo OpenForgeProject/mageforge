@@ -13,6 +13,9 @@
                     <show_button_labels>1</show_button_labels>
                     <position>bottom-left</position>
                 </inspector>
+                <template_override>
+                    <add_header>1</add_header>
+                </template_override>
             </mageforge>
       </default>
 </config>

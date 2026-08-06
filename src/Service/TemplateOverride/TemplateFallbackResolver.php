@@ -12,6 +12,7 @@ use Magento\Framework\View\Design\Fallback\RulePool;
 use Magento\Framework\View\Design\ThemeInterface;
 use Magento\Framework\View\DesignInterface;
 use OpenForgeProject\MageForge\Model\TemplateReference;
+use OpenForgeProject\MageForge\Model\TemplateType;
 
 /**
  * Determines template fallback directories exactly as Magento does at runtime
@@ -56,8 +57,14 @@ class TemplateFallbackResolver
             throw new \RuntimeException('Could not create the view fallback rule pool.');
         }
 
+        $ruleType = match ($reference->getType()) {
+            TemplateType::EMAIL => RulePool::TYPE_EMAIL_TEMPLATE,
+            TemplateType::STATIC => RulePool::TYPE_STATIC_FILE,
+            default => RulePool::TYPE_TEMPLATE_FILE,
+        };
+
         $dirs = $rulePool
-            ->getRule(RulePool::TYPE_TEMPLATE_FILE)
+            ->getRule($ruleType)
             ->getPatternDirs([
                 'area' => $area,
                 'theme' => $theme,

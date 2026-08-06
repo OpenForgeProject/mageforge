@@ -9,12 +9,14 @@ use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Model\TemplateReference;
+use OpenForgeProject\MageForge\Model\TemplateType;
 
 /**
  * Parses user input into a template reference
  *
  * Accepts the Module_Name::path/to/template.phtml notation as well as filesystem paths into
- * a module's view/<area>/templates directory or a theme's <Module_Name>/templates directory.
+ * a module's view/<area>/templates, view/<area>/email or view/<area>/web directory, or a
+ * theme's <Module_Name>/templates, <Module_Name>/email or <Module_Name>/web directory.
  * Hyvä compatibility module references are normalized to the original module, because theme
  * overrides always use the original module's name as directory name.
  */
@@ -78,7 +80,7 @@ class TemplatePathParser
             throw new \InvalidArgumentException("Module '$moduleName' is not registered in this installation.");
         }
 
-        return $this->createReference($moduleName, $templatePath);
+        return $this->createReference($moduleName, $templatePath, $this->guessTypeFromPath($templatePath));
     }
 
     /**
@@ -146,7 +148,7 @@ class TemplatePathParser
     }
 
     /**
-     * Match a file inside a module's view/<area>/templates directory
+     * Match a file inside a module's view/<area>/templates, email or web directory
      *
      * @param string $absolutePath
      * @return TemplateReference|null
@@ -161,18 +163,19 @@ class TemplatePathParser
 
         [$moduleName, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^view/[a-z_]+/templates/(.+)$#', $relativePath, $matches)) {
+        if (!preg_match('#^view/[a-z_]+/(templates|email|web)/(.+)$#', $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
-                "The file belongs to module '%s' but is not inside a view/<area>/templates directory.",
+                "The file belongs to module '%s' but is not inside a view/<area>/templates, "
+                . 'view/<area>/email or view/<area>/web directory.',
                 $moduleName,
             ));
         }
 
-        return $this->createReference($moduleName, $matches[1]);
+        return $this->createReference($moduleName, $matches[2], $this->typeFromViewDir($matches[1]));
     }
 
     /**
-     * Match a file inside a theme's <Module_Name>/templates directory
+     * Match a file inside a theme's <Module_Name>/templates, email or web directory
      *
      * @param string $absolutePath
      * @return TemplateReference|null
@@ -187,15 +190,16 @@ class TemplatePathParser
 
         [$themeFullPath, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^([A-Za-z0-9]+_[A-Za-z0-9]+)/templates/(.+)$#', $relativePath, $matches)) {
+        if (!preg_match('#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web)/(.+)$#', $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
                 "The file belongs to theme '%s' but is not a module template override "
-                . '(expected <Module_Name>/templates/...).',
+                . '(expected <Module_Name>/templates/..., <Module_Name>/email/... '
+                . 'or <Module_Name>/web/...).',
                 $themeFullPath,
             ));
         }
 
-        return $this->createReference($matches[1], $matches[2]);
+        return $this->createReference($matches[1], $matches[3], $this->typeFromViewDir($matches[2]));
     }
 
     /**
@@ -239,25 +243,33 @@ class TemplatePathParser
      *
      * @param string $moduleName
      * @param string $templatePath
+     * @param TemplateType $type
      * @return TemplateReference
      * @throws \InvalidArgumentException
      */
-    private function createReference(string $moduleName, string $templatePath): TemplateReference
-    {
+    private function createReference(
+        string $moduleName,
+        string $templatePath,
+        TemplateType $type = TemplateType::TEMPLATE,
+    ): TemplateReference {
         $originalModules = $this->compatModuleResolver->getOriginalModules($moduleName);
         if ($originalModules === []) {
-            return new TemplateReference($moduleName, $templatePath);
+            return new TemplateReference($moduleName, $templatePath, $type);
         }
 
         // Compat modules may keep templates in a subdirectory named after the original module
         foreach ($originalModules as $originalModule) {
             if (str_starts_with($templatePath, $originalModule . '/')) {
-                return new TemplateReference($originalModule, substr($templatePath, strlen($originalModule) + 1));
+                return new TemplateReference(
+                    $originalModule,
+                    substr($templatePath, strlen($originalModule) + 1),
+                    $type,
+                );
             }
         }
 
         if (count($originalModules) === 1) {
-            return new TemplateReference($originalModules[0], $templatePath);
+            return new TemplateReference($originalModules[0], $templatePath, $type);
         }
 
         throw new \InvalidArgumentException(sprintf(
@@ -268,6 +280,44 @@ class TemplatePathParser
             $originalModules[0],
             $templatePath,
         ));
+    }
+
+    /**
+     * Guess whether a path refers to a block template, email template or static view file
+     *
+     * Filesystem paths already carry their containing directory, so the type is inferred
+     * from there. For the Module_Name::path notation we fall back to the file extension:
+     * Magento email templates are HTML files, block templates use PHTML, and everything else
+     * (CSS, LESS, JS, images, fonts, ...) is treated as a static view file.
+     *
+     * @param string $path
+     * @return TemplateType
+     */
+    private function guessTypeFromPath(string $path): TemplateType
+    {
+        $lastDot = strrpos($path, '.');
+        $extension = $lastDot === false ? '' : strtolower(substr($path, $lastDot + 1));
+
+        return match ($extension) {
+            'html' => TemplateType::EMAIL,
+            'phtml' => TemplateType::TEMPLATE,
+            default => TemplateType::STATIC,
+        };
+    }
+
+    /**
+     * Map a view subdirectory name to a template type
+     *
+     * @param string $directory
+     * @return TemplateType
+     */
+    private function typeFromViewDir(string $directory): TemplateType
+    {
+        return match ($directory) {
+            'email' => TemplateType::EMAIL,
+            'web' => TemplateType::STATIC,
+            default => TemplateType::TEMPLATE,
+        };
     }
 
     /**

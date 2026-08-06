@@ -130,25 +130,28 @@ bin/magento mageforge:theme:inspector status
 
 ### `mageforge:template:override`
 
-Copies a module template or email template into a theme as an override, following Magento's
-view file fallback logic. The command resolves both the correct source file and the correct
-target directory for you — including the tricky cases where Hyvä compatibility modules ship
-the template that is actually rendered.
+Copies a module view file into a theme as an override, following Magento's view file fallback
+logic. The command resolves both the correct source file and the correct target directory for
+you — including the tricky cases where Hyvä compatibility modules ship the template that is
+actually rendered.
 
 ```bash
 bin/magento mageforge:template:override <template> --theme <theme-code>
 bin/magento mageforge:template:override 'Magento_Catalog::product/view/details.phtml' --theme Vendor/theme
 bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml -t Vendor/theme
 bin/magento mageforge:template:override 'Magento_Sales::order/new.html' --theme Vendor/theme
+bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less' --theme Vendor/theme
 ```
 
 **Arguments:**
 
-- `template` — The template to override. Accepts the `Module_Name::path/to/template.phtml`
+- `template` — The view file to override. Accepts the `Module_Name::path/to/file.phtml`
   notation or a file path (absolute, or relative to the Magento root / current directory).
-  File paths may point into a module's `view/<area>/templates` or `view/<area>/email`
-  directory, a Hyvä compat module, or another theme's override directory. Email templates
-  (`.html`) are detected automatically and copied to `<theme>/<Module_Name>/email/`.
+  File paths may point into a module's `view/<area>/templates`, `view/<area>/email` or
+  `view/<area>/web` directory, a Hyvä compat module, or another theme's override directory.
+  Email templates (`.html`) and static view files (CSS, LESS, JS, images, fonts, ...) are
+  detected automatically and copied to `<theme>/<Module_Name>/email/` or
+  `<theme>/<Module_Name>/web/` respectively.
 
 **Options:**
 
@@ -166,10 +169,12 @@ bin/magento mageforge:template:override 'Magento_Sales::order/new.html' --theme 
   e.g. `<theme>/Mollie_Payment/templates/...` — exactly where Magento looks for it.
 - Email templates are handled with the same fallback logic and placed under
   `<theme>/<Module_Name>/email/`.
-- After copying, the command re-resolves the template to verify the new override wins and
-  cleans the relevant caches (`full_page`, `block_html`, `layout`, `translate`).
-- If the template is already overridden in the target theme, nothing is copied unless
-  `--force` is given.
+- Static view files (CSS, LESS, JS, images, fonts, ...) use Magento's static file fallback
+  and are placed under `<theme>/<Module_Name>/web/`.
+- After copying, the command re-resolves the file to verify the new override wins and cleans
+  the relevant caches (`full_page`, `block_html`, `layout`, `translate`).
+- If the file is already overridden in the target theme, nothing is copied unless `--force`
+  is given.
 
 ---
 
