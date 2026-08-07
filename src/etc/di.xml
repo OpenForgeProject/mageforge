@@ -80,12 +80,12 @@
       <!-- Configure TemplateCopier with default comment style -->
       <type name="OpenForgeProject\MageForge\Service\TemplateOverride\TemplateCopier">
             <arguments>
-                  <argument name="commentStyle" xsi:type="object">OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle</argument>
+                  <argument name="commentStyle" xsi:type="object">OpenForgeProject\MageForge\Service\TemplateOverride\DefaultCommentStyle</argument>
             </arguments>
       </type>
 
       <!-- Default comment style for template override headers -->
-      <virtualType name="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle" type="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle">
+      <virtualType name="OpenForgeProject\MageForge\Service\TemplateOverride\DefaultCommentStyle" type="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle">
             <arguments>
                   <argument name="style" xsi:type="string">none</argument>
             </arguments>
