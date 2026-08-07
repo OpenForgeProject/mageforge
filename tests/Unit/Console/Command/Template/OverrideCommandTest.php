@@ -25,14 +25,49 @@ class OverrideCommandTest extends TestCase
     private const THEME_DIR = '/magento/app/design/frontend/Vendor/theme/Magento_Catalog/templates';
     private const MODULE_DIR = '/magento/vendor/magento/module-catalog/view/frontend/templates';
 
-    private ThemeList&MockObject $themeList;
-    private ThemeSuggester&MockObject $themeSuggester;
-    private TemplatePathParser&MockObject $templatePathParser;
-    private TemplateFallbackResolver&MockObject $fallbackResolver;
-    private TemplateCopier&MockObject $templateCopier;
-    private AreaEmulator&MockObject $areaEmulator;
-    private CacheCleaner&MockObject $cacheCleaner;
-    private DirectoryList&MockObject $directoryList;
+    /**
+     * @var ThemeList&MockObject
+     */
+    private MockObject $themeList;
+
+    /**
+     * @var ThemeSuggester&MockObject
+     */
+    private MockObject $themeSuggester;
+
+    /**
+     * @var TemplatePathParser&MockObject
+     */
+    private MockObject $templatePathParser;
+
+    /**
+     * @var TemplateFallbackResolver&MockObject
+     */
+    private MockObject $fallbackResolver;
+
+    /**
+     * @var TemplateCopier&MockObject
+     */
+    private MockObject $templateCopier;
+
+    /**
+     * @var AreaEmulator&MockObject
+     */
+    private MockObject $areaEmulator;
+
+    /**
+     * @var CacheCleaner&MockObject
+     */
+    private MockObject $cacheCleaner;
+
+    /**
+     * @var DirectoryList&MockObject
+     */
+    private MockObject $directoryList;
+
+    /**
+     * @var OverrideCommand
+     */
     private OverrideCommand $command;
 
     protected function setUp(): void

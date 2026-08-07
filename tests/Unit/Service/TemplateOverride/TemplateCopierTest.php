@@ -14,9 +14,24 @@ use PHPUnit\Framework\TestCase;
 
 class TemplateCopierTest extends TestCase
 {
-    private File&MockObject $fileDriver;
-    private ScopeConfigInterface&MockObject $scopeConfig;
-    private PackageInfo&MockObject $packageInfo;
+    /**
+     * @var File&MockObject
+     */
+    private MockObject $fileDriver;
+
+    /**
+     * @var ScopeConfigInterface&MockObject
+     */
+    private MockObject $scopeConfig;
+
+    /**
+     * @var PackageInfo&MockObject
+     */
+    private MockObject $packageInfo;
+
+    /**
+     * @var TemplateCopier
+     */
     private TemplateCopier $copier;
 
     protected function setUp(): void
@@ -122,5 +137,32 @@ class TemplateCopierTest extends TestCase
         $this->copier->copy('/source.phtml', '/theme/target.phtml', 'Unknown_Module');
 
         $this->assertStringNotContainsString('Source Module-Version', $captured ?? '');
+    }
+
+    public function testHeaderFormatIsExactlyAsExpected(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/module/view/frontend/templates/widget.phtml', '/theme/dir/widget.phtml', 'Vendor_Module');
+
+        $this->assertSame(
+            "# MageForge Template Override from " . date('Y-m-d') . "\n"
+            . "# Source: /module/view/frontend/templates/widget.phtml\n"
+            . "# Source Module-Version: 1.2.3\n"
+            . "\n"
+            . "<div>content</div>",
+            $captured,
+        );
     }
 }

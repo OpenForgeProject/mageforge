@@ -16,10 +16,29 @@ use PHPUnit\Framework\TestCase;
 
 class TemplatePathParserTest extends TestCase
 {
-    private ComponentRegistrarInterface&MockObject $componentRegistrar;
-    private CompatModuleResolver&MockObject $compatModuleResolver;
-    private File&MockObject $fileDriver;
-    private DirectoryList&MockObject $directoryList;
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private MockObject $componentRegistrar;
+
+    /**
+     * @var CompatModuleResolver&MockObject
+     */
+    private MockObject $compatModuleResolver;
+
+    /**
+     * @var File&MockObject
+     */
+    private MockObject $fileDriver;
+
+    /**
+     * @var DirectoryList&MockObject
+     */
+    private MockObject $directoryList;
+
+    /**
+     * @var TemplatePathParser
+     */
     private TemplatePathParser $parser;
 
     protected function setUp(): void
@@ -398,7 +417,9 @@ class TemplatePathParserTest extends TestCase
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('not inside a view/<area>/templates, view/<area>/email or view/<area>/web directory');
+        $this->expectExceptionMessage(
+            'not inside a view/<area>/templates, view/<area>/email or view/<area>/web directory',
+        );
 
         $this->parser->parse($file);
     }
@@ -414,5 +435,60 @@ class TemplatePathParserTest extends TestCase
         $this->expectExceptionMessage('does not belong to a registered module or theme');
 
         $this->parser->parse($file);
+    }
+
+    public function testParsesModuleNotationWithWhitespaceAroundModuleName(): void
+    {
+        $this->componentRegistrar
+            ->method('getPath')
+            ->with(ComponentRegistrar::MODULE, 'Magento_Catalog')
+            ->willReturn('/magento/vendor/magento/module-catalog');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse(' Magento_Catalog ::product/view/details.phtml ');
+
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('product/view/details.phtml', $reference->getTemplatePath());
+    }
+
+    public function testParsesFilePathWithBackslashes(): void
+    {
+        $file = '\\magento\\vendor\\magento\\module-catalog\\view\\frontend\\templates\\widget.phtml';
+        $normalized = '/magento/vendor/magento/module-catalog/view/frontend/templates/widget.phtml';
+        $this->fileDriver->method('isFile')->willReturnCallback(static fn(string $path): bool => $path === $normalized);
+        $this->fileDriver->method('getRealPath')->with($normalized)->willReturn($normalized);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, ['Magento_Catalog' => '/magento/vendor/magento/module-catalog']],
+                [ComponentRegistrar::THEME, []],
+            ]);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('widget.phtml', $reference->getTemplatePath());
+    }
+
+    public function testFileNotFoundMessageContainsBothHints(): void
+    {
+        $this->fileDriver->method('isFile')->willReturn(false);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Pass an existing file path');
+        $this->expectExceptionMessage('Module_Name::path/to/template.phtml');
+
+        $this->parser->parse('/nowhere/file.phtml');
+    }
+
+    public function testParsesUppercaseHtmlExtensionAsEmail(): void
+    {
+        $this->componentRegistrar->method('getPath')->willReturn('/path/to/module');
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse('Magento_Sales::order/new.HTML');
+
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
     }
 }

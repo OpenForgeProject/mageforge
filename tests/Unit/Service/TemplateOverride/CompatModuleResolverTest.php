@@ -11,7 +11,10 @@ use PHPUnit\Framework\TestCase;
 
 class CompatModuleResolverTest extends TestCase
 {
-    private ObjectManagerInterface&MockObject $objectManager;
+    /**
+     * @var ObjectManagerInterface&MockObject
+     */
+    private MockObject $objectManager;
 
     protected function setUp(): void
     {
@@ -78,5 +81,20 @@ class CompatModuleResolverTest extends TestCase
         $resolver = new CompatModuleResolver($this->objectManager, \stdClass::class);
 
         $this->assertSame([], $resolver->getOriginalModules('Some_Module'));
+    }
+
+    public function testReturnsEmptyArrayWhenRegistryLacksGetCompatModulesForMethod(): void
+    {
+        $registry = new class () {
+            /** @return array<int, string> */
+            public function getOrigModules(): array
+            {
+                return ['Vendor_Module'];
+            }
+        };
+        $this->objectManager->method('create')->willReturn($registry);
+        $resolver = new CompatModuleResolver($this->objectManager, \get_class($registry));
+
+        $this->assertSame([], $resolver->getOriginalModules('Hyva_VendorCompat'));
     }
 }

@@ -14,9 +14,24 @@ use PHPUnit\Framework\TestCase;
 
 class AreaEmulatorTest extends TestCase
 {
-    private State&MockObject $appState;
-    private ConfigLoaderInterface&MockObject $configLoader;
-    private ObjectManagerInterface&MockObject $objectManager;
+    /**
+     * @var State&MockObject
+     */
+    private MockObject $appState;
+
+    /**
+     * @var ConfigLoaderInterface&MockObject
+     */
+    private MockObject $configLoader;
+
+    /**
+     * @var ObjectManagerInterface&MockObject
+     */
+    private MockObject $objectManager;
+
+    /**
+     * @var AreaEmulator
+     */
     private AreaEmulator $areaEmulator;
 
     protected function setUp(): void

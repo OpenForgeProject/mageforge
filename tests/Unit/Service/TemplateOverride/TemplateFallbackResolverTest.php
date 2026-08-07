@@ -19,10 +19,29 @@ use PHPUnit\Framework\TestCase;
 
 class TemplateFallbackResolverTest extends TestCase
 {
-    private ObjectManagerInterface&MockObject $objectManager;
-    private DesignInterface&MockObject $design;
-    private ComponentRegistrarInterface&MockObject $componentRegistrar;
-    private File&MockObject $fileDriver;
+    /**
+     * @var ObjectManagerInterface&MockObject
+     */
+    private MockObject $objectManager;
+
+    /**
+     * @var DesignInterface&MockObject
+     */
+    private MockObject $design;
+
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private MockObject $componentRegistrar;
+
+    /**
+     * @var File&MockObject
+     */
+    private MockObject $fileDriver;
+
+    /**
+     * @var TemplateFallbackResolver
+     */
     private TemplateFallbackResolver $resolver;
 
     protected function setUp(): void
@@ -232,5 +251,21 @@ class TemplateFallbackResolverTest extends TestCase
         );
 
         $this->assertNull($result);
+    }
+
+    public function testGetThemeTargetDirNormalizesBackslashesAndTrailingSlash(): void
+    {
+        $theme = new FakeTheme('Vendor/theme');
+        $this->componentRegistrar
+            ->method('getPath')
+            ->with(ComponentRegistrar::THEME, 'frontend/Vendor/theme')
+            ->willReturn('C:\\app\\design\\frontend\\Vendor\\theme\\');
+
+        $result = $this->resolver->getThemeTargetDir(
+            ['C:\\app\\design\\frontend\\Vendor\\theme\\Magento_Catalog\\templates'],
+            $theme,
+        );
+
+        $this->assertSame('C:\\app\\design\\frontend\\Vendor\\theme\\Magento_Catalog\\templates', $result);
     }
 }
