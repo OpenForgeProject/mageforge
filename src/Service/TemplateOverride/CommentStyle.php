@@ -61,6 +61,16 @@ class CommentStyle
     }
 
     /**
+     * Check whether this style is the PHP block style
+     *
+     * @return bool
+     */
+    public function isPhpBlock(): bool
+    {
+        return $this->style === self::PHP_BLOCK;
+    }
+
+    /**
      * Build the header using the style's comment syntax
      *
      * @param string[] $lines
@@ -80,19 +90,55 @@ class CommentStyle
     }
 
     /**
-     * Wrap header lines in a PHP open tag + PHPDoc block and close PHP mode
+     * Build the header as a full PHP open tag + PHPDoc block
      *
-     * Closing PHP mode is required because most Magento .phtml templates start
-     * with HTML, which would otherwise be parsed as PHP code.
+     * Exposed for callers that need the PHP wrapper even when injecting inside
+     * an existing PHP file is not appropriate.
      *
      * @param string[] $lines
      * @return string
      */
-    private function wrapPhpBlock(array $lines): string
+    public function wrapPhpBlock(array $lines): string
     {
-        $commented = array_map(static fn(string $line): string => ' * ' . $line, $lines);
+        if ($this->style !== self::PHP_BLOCK) {
+            return $this->wrap($lines);
+        }
 
-        return "<?php\n/**\n" . implode("\n", $commented) . "\n */\n?>\n\n";
+        return "<?php\n/**\n" . $this->formatPhpDocLines($lines) . "\n */\n?>\n\n";
+    }
+
+    /**
+     * Build the header without surrounding PHP tags when already inside PHP code
+     *
+     * For the PHP block style this returns only the PHPDoc comment; for all
+     * other styles it falls back to wrap() so callers do not need to branch.
+     *
+     * @param string[] $lines
+     * @return string
+     */
+    public function wrapPhpDoc(array $lines): string
+    {
+        if ($this->style !== self::PHP_BLOCK) {
+            return $this->wrap($lines);
+        }
+
+        return "/**\n" . $this->formatPhpDocLines($lines) . "\n */\n\n";
+    }
+
+    /**
+     * Prefix each PHPDoc line with " * " and keep blank lines as " *"
+     *
+     * @param string[] $lines
+     * @return string
+     */
+    private function formatPhpDocLines(array $lines): string
+    {
+        $commented = array_map(
+            static fn(string $line): string => $line === '' ? ' *' : ' * ' . $line,
+            $lines,
+        );
+
+        return implode("\n", $commented);
     }
 
     /**

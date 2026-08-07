@@ -56,6 +56,26 @@ class CommentStyleTest extends TestCase
         );
     }
 
+    public function testPhpDocWrapsWithoutPhpTags(): void
+    {
+        $header = (new CommentStyle(CommentStyle::PHP_BLOCK))->wrapPhpDoc(['@tag value']);
+
+        $this->assertSame(
+            "/**\n * @tag value\n */\n\n",
+            $header,
+        );
+    }
+
+    public function testPhpDocRendersBlankLineAsBareAsterisk(): void
+    {
+        $header = (new CommentStyle(CommentStyle::PHP_BLOCK))->wrapPhpDoc(['Line 1', '', 'Line 2']);
+
+        $this->assertSame(
+            "/**\n * Line 1\n *\n * Line 2\n */\n\n",
+            $header,
+        );
+    }
+
     public function testHtmlBlockWrapsInHtmlComment(): void
     {
         $header = (new CommentStyle(CommentStyle::HTML_BLOCK))->wrap(['Line 1', 'Line 2']);
@@ -97,6 +117,20 @@ class CommentStyleTest extends TestCase
     public function testNoneReturnsEmptyString(): void
     {
         $this->assertSame('', (new CommentStyle(CommentStyle::NONE))->wrap(['Line 1']));
+    }
+
+    public function testPhpBlockStyleIsRecognisedAsPhp(): void
+    {
+        $this->assertTrue((new CommentStyle(CommentStyle::PHP_BLOCK))->isPhpBlock());
+    }
+
+    public function testNonPhpBlockStylesAreNotRecognisedAsPhp(): void
+    {
+        $this->assertFalse((new CommentStyle(CommentStyle::HTML_BLOCK))->isPhpBlock());
+        $this->assertFalse((new CommentStyle(CommentStyle::C_BLOCK))->isPhpBlock());
+        $this->assertFalse((new CommentStyle(CommentStyle::XML_BLOCK))->isPhpBlock());
+        $this->assertFalse((new CommentStyle(CommentStyle::SHELL_LINE))->isPhpBlock());
+        $this->assertFalse((new CommentStyle(CommentStyle::NONE))->isPhpBlock());
     }
 
     public function testUnsupportedStyleSkipsHeader(): void

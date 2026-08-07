@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Test\Unit\Service\TemplateOverride;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\PackageInfo;
 use OpenForgeProject\MageForge\Model\Config\TemplateOverride as TemplateOverrideConfig;
@@ -31,21 +34,54 @@ class TemplateCopierTest extends TestCase
     private MockObject $packageInfo;
 
     /**
+     * @var DirectoryList&MockObject
+     */
+    private MockObject $directoryList;
+
+    /**
+     * @var ComponentRegistrarInterface&MockObject
+     */
+    private MockObject $componentRegistrar;
+
+    /**
+     * @var array<string, string>
+     */
+    private array $modulePaths = [];
+
+    /**
      * @var TemplateCopier
      */
     private TemplateCopier $copier;
 
     protected function setUp(): void
     {
+        $this->modulePaths = [];
         $this->fileDriver = $this->createMock(File::class);
         $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
         $this->packageInfo = $this->createMock(PackageInfo::class);
+        $this->directoryList = $this->createMock(DirectoryList::class);
+        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->directoryList->method('getRoot')->willReturn('/magento');
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturnCallback(fn(): array => $this->modulePaths);
         $this->copier = new TemplateCopier(
             $this->fileDriver,
             $this->scopeConfig,
             $this->packageInfo,
             new CommentStyle(CommentStyle::NONE),
+            $this->directoryList,
+            $this->componentRegistrar,
         );
+    }
+
+    /**
+     * @param array<string, string> $paths
+     */
+    private function registerModulePaths(array $paths): void
+    {
+        $this->modulePaths = $paths;
     }
 
     public function testCreatesMissingTargetDirectoryBeforeCopying(): void
@@ -81,6 +117,9 @@ class TemplateCopierTest extends TestCase
             ->method('isSetFlag')
             ->with(TemplateOverrideConfig::XML_PATH_ADD_HEADER, TemplateOverrideConfig::SCOPE_STORE)
             ->willReturn(true);
+        $this->registerModulePaths([
+            'Magento_Catalog' => '/module',
+        ]);
         $this->packageInfo->method('getVersion')->with('Magento_Catalog')->willReturn('1.2.3');
         $this->fileDriver->method('getParentDirectory')->willReturn('/theme/Magento_Catalog/templates');
         $this->fileDriver->method('isDirectory')->willReturn(true);
@@ -93,7 +132,7 @@ class TemplateCopierTest extends TestCase
             ->method('filePutContents')
             ->with(
                 '/theme/Magento_Catalog/templates/product/view/details.phtml',
-                $this->matchesRegularExpression('/MageForge Template Override from \d{4}-\d{2}-\d{2}/'),
+                $this->matchesRegularExpression('/@mageforge-template-override/'),
             );
         $this->fileDriver->expects($this->never())->method('copy');
 
@@ -104,9 +143,12 @@ class TemplateCopierTest extends TestCase
         );
     }
 
-    public function testHeaderIncludesSourceModuleVersion(): void
+    public function testHeaderIncludesRelativeSourcePathAndModuleVersion(): void
     {
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
         $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('4.5.6');
         $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
         $this->fileDriver->method('isDirectory')->willReturn(true);
@@ -119,15 +161,20 @@ class TemplateCopierTest extends TestCase
                 return true;
             });
 
-        $this->copier->copy('/source.js', '/theme/target.js', 'Vendor_Module');
+        $this->copier->copy('/magento/vendor/module/web/js/source.js', '/theme/target.js', 'Vendor_Module');
 
-        $this->assertStringContainsString('Source: /source.js', $captured ?? '');
+        $this->assertStringContainsString('Source: vendor/module/web/js/source.js', $captured ?? '');
+        $this->assertStringNotContainsString('Source: /magento/', $captured ?? '');
+        $this->assertStringContainsString('Source Module: Vendor_Module', $captured ?? '');
         $this->assertStringContainsString('Source Module-Version: 4.5.6', $captured ?? '');
     }
 
     public function testSkipsModuleVersionWhenUnknown(): void
     {
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Unknown_Module' => '/magento/vendor/unknown',
+        ]);
         $this->packageInfo->method('getVersion')->willReturn('');
         $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
         $this->fileDriver->method('isDirectory')->willReturn(true);
@@ -140,14 +187,18 @@ class TemplateCopierTest extends TestCase
                 return true;
             });
 
-        $this->copier->copy('/source.phtml', '/theme/target.phtml', 'Unknown_Module');
+        $this->copier->copy('/magento/vendor/unknown/source.phtml', '/theme/target.phtml', 'Unknown_Module');
 
-        $this->assertStringNotContainsString('Source Module-Version', $captured ?? '');
+        $this->assertStringContainsString('@module Unknown_Module', $captured ?? '');
+        $this->assertStringNotContainsString('@module-version', $captured ?? '');
     }
 
-    public function testHeaderFormatIsExactlyAsExpected(): void
+    public function testHeaderFormatIsExactlyAsExpectedForTemplateStartingWithHtml(): void
     {
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
         $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
         $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
         $this->fileDriver->method('isDirectory')->willReturn(true);
@@ -160,20 +211,140 @@ class TemplateCopierTest extends TestCase
                 return true;
             });
 
-        $this->copier->copy('/module/view/frontend/templates/widget.phtml', '/theme/dir/widget.phtml', 'Vendor_Module');
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
 
         $this->assertSame(
             "<?php\n"
             . "/**\n"
-            . " * MageForge Template Override from " . date('Y-m-d') . "\n"
-            . " * Source: /module/view/frontend/templates/widget.phtml\n"
-            . " * Source Module-Version: 1.2.3\n"
+            . " * @mageforge-template-override\n"
+            . " * @date " . date('Y-m-d') . "\n"
+            . " * @source vendor/module/view/frontend/templates/widget.phtml\n"
+            . " * @module Vendor_Module\n"
+            . " * @module-version 1.2.3\n"
             . " */\n"
             . "?>\n"
             . "\n"
             . "<div>content</div>",
             $captured,
         );
+    }
+
+    public function testHeaderIsInjectedAfterExistingPhpOpenTag(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn("<?php\n\ndeclare(strict_types=1);\n\n// code\n");
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertSame(
+            "<?php\n"
+            . "/**\n"
+            . " * @mageforge-template-override\n"
+            . " * @date " . date('Y-m-d') . "\n"
+            . " * @source vendor/module/view/frontend/templates/widget.phtml\n"
+            . " * @module Vendor_Module\n"
+            . " * @module-version 1.2.3\n"
+            . " */\n"
+            . "\n"
+            . "declare(strict_types=1);\n\n// code\n",
+            $captured,
+        );
+        $this->assertStringNotContainsString('?>', substr($captured, 0, 100));
+    }
+
+    public function testHeaderIsInjectedAfterPhpOpenTagOnSameLine(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn("<?php declare(strict_types=1);\n\n// code\n");
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertSame(
+            "<?php\n"
+            . "/**\n"
+            . " * @mageforge-template-override\n"
+            . " * @date " . date('Y-m-d') . "\n"
+            . " * @source vendor/module/view/frontend/templates/widget.phtml\n"
+            . " * @module Vendor_Module\n"
+            . " * @module-version 1.2.3\n"
+            . " */\n"
+            . "\n"
+            . "declare(strict_types=1);\n\n// code\n",
+            $captured,
+        );
+    }
+
+    public function testHeaderRecordsActualSourceModuleWhenLogicalModuleDiffers(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Hyva_MageWorxFaq' => '/magento/vendor/hyva-themes/magento2-mageworx-faq/src',
+        ]);
+        $this->packageInfo
+            ->method('getVersion')
+            ->willReturnCallback(static fn(string $module): string => match ($module) {
+                'Hyva_MageWorxFaq' => '1.0.6',
+                default => '',
+            });
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn("<?php\n");
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/hyva-themes/magento2-mageworx-faq/src/view/frontend/templates/faq/list.phtml',
+            '/theme/dir/widget.phtml',
+            'MageWorx_Faq',
+        );
+
+        $this->assertStringContainsString('@module Hyva_MageWorxFaq', $captured ?? '');
+        $this->assertStringContainsString('@module-version 1.0.6', $captured ?? '');
+        $this->assertStringContainsString('@override-for MageWorx_Faq', $captured ?? '');
+        $this->assertStringNotContainsString('@module MageWorx_Faq', $captured ?? '');
     }
 
     public function testSkipsHeaderForUnsupportedFileTypes(): void
