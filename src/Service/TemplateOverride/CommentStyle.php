@@ -80,7 +80,10 @@ class CommentStyle
     }
 
     /**
-     * Wrap header lines in a PHP open tag + PHPDoc block
+     * Wrap header lines in a PHP open tag + PHPDoc block and close PHP mode
+     *
+     * Closing PHP mode is required because most Magento .phtml templates start
+     * with HTML, which would otherwise be parsed as PHP code.
      *
      * @param string[] $lines
      * @return string
@@ -89,7 +92,7 @@ class CommentStyle
     {
         $commented = array_map(static fn(string $line): string => ' * ' . $line, $lines);
 
-        return "<?php\n/**\n" . implode("\n", $commented) . "\n */\n\n";
+        return "<?php\n/**\n" . implode("\n", $commented) . "\n */\n?>\n\n";
     }
 
     /**

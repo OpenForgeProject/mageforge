@@ -77,6 +77,20 @@
             </arguments>
       </type>
 
+      <!-- Configure TemplateCopier with default comment style -->
+      <type name="OpenForgeProject\MageForge\Service\TemplateOverride\TemplateCopier">
+            <arguments>
+                  <argument name="commentStyle" xsi:type="object">OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle</argument>
+            </arguments>
+      </type>
+
+      <!-- Default comment style for template override headers -->
+      <virtualType name="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle" type="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle">
+            <arguments>
+                  <argument name="style" xsi:type="string">none</argument>
+            </arguments>
+      </virtualType>
+
       <!-- Configure NodeSetupValidator Service -->
       <type name="OpenForgeProject\MageForge\Service\NodeSetupValidator">
             <arguments>

@@ -51,7 +51,7 @@ class CommentStyleTest extends TestCase
         $header = (new CommentStyle(CommentStyle::PHP_BLOCK))->wrap(['Line 1', 'Line 2']);
 
         $this->assertSame(
-            "<?php\n/**\n * Line 1\n * Line 2\n */\n\n",
+            "<?php\n/**\n * Line 1\n * Line 2\n */\n?>\n\n",
             $header,
         );
     }

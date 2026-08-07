@@ -169,6 +169,7 @@ class TemplateCopierTest extends TestCase
             . " * Source: /module/view/frontend/templates/widget.phtml\n"
             . " * Source Module-Version: 1.2.3\n"
             . " */\n"
+            . "?>\n"
             . "\n"
             . "<div>content</div>",
             $captured,
