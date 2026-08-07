@@ -15,10 +15,10 @@ use OpenForgeProject\MageForge\Model\TemplateType;
  * Parses user input into a template reference
  *
  * Accepts the Module_Name::path/to/template.phtml notation as well as filesystem paths into
- * a module's view/<area>/templates, view/<area>/email or view/<area>/web directory, or a
- * theme's <Module_Name>/templates, <Module_Name>/email or <Module_Name>/web directory.
- * Hyvä compatibility module references are normalized to the original module, because theme
- * overrides always use the original module's name as directory name.
+ * a module's view/<area>/templates, view/<area>/email, view/<area>/web or view/<area>/layout
+ * directory, or a theme's <Module_Name>/templates, <Module_Name>/email, <Module_Name>/web or
+ * <Module_Name>/layout directory. Hyvä compatibility module references are normalized to the
+ * original module, because theme overrides always use the original module's name as directory name.
  */
 class TemplatePathParser
 {
@@ -148,7 +148,7 @@ class TemplatePathParser
     }
 
     /**
-     * Match a file inside a module's view/<area>/templates, email or web directory
+     * Match a file inside a module's view/<area>/templates, email, web or layout directory
      *
      * @param string $absolutePath
      * @return TemplateReference|null
@@ -163,10 +163,10 @@ class TemplatePathParser
 
         [$moduleName, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^view/[a-z_]+/(templates|email|web)/(.+)$#', $relativePath, $matches)) {
+        if (!preg_match('#^view/[a-z_]+/(templates|email|web|layout)/(.+)$#', $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
                 "The file belongs to module '%s' but is not inside a view/<area>/templates, "
-                . 'view/<area>/email or view/<area>/web directory.',
+                . 'view/<area>/email, view/<area>/web or view/<area>/layout directory.',
                 $moduleName,
             ));
         }
@@ -175,7 +175,7 @@ class TemplatePathParser
     }
 
     /**
-     * Match a file inside a theme's <Module_Name>/templates, email or web directory
+     * Match a file inside a theme's <Module_Name>/templates, email, web or layout directory
      *
      * @param string $absolutePath
      * @return TemplateReference|null
@@ -190,11 +190,11 @@ class TemplatePathParser
 
         [$themeFullPath, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web)/(.+)$#', $relativePath, $matches)) {
+        if (!preg_match('#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web|layout)/(.+)$#', $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
                 "The file belongs to theme '%s' but is not a module template override "
                 . '(expected <Module_Name>/templates/..., <Module_Name>/email/... '
-                . 'or <Module_Name>/web/...).',
+                . '<Module_Name>/web/... or <Module_Name>/layout/...).',
                 $themeFullPath,
             ));
         }
@@ -316,6 +316,7 @@ class TemplatePathParser
         return match ($directory) {
             'email' => TemplateType::EMAIL,
             'web' => TemplateType::STATIC,
+            'layout' => TemplateType::LAYOUT,
             default => TemplateType::TEMPLATE,
         };
     }

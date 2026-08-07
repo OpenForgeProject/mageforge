@@ -12,4 +12,5 @@ enum TemplateType: string
     case TEMPLATE = 'template';
     case EMAIL = 'email';
     case STATIC = 'static';
+    case LAYOUT = 'layout';
 }

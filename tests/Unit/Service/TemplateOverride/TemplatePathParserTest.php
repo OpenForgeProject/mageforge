@@ -406,9 +406,27 @@ class TemplatePathParserTest extends TestCase
         $this->assertSame(TemplateType::STATIC, $reference->getType());
     }
 
-    public function testRejectsModuleFileOutsideTemplatesDirectory(): void
+    public function testParsesModuleLayoutXmlFile(): void
     {
         $file = '/magento/vendor/magento/module-catalog/view/frontend/layout/default.xml';
+        $this->fileDriver->method('isFile')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($file);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($file);
+
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('default.xml', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::LAYOUT, $reference->getType());
+    }
+
+    public function testRejectsModuleFileOutsideTemplatesDirectory(): void
+    {
+        $file = '/magento/vendor/magento/module-catalog/etc/module.xml';
         $this->fileDriver->method('isFile')->willReturn(true);
         $this->fileDriver->method('getRealPath')->willReturn($file);
         $this->componentRegistrar
@@ -418,7 +436,8 @@ class TemplatePathParserTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches(
-            '/not inside a view\/<area>\/templates, view\/<area>\/email or view\/<area>\/web directory/',
+            '/not inside a view\/<area>\/templates, view\/<area>\/email, '
+            . 'view\/<area>\/web or view\/<area>\/layout directory/',
         );
 
         $this->parser->parse($file);

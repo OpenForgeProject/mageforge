@@ -60,6 +60,7 @@ class TemplateFallbackResolver
         $ruleType = match ($reference->getType()) {
             TemplateType::EMAIL => RulePool::TYPE_EMAIL_TEMPLATE,
             TemplateType::STATIC => RulePool::TYPE_STATIC_FILE,
+            TemplateType::LAYOUT => RulePool::TYPE_FILE,
             default => RulePool::TYPE_TEMPLATE_FILE,
         };
 
