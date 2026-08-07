@@ -8,6 +8,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Module\PackageInfo;
 use OpenForgeProject\MageForge\Model\Config\TemplateOverride as TemplateOverrideConfig;
+use OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplateCopier;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -39,7 +40,12 @@ class TemplateCopierTest extends TestCase
         $this->fileDriver = $this->createMock(File::class);
         $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
         $this->packageInfo = $this->createMock(PackageInfo::class);
-        $this->copier = new TemplateCopier($this->fileDriver, $this->scopeConfig, $this->packageInfo);
+        $this->copier = new TemplateCopier(
+            $this->fileDriver,
+            $this->scopeConfig,
+            $this->packageInfo,
+            new CommentStyle(CommentStyle::NONE),
+        );
     }
 
     public function testCreatesMissingTargetDirectoryBeforeCopying(): void
@@ -87,7 +93,7 @@ class TemplateCopierTest extends TestCase
             ->method('filePutContents')
             ->with(
                 '/theme/Magento_Catalog/templates/product/view/details.phtml',
-                $this->matchesRegularExpression('/# MageForge Template Override from \d{4}-\d{2}-\d{2}/'),
+                $this->matchesRegularExpression('/MageForge Template Override from \d{4}-\d{2}-\d{2}/'),
             );
         $this->fileDriver->expects($this->never())->method('copy');
 
@@ -157,12 +163,50 @@ class TemplateCopierTest extends TestCase
         $this->copier->copy('/module/view/frontend/templates/widget.phtml', '/theme/dir/widget.phtml', 'Vendor_Module');
 
         $this->assertSame(
-            "# MageForge Template Override from " . date('Y-m-d') . "\n"
-            . "# Source: /module/view/frontend/templates/widget.phtml\n"
-            . "# Source Module-Version: 1.2.3\n"
+            "<?php\n"
+            . "/**\n"
+            . " * MageForge Template Override from " . date('Y-m-d') . "\n"
+            . " * Source: /module/view/frontend/templates/widget.phtml\n"
+            . " * Source Module-Version: 1.2.3\n"
+            . " */\n"
             . "\n"
             . "<div>content</div>",
             $captured,
         );
+    }
+
+    public function testSkipsHeaderForUnsupportedFileTypes(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->expects($this->once())->method('copy')->with(
+            '/module/web/images/logo.png',
+            '/theme/dir/logo.png',
+        );
+        $this->fileDriver->expects($this->never())->method('fileGetContents');
+        $this->fileDriver->expects($this->never())->method('filePutContents');
+
+        $this->copier->copy('/module/web/images/logo.png', '/theme/dir/logo.png', 'Magento_Theme');
+    }
+
+    public function testUsesHtmlCommentForEmailTemplates(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<p>order</p>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/source.html', '/theme/dir/target.html', 'Vendor_Module');
+
+        $this->assertStringStartsWith('<!--', $captured ?? '');
+        $this->assertStringEndsWith("-->\n\n<p>order</p>", $captured ?? '');
     }
 }

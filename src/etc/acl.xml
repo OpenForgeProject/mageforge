@@ -7,6 +7,7 @@
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
                             <resource id="OpenForgeProject_MageForge::config_inspector" title="MageForge Inspector" sortOrder="50" />
+                            <resource id="OpenForgeProject_MageForge::config_template_override" title="MageForge Template Override" sortOrder="60" />
                         </resource>
                     </resource>
                 </resource>

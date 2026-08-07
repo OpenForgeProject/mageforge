@@ -91,7 +91,7 @@ class TemplatePathParserTest extends TestCase
     public function testRejectsModuleNotationWithoutPath(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected format: Module_Name::path/to/template.phtml');
+        $this->expectExceptionMessageMatches('/Expected format: Module_Name::path\/to\/template\.phtml/');
 
         $this->parser->parse('Magento_Catalog::');
     }
@@ -101,7 +101,7 @@ class TemplatePathParserTest extends TestCase
         $this->componentRegistrar->method('getPath')->willReturn(null);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Module 'Unknown_Module' is not registered");
+        $this->expectExceptionMessageMatches("/Module 'Unknown_Module' is not registered/");
 
         $this->parser->parse('Unknown_Module::some/template.phtml');
     }
@@ -109,7 +109,7 @@ class TemplatePathParserTest extends TestCase
     public function testRejectsRelativePathSegments(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('must not contain relative path segments');
+        $this->expectExceptionMessageMatches('/must not contain relative path segments/');
 
         $this->parser->parse('Magento_Catalog::../../../etc/env.phtml');
     }
@@ -117,7 +117,7 @@ class TemplatePathParserTest extends TestCase
     public function testRejectsTrailingParentDirectorySegment(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('must not contain relative path segments');
+        $this->expectExceptionMessageMatches('/must not contain relative path segments/');
 
         $this->parser->parse('Magento_Catalog::product/..');
     }
@@ -125,7 +125,7 @@ class TemplatePathParserTest extends TestCase
     public function testRejectsCurrentDirectorySegment(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('must not contain relative path segments');
+        $this->expectExceptionMessageMatches('/must not contain relative path segments/');
 
         $this->parser->parse('Magento_Catalog::product/./details.phtml');
     }
@@ -174,7 +174,7 @@ class TemplatePathParserTest extends TestCase
             ->willReturn(['Vendor_ModuleA', 'Vendor_ModuleB']);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('compatibility module for several modules');
+        $this->expectExceptionMessageMatches('/compatibility module for several modules/');
 
         $this->parser->parse('Hyva_SharedCompat::some/template.phtml');
     }
@@ -363,7 +363,7 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('isFile')->willReturn(false);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Template file '/nowhere/file.phtml' not found");
+        $this->expectExceptionMessageMatches("/Template file '\/nowhere\/file\.phtml' not found/");
 
         $this->parser->parse('/nowhere/file.phtml');
     }
@@ -417,8 +417,8 @@ class TemplatePathParserTest extends TestCase
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'not inside a view/<area>/templates, view/<area>/email or view/<area>/web directory',
+        $this->expectExceptionMessageMatches(
+            '/not inside a view\/<area>\/templates, view\/<area>\/email or view\/<area>\/web directory/',
         );
 
         $this->parser->parse($file);
@@ -432,7 +432,7 @@ class TemplatePathParserTest extends TestCase
         $this->componentRegistrar->method('getPaths')->willReturn([]);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('does not belong to a registered module or theme');
+        $this->expectExceptionMessageMatches('/does not belong to a registered module or theme/');
 
         $this->parser->parse($file);
     }
@@ -476,8 +476,7 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('isFile')->willReturn(false);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Pass an existing file path');
-        $this->expectExceptionMessage('Module_Name::path/to/template.phtml');
+        $this->expectExceptionMessageMatches('/Pass an existing file path.*Module_Name::path\/to\/template\.phtml/s');
 
         $this->parser->parse('/nowhere/file.phtml');
     }

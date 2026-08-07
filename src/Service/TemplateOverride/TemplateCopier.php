@@ -18,11 +18,13 @@ class TemplateCopier
      * @param File $fileDriver
      * @param ScopeConfigInterface $scopeConfig
      * @param PackageInfo $packageInfo
+     * @param CommentStyle $commentStyle
      */
     public function __construct(
         private readonly File $fileDriver,
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly PackageInfo $packageInfo,
+        private readonly CommentStyle $commentStyle,
     ) {
     }
 
@@ -42,8 +44,9 @@ class TemplateCopier
             $this->fileDriver->createDirectory($targetDir);
         }
 
-        if ($this->shouldAddHeader()) {
-            $this->copyWithHeader($sourceFile, $targetFile, $sourceModuleName);
+        $commentStyle = $this->commentStyle->fromFilePath($targetFile);
+        if ($commentStyle->isSupported() && $this->shouldAddHeader()) {
+            $this->copyWithHeader($sourceFile, $targetFile, $sourceModuleName, $commentStyle);
             return;
         }
 
@@ -69,13 +72,18 @@ class TemplateCopier
      * @param string $sourceFile
      * @param string $targetFile
      * @param string|null $sourceModuleName
+     * @param CommentStyle $commentStyle
      * @return void
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    private function copyWithHeader(string $sourceFile, string $targetFile, ?string $sourceModuleName): void
-    {
+    private function copyWithHeader(
+        string $sourceFile,
+        string $targetFile,
+        ?string $sourceModuleName,
+        CommentStyle $commentStyle,
+    ): void {
         $content = $this->fileDriver->fileGetContents($sourceFile);
-        $header = $this->buildHeader($sourceFile, $sourceModuleName);
+        $header = $this->buildHeader($sourceFile, $sourceModuleName, $commentStyle);
 
         $this->fileDriver->filePutContents($targetFile, $header . $content);
     }
@@ -85,9 +93,10 @@ class TemplateCopier
      *
      * @param string $sourceFile
      * @param string|null $sourceModuleName
+     * @param CommentStyle $commentStyle
      * @return string
      */
-    private function buildHeader(string $sourceFile, ?string $sourceModuleName): string
+    private function buildHeader(string $sourceFile, ?string $sourceModuleName, CommentStyle $commentStyle): string
     {
         $date = date('Y-m-d');
         $lines = [
@@ -102,8 +111,6 @@ class TemplateCopier
             }
         }
 
-        $commented = array_map(static fn(string $line): string => '# ' . $line, $lines);
-
-        return implode("\n", $commented) . "\n\n";
+        return $commentStyle->wrap($lines);
     }
 }

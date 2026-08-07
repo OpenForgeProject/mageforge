@@ -244,15 +244,15 @@ class OverrideCommand extends AbstractCommand
 
         try {
             $value = $prompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            $this->resetPromptEnvironment();
             $value = is_string($value) ? trim($value) : '';
 
             return $value === '' ? null : $value;
         } catch (\Exception $e) {
-            $this->resetPromptEnvironment();
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             return null;
+        } finally {
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
         }
     }
 
@@ -361,14 +361,14 @@ class OverrideCommand extends AbstractCommand
 
         try {
             $selection = $prompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            $this->resetPromptEnvironment();
 
             return is_string($selection) ? $frontendThemes[$selection] ?? null : null;
         } catch (\Exception $e) {
-            $this->resetPromptEnvironment();
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             return null;
+        } finally {
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
         }
     }
 
