@@ -133,10 +133,7 @@ class CommentStyle
      */
     private function formatPhpDocLines(array $lines): string
     {
-        $commented = array_map(
-            static fn(string $line): string => $line === '' ? ' *' : ' * ' . $line,
-            $lines,
-        );
+        $commented = array_map(static fn(string $line): string => $line === '' ? ' *' : ' * ' . $line, $lines);
 
         return implode("\n", $commented);
     }

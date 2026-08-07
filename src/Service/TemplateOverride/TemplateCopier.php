@@ -181,7 +181,8 @@ class TemplateCopier
             }
         }
 
-        if ($actualSourceModule !== null
+        if (
+            $actualSourceModule !== null
             && $sourceModuleName !== null
             && $sourceModuleName !== ''
             && $actualSourceModule !== $sourceModuleName
@@ -212,9 +213,7 @@ class TemplateCopier
             }
 
             $normalizedPath = rtrim(str_replace('\\', '/', $path), '/');
-            if ($normalizedPath === ''
-                || !str_starts_with($normalizedFile, $normalizedPath . '/')
-            ) {
+            if ($normalizedPath === '' || !str_starts_with($normalizedFile, $normalizedPath . '/')) {
                 continue;
             }
 
