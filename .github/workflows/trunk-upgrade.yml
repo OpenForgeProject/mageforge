@@ -1,0 +1,42 @@
+name: Trunk Upgrade
+
+on:
+  schedule:
+    # Weekly on Mondays at 06:00 UTC
+    - cron: 0 6 * * 1
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install Trunk CLI
+        uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
+
+      - name: Upgrade Trunk CLI and linters
+        run: trunk upgrade -y --include-cli
+        env:
+          # Authenticated requests get a higher GitHub API rate limit (pinact).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff2fa2e423999752927 # v8.1.0
+        with:
+          commit-message: "chore: upgrade trunk linters"
+          title: "chore: upgrade trunk linters"
+          body: |
+            Automated `trunk upgrade -y --include-cli` run.
+
+            Review the linter version changes in `.trunk/trunk.yaml` — new linter
+            versions may introduce new findings. Run `trunk check -a` and
+            `trunk fmt` locally if CI reports issues.
+          branch: chore/trunk-upgrade
+          delete-branch: true
+          labels: dependencies
