@@ -47,6 +47,11 @@ class TemplateFallbackResolver
     public function getFallbackDirs(TemplateReference $reference, ThemeInterface $theme): array
     {
         $area = $theme->getArea();
+
+        if ($reference->getType() === TemplateType::LAYOUT) {
+            return $this->getLayoutFallbackDirs($reference, $theme, $area);
+        }
+
         // Fallback plugins like Hyvä's compat module fallback check the "current" design theme
         $this->design->setDesignTheme($theme, $area);
 
@@ -60,7 +65,6 @@ class TemplateFallbackResolver
         $ruleType = match ($reference->getType()) {
             TemplateType::EMAIL => RulePool::TYPE_EMAIL_TEMPLATE,
             TemplateType::STATIC => RulePool::TYPE_STATIC_FILE,
-            TemplateType::LAYOUT => RulePool::TYPE_FILE,
             default => RulePool::TYPE_TEMPLATE_FILE,
         };
 
@@ -81,6 +85,49 @@ class TemplateFallbackResolver
         }
 
         return $result;
+    }
+
+    /**
+     * Build fallback directories for layout XML files
+     *
+     * Magento does not expose a dedicated layout fallback rule in RulePool. Layout files are
+     * resolved via the View File Locator with a fixed directory pattern:
+     * <theme_dir>/<module_name>/layout plus <module_dir>/view/<area>/layout and base.
+     *
+     * @param TemplateReference $reference
+     * @param ThemeInterface $theme
+     * @param string $area
+     * @return string[]
+     */
+    private function getLayoutFallbackDirs(TemplateReference $reference, ThemeInterface $theme, string $area): array
+    {
+        $moduleName = $reference->getModuleName();
+        $modulePath = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        $themePath = $this->componentRegistrar->getPath(ComponentRegistrar::THEME, $theme->getFullPath());
+        $parentTheme = $theme->getParentTheme();
+
+        $dirs = [];
+
+        if ($themePath !== null) {
+            $dirs[] = $themePath . '/' . $moduleName . '/layout';
+        }
+
+        if ($parentTheme instanceof ThemeInterface) {
+            $parentThemePath = $this->componentRegistrar->getPath(
+                ComponentRegistrar::THEME,
+                $parentTheme->getFullPath(),
+            );
+            if ($parentThemePath !== null) {
+                $dirs[] = $parentThemePath . '/' . $moduleName . '/layout';
+            }
+        }
+
+        if ($modulePath !== null) {
+            $dirs[] = $modulePath . '/view/' . $area . '/layout';
+            $dirs[] = $modulePath . '/view/base/layout';
+        }
+
+        return $dirs;
     }
 
     /**

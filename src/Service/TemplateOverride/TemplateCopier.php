@@ -182,7 +182,7 @@ class TemplateCopier
         }
 
         if ($this->isOverrideForDifferentModule($actualSourceModule, $sourceModuleName)) {
-            $lines[] = '@override-for ' . $sourceModuleName;
+            $lines[] = '@override-for ' . (string) $sourceModuleName;
         }
 
         return $lines;
@@ -284,6 +284,7 @@ class TemplateCopier
      */
     private function injectAfterOpenPhpTag(string $content, string $header): string
     {
+        $match = [];
         if (!preg_match('/^(\s*<\?php)\s*/m', $content, $match)) {
             return $header . $content;
         }

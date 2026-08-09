@@ -64,7 +64,8 @@ class TemplateFallbackResolverTest extends TestCase
         $reference = new TemplateReference('Magento_Catalog', 'product/view/details.phtml');
 
         $rule = $this->createMock(RuleInterface::class);
-        $rule->expects($this->once())
+        $rule
+            ->expects($this->once())
             ->method('getPatternDirs')
             ->with([
                 'area' => 'frontend',
@@ -104,7 +105,8 @@ class TemplateFallbackResolverTest extends TestCase
         $reference = new TemplateReference('Magento_Sales', 'order/new.html', TemplateType::EMAIL);
 
         $rule = $this->createMock(RuleInterface::class);
-        $rule->expects($this->once())
+        $rule
+            ->expects($this->once())
             ->method('getPatternDirs')
             ->with([
                 'area' => 'frontend',
@@ -140,7 +142,8 @@ class TemplateFallbackResolverTest extends TestCase
         $reference = new TemplateReference('Magento_Theme', 'css/source/_module.less', TemplateType::STATIC);
 
         $rule = $this->createMock(RuleInterface::class);
-        $rule->expects($this->once())
+        $rule
+            ->expects($this->once())
             ->method('getPatternDirs')
             ->with([
                 'area' => 'frontend',
@@ -170,6 +173,30 @@ class TemplateFallbackResolverTest extends TestCase
         );
     }
 
+    public function testGetFallbackDirsReturnsLayoutDirectories(): void
+    {
+        $theme = new FakeTheme('Vendor/theme');
+        $reference = new TemplateReference('MageWorx_Faq', 'hyva_catalog_product_view.xml', TemplateType::LAYOUT);
+
+        $this->componentRegistrar
+            ->method('getPath')
+            ->willReturnMap([
+                [ComponentRegistrar::THEME,  'frontend/Vendor/theme', '/app/design/frontend/Vendor/theme'],
+                [ComponentRegistrar::MODULE, 'MageWorx_Faq',          '/vendor/mageworx/faq/src'],
+            ]);
+
+        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+
+        $this->assertSame(
+            [
+                '/app/design/frontend/Vendor/theme/MageWorx_Faq/layout',
+                '/vendor/mageworx/faq/src/view/frontend/layout',
+                '/vendor/mageworx/faq/src/view/base/layout',
+            ],
+            $dirs,
+        );
+    }
+
     public function testGetFallbackDirsFailsWhenRulePoolCannotBeCreated(): void
     {
         $this->objectManager->method('create')->willReturn(null);
@@ -183,7 +210,7 @@ class TemplateFallbackResolverTest extends TestCase
     {
         $this->fileDriver
             ->method('isFile')
-            ->willReturnCallback(static fn (string $path): bool => str_starts_with($path, '/module/'));
+            ->willReturnCallback(static fn(string $path): bool => str_starts_with($path, '/module/'));
 
         $result = $this->resolver->findFirstExistingFile(
             ['/theme/Magento_Catalog/templates', '/module/view/frontend/templates'],
