@@ -181,16 +181,28 @@ class TemplateCopier
             }
         }
 
-        if (
-            $actualSourceModule !== null
-            && $sourceModuleName !== null
-            && $sourceModuleName !== ''
-            && $actualSourceModule !== $sourceModuleName
-        ) {
+        if ($this->isOverrideForDifferentModule($actualSourceModule, $sourceModuleName)) {
             $lines[] = '@override-for ' . $sourceModuleName;
         }
 
         return $lines;
+    }
+
+    /**
+     * Check whether the source file belongs to a different module than the logical override target
+     *
+     * @param string|null $actualSourceModule
+     * @param string|null $sourceModuleName
+     * @return bool
+     */
+    private function isOverrideForDifferentModule(?string $actualSourceModule, ?string $sourceModuleName): bool
+    {
+        return (
+            $actualSourceModule !== null
+            && $sourceModuleName !== null
+            && $sourceModuleName !== ''
+            && $actualSourceModule !== $sourceModuleName
+        );
     }
 
     /**
