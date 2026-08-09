@@ -4,3 +4,36 @@ updates:
     directory: /
     schedule:
       interval: daily
+    labels:
+      - dependencies
+    # Major updates land as separate PRs so they can be reviewed individually.
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      phpunit:
+        patterns:
+          - phpunit/*
+          - sebastian/*
+          - myclabs/*
+          - theseer/*
+          - phar-io/*
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
