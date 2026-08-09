@@ -18,10 +18,10 @@
     "laravel/prompts": "^0.3.5"
   },
   "require-dev": {
-    "carthage-software/mago": "^1.30",
-    "infection/infection": "^0.34.0",
+    "carthage-software/mago": "^1.46",
+    "infection/infection": "^0.34.2",
     "magento/magento-coding-standard": "^40",
-    "phpunit/phpunit": "^11.0"
+    "phpunit/phpunit": "^11.5"
   },
   "autoload-dev": {
     "psr-4": {
