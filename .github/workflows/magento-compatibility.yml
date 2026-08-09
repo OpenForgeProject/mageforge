@@ -102,6 +102,7 @@ jobs:
           bin/magento mageforge:theme:watch --help
           bin/magento mageforge:theme:clean --help
           bin/magento mageforge:theme:inspector --help
+          bin/magento mageforge:template:override --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
           bin/magento mageforge:dependencies:update --help
@@ -118,6 +119,7 @@ jobs:
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
           bin/magento frontend:clean --help
+          bin/magento template:override --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
           bin/magento dependencies:update --help

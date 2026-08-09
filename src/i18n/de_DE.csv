@@ -16,3 +16,7 @@
 "Bottom Right","Unten rechts"
 "Top Left","Oben links"
 "Top Right","Oben rechts"
+"Template Override","Template-Override"
+"Template Override Settings","Template-Override-Einstellungen"
+"Add Source Header","Quellen-Header hinzufügen"
+"When enabled, a comment header with the source path and module version is prepended to every copied override file.","Wenn aktiviert, wird jeder kopierte Override-Datei ein Kommentar-Header mit Quellpfad und Modulversion vorangestellt."

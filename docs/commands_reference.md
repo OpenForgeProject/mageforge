@@ -11,6 +11,7 @@ Complete reference of all CLI commands provided by the MageForge module.
 | **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`      |
 | **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
 | **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                     |
+| **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`   |
 | **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
 | **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
 | **Hyvä**         | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues         | `hyva:check`          |
@@ -122,6 +123,58 @@ bin/magento mageforge:theme:inspector status
 - Can also be toggled via Admin: `Stores > Configuration > MageForge > Frontend Inspector`.
 - Browser shortcut: `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS).
 - Not compatible with Magewire components (automatically excluded).
+
+---
+
+## Template Commands
+
+### `mageforge:template:override`
+
+Copies a module view file into a theme as an override, following Magento's view file fallback
+logic. The command resolves both the correct source file and the correct target directory for
+you — including the tricky cases where Hyvä compatibility modules ship the template that is
+actually rendered.
+
+```bash
+bin/magento mageforge:template:override <template> --theme <theme-code>
+bin/magento mageforge:template:override 'Magento_Catalog::product/view/details.phtml' --theme Vendor/theme
+bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml -t Vendor/theme
+bin/magento mageforge:template:override 'Magento_Sales::order/new.html' --theme Vendor/theme
+bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less' --theme Vendor/theme
+```
+
+**Arguments:**
+
+- `template` — The view file to override. Accepts the `Module_Name::path/to/file.phtml`
+  notation or a file path (absolute, or relative to the Magento root / current directory).
+  File paths may point into a module's `view/<area>/templates`, `view/<area>/email` or
+  `view/<area>/web` directory, a Hyvä compat module, or another theme's override directory.
+  Email templates (`.html`) and static view files (CSS, LESS, JS, images, fonts, ...) are
+  detected automatically and copied to `<theme>/<Module_Name>/email/` or
+  `<theme>/<Module_Name>/web/` respectively.
+
+**Options:**
+
+- `-t, --theme=VALUE` — Target theme code (format: `Vendor/theme`). If omitted, an interactive prompt appears.
+- `--dry-run` — Show source, target, and the full fallback search order without copying.
+- `-f, --force` — Replace an existing override with the next file in the fallback chain
+  (useful to reset an override to the original template).
+
+**Behavior:**
+
+- Uses Magento's own fallback rule (`RulePool`) with the frontend area DI configuration
+  loaded, so plugins like Hyvä's compat module fallback are honored.
+- Hyvä compat module templates are copied from the compat module (the file actually
+  rendered), but the override is placed under the **original** module's directory name,
+  e.g. `<theme>/Mollie_Payment/templates/...` — exactly where Magento looks for it.
+- Email templates are handled with the same fallback logic and placed under
+  `<theme>/<Module_Name>/email/`.
+- Static view files (CSS, LESS, JS, images, fonts, ...) use Magento's static file fallback
+  and are placed under `<theme>/<Module_Name>/web/`.
+- After copying, the command re-resolves the file to verify the new override wins and cleans
+  the relevant caches (`full_page`, `block_html`, `layout`, `translate`).
+- If the file is already overridden in the target theme, nothing is copied unless `--force`
+  is given.
 
 ---
 
@@ -246,6 +299,7 @@ mageforge:theme:build         → Build theme assets
 mageforge:theme:watch         → Watch & auto-rebuild
 mageforge:theme:clean         → Clean static files
 mageforge:theme:inspector     → Manage inspector tool
+mageforge:template:override   → Copy module template into a theme
 mageforge:dependencies:update → Update theme Node.js dependencies
 mageforge:hyva:tokens         → Generate Hyvä design tokens
 mageforge:hyva:compatibility:check → Check Hyvä compatibility

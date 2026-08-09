@@ -25,6 +25,8 @@
                               OpenForgeProject\MageForge\Console\Command\Theme\TokensCommand</item>
                         <item name="mageforge_dev_inspector" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand</item>
+                        <item name="mageforge_template_override" xsi:type="object">
+                              OpenForgeProject\MageForge\Console\Command\Template\OverrideCommand</item>
                         <item name="mageforge_dependencies_update" xsi:type="object">
                               OpenForgeProject\MageForge\Console\Command\Dependencies\UpdateCommand</item>
                   </argument>
@@ -74,6 +76,20 @@
                   <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
             </arguments>
       </type>
+
+      <!-- Configure TemplateCopier with default comment style -->
+      <type name="OpenForgeProject\MageForge\Service\TemplateOverride\TemplateCopier">
+            <arguments>
+                  <argument name="commentStyle" xsi:type="object">OpenForgeProject\MageForge\Service\TemplateOverride\DefaultCommentStyle</argument>
+            </arguments>
+      </type>
+
+      <!-- Default comment style for template override headers -->
+      <virtualType name="OpenForgeProject\MageForge\Service\TemplateOverride\DefaultCommentStyle" type="OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle">
+            <arguments>
+                  <argument name="style" xsi:type="string">none</argument>
+            </arguments>
+      </virtualType>
 
       <!-- Configure NodeSetupValidator Service -->
       <type name="OpenForgeProject\MageForge\Service\NodeSetupValidator">

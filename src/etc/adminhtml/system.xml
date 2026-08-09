@@ -36,5 +36,19 @@
                 </field>
             </group>
         </section>
+        <section id="mageforge_template_override" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>Template Override</label>
+            <tab>mageforge</tab>
+            <resource>OpenForgeProject_MageForge::config_template_override</resource>
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Template Override Settings</label>
+                <field id="add_header" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Add Source Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/add_header</config_path>
+                    <comment>When enabled, a comment header with the source path and module version is prepended to every copied override file.</comment>
+                </field>
+            </group>
+        </section>
     </system>
 </config>
