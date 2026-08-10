@@ -13,6 +13,7 @@ use OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class InspectorCommandTest extends TestCase
@@ -228,5 +229,84 @@ class InspectorCommandTest extends TestCase
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
         $this->assertStringContainsString('MageForge Inspector Status', $tester->getDisplay());
+    }
+
+    // -------------------------------------------------------------------------
+    // No-argument execution path (interactive menu / non-interactive fallback)
+    // -------------------------------------------------------------------------
+
+    public function testNoActionFallsBackToStatusInNonInteractiveMode(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->configWriter->expects($this->never())->method('save');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('MageForge Inspector Status', $tester->getDisplay());
+    }
+
+    public function testNoActionUsesSelectedActionFromInteractiveMenu(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $this->configWriter->expects($this->once())
+            ->method('save')
+            ->with(InspectorConfig::XML_PATH_ENABLED, '0');
+
+        $tester = new CommandTester($this->createInteractiveCommand('disable'));
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('has been disabled', $tester->getDisplay());
+    }
+
+    public function testNoActionFailsWhenInteractiveMenuIsCancelled(): void
+    {
+        $this->configWriter->expects($this->never())->method('save');
+
+        $tester = new CommandTester($this->createInteractiveCommand(null));
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    /**
+     * Create a command double that always takes the interactive path and returns
+     * the given selection from the menu instead of rendering a real prompt
+     *
+     * @param string|null $selection
+     * @return InspectorCommand
+     */
+    private function createInteractiveCommand(?string $selection): InspectorCommand
+    {
+        return new class(
+            $this->configWriter,
+            $this->state,
+            $this->cacheManager,
+            $this->scopeConfig,
+            $selection,
+        ) extends InspectorCommand {
+            public function __construct(
+                WriterInterface $configWriter,
+                State $state,
+                CacheManager $cacheManager,
+                ScopeConfigInterface $scopeConfig,
+                private readonly ?string $selection,
+            ) {
+                parent::__construct($configWriter, $state, $cacheManager, $scopeConfig);
+            }
+
+            protected function isInteractiveTerminal(OutputInterface $output): bool
+            {
+                return true;
+            }
+
+            protected function promptAction(): ?string
+            {
+                return $this->selection;
+            }
+        };
     }
 }

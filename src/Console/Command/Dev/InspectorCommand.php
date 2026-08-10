@@ -132,7 +132,7 @@ class InspectorCommand extends AbstractCommand
      *
      * @return string|null The selected action (enable, disable, status), or null if cancelled/failed
      */
-    private function promptAction(): ?string
+    protected function promptAction(): ?string
     {
         $currentStatus = $this->isInspectorEnabled() ? 'enabled' : 'disabled';
 
@@ -147,13 +147,18 @@ class InspectorCommand extends AbstractCommand
             hint: 'Arrow keys to navigate, Enter to confirm',
         );
 
+        // Set environment variables for Laravel Prompts (Docker/DDEV compatibility)
+        $this->setPromptEnvironment();
+
         try {
             $selection = $prompt->prompt();
-            \Laravel\Prompts\Prompt::terminal()->restoreTty();
             return is_string($selection) ? $selection : null;
         } catch (\Exception $e) {
             $this->io->error('Selection failed: ' . $e->getMessage());
             return null;
+        } finally {
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            $this->resetPromptEnvironment();
         }
     }
 
