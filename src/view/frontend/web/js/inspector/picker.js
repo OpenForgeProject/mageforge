@@ -12,15 +12,11 @@ export const pickerMethods = {
   setupKeyboardShortcuts() {
     this.keyboardShortcutsEnabled =
       this.$el?.getAttribute("data-keyboard-shortcuts-enabled") !== "0";
-    this.shortcut =
-      this.$el?.getAttribute("data-shortcut") || "Ctrl+Shift+I";
+    this.shortcut = this.$el?.getAttribute("data-shortcut") || "Ctrl+Shift+I";
 
     this.keydownHandler = (e) => {
       // Configured inspector shortcut (default: Ctrl/Cmd+Shift+I)
-      if (
-        this.keyboardShortcutsEnabled &&
-        matchesShortcut(e, this.shortcut)
-      ) {
+      if (this.keyboardShortcutsEnabled && matchesShortcut(e, this.shortcut)) {
         e.preventDefault();
         this.toggleInspector();
       }

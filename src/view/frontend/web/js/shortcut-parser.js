@@ -18,28 +18,48 @@
  */
 
 /**
+ * Memoised parse results keyed by the normalised shortcut string, so global
+ * keydown handlers do not re-split and re-lowercase the same shortcut on
+ * every keypress.
+ *
+ * @type {Map<string, ParsedShortcut|null>}
+ */
+const parsedShortcutCache = new Map();
+
+/**
  * Parse a shortcut string into its components.
+ *
+ * Results are memoised by normalised shortcut string.
  *
  * @param {string} shortcut
  * @returns {ParsedShortcut|null} Null when shortcut is "none" or empty.
  */
 export function parseShortcut(shortcut) {
-  if (!shortcut || shortcut.trim().toLowerCase() === "none") {
-    return null;
+  const normalised = (shortcut || "").trim().toLowerCase();
+
+  if (parsedShortcutCache.has(normalised)) {
+    return parsedShortcutCache.get(normalised);
   }
 
-  const parts = shortcut.split("+").map((part) => part.trim().toLowerCase());
-  const key = parts.pop() || "";
+  let parsed = null;
+  if (normalised !== "" && normalised !== "none") {
+    const parts = normalised.split("+").map((part) => part.trim());
+    const key = parts.pop() || "";
 
-  return {
-    key,
-    ctrlOrMeta:
-      parts.includes("ctrl") ||
-      parts.includes("cmd") ||
-      parts.includes("meta"),
-    shift: parts.includes("shift"),
-    alt: parts.includes("alt") || parts.includes("option"),
-  };
+    parsed = {
+      key,
+      ctrlOrMeta:
+        parts.includes("ctrl") ||
+        parts.includes("cmd") ||
+        parts.includes("meta"),
+      shift: parts.includes("shift"),
+      alt: parts.includes("alt") || parts.includes("option"),
+    };
+  }
+
+  parsedShortcutCache.set(normalised, parsed);
+
+  return parsed;
 }
 
 /**

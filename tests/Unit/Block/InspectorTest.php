@@ -54,6 +54,9 @@ class InspectorTest extends TestCase
     public function testShouldRenderReturnsFalseWhenNotInDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_PRODUCTION);
+        // Every later gate passes, so only the developer-mode check can make this return false
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->developerAccessChecker->method('isDevAllowed')->willReturn(true);
 
         $this->assertFalse($this->block->shouldRender());
     }
@@ -62,6 +65,8 @@ class InspectorTest extends TestCase
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->scopeConfig->method('isSetFlag')->willReturn(false);
+        // The IP gate passes, so only the disabled config flag can make this return false
+        $this->developerAccessChecker->method('isDevAllowed')->willReturn(true);
 
         $this->assertFalse($this->block->shouldRender());
     }

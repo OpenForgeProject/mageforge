@@ -601,4 +601,357 @@ class TemplateCopierTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider enabledFormatProvider
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @param string $headerMarker
+     */
+    public function testAddsHeaderForEachEnabledFileFormat(
+        string $sourcePath,
+        string $targetPath,
+        string $headerMarker,
+    ): void {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $this->fileDriver->expects($this->never())->method('copy');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy($sourcePath, $targetPath, 'Vendor_Module');
+
+        $this->assertStringContainsString($headerMarker, $captured ?? '');
+    }
+
+    /**
+     * Every extension of every match arm must map to its format toggle,
+     * including the alias extensions (php, htm, xhtml, ...).
+     *
+     * @return array<string, array{string, string, string}>
+     */
+    public static function enabledFormatProvider(): array
+    {
+        $plainMarker = 'MageForge Template Override';
+
+        return [
+            'phtml' => [
+                '/module/view/frontend/templates/widget.phtml',
+                '/theme/dir/widget.phtml',
+                '@mageforge-template-override',
+            ],
+            'php' => ['/module/Block/Widget.php', '/theme/dir/Widget.php', '@mageforge-template-override'],
+            'html' => ['/module/view/frontend/templates/mail.html', '/theme/dir/mail.html', $plainMarker],
+            'htm' => ['/module/view/frontend/templates/mail.htm', '/theme/dir/mail.htm', $plainMarker],
+            'xml' => ['/module/view/frontend/layout/default.xml', '/theme/dir/default.xml', $plainMarker],
+            'xhtml' => ['/module/view/frontend/templates/page.xhtml', '/theme/dir/page.xhtml', $plainMarker],
+            'svg' => ['/module/web/images/icon.svg', '/theme/dir/icon.svg', $plainMarker],
+            'css' => ['/module/web/css/styles.css', '/theme/dir/styles.css', $plainMarker],
+            'js' => ['/module/web/js/source.js', '/theme/dir/source.js', $plainMarker],
+            'less' => ['/module/web/css/styles.less', '/theme/dir/styles.less', $plainMarker],
+            'scss' => ['/module/web/css/styles.scss', '/theme/dir/styles.scss', $plainMarker],
+            'sass' => ['/module/web/css/styles.sass', '/theme/dir/styles.sass', $plainMarker],
+            'ts' => ['/module/web/ts/source.ts', '/theme/dir/source.ts', $plainMarker],
+            'sh' => ['/module/web/scripts/deploy.sh', '/theme/dir/deploy.sh', $plainMarker],
+            'bash' => ['/module/web/scripts/deploy.bash', '/theme/dir/deploy.bash', $plainMarker],
+            'zsh' => ['/module/web/scripts/deploy.zsh', '/theme/dir/deploy.zsh', $plainMarker],
+            'fish' => ['/module/web/scripts/deploy.fish', '/theme/dir/deploy.fish', $plainMarker],
+        ];
+    }
+
+    public function testUppercaseExtensionIsMatchedCaseInsensitively(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $this->fileDriver->expects($this->never())->method('copy');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/WIDGET.PHTML',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('@mageforge-template-override', $captured ?? '');
+    }
+
+    public function testSkipsHeaderWhenAddHeaderDisabledButFormatEnabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER => false,
+                default => true,
+            });
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->expects($this->once())->method('copy')->with(
+            '/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+        );
+        $this->fileDriver->expects($this->never())->method('fileGetContents');
+        $this->fileDriver->expects($this->never())->method('filePutContents');
+
+        $this->copier->copy(
+            '/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+    }
+
+    public function testPlainHeaderContainsAllDetailsForUnresolvableModule(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('4.5.6');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/module/web/js/source.js', '/theme/dir/source.js', 'Vendor_Module');
+
+        $this->assertStringContainsString('MageForge Template Override', $captured ?? '');
+        $this->assertStringContainsString('Date: ' . date('Y-m-d'), $captured ?? '');
+        $this->assertStringContainsString('Source: /module/web/js/source.js', $captured ?? '');
+        $this->assertStringContainsString('Override For: Vendor_Module', $captured ?? '');
+        $this->assertStringContainsString('Module-Version: 4.5.6', $captured ?? '');
+        $this->assertStringNotContainsString('Source Module:', $captured ?? '');
+    }
+
+    public function testPlainHeaderOmitsDateWhenDisabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE => false,
+                default => true,
+            });
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<p>order</p>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/source.html', '/theme/dir/target.html', 'Vendor_Module');
+
+        $this->assertStringContainsString('MageForge Template Override', $captured ?? '');
+        $this->assertStringNotContainsString('Date:', $captured ?? '');
+    }
+
+    public function testPhpDocHeaderFallsBackToLogicalModuleWhenSourceNotResolvable(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('9.9.9');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/module/view/frontend/templates/widget.phtml', '/theme/dir/widget.phtml', 'Vendor_Module');
+
+        $this->assertStringContainsString('@module Vendor_Module', $captured ?? '');
+        $this->assertStringContainsString('@module-version 9.9.9', $captured ?? '');
+        $this->assertStringNotContainsString('@override-for', $captured ?? '');
+    }
+
+    public function testPlainHeaderOmitsOverrideForWhenNoModuleNameGiven(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/module/web/js/source.js', '/theme/dir/source.js');
+
+        $this->assertStringContainsString('MageForge Template Override', $captured ?? '');
+        $this->assertStringNotContainsString('Override For', $captured ?? '');
+        $this->assertStringNotContainsString('Source Module', $captured ?? '');
+    }
+
+    public function testPlainHeaderOmitsOverrideForWhenModuleNameEmpty(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/module/web/js/source.js', '/theme/dir/source.js', '');
+
+        $this->assertStringContainsString('MageForge Template Override', $captured ?? '');
+        $this->assertStringNotContainsString('Override For', $captured ?? '');
+        $this->assertStringNotContainsString('Module-Version', $captured ?? '');
+    }
+
+    public function testPhpDocHeaderOmitsModuleLinesWhenNoModuleNameGiven(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy('/magento/vendor/module/view/frontend/templates/widget.phtml', '/theme/dir/widget.phtml');
+
+        $this->assertStringContainsString('@module Vendor_Module', $captured ?? '');
+        $this->assertStringNotContainsString('@override-for', $captured ?? '');
+    }
+
+    public function testNoOverrideForWhenActualModuleMatchesLogicalModule(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('@module Vendor_Module', $captured ?? '');
+        $this->assertStringNotContainsString('@override-for', $captured ?? '');
+    }
+
+    public function testResolvesModuleWithWindowsStylePaths(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->registerModulePaths([
+            'Vendor_Module' => 'C:\\magento\\vendor\\module\\',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('content');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            'C:\\magento\\vendor\\module\\web\\js\\source.js',
+            '/theme/dir/source.js',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('Source Module: Vendor_Module', $captured ?? '');
+    }
+
+    public function testHeaderIsPrependedWhenPhpTagAppearsLaterInTemplate(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn("<div>\n<?php echo 'x';\n</div>");
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringStartsWith("<?php\n/**\n * @mageforge-template-override", $captured ?? '');
+        $this->assertStringEndsWith("<div>\n<?php echo 'x';\n</div>", $captured ?? '');
+    }
+
+    public function testHeaderIsInjectedAfterPhpOpenTagPrecededByBlankLine(): void
+    {
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn("\n<?php echo 'x';\n");
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringStartsWith("\n<?php\n/**\n * @mageforge-template-override", $captured ?? '');
+        $this->assertStringEndsWith("echo 'x';\n", $captured ?? '');
+    }
 }

@@ -65,7 +65,7 @@
                     <label>Add Source Header</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <config_path>mageforge/template_override/add_header</config_path>
-                    <comment>When enabled, a comment header with the source path and module version is prepended to every copied override file.</comment>
+                    <comment>When enabled, an information header is prepended to every copied override file. Use the Source Headers options below to control which details are included and for which file types.</comment>
                 </field>
             </group>
             <group id="source_headers" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">

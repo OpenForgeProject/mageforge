@@ -26,7 +26,7 @@
 "Template Override","Template-Override"
 "Template Override Settings","Template-Override-Einstellungen"
 "Add Source Header","Quellen-Header hinzufügen"
-"When enabled, a comment header with the source path and module version is prepended to every copied override file.","Wenn aktiviert, wird jeder kopierte Override-Datei ein Kommentar-Header mit Quellpfad und Modulversion vorangestellt."
+"When enabled, an information header is prepended to every copied override file. Use the Source Headers options below to control which details are included and for which file types.","Wenn aktiviert, wird jeder kopierte Override-Datei ein Informations-Header vorangestellt. Über die untenstehenden Source-Headers-Optionen lässt sich steuern, welche Details für welche Dateitypen enthalten sind."
 "Source Headers","Quellen-Header"
 "Include Date in Header","Datum im Header anzeigen"
 "When enabled, the override date is included in the source header of every copied override file. Default: Yes.","Wenn aktiviert, wird das Override-Datum im Quellen-Header jeder kopierten Override-Datei angezeigt. Standard: Ja."

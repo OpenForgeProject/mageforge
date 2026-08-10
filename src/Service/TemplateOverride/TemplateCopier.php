@@ -108,9 +108,7 @@ class TemplateCopier
      */
     private function isHeaderEnabledForFile(string $filePath): bool
     {
-        $extension = strtolower((string) $this->extension($filePath));
-
-        return match ($extension) {
+        return match ($this->extension($filePath)) {
             'phtml', 'php' => $this->scopeConfig->isSetFlag(
                 TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
                 TemplateOverrideConfig::SCOPE_STORE,
@@ -322,7 +320,7 @@ class TemplateCopier
     {
         $lastDot = strrpos($filePath, '.');
 
-        return $lastDot === false ? '' : substr($filePath, $lastDot + 1);
+        return $lastDot === false ? '' : strtolower(substr($filePath, $lastDot + 1));
     }
 
     /**
