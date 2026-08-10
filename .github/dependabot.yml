@@ -7,12 +7,9 @@ updates:
     labels:
       - dependencies
     # Major updates land as separate PRs so they can be reviewed individually.
+    # Note: only the first matching group applies, so the phpunit group must
+    # come before the catch-all dev-dependencies group.
     groups:
-      dev-dependencies:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
       phpunit:
         patterns:
           - phpunit/*
@@ -20,6 +17,11 @@ updates:
           - myclabs/*
           - theseer/*
           - phar-io/*
+        update-types:
+          - minor
+          - patch
+      dev-dependencies:
+        dependency-type: development
         update-types:
           - minor
           - patch
