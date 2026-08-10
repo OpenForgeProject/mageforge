@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Dev;
 
+use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\App\Cache\Manager as CacheManager;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
@@ -51,11 +52,14 @@ class InspectorCommand extends AbstractCommand
             ->setDescription('Manage MageForge Frontend Inspector (Actions: enable|disable|status)')
             ->addArgument(
                 self::ARGUMENT_ACTION,
-                InputArgument::REQUIRED,
-                'Action to perform: enable, disable, or status',
+                InputArgument::OPTIONAL,
+                'Action to perform: enable, disable, or status (interactive menu if omitted)',
             )
             ->setHelp(<<<HELP
                 The <info>%command.name%</info> command manages the MageForge Frontend Inspector:
+
+                  <info>php %command.full_name%</info>
+                  Show an interactive menu to enable or disable the inspector
 
                   <info>php %command.full_name%</info> <comment>enable</comment>
                   Enable the inspector (requires developer mode)
@@ -83,7 +87,20 @@ class InspectorCommand extends AbstractCommand
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
         $arg = $input->getArgument(self::ARGUMENT_ACTION);
-        $action = strtolower(is_string($arg) ? $arg : '');
+        $action = strtolower(is_string($arg) ? trim($arg) : '');
+
+        // No action given: show interactive menu, fall back to status in non-interactive mode
+        if ($action === '') {
+            if (!$this->isInteractiveTerminal($output)) {
+                return $this->showStatus();
+            }
+
+            $selectedAction = $this->promptAction();
+            if ($selectedAction === null) {
+                return Cli::RETURN_FAILURE;
+            }
+            $action = $selectedAction;
+        }
 
         // Validate action
         if (!in_array($action, ['enable', 'disable', 'status'], true)) {
@@ -108,6 +125,36 @@ class InspectorCommand extends AbstractCommand
             'disable' => $this->disableInspector(),
             default => $this->showStatus(),
         };
+    }
+
+    /**
+     * Prompt user to select an action via interactive menu
+     *
+     * @return string|null The selected action (enable, disable, status), or null if cancelled/failed
+     */
+    private function promptAction(): ?string
+    {
+        $currentStatus = $this->isInspectorEnabled() ? 'enabled' : 'disabled';
+
+        $prompt = new SelectPrompt(
+            label: sprintf('MageForge Inspector is currently %s – select an action', $currentStatus),
+            options: [
+                'enable' => 'Enable inspector',
+                'disable' => 'Disable inspector',
+                'status' => 'Show status',
+            ],
+            default: $this->isInspectorEnabled() ? 'disable' : 'enable',
+            hint: 'Arrow keys to navigate, Enter to confirm',
+        );
+
+        try {
+            $selection = $prompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+            return is_string($selection) ? $selection : null;
+        } catch (\Exception $e) {
+            $this->io->error('Selection failed: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
