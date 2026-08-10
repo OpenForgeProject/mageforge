@@ -6,6 +6,11 @@ updates:
       interval: daily
     labels:
       - Dependencies
+    # Wait after release before opening update PRs — gives the ecosystem time
+    # to catch malicious releases (supply-chain protection).
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     # Major updates land as separate PRs so they can be reviewed individually.
     # Note: only the first matching group applies, so the phpunit group must
     # come before the catch-all dev-dependencies group.
@@ -32,6 +37,11 @@ updates:
       interval: weekly
     labels:
       - Dependencies
+    # Actions are pulled by SHA, but a compromised release is still a risk —
+    # wait a week so takedowns/reverts can happen first.
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     groups:
       github-actions:
         patterns:
