@@ -139,6 +139,46 @@ class Inspector extends Template
     }
 
     /**
+     * Whether keyboard shortcuts are enabled for toolbar and inspector
+     *
+     * @return bool
+     */
+    public function getKeyboardShortcutsEnabled(): bool
+    {
+        $value = $this->scopeConfig->getValue(
+            InspectorConfig::XML_PATH_KEYBOARD_SHORTCUTS_ENABLED,
+            InspectorConfig::SCOPE_STORE,
+        );
+        // Default to true when not explicitly set to '0'
+        return !is_string($value) || $value !== '0';
+    }
+
+    /**
+     * Get configured toolbar keyboard shortcut
+     *
+     * @return string
+     */
+    public function getToolbarShortcut(): string
+    {
+        $value = $this->scopeConfig->getValue(InspectorConfig::XML_PATH_TOOLBAR_SHORTCUT, InspectorConfig::SCOPE_STORE);
+        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_TOOLBAR_SHORTCUT;
+    }
+
+    /**
+     * Get configured inspector keyboard shortcut
+     *
+     * @return string
+     */
+    public function getInspectorShortcut(): string
+    {
+        $value = $this->scopeConfig->getValue(
+            InspectorConfig::XML_PATH_INSPECTOR_SHORTCUT,
+            InspectorConfig::SCOPE_STORE,
+        );
+        return is_string($value) && $value !== '' ? $value : InspectorConfig::DEFAULT_INSPECTOR_SHORTCUT;
+    }
+
+    /**
      * Render block HTML
      *
      * @return string

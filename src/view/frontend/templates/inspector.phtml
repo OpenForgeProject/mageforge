@@ -72,9 +72,13 @@ $alpineBootstrap = <<<JS
      x-data="mageforgeToolbar"
      data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"
      data-position="<?= $escaper->escapeHtmlAttr($block->getPosition()) ?>"
-     data-show-labels="<?= (int) $block->getShowButtonLabels() ?>"></div>
+     data-show-labels="<?= (int) $block->getShowButtonLabels() ?>"
+     data-keyboard-shortcuts-enabled="<?= (int) $block->getKeyboardShortcutsEnabled() ?>"
+     data-shortcut="<?= $escaper->escapeHtmlAttr($block->getToolbarShortcut()) ?>"></div>
 
 <!-- MageForge Inspector Component Wrapper -->
 <div class="mageforge-inspector"
      x-data="mageforgeInspector"
-     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"></div>
+     data-theme="<?= $escaper->escapeHtmlAttr($block->getTheme()) ?>"
+     data-keyboard-shortcuts-enabled="<?= (int) $block->getKeyboardShortcutsEnabled() ?>"
+     data-shortcut="<?= $escaper->escapeHtmlAttr($block->getInspectorShortcut()) ?>"></div>

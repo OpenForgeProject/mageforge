@@ -35,6 +35,25 @@
                     <comment>Position of the MageForge Toolbar on the page. Default: Bottom Left.</comment>
                 </field>
             </group>
+            <group id="keyboard_shortcuts" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Keyboard Shortcuts</label>
+                <field id="keyboard_shortcuts_enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Keyboard Shortcuts</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/inspector/keyboard_shortcuts_enabled</config_path>
+                    <comment>Master switch for the MageForge keyboard shortcuts. Default: Yes.</comment>
+                </field>
+                <field id="toolbar_shortcut" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Toolbar Shortcut</label>
+                    <config_path>mageforge/inspector/toolbar_shortcut</config_path>
+                    <comment>Shortcut to toggle all toolbar audits. Use "none" to disable only this shortcut. Examples: Ctrl+Shift+A, Shift+F8, F12, Cmd+Option+S. Default: Ctrl+Shift+A.</comment>
+                </field>
+                <field id="inspector_shortcut" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Inspector Shortcut</label>
+                    <config_path>mageforge/inspector/inspector_shortcut</config_path>
+                    <comment>Shortcut to toggle the element inspector. Use "none" to disable only this shortcut. Examples: Ctrl+Shift+I, Shift+F8, F12. Default: Ctrl+Shift+I.</comment>
+                </field>
+            </group>
         </section>
         <section id="mageforge_template_override" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
             <label>Template Override</label>
@@ -46,7 +65,70 @@
                     <label>Add Source Header</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <config_path>mageforge/template_override/add_header</config_path>
-                    <comment>When enabled, a comment header with the source path and module version is prepended to every copied override file.</comment>
+                    <comment>When enabled, an information header is prepended to every copied override file. Use the Source Headers options below to control which details are included and for which file types.</comment>
+                </field>
+            </group>
+            <group id="source_headers" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Source Headers</label>
+                <field id="include_date" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Include Date in Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_include_date</config_path>
+                    <comment>When enabled, the override date is included in the source header of every copied override file. Default: Yes.</comment>
+                </field>
+                <field id="include_module_version" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Include Module Version in Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_include_module_version</config_path>
+                    <comment>When enabled, the source module version is included in the source header of every copied override file. Default: Yes.</comment>
+                </field>
+                <field id="include_source_path" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Include Source Path in Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_include_source_path</config_path>
+                    <comment>When enabled, the relative source path is included in the source header of every copied override file. Default: Yes.</comment>
+                </field>
+                <field id="include_source_module" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Include Source Module in Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_include_source_module</config_path>
+                    <comment>When enabled, the source module name is included in the source header of every copied override file. Default: Yes.</comment>
+                </field>
+                <field id="include_override_for" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Include Override Target in Header</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_include_override_for</config_path>
+                    <comment>When enabled, the logical override target module is included in the source header when it differs from the source module. Default: Yes.</comment>
+                </field>
+                <field id="enable_for_phtml" translate="label comment" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable for PHP/PHTML</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_enable_phtml</config_path>
+                    <comment>When enabled, source headers are prepended to copied PHP and PHTML files. Default: Yes.</comment>
+                </field>
+                <field id="enable_for_html" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable for HTML</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_enable_html</config_path>
+                    <comment>When enabled, source headers are prepended to copied HTML files. Default: Yes.</comment>
+                </field>
+                <field id="enable_for_xml" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable for XML/SVG</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_enable_xml</config_path>
+                    <comment>When enabled, source headers are prepended to copied XML, XHTML and SVG files. Default: Yes.</comment>
+                </field>
+                <field id="enable_for_web_assets" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable for CSS/JS/TS/LESS/SCSS</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_enable_web_assets</config_path>
+                    <comment>When enabled, source headers are prepended to copied CSS, JavaScript, TypeScript, LESS and SCSS files. Default: Yes.</comment>
+                </field>
+                <field id="enable_for_shell" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable for Shell Scripts</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>mageforge/template_override/source_header_enable_shell</config_path>
+                    <comment>When enabled, source headers are prepended to copied shell scripts. Default: Yes.</comment>
                 </field>
             </group>
         </section>

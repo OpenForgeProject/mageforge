@@ -38,10 +38,11 @@ updates:
     labels:
       - Dependencies
     # Actions are pulled by SHA, but a compromised release is still a risk —
-    # wait a week so takedowns/reverts can happen first.
+    # wait a week so takedowns/reverts can happen first. semver-major-days is
+    # not supported for the github-actions ecosystem, so only the default
+    # cooldown applies here.
     cooldown:
       default-days: 7
-      semver-major-days: 14
     groups:
       github-actions:
         patterns:
