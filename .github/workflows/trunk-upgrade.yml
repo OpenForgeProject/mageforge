@@ -39,4 +39,4 @@ jobs:
             `trunk fmt` locally if CI reports issues.
           branch: chore/trunk-upgrade
           delete-branch: true
-          labels: dependencies
+          labels: Dependencies

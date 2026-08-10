@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: daily
     labels:
-      - dependencies
+      - Dependencies
     # Major updates land as separate PRs so they can be reviewed individually.
     # Note: only the first matching group applies, so the phpunit group must
     # come before the catch-all dev-dependencies group.
@@ -31,7 +31,7 @@ updates:
     schedule:
       interval: weekly
     labels:
-      - dependencies
+      - Dependencies
     groups:
       github-actions:
         patterns:
