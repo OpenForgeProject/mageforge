@@ -12,9 +12,22 @@
                     <theme>dark</theme>
                     <show_button_labels>1</show_button_labels>
                     <position>bottom-left</position>
+                    <keyboard_shortcuts_enabled>1</keyboard_shortcuts_enabled>
+                    <toolbar_shortcut>Ctrl+Shift+A</toolbar_shortcut>
+                    <inspector_shortcut>Ctrl+Shift+I</inspector_shortcut>
                 </inspector>
                 <template_override>
                     <add_header>1</add_header>
+                    <source_header_include_date>1</source_header_include_date>
+                    <source_header_include_module_version>1</source_header_include_module_version>
+                    <source_header_include_source_path>1</source_header_include_source_path>
+                    <source_header_include_source_module>1</source_header_include_source_module>
+                    <source_header_include_override_for>1</source_header_include_override_for>
+                    <source_header_enable_phtml>1</source_header_enable_phtml>
+                    <source_header_enable_html>1</source_header_enable_html>
+                    <source_header_enable_xml>1</source_header_enable_xml>
+                    <source_header_enable_web_assets>1</source_header_enable_web_assets>
+                    <source_header_enable_shell>1</source_header_enable_shell>
                 </template_override>
             </mageforge>
       </default>

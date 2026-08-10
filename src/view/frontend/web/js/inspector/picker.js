@@ -2,6 +2,7 @@
  * MageForge Inspector - Keyboard Shortcuts, Inspector Toggle & Element Picker
  */
 
+import { matchesShortcut } from "../shortcut-parser.js";
 import { blockDataMap } from "./blockData.js";
 
 export const pickerMethods = {
@@ -9,9 +10,17 @@ export const pickerMethods = {
    * Setup keyboard shortcuts
    */
   setupKeyboardShortcuts() {
+    this.keyboardShortcutsEnabled =
+      this.$el?.getAttribute("data-keyboard-shortcuts-enabled") !== "0";
+    this.shortcut =
+      this.$el?.getAttribute("data-shortcut") || "Ctrl+Shift+I";
+
     this.keydownHandler = (e) => {
-      // Ctrl+Shift+I or Cmd+Option+I
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "I") {
+      // Configured inspector shortcut (default: Ctrl/Cmd+Shift+I)
+      if (
+        this.keyboardShortcutsEnabled &&
+        matchesShortcut(e, this.shortcut)
+      ) {
         e.preventDefault();
         this.toggleInspector();
       }

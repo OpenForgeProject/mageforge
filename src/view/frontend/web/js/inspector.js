@@ -136,7 +136,7 @@ function _registerMageforgeInspector() {
       // Use div instead of button to avoid Luma/theme button CSS overrides
       const btn = document.createElement("div");
       btn.className = "mageforge-inspector-float-button";
-      btn.title = "Activate Inspector (Ctrl+Shift+I)";
+      btn.title = "Activate Inspector";
       btn.setAttribute("role", "button");
       btn.setAttribute("tabindex", "0");
       btn.setAttribute("aria-pressed", "false");

@@ -113,10 +113,7 @@ class TemplateCopierTest extends TestCase
 
     public function testAddsHeaderWhenEnabled(): void
     {
-        $this->scopeConfig
-            ->method('isSetFlag')
-            ->with(TemplateOverrideConfig::XML_PATH_ADD_HEADER, TemplateOverrideConfig::SCOPE_STORE)
-            ->willReturn(true);
+        $this->scopeConfig->method('isSetFlag')->willReturn(true);
         $this->registerModulePaths([
             'Magento_Catalog' => '/module',
         ]);
@@ -380,5 +377,228 @@ class TemplateCopierTest extends TestCase
 
         $this->assertStringStartsWith('<!--', $captured ?? '');
         $this->assertStringEndsWith("-->\n\n<p>order</p>", $captured ?? '');
+    }
+
+    public function testPhtmlHeaderExcludesDateWhenDisabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_PATH,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_MODULE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_MODULE_VERSION => true,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE => false,
+                default => false,
+            });
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('@mageforge-template-override', $captured ?? '');
+        $this->assertStringContainsString('@module-version 1.2.3', $captured ?? '');
+        $this->assertStringNotContainsString('@date ', $captured ?? '');
+    }
+
+    public function testPhtmlHeaderExcludesModuleVersionWhenDisabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_PATH,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_MODULE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE => true,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_MODULE_VERSION => false,
+                default => false,
+            });
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('@date ' . date('Y-m-d'), $captured ?? '');
+        $this->assertStringContainsString('@module Vendor_Module', $captured ?? '');
+        $this->assertStringNotContainsString('@module-version', $captured ?? '');
+    }
+
+    public function testPhtmlHeaderExcludesSourcePathWhenDisabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_MODULE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_MODULE_VERSION => true,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_PATH => false,
+                default => false,
+            });
+        $this->registerModulePaths([
+            'Vendor_Module' => '/magento/vendor/module',
+        ]);
+        $this->packageInfo->method('getVersion')->with('Vendor_Module')->willReturn('1.2.3');
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/module/view/frontend/templates/widget.phtml',
+            '/theme/dir/widget.phtml',
+            'Vendor_Module',
+        );
+
+        $this->assertStringContainsString('@module Vendor_Module', $captured ?? '');
+        $this->assertStringContainsString('@module-version 1.2.3', $captured ?? '');
+        $this->assertStringNotContainsString('@source ', $captured ?? '');
+    }
+
+    public function testPhtmlHeaderExcludesOverrideForWhenDisabled(): void
+    {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_PATH,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_MODULE,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_MODULE_VERSION => true,
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_OVERRIDE_FOR => false,
+                default => false,
+            });
+        $this->registerModulePaths([
+            'Hyva_MageWorxFaq' => '/magento/vendor/hyva-themes/magento2-mageworx-faq/src',
+        ]);
+        $this->packageInfo
+            ->method('getVersion')
+            ->willReturnCallback(static fn(string $module): string => match ($module) {
+                'Hyva_MageWorxFaq' => '1.0.6',
+                default => '',
+            });
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('fileGetContents')->willReturn('<div>content</div>');
+        $captured = null;
+        $this->fileDriver
+            ->method('filePutContents')
+            ->willReturnCallback(static function (string $path, string $content) use (&$captured): bool {
+                $captured = $content;
+                return true;
+            });
+
+        $this->copier->copy(
+            '/magento/vendor/hyva-themes/magento2-mageworx-faq/src/view/frontend/templates/faq/list.phtml',
+            '/theme/dir/widget.phtml',
+            'MageWorx_Faq',
+        );
+
+        $this->assertStringContainsString('@module Hyva_MageWorxFaq', $captured ?? '');
+        $this->assertStringContainsString('@module-version 1.0.6', $captured ?? '');
+        $this->assertStringNotContainsString('@override-for', $captured ?? '');
+    }
+
+    /**
+     * @dataProvider formatToggleProvider
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @param string $enableConfigPath
+     */
+    public function testSkipsHeaderWhenFormatToggleDisabled(
+        string $sourcePath,
+        string $targetPath,
+        string $enableConfigPath,
+    ): void {
+        $this->scopeConfig
+            ->method('isSetFlag')
+            ->willReturnCallback(static fn(string $path): bool => match ($path) {
+                TemplateOverrideConfig::XML_PATH_ADD_HEADER => true,
+                $enableConfigPath => false,
+                default => true,
+            });
+        $this->fileDriver->method('getParentDirectory')->willReturn('/theme/dir');
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->expects($this->once())->method('copy')->with($sourcePath, $targetPath);
+        $this->fileDriver->expects($this->never())->method('fileGetContents');
+        $this->fileDriver->expects($this->never())->method('filePutContents');
+
+        $this->copier->copy($sourcePath, $targetPath, 'Vendor_Module');
+    }
+
+    /**
+     * @return array<string, array{string, string, string}>
+     */
+    public static function formatToggleProvider(): array
+    {
+        return [
+            'phtml disabled' => [
+                '/module/view/frontend/templates/widget.phtml',
+                '/theme/dir/widget.phtml',
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+            ],
+            'html disabled' => [
+                '/module/view/frontend/templates/mail.html',
+                '/theme/dir/mail.html',
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_HTML,
+            ],
+            'xml disabled' => [
+                '/module/view/frontend/layout/default.xml',
+                '/theme/dir/default.xml',
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_XML,
+            ],
+            'web asset disabled' => [
+                '/module/web/js/source.js',
+                '/theme/dir/source.js',
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_WEB_ASSETS,
+            ],
+            'shell disabled' => [
+                '/module/web/scripts/deploy.sh',
+                '/theme/dir/deploy.sh',
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_SHELL,
+            ],
+        ];
     }
 }

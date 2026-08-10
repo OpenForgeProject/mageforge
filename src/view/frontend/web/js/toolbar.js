@@ -2,6 +2,7 @@
  * MageForge Toolbar - Standalone audit toolbar.
  */
 
+import { matchesShortcut } from "./shortcut-parser.js";
 import { uiMethods } from "./toolbar/ui.js";
 import { auditMethods } from "./toolbar/audits.js";
 
@@ -39,6 +40,12 @@ function _registerMageforgeToolbar() {
     /** @type {Function|null} Global keydown handler for keyboard shortcuts */
     _keyboardShortcutHandler: null,
 
+    /** @type {boolean} Whether keyboard shortcuts are enabled */
+    keyboardShortcutsEnabled: true,
+
+    /** @type {string} Configured keyboard shortcut for toggling all audits */
+    shortcut: "Ctrl+Shift+A",
+
     /** @type {Map<string, 'success'|'warning'|'error'>} In-memory audit badge status (avoids DOM reads in score calc) */
     _auditStatus: new Map(),
 
@@ -50,10 +57,15 @@ function _registerMageforgeToolbar() {
       this.createToolbar();
       this.currentTheme = this.$el?.getAttribute("data-theme") || "dark";
       this.setTheme(this.currentTheme);
+      this.keyboardShortcutsEnabled =
+        this.$el?.getAttribute("data-keyboard-shortcuts-enabled") !== "0";
+      this.shortcut =
+        this.$el?.getAttribute("data-shortcut") || "Ctrl+Shift+A";
 
-      // Global keyboard shortcut: Ctrl/Cmd+Shift+A → toggle all audits
+      // Global keyboard shortcut for toggling all audits
       this._keyboardShortcutHandler = (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A") {
+        if (!this.keyboardShortcutsEnabled) return;
+        if (matchesShortcut(e, this.shortcut)) {
           e.preventDefault();
           this.toggleAllAudits();
         }

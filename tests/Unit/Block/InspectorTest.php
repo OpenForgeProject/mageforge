@@ -143,4 +143,57 @@ class InspectorTest extends TestCase
 
         $this->assertSame(InspectorConfig::DEFAULT_POSITION, $this->block->getPosition());
     }
+
+    public function testGetKeyboardShortcutsEnabledDefaultsToTrue(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn(null);
+
+        $this->assertTrue($this->block->getKeyboardShortcutsEnabled());
+    }
+
+    public function testGetKeyboardShortcutsEnabledReturnsFalseWhenExplicitlyDisabled(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn('0');
+
+        $this->assertFalse($this->block->getKeyboardShortcutsEnabled());
+    }
+
+    public function testGetKeyboardShortcutsEnabledReturnsTrueForOtherValues(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn('1');
+
+        $this->assertTrue($this->block->getKeyboardShortcutsEnabled());
+    }
+
+    public function testGetToolbarShortcutReturnsConfiguredValue(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->with(InspectorConfig::XML_PATH_TOOLBAR_SHORTCUT, InspectorConfig::SCOPE_STORE)
+            ->willReturn('Shift+F8');
+
+        $this->assertSame('Shift+F8', $this->block->getToolbarShortcut());
+    }
+
+    public function testGetToolbarShortcutReturnsDefaultWhenEmpty(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn('');
+
+        $this->assertSame(InspectorConfig::DEFAULT_TOOLBAR_SHORTCUT, $this->block->getToolbarShortcut());
+    }
+
+    public function testGetInspectorShortcutReturnsConfiguredValue(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->with(InspectorConfig::XML_PATH_INSPECTOR_SHORTCUT, InspectorConfig::SCOPE_STORE)
+            ->willReturn('F12');
+
+        $this->assertSame('F12', $this->block->getInspectorShortcut());
+    }
+
+    public function testGetInspectorShortcutReturnsDefaultWhenEmpty(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn(null);
+
+        $this->assertSame(InspectorConfig::DEFAULT_INSPECTOR_SHORTCUT, $this->block->getInspectorShortcut());
+    }
 }
