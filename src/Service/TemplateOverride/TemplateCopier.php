@@ -36,6 +36,104 @@ class TemplateCopier
     }
 
     /**
+     * Check whether the override date should be included in the source header
+     *
+     * @return bool
+     */
+    private function shouldIncludeDateInHeader(): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_DATE,
+            TemplateOverrideConfig::SCOPE_STORE,
+        );
+    }
+
+    /**
+     * Check whether the source module version should be included in the source header
+     *
+     * @return bool
+     */
+    private function shouldIncludeModuleVersionInHeader(): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_MODULE_VERSION,
+            TemplateOverrideConfig::SCOPE_STORE,
+        );
+    }
+
+    /**
+     * Check whether the relative source path should be included in the source header
+     *
+     * @return bool
+     */
+    private function shouldIncludeSourcePathInHeader(): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_PATH,
+            TemplateOverrideConfig::SCOPE_STORE,
+        );
+    }
+
+    /**
+     * Check whether the source module name should be included in the source header
+     *
+     * @return bool
+     */
+    private function shouldIncludeSourceModuleInHeader(): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_SOURCE_MODULE,
+            TemplateOverrideConfig::SCOPE_STORE,
+        );
+    }
+
+    /**
+     * Check whether the logical override target should be included in the source header
+     *
+     * @return bool
+     */
+    private function shouldIncludeOverrideForInHeader(): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_INCLUDE_OVERRIDE_FOR,
+            TemplateOverrideConfig::SCOPE_STORE,
+        );
+    }
+
+    /**
+     * Check whether source headers are enabled for the given file type
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    private function isHeaderEnabledForFile(string $filePath): bool
+    {
+        return match ($this->extension($filePath)) {
+            'phtml', 'php' => $this->scopeConfig->isSetFlag(
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_PHTML,
+                TemplateOverrideConfig::SCOPE_STORE,
+            ),
+            'html', 'htm' => $this->scopeConfig->isSetFlag(
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_HTML,
+                TemplateOverrideConfig::SCOPE_STORE,
+            ),
+            'xml', 'xhtml', 'svg' => $this->scopeConfig->isSetFlag(
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_XML,
+                TemplateOverrideConfig::SCOPE_STORE,
+            ),
+            'css', 'js', 'less', 'scss', 'sass', 'ts' => $this->scopeConfig->isSetFlag(
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_WEB_ASSETS,
+                TemplateOverrideConfig::SCOPE_STORE,
+            ),
+            'sh', 'bash', 'zsh', 'fish' => $this->scopeConfig->isSetFlag(
+                TemplateOverrideConfig::XML_PATH_SOURCE_HEADER_ENABLE_SHELL,
+                TemplateOverrideConfig::SCOPE_STORE,
+            ),
+            default => false,
+        };
+    }
+
+    /**
      * Copy the source template to the target location
      *
      * @param string $sourceFile
@@ -52,7 +150,7 @@ class TemplateCopier
         }
 
         $commentStyle = $this->commentStyle->fromFilePath($targetFile);
-        if ($commentStyle->isSupported() && $this->shouldAddHeader()) {
+        if ($commentStyle->isSupported() && $this->shouldAddHeader() && $this->isHeaderEnabledForFile($targetFile)) {
             $this->copyWithHeader($sourceFile, $targetFile, $sourceModuleName, $commentStyle);
             return;
         }
@@ -120,23 +218,34 @@ class TemplateCopier
      */
     private function buildHeaderLines(string $sourceFile, ?string $sourceModuleName): array
     {
-        $date = date('Y-m-d');
         $lines = [
-            'MageForge Template Override from ' . $date,
-            'Source: ' . $this->toRelativePath($sourceFile),
+            'MageForge Template Override',
         ];
 
-        $actualSourceModule = $this->resolveSourceModule($sourceFile);
+        if ($this->shouldIncludeDateInHeader()) {
+            $lines[] = 'Date: ' . date('Y-m-d');
+        }
 
-        if ($actualSourceModule !== null) {
+        if ($this->shouldIncludeSourcePathInHeader()) {
+            $lines[] = 'Source: ' . $this->toRelativePath($sourceFile);
+        }
+
+        $actualSourceModule = $this->resolveSourceModule($sourceFile);
+        $includeSourceModule = $this->shouldIncludeSourceModuleInHeader();
+
+        if ($actualSourceModule !== null && $includeSourceModule) {
             $lines[] = 'Source Module: ' . $actualSourceModule;
-            $version = $this->packageInfo->getVersion($actualSourceModule);
+            $version = $this->shouldIncludeModuleVersionInHeader()
+                ? $this->packageInfo->getVersion($actualSourceModule)
+                : '';
             if ($version !== '') {
                 $lines[] = 'Source Module-Version: ' . $version;
             }
-        } elseif ($sourceModuleName !== null && $sourceModuleName !== '') {
+        } elseif ($sourceModuleName !== null && $sourceModuleName !== '' && $includeSourceModule) {
             $lines[] = 'Override For: ' . $sourceModuleName;
-            $version = $this->packageInfo->getVersion($sourceModuleName);
+            $version = $this->shouldIncludeModuleVersionInHeader()
+                ? $this->packageInfo->getVersion($sourceModuleName)
+                : '';
             if ($version !== '') {
                 $lines[] = 'Module-Version: ' . $version;
             }
@@ -158,34 +267,60 @@ class TemplateCopier
      */
     private function buildPhpDocHeaderLines(string $sourceFile, ?string $sourceModuleName): array
     {
-        $date = date('Y-m-d');
         $lines = [
             '@mageforge-template-override',
-            '@date ' . $date,
-            '@source ' . $this->toRelativePath($sourceFile),
         ];
 
-        $actualSourceModule = $this->resolveSourceModule($sourceFile);
+        if ($this->shouldIncludeDateInHeader()) {
+            $lines[] = '@date ' . date('Y-m-d');
+        }
 
-        if ($actualSourceModule !== null) {
+        if ($this->shouldIncludeSourcePathInHeader()) {
+            $lines[] = '@source ' . $this->toRelativePath($sourceFile);
+        }
+
+        $actualSourceModule = $this->resolveSourceModule($sourceFile);
+        $includeSourceModule = $this->shouldIncludeSourceModuleInHeader();
+
+        if ($actualSourceModule !== null && $includeSourceModule) {
             $lines[] = '@module ' . $actualSourceModule;
-            $version = $this->packageInfo->getVersion($actualSourceModule);
+            $version = $this->shouldIncludeModuleVersionInHeader()
+                ? $this->packageInfo->getVersion($actualSourceModule)
+                : '';
             if ($version !== '') {
                 $lines[] = '@module-version ' . $version;
             }
-        } elseif ($sourceModuleName !== null && $sourceModuleName !== '') {
+        } elseif ($sourceModuleName !== null && $sourceModuleName !== '' && $includeSourceModule) {
             $lines[] = '@module ' . $sourceModuleName;
-            $version = $this->packageInfo->getVersion($sourceModuleName);
+            $version = $this->shouldIncludeModuleVersionInHeader()
+                ? $this->packageInfo->getVersion($sourceModuleName)
+                : '';
             if ($version !== '') {
                 $lines[] = '@module-version ' . $version;
             }
         }
 
-        if ($this->isOverrideForDifferentModule($actualSourceModule, $sourceModuleName)) {
+        $includeOverrideFor =
+            $this->shouldIncludeOverrideForInHeader()
+            && $this->isOverrideForDifferentModule($actualSourceModule, $sourceModuleName);
+        if ($includeOverrideFor) {
             $lines[] = '@override-for ' . (string) $sourceModuleName;
         }
 
         return $lines;
+    }
+
+    /**
+     * Extract the lower-cased file extension from a path
+     *
+     * @param string $filePath
+     * @return string
+     */
+    private function extension(string $filePath): string
+    {
+        $lastDot = strrpos($filePath, '.');
+
+        return $lastDot === false ? '' : strtolower(substr($filePath, $lastDot + 1));
     }
 
     /**
