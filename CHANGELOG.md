@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.28.0](https://github.com/OpenForgeProject/mageforge/compare/0.27.0...0.28.0) (2026-08-11)
+
+
+### Added
+
+* add auto dependency updater ([#231](https://github.com/OpenForgeProject/mageforge/issues/231)) ([bc80151](https://github.com/OpenForgeProject/mageforge/commit/bc80151e4b616bc1d61790193c3ec842f8f63528))
+* add dependency updater command ([#222](https://github.com/OpenForgeProject/mageforge/issues/222)) ([b90be81](https://github.com/OpenForgeProject/mageforge/commit/b90be814c60e9ad3066cc6fd2303c7a6166938d6))
+* add interactive menu for managing MageForge Inspector actions ([#240](https://github.com/OpenForgeProject/mageforge/issues/240)) ([412c63f](https://github.com/OpenForgeProject/mageforge/commit/412c63fe41a9216d20f84ab10a502b95f5c4ec2e))
+* Add keyboard shortcuts configuration and functionality ([#239](https://github.com/OpenForgeProject/mageforge/issues/239)) ([3a88afa](https://github.com/OpenForgeProject/mageforge/commit/3a88afa2ef2615775337e6a498319f6c0f6eee04))
+* add MageForge-Slogan-dark.svg ([a703b8b](https://github.com/OpenForgeProject/mageforge/commit/a703b8bdfab9ab38f5b7fd0558f22065fb38b073))
+* add template override command ([#223](https://github.com/OpenForgeProject/mageforge/issues/223)) ([648668e](https://github.com/OpenForgeProject/mageforge/commit/648668e806174812b199df60623a4965ac6e8c92))
+* add update cooldown to dependabot for supply-chain safety ([#238](https://github.com/OpenForgeProject/mageforge/issues/238)) ([ac2d1ee](https://github.com/OpenForgeProject/mageforge/commit/ac2d1ee3d080cafc42f5490856e2983b14b513cb))
+* update tools ([#230](https://github.com/OpenForgeProject/mageforge/issues/230)) ([ceda319](https://github.com/OpenForgeProject/mageforge/commit/ceda319a9a1a7b3e205c585251f82701387069f8))
+
+
+### Fixed
+
+* use correct SHA for peter-evans/create-pull-request v8.1.0 ([#237](https://github.com/OpenForgeProject/mageforge/issues/237)) ([d152e1f](https://github.com/OpenForgeProject/mageforge/commit/d152e1fa3c12457ccfa00790e3fe8a091372d4da))
+
 ## [0.27.0](https://github.com/OpenForgeProject/mageforge/compare/0.26.1...0.27.0) (2026-07-10)
 
 
