@@ -8,7 +8,8 @@ declare(strict_types=1);
  * Initializes the Alpine.js inspector component.
  * The floating button and info badge are created dynamically via JavaScript.
  *
- * Note: Loads Alpine.js from CDN if not already available (for non-Hyvä themes like Luma)
+ * Note: Loads bundled Alpine.js locally as fallback if not already available
+ *       (e.g. for non-Hyvä themes like Luma). No external CDN is used.
  *
  * @var \OpenForgeProject\MageForge\Block\Inspector $block
  */
@@ -20,7 +21,10 @@ declare(strict_types=1);
 <!-- Alpine.js Bootstrap (load local fallback only if not already present) -->
 <?php
 
-$alpineJsUrl = $escaper->escapeUrl($block->getAlpineJsUrl());
+$alpineJsUrl = json_encode(
+    $block->getAlpineJsUrl(),
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+);
 $alpineBootstrap = <<<JS
     (function() {
         'use strict';
@@ -35,7 +39,7 @@ $alpineBootstrap = <<<JS
             console.log('[MageForge Inspector] Loading bundled Alpine.js');
 
             var alpineScript = document.createElement('script');
-            alpineScript.src = '{$alpineJsUrl}';
+            alpineScript.src = {$alpineJsUrl};
             alpineScript.onload = function() {
                 console.log('[MageForge Inspector] Alpine.js loaded successfully');
             };
