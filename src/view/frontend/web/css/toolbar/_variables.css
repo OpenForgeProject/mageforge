@@ -62,15 +62,33 @@
   --mageforge-color-teal-rgb: 20, 184, 166;
 
   /* Alpha variants */
-  --mageforge-color-green-alpha-15: rgba(var(--mageforge-color-green-rgb), 0.15);
-  --mageforge-color-green-alpha-35: rgba(var(--mageforge-color-green-rgb), 0.35);
+  --mageforge-color-green-alpha-15: rgba(
+    var(--mageforge-color-green-rgb),
+    0.15
+  );
+  --mageforge-color-green-alpha-35: rgba(
+    var(--mageforge-color-green-rgb),
+    0.35
+  );
   --mageforge-color-red-alpha-15: rgba(var(--mageforge-color-red-rgb), 0.15);
   --mageforge-color-red-alpha-35: rgba(var(--mageforge-color-red-rgb), 0.35);
-  --mageforge-color-amber-alpha-15: rgba(var(--mageforge-color-amber-rgb), 0.15);
-  --mageforge-color-amber-alpha-35: rgba(var(--mageforge-color-amber-rgb), 0.35);
+  --mageforge-color-amber-alpha-15: rgba(
+    var(--mageforge-color-amber-rgb),
+    0.15
+  );
+  --mageforge-color-amber-alpha-35: rgba(
+    var(--mageforge-color-amber-rgb),
+    0.35
+  );
   --mageforge-color-blue-alpha-35: rgba(var(--mageforge-color-blue-rgb), 0.35);
-  --mageforge-color-fuchsia-alpha-15: rgba(var(--mageforge-color-fuchsia-rgb), 0.15);
-  --mageforge-color-fuchsia-alpha-30: rgba(var(--mageforge-color-fuchsia-rgb), 0.3);
+  --mageforge-color-fuchsia-alpha-15: rgba(
+    var(--mageforge-color-fuchsia-rgb),
+    0.15
+  );
+  --mageforge-color-fuchsia-alpha-30: rgba(
+    var(--mageforge-color-fuchsia-rgb),
+    0.3
+  );
 
   /* Audit group colors */
   --mageforge-group-color-wcag: var(--mageforge-color-purple);

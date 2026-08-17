@@ -21,7 +21,10 @@
 }
 
 .mageforge-jsonld-count {
-  color: var(--mageforge-text-secondary, rgba(var(--mageforge-color-slate-400-rgb), 0.8));
+  color: var(
+    --mageforge-text-secondary,
+    rgba(var(--mageforge-color-slate-400-rgb), 0.8)
+  );
 }
 
 .mageforge-jsonld-errors {
@@ -130,7 +133,10 @@
   border: none;
   cursor: pointer;
   text-align: left;
-  color: var(--mageforge-text-primary, rgba(var(--mageforge-color-slate-50-rgb), 0.9));
+  color: var(
+    --mageforge-text-primary,
+    rgba(var(--mageforge-color-slate-50-rgb), 0.9)
+  );
   font-size: 11px;
   font-weight: 500;
   font-family: var(--mageforge-font-family);
@@ -190,7 +196,10 @@
   font-family:
     "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, "Courier New",
     monospace;
-  color: var(--mageforge-text-primary, rgba(var(--mageforge-color-slate-50-rgb), 0.9));
+  color: var(
+    --mageforge-text-primary,
+    rgba(var(--mageforge-color-slate-50-rgb), 0.9)
+  );
   white-space: pre;
 }
 
@@ -275,7 +284,10 @@
 
 .mageforge-schema-prop-value {
   font-size: 10px;
-  color: var(--mageforge-text-primary, rgba(var(--mageforge-color-slate-50-rgb), 0.9));
+  color: var(
+    --mageforge-text-primary,
+    rgba(var(--mageforge-color-slate-50-rgb), 0.9)
+  );
   word-break: break-word;
   padding: 2px 0;
   margin: 0;

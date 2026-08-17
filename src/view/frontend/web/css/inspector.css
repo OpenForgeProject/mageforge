@@ -796,7 +796,10 @@
 
     /* Glass Overlays - Inverted for light mode */
     --mageforge-surface-glass: rgba(var(--mageforge-color-black-rgb), 0.05);
-    --mageforge-surface-glass-hover: rgba(var(--mageforge-color-black-rgb), 0.08);
+    --mageforge-surface-glass-hover: rgba(
+      var(--mageforge-color-black-rgb),
+      0.08
+    );
     --mageforge-border-glass: rgba(var(--mageforge-color-black-rgb), 0.1);
     --mageforge-shadow-glow: rgba(var(--mageforge-color-black-rgb), 0.05);
   }
