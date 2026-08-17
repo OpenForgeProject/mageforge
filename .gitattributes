@@ -19,3 +19,6 @@
 /infection.json5                  export-ignore
 /.gitignore                       export-ignore
 /.gitattributes                   export-ignore
+
+# Vendored/minified frontend libraries: treat as binary to keep diffs readable
+src/view/frontend/web/js/lib/alpine.min.js  binary

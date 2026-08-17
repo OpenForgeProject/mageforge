@@ -102,6 +102,16 @@ class Inspector extends Template
     }
 
     /**
+     * Get local Alpine.js fallback URL
+     *
+     * @return string
+     */
+    public function getAlpineJsUrl(): string
+    {
+        return $this->getViewFileUrl('OpenForgeProject_MageForge::js/lib/alpine.min.js');
+    }
+
+    /**
      * Whether button labels should be displayed in the toolbar
      *
      * @return bool
