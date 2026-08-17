@@ -30,7 +30,7 @@
   border-top: none;
   border-right: none;
   border-bottom: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--mageforge-color-black-rgb), 0.3);
 }
 
 .mageforge-toolbar-feedback--error {
@@ -40,5 +40,5 @@
   border-top: none;
   border-right: none;
   border-bottom: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--mageforge-color-black-rgb), 0.3);
 }

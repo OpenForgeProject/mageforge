@@ -40,13 +40,13 @@
     opacity 0.15s ease,
     transform 0.15s ease,
     box-shadow 0.15s ease;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 14px rgba(var(--mageforge-color-blue-rgb), 0.3);
 }
 
 .mageforge-toolbar-menu-run-all:hover {
   opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 18px rgba(var(--mageforge-color-blue-rgb), 0.4);
 }
 
 .mageforge-toolbar-menu-run-all:active {
@@ -69,7 +69,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(var(--mageforge-color-white-rgb), 0.3);
   border-top-color: var(--mageforge-color-white);
   border-radius: 50%;
   animation: mageforge-spin 0.7s linear infinite;
@@ -137,13 +137,13 @@
     opacity 0.15s ease,
     transform 0.15s ease,
     box-shadow 0.15s ease;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 14px rgba(var(--mageforge-color-blue-rgb), 0.3);
 }
 
 .mageforge-home-check-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 18px rgba(var(--mageforge-color-blue-rgb), 0.4);
 }
 
 .mageforge-home-check-btn:active {
@@ -250,11 +250,11 @@
 }
 
 .mageforge-home-summary-errors {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(var(--mageforge-color-red-rgb), 0.3);
 }
 
 .mageforge-home-summary-warnings {
-  border-color: rgba(245, 158, 11, 0.3);
+  border-color: rgba(var(--mageforge-color-amber-rgb), 0.3);
 }
 
 .mageforge-home-summary-count {
@@ -306,13 +306,13 @@
     opacity 0.15s ease,
     transform 0.15s ease,
     box-shadow 0.15s ease;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 3px 10px rgba(var(--mageforge-color-blue-rgb), 0.25);
 }
 
 .mageforge-group-run-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 5px 14px rgba(var(--mageforge-color-blue-rgb), 0.35);
 }
 
 .mageforge-group-run-btn:active {
@@ -335,7 +335,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(var(--mageforge-color-white-rgb), 0.3);
   border-top-color: var(--mageforge-color-white);
   border-radius: 50%;
   animation: mageforge-spin 0.7s linear infinite;

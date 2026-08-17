@@ -15,54 +15,91 @@
 
   /* Brand Colors */
   --mageforge-color-white: #ffffff;
+  --mageforge-color-black: #000000;
   --mageforge-color-blue: #3b82f6;
+  --mageforge-color-blue-dark: #2563eb;
   --mageforge-color-green: #10b981;
+  --mageforge-color-green-dark: #059669;
   --mageforge-color-red: #ef4444;
+  --mageforge-color-red-light: #fca5a5;
+  --mageforge-color-yellow: #fbbf24;
+  --mageforge-color-slate-100: #f1f5f9;
+  --mageforge-color-slate-200: #e2e8f0;
+  --mageforge-color-slate-300: #cbd5e1;
   --mageforge-color-slate-400: #94a3b8;
+  --mageforge-color-slate-500: #64748b;
+  --mageforge-color-slate-900: #1e293b;
+  --mageforge-color-slate-950: #0f172a;
+  --mageforge-color-slate-50: #f8fafc;
   --mageforge-color-orange: #fb923c;
   --mageforge-color-pink: #c850c0;
   --mageforge-color-purple: #a855f7;
   --mageforge-color-amber: #edb04d;
+  --mageforge-color-cyan: #22d3ee;
+  --mageforge-color-fuchsia: #d946ef;
+  --mageforge-color-fuchsia-light: #e879f9;
+  --mageforge-color-teal: #14b8a6;
+
+  /* RGB channels for alpha variants */
+  --mageforge-color-white-rgb: 255, 255, 255;
+  --mageforge-color-black-rgb: 0, 0, 0;
+  --mageforge-color-blue-rgb: 59, 130, 246;
+  --mageforge-color-blue-dark-rgb: 37, 99, 235;
+  --mageforge-color-green-rgb: 16, 185, 129;
+  --mageforge-color-green-dark-rgb: 5, 150, 105;
+  --mageforge-color-red-rgb: 239, 68, 68;
+  --mageforge-color-red-light-rgb: 252, 165, 165;
+  --mageforge-color-yellow-rgb: 251, 191, 36;
+  --mageforge-color-amber-rgb: 245, 158, 11;
+  --mageforge-color-slate-400-rgb: 148, 163, 184;
+  --mageforge-color-slate-500-rgb: 100, 116, 139;
+  --mageforge-color-slate-900-rgb: 30, 41, 59;
+  --mageforge-color-slate-950-rgb: 15, 23, 42;
+  --mageforge-color-slate-50-rgb: 248, 250, 252;
+  --mageforge-color-orange-rgb: 251, 146, 60;
+  --mageforge-color-purple-rgb: 168, 85, 247;
+  --mageforge-color-fuchsia-rgb: 217, 70, 239;
+  --mageforge-color-teal-rgb: 20, 184, 166;
 
   /* Alpha variants */
-  --mageforge-color-green-alpha-15: rgba(16, 185, 129, 0.15);
-  --mageforge-color-green-alpha-35: rgba(16, 185, 129, 0.35);
-  --mageforge-color-red-alpha-15: rgba(239, 68, 68, 0.15);
-  --mageforge-color-red-alpha-35: rgba(239, 68, 68, 0.35);
-  --mageforge-color-amber-alpha-15: rgba(237, 176, 77, 0.15);
-  --mageforge-color-amber-alpha-35: rgba(237, 176, 77, 0.35);
-  --mageforge-color-blue-alpha-35: rgba(59, 130, 246, 0.35);
+  --mageforge-color-green-alpha-15: rgba(var(--mageforge-color-green-rgb), 0.15);
+  --mageforge-color-green-alpha-35: rgba(var(--mageforge-color-green-rgb), 0.35);
+  --mageforge-color-red-alpha-15: rgba(var(--mageforge-color-red-rgb), 0.15);
+  --mageforge-color-red-alpha-35: rgba(var(--mageforge-color-red-rgb), 0.35);
+  --mageforge-color-amber-alpha-15: rgba(var(--mageforge-color-amber-rgb), 0.15);
+  --mageforge-color-amber-alpha-35: rgba(var(--mageforge-color-amber-rgb), 0.35);
+  --mageforge-color-blue-alpha-35: rgba(var(--mageforge-color-blue-rgb), 0.35);
+  --mageforge-color-fuchsia-alpha-15: rgba(var(--mageforge-color-fuchsia-rgb), 0.15);
+  --mageforge-color-fuchsia-alpha-30: rgba(var(--mageforge-color-fuchsia-rgb), 0.3);
 
   /* Audit group colors */
   --mageforge-group-color-wcag: var(--mageforge-color-purple);
   --mageforge-group-color-html-quality: var(--mageforge-color-blue);
   --mageforge-group-color-performance: var(--mageforge-color-orange);
-  --mageforge-group-color-seo: #14b8a6;
-  --mageforge-group-color-structured-data: #d946ef;
-  --mageforge-color-fuchsia: #d946ef;
-  --mageforge-color-fuchsia-alpha-15: rgba(217, 70, 239, 0.15);
-  --mageforge-color-fuchsia-alpha-30: rgba(217, 70, 239, 0.3);
-  --mageforge-color-fuchsia-light: #e879f9;
+  --mageforge-group-color-seo: var(--mageforge-color-teal);
+  --mageforge-group-color-structured-data: var(--mageforge-color-fuchsia);
 
   /* Backgrounds */
-  --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
-  --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
-  --mageforge-border-color: rgba(148, 163, 184, 0.15);
-  --mageforge-surface-glass: rgba(255, 255, 255, 0.05);
-  --mageforge-surface-glass-hover: rgba(255, 255, 255, 0.08);
-  --mageforge-border-glass: rgba(255, 255, 255, 0.1);
+  --mageforge-bg-dark: rgba(var(--mageforge-color-slate-950-rgb), 0.98);
+  --mageforge-bg-dark-alt: rgba(var(--mageforge-color-slate-900-rgb), 0.98);
+  --mageforge-border-color: rgba(var(--mageforge-color-slate-400-rgb), 0.15);
+  --mageforge-surface-glass: rgba(var(--mageforge-color-white-rgb), 0.05);
+  --mageforge-surface-glass-hover: rgba(var(--mageforge-color-white-rgb), 0.08);
+  --mageforge-border-glass: rgba(var(--mageforge-color-white-rgb), 0.1);
+
   /* Shadows */
-  --mageforge-shadow-sm: rgba(0, 0, 0, 0.2);
-  --mageforge-shadow-md: rgba(0, 0, 0, 0.3);
-  --mageforge-shadow-lg: rgba(0, 0, 0, 0.4);
+  --mageforge-shadow-sm: rgba(var(--mageforge-color-black-rgb), 0.2);
+  --mageforge-shadow-md: rgba(var(--mageforge-color-black-rgb), 0.3);
+  --mageforge-shadow-lg: rgba(var(--mageforge-color-black-rgb), 0.4);
+  --mageforge-shadow-glow: rgba(var(--mageforge-color-white-rgb), 0.05);
 
   /* Burger button */
-  --mageforge-burger-bg: rgba(15, 23, 42, 0.85);
-  --mageforge-burger-bg-hover: rgba(30, 41, 59, 0.95);
+  --mageforge-burger-bg: rgba(var(--mageforge-color-slate-950-rgb), 0.85);
+  --mageforge-burger-bg-hover: rgba(var(--mageforge-color-slate-900-rgb), 0.95);
 
   /* Toggle switch */
-  --mageforge-toggle-bg-off: rgba(255, 255, 255, 0.15);
-  --mageforge-toggle-bg-off-light: rgba(0, 0, 0, 0.15);
+  --mageforge-toggle-bg-off: rgba(var(--mageforge-color-white-rgb), 0.15);
+  --mageforge-toggle-bg-off-light: rgba(var(--mageforge-color-black-rgb), 0.15);
 
   /* Brand gradients */
   --gradient-brand: linear-gradient(
