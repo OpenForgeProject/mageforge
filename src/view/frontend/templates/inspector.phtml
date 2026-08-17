@@ -21,10 +21,7 @@ declare(strict_types=1);
 <!-- Alpine.js Bootstrap (load local fallback only if not already present) -->
 <?php
 
-$alpineJsUrl = json_encode(
-    $block->getAlpineJsUrl(),
-    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
-);
+$alpineJsUrl = json_encode($block->getAlpineJsUrl(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 $alpineBootstrap = <<<JS
     (function() {
         'use strict';
