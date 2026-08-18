@@ -314,18 +314,18 @@
 
 .mageforge-toolbar-menu-status--success {
   color: var(--mageforge-color-green);
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(var(--mageforge-color-green-rgb), 0.15);
+  border: 1px solid rgba(var(--mageforge-color-green-rgb), 0.3);
 }
 
 .mageforge-toolbar-menu-status--error {
   color: var(--mageforge-color-red);
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(var(--mageforge-color-red-rgb), 0.15);
+  border: 1px solid rgba(var(--mageforge-color-red-rgb), 0.3);
 }
 
 .mageforge-toolbar-menu-status--warning {
   color: var(--mageforge-color-amber);
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(var(--mageforge-color-amber-rgb), 0.15);
+  border: 1px solid rgba(var(--mageforge-color-amber-rgb), 0.3);
 }

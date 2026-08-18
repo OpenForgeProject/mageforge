@@ -18,6 +18,8 @@
     "Helvetica Neue", Arial, sans-serif;
   --mageforge-font-mono:
     "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas", monospace;
+  --mageforge-color-white: #ffffff;
+  --mageforge-color-black: #000000;
   --mageforge-color-blue: #3b82f6;
   --mageforge-color-blue-dark: #2563eb;
   --mageforge-color-green: #10b981;
@@ -30,24 +32,51 @@
   --mageforge-color-slate-300: #cbd5e1;
   --mageforge-color-slate-400: #94a3b8;
   --mageforge-color-slate-500: #64748b;
+  --mageforge-color-slate-900: #1e293b;
+  --mageforge-color-slate-950: #0f172a;
+  --mageforge-color-slate-50: #f8fafc;
   --mageforge-color-amber: #f59e0b;
   --mageforge-color-cyan: #22d3ee;
   --mageforge-color-purple: #a78bfa;
   --mageforge-color-orange: #fb923c;
-  --mageforge-bg-dark: rgba(15, 23, 42, 0.98);
-  --mageforge-bg-dark-alt: rgba(30, 41, 59, 0.98);
-  --mageforge-border-color: rgba(148, 163, 184, 0.15);
+  --mageforge-color-fuchsia: #d946ef;
+  --mageforge-color-fuchsia-light: #e879f9;
+  --mageforge-color-teal: #14b8a6;
+
+  /* RGB channels for alpha variants */
+  --mageforge-color-white-rgb: 255, 255, 255;
+  --mageforge-color-black-rgb: 0, 0, 0;
+  --mageforge-color-blue-rgb: 59, 130, 246;
+  --mageforge-color-blue-dark-rgb: 37, 99, 235;
+  --mageforge-color-green-rgb: 16, 185, 129;
+  --mageforge-color-green-dark-rgb: 5, 150, 105;
+  --mageforge-color-red-rgb: 239, 68, 68;
+  --mageforge-color-red-light-rgb: 252, 165, 165;
+  --mageforge-color-yellow-rgb: 251, 191, 36;
+  --mageforge-color-amber-rgb: 245, 158, 11;
+  --mageforge-color-slate-400-rgb: 148, 163, 184;
+  --mageforge-color-slate-500-rgb: 100, 116, 139;
+  --mageforge-color-slate-900-rgb: 30, 41, 59;
+  --mageforge-color-slate-950-rgb: 15, 23, 42;
+  --mageforge-color-slate-50-rgb: 248, 250, 252;
+  --mageforge-color-orange-rgb: 251, 146, 60;
+  --mageforge-color-purple-rgb: 167, 139, 250;
+  --mageforge-color-fuchsia-rgb: 217, 70, 239;
+  --mageforge-color-teal-rgb: 20, 184, 166;
+
+  /* Backgrounds */
+  --mageforge-bg-dark: rgba(var(--mageforge-color-slate-950-rgb), 0.98);
+  --mageforge-bg-dark-alt: rgba(var(--mageforge-color-slate-900-rgb), 0.98);
+  --mageforge-border-color: rgba(var(--mageforge-color-slate-400-rgb), 0.15);
 
   /* Glass/Overlay Variables */
-  --mageforge-surface-glass: rgba(255, 255, 255, 0.05);
+  --mageforge-surface-glass: rgba(var(--mageforge-color-white-rgb), 0.05);
   --mageforge-surface-glass-hover: rgba(
-    255,
-    255,
-    255,
+    var(--mageforge-color-white-rgb),
     0.08
   ); /* slightly lighter for hover */
-  --mageforge-border-glass: rgba(255, 255, 255, 0.1);
-  --mageforge-shadow-glow: rgba(255, 255, 255, 0.05);
+  --mageforge-border-glass: rgba(var(--mageforge-color-white-rgb), 0.1);
+  --mageforge-shadow-glow: rgba(var(--mageforge-color-white-rgb), 0.05);
 }
 
 .mageforge-inspector {
@@ -81,12 +110,7 @@
   outline-offset: -3px;
   z-index: 9998;
   transition: all 0.1s ease-in-out;
-  background-color: rgba(
-    59,
-    130,
-    246,
-    0.05
-  ); /* keep opacity variant local or use calc/color-mix in future */
+  background-color: rgba(var(--mageforge-color-blue-rgb), 0.05);
 }
 
 /* ============================================================================
@@ -115,8 +139,8 @@
   white-space: nowrap;
   text-transform: none;
   box-shadow:
-    0 4px 12px rgba(59, 130, 246, 0.4),
-    0 2px 4px rgba(0, 0, 0, 0.2);
+    0 4px 12px rgba(var(--mageforge-color-blue-rgb), 0.4),
+    0 2px 4px rgba(var(--mageforge-color-black-rgb), 0.2);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(8px);
   letter-spacing: 0.025em;
@@ -127,8 +151,8 @@
 .mageforge-inspector-float-button:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 8px 20px rgba(59, 130, 246, 0.5),
-    0 4px 8px rgba(0, 0, 0, 0.3);
+    0 8px 20px rgba(var(--mageforge-color-blue-rgb), 0.5),
+    0 4px 8px rgba(var(--mageforge-color-black-rgb), 0.3);
 }
 
 .mageforge-inspector-float-button:active {
@@ -136,7 +160,7 @@
 }
 
 .mageforge-inspector-float-button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline: 2px solid rgba(var(--mageforge-color-white-rgb), 0.8);
   outline-offset: 2px;
 }
 
@@ -147,8 +171,8 @@
     var(--mageforge-color-green-dark) 100%
   );
   box-shadow:
-    0 0 0 3px rgba(16, 185, 129, 0.2),
-    0 8px 20px rgba(16, 185, 129, 0.5);
+    0 0 0 3px rgba(var(--mageforge-color-green-rgb), 0.2),
+    0 8px 20px rgba(var(--mageforge-color-green-rgb), 0.5);
 }
 
 /* ============================================================================
@@ -175,9 +199,9 @@
   word-wrap: break-word;
   border: 1px solid var(--mageforge-border-color);
   box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.3),
-    0 10px 10px -5px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 20px 25px -5px rgba(var(--mageforge-color-black-rgb), 0.3),
+    0 10px 10px -5px rgba(var(--mageforge-color-black-rgb), 0.2),
+    0 0 0 1px rgba(var(--mageforge-color-white-rgb), 0.05);
 }
 
 .mageforge-inspector-arrow {
@@ -190,7 +214,7 @@
   border-right: 8px solid transparent;
   border-bottom: 8px solid var(--mageforge-bg-dark);
   pointer-events: none;
-  filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 -2px 4px rgba(var(--mageforge-color-black-rgb), 0.2));
 }
 
 /* Close button */
@@ -218,8 +242,8 @@
 }
 
 .mageforge-inspector-close:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(var(--mageforge-color-red-rgb), 0.15);
+  border-color: rgba(var(--mageforge-color-red-rgb), 0.3);
   color: var(--mageforge-color-red);
   transform: scale(1.05);
 }
@@ -270,8 +294,8 @@
 /* Shadows */
 .mageforge-shadow-lg {
   box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    0 10px 15px -3px rgba(var(--mageforge-color-black-rgb), 0.1),
+    0 4px 6px -4px rgba(var(--mageforge-color-black-rgb), 0.1);
 }
 
 /* ============================================================================
@@ -357,7 +381,7 @@
 
 /* Code inline display for cache keys */
 .mageforge-code-inline {
-  background: rgba(100, 116, 139, 0.1);
+  background: rgba(var(--mageforge-color-slate-500-rgb), 0.1);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: var(--mageforge-font-mono);
@@ -376,19 +400,19 @@
 
 /* Individual tag styling */
 .mageforge-tag {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(var(--mageforge-color-blue-rgb), 0.1);
   color: var(--mageforge-color-blue);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 10px;
   font-weight: 500;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(var(--mageforge-color-blue-rgb), 0.2);
   transition: all 0.2s ease;
 }
 
 .mageforge-tag:hover {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(var(--mageforge-color-blue-rgb), 0.2);
+  border-color: rgba(var(--mageforge-color-blue-rgb), 0.4);
   transform: translateY(-1px);
 }
 
@@ -396,7 +420,7 @@
 .mageforge-complexity-bar {
   width: 100%;
   height: 4px;
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(var(--mageforge-color-slate-400-rgb), 0.2);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 4px;
@@ -505,7 +529,7 @@
 }
 
 .mageforge-tab-button.active {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(var(--mageforge-color-blue-rgb), 0.15);
   color: var(--mageforge-color-blue);
   border-bottom-color: var(--mageforge-color-blue);
 }
@@ -580,15 +604,15 @@
 
 .mageforge-info-value.copied {
   color: var(--mageforge-color-green) !important;
-  background: rgba(16, 185, 129, 0.1) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(var(--mageforge-color-green-rgb), 0.1) !important;
+  border-color: rgba(var(--mageforge-color-green-rgb), 0.3) !important;
   font-weight: 600;
 }
 
 .mageforge-info-value.copy-failed {
   color: var(--mageforge-color-red) !important;
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
+  background: rgba(var(--mageforge-color-red-rgb), 0.1) !important;
+  border-color: rgba(var(--mageforge-color-red-rgb), 0.3) !important;
 }
 
 /* ============================================================================
@@ -606,14 +630,14 @@
 }
 
 .mageforge-inheritance-note {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(var(--mageforge-color-yellow-rgb), 0.1);
+  border: 1px solid rgba(var(--mageforge-color-yellow-rgb), 0.3);
   color: var(--mageforge-color-yellow);
 }
 
 .mageforge-warning-box {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(var(--mageforge-color-red-rgb), 0.1);
+  border: 1px solid rgba(var(--mageforge-color-red-rgb), 0.3);
   color: var(--mageforge-color-red-light);
 }
 
@@ -660,7 +684,7 @@
   cursor: move;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.12); /* Almost slate-400, keeping specific opacity */
+  border-top: 1px solid rgba(var(--mageforge-color-slate-400-rgb), 0.12);
   text-align: center;
   font-size: 10px;
   color: var(--mageforge-color-slate-400);
@@ -715,7 +739,7 @@
   stroke: var(--mageforge-color-blue);
   stroke-width: 2;
   stroke-dasharray: 4;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 1px 2px rgba(var(--mageforge-color-black-rgb), 0.3));
   animation: mageforge-dash-flow 30s linear infinite;
 }
 
@@ -740,9 +764,9 @@
 
 /* Explicit Light Mode */
 .mageforge-inspector[data-theme="light"] {
-  --mageforge-bg-dark: rgba(255, 255, 255, 0.98);
-  --mageforge-bg-dark-alt: rgba(248, 250, 252, 0.98);
-  --mageforge-border-color: rgba(0, 0, 0, 0.12);
+  --mageforge-bg-dark: rgba(var(--mageforge-color-white-rgb), 0.98);
+  --mageforge-bg-dark-alt: rgba(var(--mageforge-color-slate-50-rgb), 0.98);
+  --mageforge-border-color: rgba(var(--mageforge-color-black-rgb), 0.12);
 
   --mageforge-color-slate-100: #0f172a; /* Slate 900 */
   --mageforge-color-slate-200: #1e293b; /* Slate 800 */
@@ -751,18 +775,18 @@
   --mageforge-color-slate-500: #94a3b8; /* Slate 400 */
 
   /* Glass Overlays - Inverted for light mode */
-  --mageforge-surface-glass: rgba(0, 0, 0, 0.05);
-  --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.08);
-  --mageforge-border-glass: rgba(0, 0, 0, 0.1);
-  --mageforge-shadow-glow: rgba(0, 0, 0, 0.05);
+  --mageforge-surface-glass: rgba(var(--mageforge-color-black-rgb), 0.05);
+  --mageforge-surface-glass-hover: rgba(var(--mageforge-color-black-rgb), 0.08);
+  --mageforge-border-glass: rgba(var(--mageforge-color-black-rgb), 0.1);
+  --mageforge-shadow-glow: rgba(var(--mageforge-color-black-rgb), 0.05);
 }
 
 /* Auto Mode - Light Preference */
 @media (prefers-color-scheme: light) {
   .mageforge-inspector[data-theme="auto"] {
-    --mageforge-bg-dark: rgba(255, 255, 255, 0.98);
-    --mageforge-bg-dark-alt: rgba(248, 250, 252, 0.98);
-    --mageforge-border-color: rgba(0, 0, 0, 0.12);
+    --mageforge-bg-dark: rgba(var(--mageforge-color-white-rgb), 0.98);
+    --mageforge-bg-dark-alt: rgba(var(--mageforge-color-slate-50-rgb), 0.98);
+    --mageforge-border-color: rgba(var(--mageforge-color-black-rgb), 0.12);
 
     --mageforge-color-slate-100: #0f172a;
     --mageforge-color-slate-200: #1e293b;
@@ -771,10 +795,13 @@
     --mageforge-color-slate-500: #94a3b8;
 
     /* Glass Overlays - Inverted for light mode */
-    --mageforge-surface-glass: rgba(0, 0, 0, 0.05);
-    --mageforge-surface-glass-hover: rgba(0, 0, 0, 0.08);
-    --mageforge-border-glass: rgba(0, 0, 0, 0.1);
-    --mageforge-shadow-glow: rgba(0, 0, 0, 0.05);
+    --mageforge-surface-glass: rgba(var(--mageforge-color-black-rgb), 0.05);
+    --mageforge-surface-glass-hover: rgba(
+      var(--mageforge-color-black-rgb),
+      0.08
+    );
+    --mageforge-border-glass: rgba(var(--mageforge-color-black-rgb), 0.1);
+    --mageforge-shadow-glow: rgba(var(--mageforge-color-black-rgb), 0.05);
   }
 }
 

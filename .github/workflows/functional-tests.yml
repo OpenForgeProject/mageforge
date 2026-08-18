@@ -200,10 +200,10 @@ jobs:
 
           # Verify Alpine.js auto-loading in template
           echo "Verifying Alpine.js auto-loading for non-Hyvä themes:"
-          if grep -q "jsdelivr.net/npm/alpinejs" "$INSPECTOR_TPL"; then
-            echo "✓ Template includes Alpine.js CDN loading"
+          if grep -q "getAlpineJsUrl" "$INSPECTOR_TPL"; then
+            echo "✓ Template includes local Alpine.js fallback loading"
           else
-            echo "✗ Template missing Alpine.js auto-loading"
+            echo "✗ Template missing local Alpine.js fallback loading"
             exit 1
           fi
 
@@ -212,6 +212,13 @@ jobs:
           else
             echo "✗ Template missing Alpine.js detection"
             exit 1
+          fi
+
+          if grep -q "jsdelivr.net/npm/alpinejs" "$INSPECTOR_TPL"; then
+            echo "✗ Template still references external Alpine.js CDN"
+            exit 1
+          else
+            echo "✓ Template no longer relies on external Alpine.js CDN"
           fi
 
           # Test Luma theme (non-Hyvä)
