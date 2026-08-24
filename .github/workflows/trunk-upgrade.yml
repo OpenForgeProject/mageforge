@@ -19,9 +19,8 @@ jobs:
 
       - name: Install Trunk CLI
         uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
-
-      - name: Upgrade Trunk CLI and linters
-        run: '"${TRUNK_PATH}" upgrade -y --include-cli'
+        with:
+          arguments: upgrade -y --include-cli
         env:
           # Authenticated requests get a higher GitHub API rate limit (pinact).
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
