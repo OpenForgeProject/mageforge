@@ -63,6 +63,6 @@ jobs:
       # this job via its exit code; grant `checks: write` + drop this only if you
       # want inline PR annotations (and the extra check-run) back.
       - name: Trunk Check
-        uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
+        uses: trunk-io/trunk-action@e1234e67a86010d61ddac8d8ebf4b783e2ffd2fa # v2.0.0
         with:
           save-annotations: true
