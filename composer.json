@@ -19,7 +19,7 @@
   },
   "require-dev": {
     "carthage-software/mago": "^1.46",
-    "infection/infection": "^0.34.2",
+    "infection/infection": "^0.35.0",
     "magento/magento-coding-standard": "^40",
     "phpunit/phpunit": "^11.5"
   },
