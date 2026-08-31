@@ -32,7 +32,7 @@ jobs:
           commit-message: "chore: upgrade trunk linters"
           title: "chore: upgrade trunk linters"
           body: |
-            Automated `trunk upgrade -y` run.
+            Automated `"${TRUNK_PATH}" upgrade -y` run.
 
             Review the linter version changes in `.trunk/trunk.yaml` — new linter
             versions may introduce new findings. Run `trunk check -a` and
