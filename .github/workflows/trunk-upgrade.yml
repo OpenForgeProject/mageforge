@@ -21,7 +21,7 @@ jobs:
         uses: trunk-io/trunk-action@e1234e67a86010d61ddac8d8ebf4b783e2ffd2fa # v2.0.0
         with:
           check-mode: none
-          post-init: '"${TRUNK_PATH}" upgrade -y --include-cli'
+          post-init: '"${TRUNK_PATH}" upgrade -y'
         env:
           # Authenticated requests get a higher GitHub API rate limit (pinact).
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
           commit-message: "chore: upgrade trunk linters"
           title: "chore: upgrade trunk linters"
           body: |
-            Automated `trunk upgrade -y --include-cli` run.
+            Automated `"${TRUNK_PATH}" upgrade -y` run.
 
             Review the linter version changes in `.trunk/trunk.yaml` — new linter
             versions may introduce new findings. Run `trunk check -a` and
