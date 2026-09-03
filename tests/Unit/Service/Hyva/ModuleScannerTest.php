@@ -226,7 +226,9 @@ class ModuleScannerTest extends TestCase
      */
     private function givenComposerJson(array $composerData): void
     {
-        $this->fileDriver->method('isExists')->with('/module/composer.json')->willReturn(true);
+        $this->fileDriver->method('isExists')->willReturnCallback(
+            static fn(string $path): bool => $path === '/module/composer.json',
+        );
         $this->fileDriver->method('fileGetContents')->willReturn(json_encode($composerData));
     }
 
@@ -238,5 +240,28 @@ class ModuleScannerTest extends TestCase
         ]);
 
         $this->assertFalse($this->scanner->getModuleInfo('/module')['isHyvaAware']);
+    }
+
+    public function testHyvaThemesJsonMakesModuleHyvaAware(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            ['/module/composer.json', true],
+            ['/module/hyva-themes.json', true],
+        ]);
+        $this->fileDriver->method('fileGetContents')->with('/module/composer.json')->willReturn(
+            json_encode(['name' => 'vendor/module']),
+        );
+
+        $this->assertTrue($this->scanner->getModuleInfo('/module')['isHyvaAware']);
+    }
+
+    public function testComposerHyvaDependencyTakesPrecedenceOverMissingHyvaThemesJson(): void
+    {
+        $this->givenComposerJson([
+            'name' => 'vendor/module',
+            'require' => ['hyva-themes/magento2-default-theme' => '*'],
+        ]);
+
+        $this->assertTrue($this->scanner->getModuleInfo('/module')['isHyvaAware']);
     }
 }

@@ -174,11 +174,30 @@ class ModuleScanner
             return [
                 'name' => is_string($composerData['name'] ?? null) ? $composerData['name'] : 'Unknown',
                 'version' => is_string($composerData['version'] ?? null) ? $composerData['version'] : 'Unknown',
-                'isHyvaAware' => $this->isHyvaCompatibilityPackage($composerData),
+                'isHyvaAware' => $this->isHyvaAware($modulePath, $composerData),
             ];
         } catch (\Throwable $e) {
             return ['name' => 'Unknown', 'version' => 'Unknown', 'isHyvaAware' => false];
         }
+    }
+
+    /**
+     * Determine whether a module is Hyvä-aware.
+     *
+     * A module is considered Hyvä-aware when it either declares a Hyvä dependency,
+     * is a Hyvä compatibility package, or ships a hyva-themes.json config.
+     *
+     * @param string $modulePath
+     * @param array<string, mixed> $composerData
+     * @return bool
+     */
+    private function isHyvaAware(string $modulePath, array $composerData): bool
+    {
+        if ($this->isHyvaCompatibilityPackage($composerData)) {
+            return true;
+        }
+
+        return $this->fileDriver->isExists($modulePath . '/hyva-themes.json');
     }
 
     /**

@@ -135,6 +135,10 @@ class CompatibilityCheckCommand extends AbstractCommand
     {
         $this->io->title('Hyvä Theme Compatibility Check');
 
+        if ($this->isVerbose($output)) {
+            $this->io->info('Running in interactive mode');
+        }
+
         // Set environment variables for Laravel Prompts
         $this->setPromptEnvironment();
 
@@ -229,6 +233,17 @@ class CompatibilityCheckCommand extends AbstractCommand
         $detailed = (bool) $input->getOption(self::OPTION_DETAILED);
 
         $this->io->title('Hyvä Theme Compatibility Check');
+
+        if ($this->isVerbose($output)) {
+            $this->io->info(sprintf(
+                'Direct mode: showAll=%s, thirdPartyOnly=%s, includeCore=%s, excludeVendor=%s, detailed=%s',
+                $showAll ? 'true' : 'false',
+                $thirdPartyOnly ? 'true' : 'false',
+                $includeCore ? 'true' : 'false',
+                $excludeVendor ? 'true' : 'false',
+                $detailed ? 'true' : 'false',
+            ));
+        }
 
         return $this->runScan($showAll, $thirdPartyOnly, $includeCore, $excludeVendor, $detailed, false);
     }
