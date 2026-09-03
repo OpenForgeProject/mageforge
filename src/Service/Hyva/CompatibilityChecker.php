@@ -34,7 +34,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @phpstan-type CheckResults array{
  *     modules: array<string, ModuleEntry>,
  *     summary: CheckSummary,
- *     hasIncompatibilities: bool
+ *     hasIssues: bool
  * }
  */
 class CompatibilityChecker
@@ -57,7 +57,7 @@ class CompatibilityChecker
      * @param bool $thirdPartyOnly Whether to scan only third-party modules (excludes Magento_* modules)
      * @param bool $excludeVendor Whether to exclude modules from the vendor/ directory
      * @return array<string, mixed> Results with structure: ['modules' => [], 'summary' => [],
-     *     'hasIncompatibilities' => bool]
+     *     'hasIssues' => bool]
      * @phpstan-return CheckResults
      */
     public function check(
@@ -78,7 +78,7 @@ class CompatibilityChecker
                 'criticalIssues' => 0,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => false,
+            'hasIssues' => false,
         ];
 
         $io->text(sprintf('Scanning %d modules for Hyvä compatibility...', count($modules)));
@@ -118,12 +118,12 @@ class CompatibilityChecker
                 $results['summary']['compatible']++;
             } else {
                 $results['summary']['incompatible']++;
-                $results['hasIncompatibilities'] = true;
+                $results['hasIssues'] = true;
             }
 
             // Warnings alone still trigger the detail/recommendation display
             if ($hasWarnings) {
-                $results['hasIncompatibilities'] = true;
+                $results['hasIssues'] = true;
             }
 
             if ($moduleInfo['isHyvaAware']) {

@@ -80,7 +80,7 @@ class CompatibilityCheckerTest extends TestCase
             ],
             $results['summary'],
         );
-        $this->assertTrue($results['hasIncompatibilities']);
+        $this->assertTrue($results['hasIssues']);
         $this->assertTrue($results['modules']['Vendor_Clean']['compatible']);
         $this->assertFalse($results['modules']['Vendor_Broken']['compatible']);
     }
@@ -93,7 +93,7 @@ class CompatibilityCheckerTest extends TestCase
 
         $results = $this->checker->check($this->io);
 
-        $this->assertTrue($results['hasIncompatibilities']);
+        $this->assertTrue($results['hasIssues']);
         $this->assertFalse($results['modules']['Vendor_Broken']['hasWarnings']);
     }
 
@@ -105,7 +105,7 @@ class CompatibilityCheckerTest extends TestCase
 
         $results = $this->checker->check($this->io);
 
-        $this->assertFalse($results['hasIncompatibilities']);
+        $this->assertFalse($results['hasIssues']);
         $this->assertSame(0, $results['summary']['incompatible']);
     }
 
@@ -117,7 +117,7 @@ class CompatibilityCheckerTest extends TestCase
 
         $results = $this->checker->check($this->io);
 
-        $this->assertTrue($results['hasIncompatibilities']);
+        $this->assertTrue($results['hasIssues']);
         $this->assertTrue($results['modules']['Vendor_Warned']['compatible']);
         $this->assertTrue($results['modules']['Vendor_Warned']['hasWarnings']);
         $this->assertSame(2, $results['summary']['warningIssues']);
@@ -201,7 +201,7 @@ class CompatibilityCheckerTest extends TestCase
             'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
             'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
             'Vendor_Warned' => $this->moduleEntry(compatible: true, hasWarnings: true, critical: 0, total: 1),
-        ], hasIncompatibilities: true);
+        ], hasIssues: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results);
 
@@ -215,7 +215,7 @@ class CompatibilityCheckerTest extends TestCase
         $results = $this->checkResults([
             'Vendor_Clean' => $this->moduleEntry(compatible: true, hasWarnings: false, critical: 0, total: 0),
             'Vendor_Broken' => $this->moduleEntry(compatible: false, hasWarnings: false, critical: 2, total: 2),
-        ], hasIncompatibilities: true);
+        ], hasIssues: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results, true);
 
@@ -236,7 +236,7 @@ class CompatibilityCheckerTest extends TestCase
                 total: 3,
                 hyvaAware: true,
             ),
-        ], hasIncompatibilities: true);
+        ], hasIssues: true);
 
         $tableData = $this->checker->formatResultsForDisplay($results);
 
@@ -254,7 +254,7 @@ class CompatibilityCheckerTest extends TestCase
                 total: 0,
                 hyvaAware: true,
             ),
-        ], hasIncompatibilities: false);
+        ], hasIssues: false);
 
         $tableData = $this->checker->formatResultsForDisplay($results, true);
 
@@ -333,7 +333,7 @@ class CompatibilityCheckerTest extends TestCase
      * @param array<string, ModuleEntry> $modules
      * @return CheckResults
      */
-    private function checkResults(array $modules, bool $hasIncompatibilities): array
+    private function checkResults(array $modules, bool $hasIssues): array
     {
         return [
             'modules' => $modules,
@@ -345,7 +345,7 @@ class CompatibilityCheckerTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => $hasIncompatibilities,
+            'hasIssues' => $hasIssues,
         ];
     }
 

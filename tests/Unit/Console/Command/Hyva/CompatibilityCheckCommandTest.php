@@ -44,7 +44,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => false,
+            'hasIssues' => false,
         ], $overrides);
     }
 
@@ -77,7 +77,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 2,
                 'warningIssues' => 1,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -113,7 +113,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 2,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -140,7 +140,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 2,
                 'warningIssues' => 5,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -175,7 +175,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 3,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -202,7 +202,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -242,7 +242,7 @@ class CompatibilityCheckCommandTest extends TestCase
 
     public function testDetailedFlagWithoutIncompatibilitiesSkipsDetailedIssues(): void
     {
-        $this->compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIncompatibilities' => false]));
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIssues' => false]));
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->compatibilityChecker->expects($this->never())->method('getDetailedIssues');
 
@@ -263,7 +263,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -301,7 +301,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -350,7 +350,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 1,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);

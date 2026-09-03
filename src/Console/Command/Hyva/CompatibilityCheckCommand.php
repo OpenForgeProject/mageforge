@@ -271,7 +271,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->displayResults($results, $displayShowAll);
 
         // Display detailed issues if requested
-        if ($detailed && $results['hasIncompatibilities']) {
+        if ($detailed && $results['hasIssues']) {
             $this->displayDetailedIssues($results);
         }
 
@@ -279,7 +279,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->displaySummary($results['summary']);
 
         // Display recommendations if there are issues
-        if ($results['hasIncompatibilities']) {
+        if ($results['hasIssues']) {
             $this->displayRecommendations();
         }
 
