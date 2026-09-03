@@ -377,6 +377,18 @@ class CompatibilityCheckCommandTest extends TestCase
         $tester->execute(['--include-core' => true]);
     }
 
+    public function testExcludeVendorOptionIsPassedToChecker(): void
+    {
+        $this->compatibilityChecker->expects($this->once())
+            ->method('check')
+            ->with($this->anything(), false, true, true)
+            ->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--exclude-vendor' => true]);
+    }
+
     public function testConflictingThirdPartyOnlyAndIncludeCoreOptionsReturnError(): void
     {
         $this->compatibilityChecker->expects($this->never())->method('check');

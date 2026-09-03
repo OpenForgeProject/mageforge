@@ -488,7 +488,7 @@ All notable changes to this project will be documented in this file.
   - Scans Magento modules for Hyvä theme compatibility issues
   - Detects RequireJS, Knockout.js, jQuery, and UI Components usage
   - Interactive menu with Laravel Prompts for scan options
-  - Options: `--show-all`, `--third-party-only`, `--include-core`, `--detailed`
+  - Options: `--show-all`, `--third-party-only`, `--include-core`, `--exclude-vendor`, `--detailed`
   - Color-coded output (✓ Compatible, ⚠ Warnings, ✗ Incompatible)
   - Detailed file-level issues with line numbers
   - Exit code 1 for critical issues, 0 for success
