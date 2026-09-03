@@ -365,7 +365,7 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
     }
 
-    public function testIncludeVendorOptionIsPassedToChecker(): void
+    public function testIncludeCoreOptionIsPassedToChecker(): void
     {
         $this->compatibilityChecker->expects($this->once())
             ->method('check')
@@ -374,7 +374,7 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
         $tester = new CommandTester($this->command);
-        $tester->execute(['--include-vendor' => true]);
+        $tester->execute(['--include-core' => true]);
     }
 
     public function testCommandNameAndAliases(): void
