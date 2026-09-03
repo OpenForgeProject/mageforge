@@ -93,6 +93,15 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
+        // Validate conflicting options early
+        if ($input->getOption(self::OPTION_THIRD_PARTY_ONLY)
+            && $input->getOption(self::OPTION_INCLUDE_CORE)
+        ) {
+            $this->io->error('The options --third-party-only and --include-core cannot be used together.');
+
+            return Cli::RETURN_FAILURE;
+        }
+
         // Check if we're in interactive mode (no options provided)
         $hasOptions =
             (bool) $input->getOption(self::OPTION_SHOW_ALL)

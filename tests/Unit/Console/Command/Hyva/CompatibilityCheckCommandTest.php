@@ -377,6 +377,23 @@ class CompatibilityCheckCommandTest extends TestCase
         $tester->execute(['--include-core' => true]);
     }
 
+    public function testConflictingThirdPartyOnlyAndIncludeCoreOptionsReturnError(): void
+    {
+        $this->compatibilityChecker->expects($this->never())->method('check');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            '--third-party-only' => true,
+            '--include-core' => true,
+        ]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString(
+            'cannot be used together',
+            $tester->getDisplay(),
+        );
+    }
+
     public function testCommandNameAndAliases(): void
     {
         $this->assertSame('mageforge:hyva:compatibility:check', $this->command->getName());
