@@ -141,7 +141,7 @@
 .mageforge-score--mid .mageforge-toolbar-health-score-number,
 .mageforge-score--mid .mageforge-score-number,
 .mageforge-score--mid.mageforge-dashboard-category-score {
-  color: var(--mageforge-color-yellow);
+  color: var(--mageforge-color-amber);
 }
 
 .mageforge-score--high .mageforge-toolbar-health-score-number,
