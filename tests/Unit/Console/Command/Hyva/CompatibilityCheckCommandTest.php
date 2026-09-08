@@ -44,7 +44,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => false,
+            'hasIssues' => false,
         ], $overrides);
     }
 
@@ -77,7 +77,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 2,
                 'warningIssues' => 1,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -113,7 +113,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 2,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -140,7 +140,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 2,
                 'warningIssues' => 5,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -175,7 +175,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 3,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -202,7 +202,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -242,7 +242,7 @@ class CompatibilityCheckCommandTest extends TestCase
 
     public function testDetailedFlagWithoutIncompatibilitiesSkipsDetailedIssues(): void
     {
-        $this->compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIncompatibilities' => false]));
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIssues' => false]));
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->compatibilityChecker->expects($this->never())->method('getDetailedIssues');
 
@@ -263,7 +263,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -301,7 +301,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 1,
                 'warningIssues' => 0,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')
@@ -350,7 +350,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'criticalIssues' => 0,
                 'warningIssues' => 1,
             ],
-            'hasIncompatibilities' => true,
+            'hasIssues' => true,
         ]);
         $this->compatibilityChecker->method('check')->willReturn($results);
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
@@ -365,16 +365,57 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
     }
 
+    public function testDefaultExcludesVendorModules(): void
+    {
+        $this->compatibilityChecker->expects($this->once())
+            ->method('check')
+            ->with($this->anything(), false, true, true)
+            ->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute([]);
+    }
+
+    public function testIncludeCoreOptionIsPassedToChecker(): void
+    {
+        $this->compatibilityChecker->expects($this->once())
+            ->method('check')
+            ->with($this->anything(), false, false, true)
+            ->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--include-core' => true]);
+    }
+
     public function testIncludeVendorOptionIsPassedToChecker(): void
     {
         $this->compatibilityChecker->expects($this->once())
             ->method('check')
-            ->with($this->anything(), false, false, false)
+            ->with($this->anything(), false, true, false)
             ->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
         $tester = new CommandTester($this->command);
         $tester->execute(['--include-vendor' => true]);
+    }
+
+    public function testConflictingThirdPartyOnlyAndIncludeCoreOptionsReturnError(): void
+    {
+        $this->compatibilityChecker->expects($this->never())->method('check');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            '--third-party-only' => true,
+            '--include-core' => true,
+        ]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString(
+            'cannot be used together',
+            $tester->getDisplay(),
+        );
     }
 
     public function testCommandNameAndAliases(): void
