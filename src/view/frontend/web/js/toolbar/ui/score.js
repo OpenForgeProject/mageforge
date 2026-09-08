@@ -58,7 +58,9 @@ export const scoreMethods = {
     this.menu
       .querySelectorAll(".mageforge-toolbar-health-score-value")
       .forEach((el) => {
-        const number = el.querySelector(".mageforge-toolbar-health-score-number");
+        const number = el.querySelector(
+          ".mageforge-toolbar-health-score-number",
+        );
         if (number) number.textContent = score;
         this._applyScoreColorClass(el, score);
       });
