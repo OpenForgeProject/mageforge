@@ -365,19 +365,7 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
     }
 
-    public function testIncludeCoreOptionIsPassedToChecker(): void
-    {
-        $this->compatibilityChecker->expects($this->once())
-            ->method('check')
-            ->with($this->anything(), false, false, false)
-            ->willReturn($this->makeResults());
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-
-        $tester = new CommandTester($this->command);
-        $tester->execute(['--include-core' => true]);
-    }
-
-    public function testExcludeVendorOptionIsPassedToChecker(): void
+    public function testDefaultExcludesVendorModules(): void
     {
         $this->compatibilityChecker->expects($this->once())
             ->method('check')
@@ -386,7 +374,31 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
         $tester = new CommandTester($this->command);
-        $tester->execute(['--exclude-vendor' => true]);
+        $tester->execute([]);
+    }
+
+    public function testIncludeCoreOptionIsPassedToChecker(): void
+    {
+        $this->compatibilityChecker->expects($this->once())
+            ->method('check')
+            ->with($this->anything(), false, false, true)
+            ->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--include-core' => true]);
+    }
+
+    public function testIncludeVendorOptionIsPassedToChecker(): void
+    {
+        $this->compatibilityChecker->expects($this->once())
+            ->method('check')
+            ->with($this->anything(), false, true, false)
+            ->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--include-vendor' => true]);
     }
 
     public function testConflictingThirdPartyOnlyAndIncludeCoreOptionsReturnError(): void

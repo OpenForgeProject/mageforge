@@ -188,7 +188,8 @@ class ModuleScanner
      * is a Hyvä compatibility package, or ships a hyva-themes.json config.
      *
      * @param string $modulePath
-     * @param array<string, mixed> $composerData
+     * @param array $composerData
+     * @phpstan-param array<string, mixed> $composerData
      * @return bool
      */
     private function isHyvaAware(string $modulePath, array $composerData): bool

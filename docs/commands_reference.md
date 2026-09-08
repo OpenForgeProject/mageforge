@@ -246,7 +246,7 @@ bin/magento hyva:check
 - `-a, --show-all` — Show all modules including compatible ones.
 - `-t, --third-party-only` — Check only third-party modules (exclude Magento\_\*).
 - `--include-core` — Include Magento core modules in the check.
-- `--exclude-vendor` — Exclude modules installed in the vendor directory.
+- `--include-vendor` — Include modules installed in the vendor directory (default: excluded).
 - `--detailed` — Show detailed compatibility information.
 
 **Output:** Displays a table with compatibility status per module.
