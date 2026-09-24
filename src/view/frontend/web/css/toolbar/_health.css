@@ -127,3 +127,25 @@
   text-align: center;
   line-height: 1;
 }
+
+/* ============================================================================
+   Dynamic score colours
+   ========================================================================== */
+
+.mageforge-score--low .mageforge-toolbar-health-score-number,
+.mageforge-score--low .mageforge-score-number,
+.mageforge-score--low.mageforge-dashboard-category-score {
+  color: var(--mageforge-color-red);
+}
+
+.mageforge-score--mid .mageforge-toolbar-health-score-number,
+.mageforge-score--mid .mageforge-score-number,
+.mageforge-score--mid.mageforge-dashboard-category-score {
+  color: var(--mageforge-color-amber);
+}
+
+.mageforge-score--high .mageforge-toolbar-health-score-number,
+.mageforge-score--high .mageforge-score-number,
+.mageforge-score--high.mageforge-dashboard-category-score {
+  color: var(--mageforge-color-green);
+}

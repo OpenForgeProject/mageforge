@@ -8,6 +8,30 @@ import { GAUGE_ARC_LENGTH, SCORE_RING_CIRCUMFERENCE } from "./constants.js";
 
 export const scoreMethods = {
   /**
+   * Apply a colour class to a score element based on its value.
+   * < 50 = low (red), 50–89 = mid (amber), >= 90 = high (green).
+   *
+   * @param {HTMLElement|null} el
+   * @param {number} score
+   */
+  _applyScoreColorClass(el, score) {
+    if (!el) return;
+    el.classList.remove(
+      "mageforge-score--low",
+      "mageforge-score--mid",
+      "mageforge-score--high",
+    );
+    if (score < 0) return;
+    if (score < 50) {
+      el.classList.add("mageforge-score--low");
+    } else if (score < 90) {
+      el.classList.add("mageforge-score--mid");
+    } else {
+      el.classList.add("mageforge-score--high");
+    }
+  },
+
+  /**
    * Animate all score gauges and rings to the given score (0-100).
    *
    * @param {number} score
@@ -32,9 +56,13 @@ export const scoreMethods = {
       needle.setAttribute("opacity", "1");
     }
     this.menu
-      .querySelectorAll(".mageforge-toolbar-health-score-number")
+      .querySelectorAll(".mageforge-toolbar-health-score-value")
       .forEach((el) => {
-        el.textContent = score;
+        const number = el.querySelector(
+          ".mageforge-toolbar-health-score-number",
+        );
+        if (number) number.textContent = score;
+        this._applyScoreColorClass(el, score);
       });
 
     // Circular rings in audit panel headers
@@ -69,8 +97,12 @@ export const scoreMethods = {
       );
     }
     const number = panel.querySelector(".mageforge-score-number");
+    const valueEl = panel.querySelector(".mageforge-score-value");
     if (number) {
       number.textContent = score;
+    }
+    if (valueEl) {
+      this._applyScoreColorClass(valueEl, score);
     }
 
     // Also update the dashboard category badge
@@ -83,6 +115,7 @@ export const scoreMethods = {
         "mageforge-dashboard-category-score--active",
         score > 0,
       );
+      this._applyScoreColorClass(dashboardScore, score);
     }
   },
 
@@ -111,6 +144,13 @@ export const scoreMethods = {
     this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
       el.textContent = "--";
     });
+    this.menu
+      .querySelectorAll(
+        ".mageforge-toolbar-health-score-value, .mageforge-score-value, .mageforge-dashboard-category-score",
+      )
+      .forEach((el) => {
+        this._applyScoreColorClass(el, -1);
+      });
 
     // Reset dashboard category badges
     this.menu.querySelectorAll("[data-dashboard-group-score]").forEach((el) => {
