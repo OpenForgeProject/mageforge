@@ -96,6 +96,7 @@ export const controls = {
     this.runAllButton = null;
     this.resetButton = null;
     this._exportBtnRow = null;
+    this._themeToggleGroup = null;
     this.menuOpen = false;
   },
 
@@ -110,5 +111,20 @@ export const controls = {
       localStorage.setItem("mageforge-theme", theme);
     } catch (_) {}
     if (this.container) this.container.setAttribute("data-theme", theme);
+    this._updateThemeToggle();
+  },
+
+  /**
+   * Reflect the current theme in the header icon toggle buttons.
+   */
+  _updateThemeToggle() {
+    if (!this._themeToggleGroup) return;
+    this._themeToggleGroup
+      .querySelectorAll(".mageforge-theme-icon-btn")
+      .forEach((btn) => {
+        const active = btn.dataset.themeValue === this.currentTheme;
+        btn.classList.toggle("mageforge-theme-icon-btn--active", active);
+        btn.setAttribute("aria-pressed", String(active));
+      });
   },
 };

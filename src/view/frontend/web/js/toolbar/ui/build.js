@@ -24,6 +24,9 @@ import {
   createLogoSvg,
   generateId,
   ICON_HOME,
+  ICON_THEME_DARK,
+  ICON_THEME_LIGHT,
+  ICON_THEME_AUTO,
   GROUP_ICONS,
   GAUGE_ARC_LENGTH,
   SCORE_RING_CIRCUMFERENCE,
@@ -93,7 +96,7 @@ export const buildMethods = {
   },
 
   /**
-   * Sticky title bar: logo + name + close button.
+   * Sticky title bar: logo + name + theme toggle + close button.
    *
    * @returns {HTMLDivElement}
    */
@@ -105,15 +108,54 @@ export const buildMethods = {
         <div>${createLogoSvg("#E5622A")}</div>
         <span class="mageforge-toolbar-menu-title-text">MageForge</span>
       </div>
-      <button type="button" class="mageforge-toolbar-menu-close" title="Close & deactivate all" aria-label="Close & deactivate all">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-      </button>
+      <div class="mageforge-toolbar-menu-actions"></div>
     `;
-    header.querySelector(".mageforge-toolbar-menu-close").onclick = (e) => {
+
+    const actions = header.querySelector(".mageforge-toolbar-menu-actions");
+
+    // Theme toggle
+    const themeGroup = document.createElement("div");
+    themeGroup.className = "mageforge-theme-icon-group";
+    themeGroup.setAttribute("role", "group");
+    themeGroup.setAttribute("aria-label", "Colour theme");
+    [
+      ["dark", ICON_THEME_DARK, "Dark theme"],
+      ["auto", ICON_THEME_AUTO, "Auto theme"],
+      ["light", ICON_THEME_LIGHT, "Light theme"],
+    ].forEach(([value, icon, label]) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mageforge-theme-icon-btn";
+      btn.dataset.themeValue = value;
+      btn.innerHTML = icon;
+      btn.setAttribute("aria-label", label);
+      btn.title = label;
+      btn.setAttribute("aria-pressed", "false");
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        this.setTheme(/** @type {'dark'|'auto'|'light'} */ (value));
+      };
+      themeGroup.appendChild(btn);
+    });
+    actions.appendChild(themeGroup);
+    this._themeToggleGroup = themeGroup;
+
+    // Close button
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "mageforge-toolbar-menu-close";
+    closeBtn.title = "Close & deactivate all";
+    closeBtn.setAttribute("aria-label", "Close & deactivate all");
+    closeBtn.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"></path></svg>';
+    closeBtn.onclick = (e) => {
       e.stopPropagation();
       this.deactivateAllAudits();
       this.closeMenu();
     };
+    actions.appendChild(closeBtn);
+
+    this._updateThemeToggle();
     return header;
   },
 
@@ -718,16 +760,26 @@ export const buildMethods = {
     const footer = document.createElement("div");
     footer.className = "mageforge-toolbar-menu-footer";
 
-    // Export format row ──────────────────────────────────────────────────
-    const exportRow = document.createElement("div");
-    exportRow.className = "mageforge-footer-theme-row";
-    this._exportBtnRow = exportRow;
-    const exportGroup = document.createElement("div");
-    exportGroup.className = "mageforge-theme-toggle";
+    // Footer toolbar row: credit + theme toggle + export formats
+    const footerRow = document.createElement("div");
+    footerRow.className = "mageforge-footer-toolbar-row";
+
+    // Credit line
+    const credit = document.createElement("div");
+    credit.className = "mageforge-toolbar-menu-credit";
+    credit.innerHTML =
+      'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
+    footerRow.appendChild(credit);
+
+    // Export format toggle
+    this._exportBtnRow = document.createElement("div");
+    this._exportBtnRow.className = "mageforge-segmented-toggle";
+    this._exportBtnRow.setAttribute("role", "group");
+    this._exportBtnRow.setAttribute("aria-label", "Export format");
     const exportLabel = document.createElement("span");
-    exportLabel.className = "mageforge-footer-theme-label";
+    exportLabel.className = "mageforge-footer-toolbar-label";
     exportLabel.textContent = "Export";
-    exportGroup.appendChild(exportLabel);
+    this._exportBtnRow.appendChild(exportLabel);
     [
       ["json", "JSON"],
       ["md", "MD"],
@@ -735,7 +787,7 @@ export const buildMethods = {
     ].forEach(([fmt, label]) => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "mageforge-theme-btn mageforge-export-btn--disabled";
+      btn.className = "mageforge-segmented-btn mageforge-export-btn--disabled";
       btn.dataset.exportFormat = fmt;
       btn.textContent = label;
       btn.disabled = true;
@@ -745,17 +797,11 @@ export const buildMethods = {
         e.stopPropagation();
         this.exportFindings(fmt);
       };
-      exportGroup.appendChild(btn);
+      this._exportBtnRow.appendChild(btn);
     });
-    exportRow.appendChild(exportGroup);
-    footer.appendChild(exportRow);
+    footerRow.appendChild(this._exportBtnRow);
 
-    // Credit line (left side of export row) ─────────────────────────────
-    const credit = document.createElement("div");
-    credit.className = "mageforge-toolbar-menu-credit";
-    credit.innerHTML =
-      'Built with <span class="mageforge-toolbar-menu-credit-heart">\u2764</span> by <a href="https://github.com/OpenForgeProject/mageforge" target="_blank" rel="noopener noreferrer" class="mageforge-toolbar-menu-credit-link">MageForge</a>';
-    exportRow.insertBefore(credit, exportRow.firstChild);
+    footer.appendChild(footerRow);
 
     // Populate nav action bar for the initially active tab (home).
     // footerActionBar was already created in _buildTabNav().
