@@ -37,7 +37,7 @@ lint:
       paths:
         - .ddev/web-build/**
   enabled:
-    - pinact@5.0.0
+    - pinact@4.0.0
     - svgo@4.1.0
     - taplo@0.10.0
     - checkov@3.3.28
