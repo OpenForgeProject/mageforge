@@ -115,7 +115,7 @@ export const scoreMethods = {
         "mageforge-dashboard-category-score--active",
         score > 0,
       );
-      this._applyScoreColorClass(dashboardScore, score);
+      this._applyScoreColorClass(dashboardScore, score > 0 ? score : -1);
     }
   },
 
