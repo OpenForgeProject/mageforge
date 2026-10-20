@@ -28,6 +28,7 @@ class CompatibilityCheckCommand extends AbstractCommand
 {
     private const OPTION_SHOW_ALL = 'show-all';
     private const OPTION_THIRD_PARTY_ONLY = 'third-party-only';
+    private const OPTION_INCLUDE_CORE = 'include-core';
     private const OPTION_INCLUDE_VENDOR = 'include-vendor';
     private const OPTION_DETAILED = 'detailed';
 
@@ -71,10 +72,16 @@ class CompatibilityCheckCommand extends AbstractCommand
                 'Check only third-party modules (exclude Magento_* modules)',
             )
             ->addOption(
-                self::OPTION_INCLUDE_VENDOR,
+                self::OPTION_INCLUDE_CORE,
                 null,
                 InputOption::VALUE_NONE,
                 'Include Magento core modules (default: third-party modules only)',
+            )
+            ->addOption(
+                self::OPTION_INCLUDE_VENDOR,
+                null,
+                InputOption::VALUE_NONE,
+                'Include modules installed in the vendor directory (default: excluded)',
             )
             ->addOption(
                 self::OPTION_DETAILED,
@@ -93,10 +100,18 @@ class CompatibilityCheckCommand extends AbstractCommand
      */
     protected function executeCommand(InputInterface $input, OutputInterface $output): int
     {
+        // Validate conflicting options early
+        if ($input->getOption(self::OPTION_THIRD_PARTY_ONLY) && $input->getOption(self::OPTION_INCLUDE_CORE)) {
+            $this->io->error('The options --third-party-only and --include-core cannot be used together.');
+
+            return Cli::RETURN_FAILURE;
+        }
+
         // Check if we're in interactive mode (no options provided)
         $hasOptions =
             (bool) $input->getOption(self::OPTION_SHOW_ALL)
             || (bool) $input->getOption(self::OPTION_THIRD_PARTY_ONLY)
+            || (bool) $input->getOption(self::OPTION_INCLUDE_CORE)
             || (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR)
             || (bool) $input->getOption(self::OPTION_DETAILED);
 
@@ -117,6 +132,10 @@ class CompatibilityCheckCommand extends AbstractCommand
     private function runInteractiveMode(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('Hyvä Theme Compatibility Check');
+
+        if ($this->isVerbose($output)) {
+            $this->io->info('Running in interactive mode');
+        }
 
         // Set environment variables for Laravel Prompts
         $this->setPromptEnvironment();
@@ -155,8 +174,9 @@ class CompatibilityCheckCommand extends AbstractCommand
             // Map selected options to flags
             $showAll = $displayMode === self::DISPLAY_MODE_SHOW_ALL;
             $incompatibleOnly = $displayMode === self::DISPLAY_MODE_INCOMPATIBLE_ONLY;
-            $includeVendor = $scope === self::SCOPE_ALL;
+            $includeCore = $scope === self::SCOPE_ALL;
             $thirdPartyOnly = false; // Not needed in interactive mode
+            $includeVendor = false; // Vendor modules excluded by default in interactive mode
 
             // Show selected configuration
             $this->io->newLine();
@@ -168,7 +188,7 @@ class CompatibilityCheckCommand extends AbstractCommand
             } else {
                 $config[] = 'Show modules with issues';
             }
-            $config[] = $includeVendor ? 'Include Magento core' : 'Third-party modules only';
+            $config[] = $includeCore ? 'Include Magento core' : 'Third-party modules only';
             if ($detailed) {
                 $config[] = 'Detailed issues';
             }
@@ -176,7 +196,14 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->io->newLine();
 
             // Run scan with selected options
-            return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, $incompatibleOnly);
+            return $this->runScan(
+                $showAll,
+                $thirdPartyOnly,
+                $includeCore,
+                $includeVendor,
+                $detailed,
+                $incompatibleOnly,
+            );
         } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
             $this->io->info('Falling back to default scan (third-party modules only)...');
@@ -199,12 +226,24 @@ class CompatibilityCheckCommand extends AbstractCommand
     {
         $showAll = (bool) $input->getOption(self::OPTION_SHOW_ALL);
         $thirdPartyOnly = (bool) $input->getOption(self::OPTION_THIRD_PARTY_ONLY);
+        $includeCore = (bool) $input->getOption(self::OPTION_INCLUDE_CORE);
         $includeVendor = (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR);
         $detailed = (bool) $input->getOption(self::OPTION_DETAILED);
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
-        return $this->runScan($showAll, $thirdPartyOnly, $includeVendor, $detailed, false);
+        if ($this->isVerbose($output)) {
+            $this->io->info(sprintf(
+                'Direct mode: showAll=%s, thirdPartyOnly=%s, includeCore=%s, includeVendor=%s, detailed=%s',
+                $showAll ? 'true' : 'false',
+                $thirdPartyOnly ? 'true' : 'false',
+                $includeCore ? 'true' : 'false',
+                $includeVendor ? 'true' : 'false',
+                $detailed ? 'true' : 'false',
+            ));
+        }
+
+        return $this->runScan($showAll, $thirdPartyOnly, $includeCore, $includeVendor, $detailed, false);
     }
 
     /**
@@ -212,6 +251,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      *
      * @param bool $showAll
      * @param bool $thirdPartyOnly
+     * @param bool $includeCore
      * @param bool $includeVendor
      * @param bool $detailed
      * @param bool $incompatibleOnly
@@ -220,19 +260,19 @@ class CompatibilityCheckCommand extends AbstractCommand
     private function runScan(
         bool $showAll,
         bool $thirdPartyOnly,
+        bool $includeCore,
         bool $includeVendor,
         bool $detailed,
         bool $incompatibleOnly,
     ): int {
         // Determine filter logic:
-        // - thirdPartyOnly: Only scan non-Magento_* modules (default behavior)
-        // - includeVendor: Also scan Magento_* core modules
-        // - excludeVendor: Whether to exclude vendor/ directory (always false for now)
-        $scanThirdPartyOnly = !$includeVendor;
-        $excludeVendor = false;
+        // - thirdPartyOnly: Only scan non-Magento_* modules
+        // - includeCore: Also scan Magento_* core modules
+        // - includeVendor: Whether to include modules installed in vendor/
+        $scanThirdPartyOnly = $thirdPartyOnly || !$includeCore;
 
         // Run the compatibility check
-        $results = $this->compatibilityChecker->check($this->io, $showAll, $scanThirdPartyOnly, $excludeVendor);
+        $results = $this->compatibilityChecker->check($this->io, $showAll, $scanThirdPartyOnly, !$includeVendor);
 
         // Determine display mode:
         // showAll = show all modules including compatible ones
@@ -244,7 +284,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->displayResults($results, $displayShowAll);
 
         // Display detailed issues if requested
-        if ($detailed && $results['hasIncompatibilities']) {
+        if ($detailed && $results['hasIssues']) {
             $this->displayDetailedIssues($results);
         }
 
@@ -252,7 +292,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         $this->displaySummary($results['summary']);
 
         // Display recommendations if there are issues
-        if ($results['hasIncompatibilities']) {
+        if ($results['hasIssues']) {
             $this->displayRecommendations();
         }
 
