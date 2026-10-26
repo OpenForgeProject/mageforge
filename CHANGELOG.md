@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.29.0](https://github.com/OpenForgeProject/mageforge/compare/0.28.0...0.29.0) (2026-10-26)
+
+
+### Added
+
+* **deps-dev:** update infection/infection requirement ([#251](https://github.com/OpenForgeProject/mageforge/issues/251)) ([b9a029a](https://github.com/OpenForgeProject/mageforge/commit/b9a029a022835ac718e38aaecff2de2a7b7fdd71))
+* **deps-dev:** update magento/magento-coding-standard requirement ([#252](https://github.com/OpenForgeProject/mageforge/issues/252)) ([2148678](https://github.com/OpenForgeProject/mageforge/commit/21486785c51122c76d1c74daae8a3d6865e61a95))
+* **deps:** bump the github-actions group with 4 updates ([#262](https://github.com/OpenForgeProject/mageforge/issues/262)) ([517aac2](https://github.com/OpenForgeProject/mageforge/commit/517aac2d268a9a528578014214fbee46b57e26f5))
+* **deps:** bump trunk-io/trunk-action from 1.3.1 to 2.0.0 ([#248](https://github.com/OpenForgeProject/mageforge/issues/248)) ([fda9b96](https://github.com/OpenForgeProject/mageforge/commit/fda9b96f65f45bce073828db48355b7f93f5face))
+
 ## [0.28.0](https://github.com/OpenForgeProject/mageforge/compare/0.27.0...0.28.0) (2026-08-11)
 
 
