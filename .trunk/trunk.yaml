@@ -40,7 +40,7 @@ lint:
     - pinact@5.0.2
     - svgo@4.1.0
     - taplo@0.10.0
-    - checkov@3.3.30
+    - checkov@3.4.2
     - actionlint@1.7.12
     - git-diff-check
     - hadolint@2.15.1
