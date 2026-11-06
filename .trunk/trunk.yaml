@@ -37,7 +37,11 @@ lint:
       paths:
         - .ddev/web-build/**
   enabled:
-    - pinact@5.0.2
+    # pinact 5 is not supported by the trunk plugins (v1.11.0 still passes
+    # single-dash flags), so every workflow change fails with a
+    # "pinact/config-error". Stay on 4.x until
+    # https://github.com/trunk-io/plugins/issues/1177 is fixed.
+    - pinact@4.1.1
     - svgo@4.1.0
     - taplo@0.10.0
     - checkov@3.4.2
