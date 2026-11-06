@@ -21,7 +21,7 @@
     "carthage-software/mago": "^1.46",
     "infection/infection": "^0.35.0",
     "magento/magento-coding-standard": "^41",
-    "phpunit/phpunit": "^13.4"
+    "phpunit/phpunit": "^11.5"
   },
   "autoload-dev": {
     "psr-4": {
