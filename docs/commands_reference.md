@@ -248,8 +248,22 @@ bin/magento hyva:check
 - `--include-core` — Include Magento core modules in the check.
 - `--include-vendor` — Include modules installed in the vendor directory (default: excluded).
 - `--detailed` — Show detailed compatibility information.
+- `--tailwind4` — Also check Hyvä themes and modules for Tailwind CSS v4 readiness (Hyvä 1.4). See below.
 
 **Output:** Displays a table with compatibility status per module.
+
+#### Tailwind CSS v4 readiness (`--tailwind4`)
+
+Read-only check of what is still needed for the upgrade from Tailwind CSS v3 (Hyvä 1.3.x) to v4 (Hyvä 1.4). See the [Hyvä upgrade guide](https://docs.hyva.io/hyva-themes/working-with-tailwindcss/updating-to-tailwind-4.html). The same module filters apply (`--include-core`, `--include-vendor`); vendor themes such as `Hyva/default` are skipped unless `--include-vendor` is set.
+
+```bash
+bin/magento hyva:check --tailwind4
+```
+
+- **Themes** (Hyvä themes, `web/tailwind`): Node.js version (20+), `tailwindcss` version (declared and installed), removed packages (PostCSS, `@tailwindcss/forms`, `@tailwindcss/typography`), required packages (`@tailwindcss/cli`, `@hyva-themes/hyva-modules`), npm scripts, obsolete `postcss.config.js` / `tailwind.config.js`, `hyva.config.json`, the CSS folder structure and the `tailwind-source.css` entry point.
+- **Themes and modules** (CSS files in `web/tailwind` and `view/frontend/tailwind`): syntax that changed in v4 (`@tailwind`, `@screen`, `theme()` with dotted paths, non-relative `@import` paths).
+
+Errors make the command fail; warnings do not.
 
 ---
 

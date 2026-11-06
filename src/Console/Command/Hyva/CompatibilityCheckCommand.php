@@ -9,6 +9,8 @@ use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
+use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker;
+use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -23,6 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @phpstan-import-type CheckResults from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
  * @phpstan-import-type CheckSummary from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
  * @phpstan-import-type ModuleEntry from \OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker
+ * @phpstan-import-type Tailwind4Results from \OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker
  */
 class CompatibilityCheckCommand extends AbstractCommand
 {
@@ -31,6 +34,7 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const OPTION_INCLUDE_CORE = 'include-core';
     private const OPTION_INCLUDE_VENDOR = 'include-vendor';
     private const OPTION_DETAILED = 'detailed';
+    private const OPTION_TAILWIND4 = 'tailwind4';
 
     private const DISPLAY_MODE_ISSUES = 'issues';
     private const DISPLAY_MODE_INCOMPATIBLE_ONLY = 'incompatible-only';
@@ -41,9 +45,11 @@ class CompatibilityCheckCommand extends AbstractCommand
 
     /**
      * @param CompatibilityChecker $compatibilityChecker
+     * @param Tailwind4Checker $tailwind4Checker
      */
     public function __construct(
         private readonly CompatibilityChecker $compatibilityChecker,
+        private readonly Tailwind4Checker $tailwind4Checker,
     ) {
         parent::__construct();
     }
@@ -88,6 +94,12 @@ class CompatibilityCheckCommand extends AbstractCommand
                 'd',
                 InputOption::VALUE_NONE,
                 'Show detailed file-level issues for incompatible modules',
+            )
+            ->addOption(
+                self::OPTION_TAILWIND4,
+                null,
+                InputOption::VALUE_NONE,
+                'Also check Hyvä themes and modules for Tailwind CSS v4 readiness (Hyvä 1.4)',
             );
     }
 
@@ -113,7 +125,8 @@ class CompatibilityCheckCommand extends AbstractCommand
             || (bool) $input->getOption(self::OPTION_THIRD_PARTY_ONLY)
             || (bool) $input->getOption(self::OPTION_INCLUDE_CORE)
             || (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR)
-            || (bool) $input->getOption(self::OPTION_DETAILED);
+            || (bool) $input->getOption(self::OPTION_DETAILED)
+            || (bool) $input->getOption(self::OPTION_TAILWIND4);
 
         if (!$hasOptions && $this->isInteractiveTerminal($output)) {
             return $this->runInteractiveMode($input, $output);
@@ -171,6 +184,13 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             $detailed = (bool) $detailedPrompt->prompt();
 
+            $tailwind4Prompt = new ConfirmPrompt(
+                label: 'Also check Hyvä themes and modules for Tailwind CSS v4 readiness?',
+                default: false,
+            );
+
+            $tailwind4 = (bool) $tailwind4Prompt->prompt();
+
             // Map selected options to flags
             $showAll = $displayMode === self::DISPLAY_MODE_SHOW_ALL;
             $incompatibleOnly = $displayMode === self::DISPLAY_MODE_INCOMPATIBLE_ONLY;
@@ -192,6 +212,9 @@ class CompatibilityCheckCommand extends AbstractCommand
             if ($detailed) {
                 $config[] = 'Detailed issues';
             }
+            if ($tailwind4) {
+                $config[] = 'Tailwind CSS v4 check';
+            }
             $this->io->comment('Configuration: ' . implode(', ', $config));
             $this->io->newLine();
 
@@ -203,6 +226,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 $includeVendor,
                 $detailed,
                 $incompatibleOnly,
+                $tailwind4,
             );
         } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
@@ -229,21 +253,24 @@ class CompatibilityCheckCommand extends AbstractCommand
         $includeCore = (bool) $input->getOption(self::OPTION_INCLUDE_CORE);
         $includeVendor = (bool) $input->getOption(self::OPTION_INCLUDE_VENDOR);
         $detailed = (bool) $input->getOption(self::OPTION_DETAILED);
+        $tailwind4 = (bool) $input->getOption(self::OPTION_TAILWIND4);
 
         $this->io->title('Hyvä Theme Compatibility Check');
 
         if ($this->isVerbose($output)) {
             $this->io->info(sprintf(
-                'Direct mode: showAll=%s, thirdPartyOnly=%s, includeCore=%s, includeVendor=%s, detailed=%s',
+                'Direct mode: showAll=%s, thirdPartyOnly=%s, includeCore=%s, includeVendor=%s, detailed=%s, '
+                . 'tailwind4=%s',
                 $showAll ? 'true' : 'false',
                 $thirdPartyOnly ? 'true' : 'false',
                 $includeCore ? 'true' : 'false',
                 $includeVendor ? 'true' : 'false',
                 $detailed ? 'true' : 'false',
+                $tailwind4 ? 'true' : 'false',
             ));
         }
 
-        return $this->runScan($showAll, $thirdPartyOnly, $includeCore, $includeVendor, $detailed, false);
+        return $this->runScan($showAll, $thirdPartyOnly, $includeCore, $includeVendor, $detailed, false, $tailwind4);
     }
 
     /**
@@ -255,6 +282,7 @@ class CompatibilityCheckCommand extends AbstractCommand
      * @param bool $includeVendor
      * @param bool $detailed
      * @param bool $incompatibleOnly
+     * @param bool $tailwind4
      * @return int
      */
     private function runScan(
@@ -264,6 +292,7 @@ class CompatibilityCheckCommand extends AbstractCommand
         bool $includeVendor,
         bool $detailed,
         bool $incompatibleOnly,
+        bool $tailwind4 = false,
     ): int {
         // Determine filter logic:
         // - thirdPartyOnly: Only scan non-Magento_* modules
@@ -296,11 +325,98 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->displayRecommendations();
         }
 
+        $tailwind4Errors = 0;
+        if ($tailwind4) {
+            $tailwind4Errors = $this->runTailwind4Check($scanThirdPartyOnly, !$includeVendor);
+        }
+
         // Add spacing before exit
         $this->io->newLine();
 
         // Return appropriate exit code
-        return $results['summary']['criticalIssues'] > 0 ? Cli::RETURN_FAILURE : Cli::RETURN_SUCCESS;
+        return $results['summary']['criticalIssues'] > 0 || $tailwind4Errors > 0
+            ? Cli::RETURN_FAILURE
+            : Cli::RETURN_SUCCESS;
+    }
+
+    /**
+     * Run the Tailwind CSS v4 readiness check and display its results
+     *
+     * @param bool $thirdPartyOnly
+     * @param bool $excludeVendor
+     * @return int Number of errors found
+     */
+    private function runTailwind4Check(bool $thirdPartyOnly, bool $excludeVendor): int
+    {
+        $this->io->section('Tailwind CSS v4 Readiness (Hyvä 1.4)');
+
+        $results = $this->tailwind4Checker->check($thirdPartyOnly, $excludeVendor);
+        $this->displayTailwind4Results($results);
+
+        return $results['errors'];
+    }
+
+    /**
+     * Display Tailwind CSS v4 readiness results
+     *
+     * @param array $results
+     * @phpstan-param Tailwind4Results $results
+     */
+    private function displayTailwind4Results(array $results): void
+    {
+        $checked = sprintf(
+            '%d theme(s) and %d module(s) with Tailwind sources',
+            $results['themes'],
+            $results['modules'],
+        );
+
+        if ($results['themes'] === 0 && $results['modules'] === 0) {
+            $this->io->note(
+                'No Hyvä themes or modules with Tailwind sources found. Vendor themes require --include-vendor.',
+            );
+            return;
+        }
+
+        $hints = [];
+        foreach ($results['sections'] as $name => $findings) {
+            $rows = [];
+            foreach ($findings as $finding) {
+                $isError = $finding->severity === Tailwind4Severity::Error;
+                $rows[] = [
+                    $isError ? '<fg=red>✗ error</>' : '<fg=yellow>⚠ warning</>',
+                    $finding->message,
+                    $finding->getLocation(),
+                ];
+                if ($finding->hint !== '') {
+                    $hints[$finding->hint] = true;
+                }
+            }
+
+            $this->io->text(sprintf('<fg=cyan>%s</>', $name));
+            $this->io->table(['Severity', 'Finding', 'Location'], $rows);
+        }
+
+        if ($hints !== []) {
+            $this->io->text('How to fix:');
+            $this->io->listing(array_map('strval', array_keys($hints)));
+        }
+
+        if ($results['errors'] > 0) {
+            $this->io->writeln(sprintf(
+                '<fg=red>⚠</> Found <fg=red;options=bold>%d error(s)</> and %d warning(s) in %s.',
+                $results['errors'],
+                $results['warnings'],
+                $checked,
+            ));
+        } elseif ($results['warnings'] > 0) {
+            $this->io->writeln(sprintf(
+                '<fg=yellow>ℹ</> Found <fg=yellow;options=bold>%d warning(s)</> in %s.',
+                $results['warnings'],
+                $checked,
+            ));
+        } else {
+            $this->io->success(sprintf('Ready for Tailwind CSS v4: %s checked.', $checked));
+        }
     }
 
     /**
