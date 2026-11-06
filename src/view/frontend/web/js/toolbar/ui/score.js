@@ -72,8 +72,10 @@ export const scoreMethods = {
         `${((score / 100) * SCORE_RING_CIRCUMFERENCE).toFixed(2)} ${SCORE_RING_CIRCUMFERENCE}`,
       );
     });
-    this.menu.querySelectorAll(".mageforge-score-number").forEach((el) => {
-      el.textContent = score;
+    this.menu.querySelectorAll(".mageforge-score-value").forEach((el) => {
+      const number = el.querySelector(".mageforge-score-number");
+      if (number) number.textContent = score;
+      this._applyScoreColorClass(el, score);
     });
   },
 

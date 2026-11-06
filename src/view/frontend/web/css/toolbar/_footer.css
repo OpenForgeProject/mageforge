@@ -61,7 +61,6 @@
   background: rgba(var(--mageforge-color-white-rgb), 0.08);
 }
 
-.mageforge-segmented-btn--active,
 .mageforge-segmented-btn[aria-pressed="true"] {
   background: var(--mageforge-color-blue);
   color: var(--mageforge-color-white);

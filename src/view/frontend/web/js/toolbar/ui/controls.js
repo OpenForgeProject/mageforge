@@ -2,7 +2,7 @@
  * MageForge Toolbar – Menu lifecycle and focus trap
  *
  * toggleMenu / openMenu / closeMenu / destroyToolbar
- * _getFocusableEls / _trapFocus / _releaseFocusTrap / setTheme
+ * _getFocusableEls / _trapFocus / _releaseFocusTrap / setTheme / _resolveInitialTheme
  */
 
 export const controls = {
@@ -101,6 +101,23 @@ export const controls = {
   },
 
   /**
+   * Resolve the initial theme: the user's stored choice wins over the
+   * configured default from the data-theme attribute.
+   *
+   * @returns {'dark'|'auto'|'light'}
+   */
+  _resolveInitialTheme() {
+    const valid = ["dark", "auto", "light"];
+    let stored = null;
+    try {
+      stored = localStorage.getItem("mageforge-theme");
+    } catch (_) {}
+    if (stored && valid.includes(stored)) return stored;
+    const configured = this.$el?.getAttribute("data-theme");
+    return valid.includes(configured) ? configured : "dark";
+  },
+
+  /**
    * Apply a colour theme to the toolbar container.
    *
    * @param {'dark'|'auto'|'light'} theme
@@ -123,7 +140,6 @@ export const controls = {
       .querySelectorAll(".mageforge-theme-icon-btn")
       .forEach((btn) => {
         const active = btn.dataset.themeValue === this.currentTheme;
-        btn.classList.toggle("mageforge-theme-icon-btn--active", active);
         btn.setAttribute("aria-pressed", String(active));
       });
   },

@@ -55,8 +55,7 @@ function _registerMageforgeToolbar() {
 
     init() {
       this.createToolbar();
-      this.currentTheme = this.$el?.getAttribute("data-theme") || "dark";
-      this.setTheme(this.currentTheme);
+      this.setTheme(this._resolveInitialTheme());
       this.keyboardShortcutsEnabled =
         this.$el?.getAttribute("data-keyboard-shortcuts-enabled") !== "0";
       this.shortcut = this.$el?.getAttribute("data-shortcut") || "Ctrl+Shift+A";

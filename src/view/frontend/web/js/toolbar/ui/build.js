@@ -119,9 +119,9 @@ export const buildMethods = {
     themeGroup.setAttribute("role", "group");
     themeGroup.setAttribute("aria-label", "Colour theme");
     [
-      ["dark", ICON_THEME_DARK, "Dark theme"],
-      ["auto", ICON_THEME_AUTO, "Auto theme"],
       ["light", ICON_THEME_LIGHT, "Light theme"],
+      ["auto", ICON_THEME_AUTO, "Auto theme"],
+      ["dark", ICON_THEME_DARK, "Dark theme"],
     ].forEach(([value, icon, label]) => {
       const btn = document.createElement("button");
       btn.type = "button";

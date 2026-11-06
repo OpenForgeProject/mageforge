@@ -162,7 +162,6 @@
   background: rgba(var(--mageforge-color-white-rgb), 0.08);
 }
 
-.mageforge-theme-icon-btn--active,
 .mageforge-theme-icon-btn[aria-pressed="true"] {
   background: var(--mageforge-color-blue);
   color: var(--mageforge-color-white);
