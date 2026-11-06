@@ -90,12 +90,19 @@ export function matchesShortcut(event, shortcut) {
 
   // Some events (autofill, synthetic input) carry no key at all
   const key = (event.key || "").toLowerCase();
+  if (key === "") return false;
 
-  // With Alt/Option macOS produces special characters (Option+I => "ˆ"), so
-  // fall back to the physical key for letters and digits.
+  // With Alt/Option macOS produces special characters (Option+I => "ˆ") or
+  // "Dead", so fall back to the physical key for those. A plain letter or
+  // digit is trusted as is, otherwise layouts where key and code disagree
+  // (key "y" on code KeyZ) would match two different shortcuts.
+  const isPlainKey = /^[a-z0-9]$/.test(key);
   const keyMatches =
     key === parsed.key ||
-    (parsed.alt && parsed.code !== "" && event.code === parsed.code);
+    (parsed.alt &&
+      !isPlainKey &&
+      parsed.code !== "" &&
+      event.code === parsed.code);
 
   return (
     keyMatches &&
