@@ -83,10 +83,14 @@ export const scoreMethods = {
    * Update the score ring in a specific group panel header.
    *
    * @param {string} groupKey
-   * @param {number} score
+   * @param {number|null} score Score 0-100, or null to reset to the unscored state
    */
   updateGroupScore(groupKey, score) {
     if (!this.menu) return;
+
+    const scored = score !== null;
+    const value = scored ? score : 0;
+    const colorScore = scored ? score : -1;
 
     const panel = this.menu.querySelector(`[data-panel="${groupKey}"]`);
     if (!panel) return;
@@ -95,16 +99,16 @@ export const scoreMethods = {
     if (ring) {
       ring.setAttribute(
         "stroke-dasharray",
-        `${((score / 100) * SCORE_RING_CIRCUMFERENCE).toFixed(2)} ${SCORE_RING_CIRCUMFERENCE}`,
+        `${((value / 100) * SCORE_RING_CIRCUMFERENCE).toFixed(2)} ${SCORE_RING_CIRCUMFERENCE}`,
       );
     }
     const number = panel.querySelector(".mageforge-score-number");
     const valueEl = panel.querySelector(".mageforge-score-value");
     if (number) {
-      number.textContent = score;
+      number.textContent = value;
     }
     if (valueEl) {
-      this._applyScoreColorClass(valueEl, score);
+      this._applyScoreColorClass(valueEl, colorScore);
     }
 
     // Also update the dashboard category badge
@@ -112,12 +116,12 @@ export const scoreMethods = {
       `[data-dashboard-group-score="${groupKey}"]`,
     );
     if (dashboardScore) {
-      dashboardScore.textContent = score;
+      dashboardScore.textContent = value;
       dashboardScore.classList.toggle(
         "mageforge-dashboard-category-score--active",
-        score > 0,
+        scored,
       );
-      this._applyScoreColorClass(dashboardScore, score > 0 ? score : -1);
+      this._applyScoreColorClass(dashboardScore, colorScore);
     }
   },
 

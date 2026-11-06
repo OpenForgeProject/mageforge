@@ -190,7 +190,7 @@ export const auditMethods = {
     });
 
     // Reset score ring
-    this.updateGroupScore(groupKey, 0);
+    this.updateGroupScore(groupKey, null);
   },
 
   /**
