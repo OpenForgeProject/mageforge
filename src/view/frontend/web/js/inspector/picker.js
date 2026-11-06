@@ -33,16 +33,15 @@ export const pickerMethods = {
    * Toggle inspector on/off
    */
   toggleInspector() {
-    this.isOpen = !this.isOpen;
-
+    // Closing also resets a pinned badge, otherwise the next open stays pinned
     if (this.isOpen) {
-      this.activatePicker();
-      this.$dispatch("mageforge:inspector:opened");
-    } else {
-      this.deactivatePicker();
-      this.$dispatch("mageforge:inspector:closed");
+      this.closeInspector();
+      return;
     }
 
+    this.isOpen = true;
+    this.activatePicker();
+    this.$dispatch("mageforge:inspector:opened");
     this.updateFloatingButton();
   },
 
@@ -109,7 +108,7 @@ export const pickerMethods = {
     if (this.isPinned) return;
 
     // Don't update if mouse is over the floating button
-    if (this.floatingButton && this.floatingButton.contains(e.target)) {
+    if (this._inspectorFloatButton?.contains(e.target)) {
       return;
     }
 
@@ -144,6 +143,8 @@ export const pickerMethods = {
       if (this.highlightBox) {
         this.highlightBox.style.display = "none";
       }
+      // Forget the element so hovering it again shows the highlight again
+      this.hoveredElement = null;
       // Badge stays visible until hovering another element
     }
   },
@@ -157,7 +158,8 @@ export const pickerMethods = {
       // Check if click is outside badge
       if (
         !this.infoBadge.contains(e.target) &&
-        (!this.floatingButton || !this.floatingButton.contains(e.target))
+        (!this._inspectorFloatButton ||
+          !this._inspectorFloatButton.contains(e.target))
       ) {
         this.unpinBadge();
         return;
