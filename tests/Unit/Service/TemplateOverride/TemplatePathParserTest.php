@@ -554,7 +554,9 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('isFile')->willReturn(false);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/Pass an existing file or directory path.*Module_Name::path\/to\/template\.phtml/s');
+        $this->expectExceptionMessageMatches(
+            '/Pass an existing file or directory path.*Module_Name::path\/to\/template\.phtml/s',
+        );
 
         $this->parser->parse('/nowhere/file.phtml');
     }

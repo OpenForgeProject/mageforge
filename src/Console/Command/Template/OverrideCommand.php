@@ -290,13 +290,10 @@ class OverrideCommand extends AbstractCommand
         }
 
         if ($isDryRun || $this->isVerbose($output)) {
-            $this->io->table(
-                ['Source', 'Target'],
-                array_map(
-                    fn(array $copy) => [$this->toRelativePath($copy['source']), $this->toRelativePath($copy['target'])],
-                    array_values($copies),
-                ),
-            );
+            $this->io->table(['Source', 'Target'], array_map(fn(array $copy) => [
+                $this->toRelativePath($copy['source']),
+                $this->toRelativePath($copy['target']),
+            ], array_values($copies)));
         }
 
         if ($isDryRun) {
@@ -317,10 +314,10 @@ class OverrideCommand extends AbstractCommand
         }
 
         if ($unresolved !== []) {
-            $this->io->warning(sprintf(
-                "The files were copied, but Magento does not resolve these to the new override:\n  - %s",
-                implode("\n  - ", $unresolved),
-            ));
+            $list = implode("\n  - ", $unresolved);
+            $this->io->warning(
+                "The files were copied, but Magento does not resolve these to the new override:\n  - {$list}",
+            );
             return Cli::RETURN_FAILURE;
         }
 
@@ -334,11 +331,7 @@ class OverrideCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
 
-        $this->io->success(sprintf(
-            '%d file(s) copied to %s',
-            count($copies),
-            $this->toRelativePath($targetBase),
-        ));
+        $this->io->success(sprintf('%d file(s) copied to %s', count($copies), $this->toRelativePath($targetBase)));
         return Cli::RETURN_SUCCESS;
     }
 
