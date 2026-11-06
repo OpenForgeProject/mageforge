@@ -84,7 +84,7 @@ All pull requests are merged using **squash-merge** to maintain a clean, linear 
 - ✅ PR title becomes the commit message
 - ✅ All PR commits are squashed into a single commit
 - ✅ Easier to follow project history and revert changes if needed
-- ⚠️ Do not use "Create a merge commit" or "Rebase and merge": Release Please then only sees the individual commits and ignores everything that is not a Conventional Commit
+- ⚠️ The changelog is built from the PR title, so it must be a valid Conventional Commit whichever merge button is used. A merge commit also works because Release Please reads the PR title; avoid "Rebase and merge", where only the individual commits are visible and these would have to be Conventional Commits too
 
 ---
 
