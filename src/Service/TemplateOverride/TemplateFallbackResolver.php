@@ -161,6 +161,47 @@ class TemplateFallbackResolver
     }
 
     /**
+     * Collect all files below a directory across the fallback directories
+     *
+     * For every relative file path, the first fallback directory containing it wins, exactly like
+     * for a single template. The optional excluded directory (the override target) is not searched.
+     *
+     * @param string[] $fallbackDirs
+     * @param string $subPath Directory path relative to the fallback directories, empty for their root
+     * @param string|null $excludedDir
+     * @return array<string,string> Source file paths keyed by their path relative to $subPath
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
+    public function findDirectoryFiles(array $fallbackDirs, string $subPath, ?string $excludedDir = null): array
+    {
+        $files = [];
+        foreach ($fallbackDirs as $dir) {
+            if ($dir === $excludedDir) {
+                continue;
+            }
+
+            $base = $subPath === '' ? $dir : $dir . '/' . $subPath;
+            if (!$this->fileDriver->isDirectory($base)) {
+                continue;
+            }
+
+            $prefix = rtrim(str_replace('\\', '/', $base), '/') . '/';
+            foreach ($this->fileDriver->readDirectoryRecursively($base) as $entry) {
+                $entry = str_replace('\\', '/', $entry);
+                if (!str_starts_with($entry, $prefix) || !$this->fileDriver->isFile($entry)) {
+                    continue;
+                }
+
+                $files[substr($entry, strlen($prefix))] ??= $entry;
+            }
+        }
+
+        ksort($files);
+
+        return $files;
+    }
+
+    /**
      * Get the fallback directory located within the given theme itself (the override target)
      *
      * @param string[] $fallbackDirs

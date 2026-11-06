@@ -92,39 +92,42 @@ class TemplatePathParser
      */
     private function parseFilePath(string $input): TemplateReference
     {
-        $absolutePath = $this->locateFile(str_replace('\\', '/', $input));
-        if ($absolutePath === null) {
+        $located = $this->locatePath(str_replace('\\', '/', $input));
+        if ($located === null) {
             throw new \InvalidArgumentException(
-                "Template file '$input' not found. Pass an existing file path or use the "
+                "Template file or directory '$input' not found. Pass an existing file or directory path or use the "
                 . 'Module_Name::path/to/template.phtml notation.',
             );
         }
 
-        $moduleReference = $this->matchModuleFile($absolutePath);
+        [$absolutePath, $isDirectory] = $located;
+
+        $moduleReference = $this->matchModuleFile($absolutePath, $isDirectory);
         if ($moduleReference !== null) {
             return $moduleReference;
         }
 
-        $themeReference = $this->matchThemeFile($absolutePath);
+        $themeReference = $this->matchThemeFile($absolutePath, $isDirectory);
         if ($themeReference !== null) {
             return $themeReference;
         }
 
         throw new \InvalidArgumentException(
-            "The file '$input' does not belong to a registered module or theme view directory.",
+            "The path '$input' does not belong to a registered module or theme view directory.",
         );
     }
 
     /**
-     * Locate a file by its path, trying the working directory and the Magento root
+     * Locate a file or directory by its path, trying the working directory and the Magento root
      *
      * Relative paths are first resolved against the current working directory and then
      * against the Magento root, so paths like vendor/module/... work from any directory.
      *
      * @param string $path
-     * @return string|null The normalized absolute path, or null when the file does not exist
+     * @return array{0: string, 1: bool}|null The normalized absolute path and whether it is a directory,
+     *                                        or null when nothing exists at the given path
      */
-    private function locateFile(string $path): ?string
+    private function locatePath(string $path): ?array
     {
         $candidates = [$path];
         if (!str_starts_with($path, '/')) {
@@ -135,12 +138,16 @@ class TemplatePathParser
         }
 
         foreach ($candidates as $candidate) {
+            $isDirectory = false;
             if (!$this->fileDriver->isFile($candidate)) {
-                continue;
+                if (!$this->fileDriver->isDirectory($candidate)) {
+                    continue;
+                }
+                $isDirectory = true;
             }
             $realPath = $this->fileDriver->getRealPath($candidate);
             if (is_string($realPath)) {
-                return str_replace('\\', '/', $realPath);
+                return [rtrim(str_replace('\\', '/', $realPath), '/'), $isDirectory];
             }
         }
 
@@ -148,13 +155,14 @@ class TemplatePathParser
     }
 
     /**
-     * Match a file inside a module's view/<area>/templates, email, web or layout directory
+     * Match a path inside a module's view/<area>/templates, email, web or layout directory
      *
      * @param string $absolutePath
+     * @param bool $isDirectory
      * @return TemplateReference|null
      * @throws \InvalidArgumentException
      */
-    private function matchModuleFile(string $absolutePath): ?TemplateReference
+    private function matchModuleFile(string $absolutePath, bool $isDirectory): ?TemplateReference
     {
         $match = $this->findOwningComponent($absolutePath, ComponentRegistrar::MODULE);
         if ($match === null) {
@@ -163,25 +171,31 @@ class TemplatePathParser
 
         [$moduleName, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^view/[a-z_]+/(templates|email|web|layout)/(.+)$#', $relativePath, $matches)) {
+        if (!preg_match($this->moduleViewPattern($isDirectory), $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
-                "The file belongs to module '%s' but is not inside a view/<area>/templates, "
+                "The path belongs to module '%s' but is not inside a view/<area>/templates, "
                 . 'view/<area>/email, view/<area>/web or view/<area>/layout directory.',
                 $moduleName,
             ));
         }
 
-        return $this->createReference($moduleName, $matches[2], $this->typeFromViewDir($matches[1]));
+        return $this->createReference(
+            $moduleName,
+            $matches[2] ?? '',
+            $this->typeFromViewDir($matches[1]),
+            $isDirectory,
+        );
     }
 
     /**
-     * Match a file inside a theme's <Module_Name>/templates, email, web or layout directory
+     * Match a path inside a theme's <Module_Name>/templates, email, web or layout directory
      *
      * @param string $absolutePath
+     * @param bool $isDirectory
      * @return TemplateReference|null
      * @throws \InvalidArgumentException
      */
-    private function matchThemeFile(string $absolutePath): ?TemplateReference
+    private function matchThemeFile(string $absolutePath, bool $isDirectory): ?TemplateReference
     {
         $match = $this->findOwningComponent($absolutePath, ComponentRegistrar::THEME);
         if ($match === null) {
@@ -190,24 +204,45 @@ class TemplatePathParser
 
         [$themeFullPath, $relativePath] = $match;
         $matches = [];
-        if (!preg_match('#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web|layout)/(.+)$#', $relativePath, $matches)) {
+        $pattern = $isDirectory
+            ? '#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web|layout)(?:/(.*))?$#'
+            : '#^([A-Za-z0-9]+_[A-Za-z0-9]+)/(templates|email|web|layout)/(.+)$#';
+        if (!preg_match($pattern, $relativePath, $matches)) {
             throw new \InvalidArgumentException(sprintf(
-                "The file belongs to theme '%s' but is not a module template override "
+                "The path belongs to theme '%s' but is not a module template override "
                 . '(expected <Module_Name>/templates/..., <Module_Name>/email/... '
                 . '<Module_Name>/web/... or <Module_Name>/layout/...).',
                 $themeFullPath,
             ));
         }
 
-        return $this->createReference($matches[1], $matches[3], $this->typeFromViewDir($matches[2]));
+        return $this->createReference(
+            $matches[1],
+            $matches[3] ?? '',
+            $this->typeFromViewDir($matches[2]),
+            $isDirectory,
+        );
     }
 
     /**
-     * Find the registered component (longest path match) containing the given file
+     * Get the pattern matching a module's view directory path; directories may be the view directory itself
+     *
+     * @param bool $isDirectory
+     * @return string
+     */
+    private function moduleViewPattern(bool $isDirectory): string
+    {
+        return $isDirectory
+            ? '#^view/[a-z_]+/(templates|email|web|layout)(?:/(.*))?$#'
+            : '#^view/[a-z_]+/(templates|email|web|layout)/(.+)$#';
+    }
+
+    /**
+     * Find the registered component (longest path match) containing the given path
      *
      * @param string $absolutePath
      * @param string $componentType
-     * @return array{0: string, 1: string}|null Component name and file path relative to the component root
+     * @return array{0: string, 1: string}|null Component name and path relative to the component root
      */
     private function findOwningComponent(string $absolutePath, string $componentType): ?array
     {
@@ -244,6 +279,7 @@ class TemplatePathParser
      * @param string $moduleName
      * @param string $templatePath
      * @param TemplateType $type
+     * @param bool $isDirectory
      * @return TemplateReference
      * @throws \InvalidArgumentException
      */
@@ -251,10 +287,11 @@ class TemplatePathParser
         string $moduleName,
         string $templatePath,
         TemplateType $type = TemplateType::TEMPLATE,
+        bool $isDirectory = false,
     ): TemplateReference {
         $originalModules = $this->compatModuleResolver->getOriginalModules($moduleName);
         if ($originalModules === []) {
-            return new TemplateReference($moduleName, $templatePath, $type);
+            return new TemplateReference($moduleName, $templatePath, $type, $isDirectory);
         }
 
         // Compat modules may keep templates in a subdirectory named after the original module
@@ -264,12 +301,16 @@ class TemplatePathParser
                     $originalModule,
                     substr($templatePath, strlen($originalModule) + 1),
                     $type,
+                    $isDirectory,
                 );
+            }
+            if ($isDirectory && $templatePath === $originalModule) {
+                return new TemplateReference($originalModule, '', $type, true);
             }
         }
 
         if (count($originalModules) === 1) {
-            return new TemplateReference($originalModules[0], $templatePath, $type);
+            return new TemplateReference($originalModules[0], $templatePath, $type, $isDirectory);
         }
 
         throw new \InvalidArgumentException(sprintf(

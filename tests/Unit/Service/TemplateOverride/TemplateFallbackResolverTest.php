@@ -295,4 +295,35 @@ class TemplateFallbackResolverTest extends TestCase
 
         $this->assertSame('C:\\app\\design\\frontend\\Vendor\\theme\\Magento_Catalog\\templates', $result);
     }
+
+    public function testFindDirectoryFilesMergesFallbackDirsFirstDirWinsAndSkipsExcluded(): void
+    {
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver
+            ->method('readDirectoryRecursively')
+            ->willReturnMap([
+                ['/compat/templates/product', ['/compat/templates/product/a.phtml', '/compat/templates/product/sub']],
+                [
+                    '/module/templates/product',
+                    ['/module/templates/product/a.phtml', '/module/templates/product/sub/b.phtml'],
+                ],
+            ]);
+        $this->fileDriver
+            ->method('isFile')
+            ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
+
+        $files = $this->resolver->findDirectoryFiles(
+            ['/theme/templates', '/compat/templates', '/module/templates'],
+            'product',
+            '/theme/templates',
+        );
+
+        $this->assertSame(
+            [
+                'a.phtml' => '/compat/templates/product/a.phtml',
+                'sub/b.phtml' => '/module/templates/product/sub/b.phtml',
+            ],
+            $files,
+        );
+    }
 }

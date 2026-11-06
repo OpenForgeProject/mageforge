@@ -69,7 +69,7 @@ class OverrideCommand extends AbstractCommand
             ->addArgument(
                 'template',
                 InputArgument::OPTIONAL,
-                'Template to override (Module_Name::path/to/template.phtml or a file path)',
+                'Template to override (Module_Name::path/to/template.phtml, a file path or a directory path)',
             )
             ->addOption('theme', 't', InputOption::VALUE_REQUIRED, 'Target theme code (format: Vendor/theme)')
             ->addOption(
@@ -138,6 +138,19 @@ class OverrideCommand extends AbstractCommand
             ));
             return Cli::RETURN_FAILURE;
         }
+
+        if ($reference->isDirectory()) {
+            return $this->overrideDirectory(
+                $reference,
+                $theme,
+                $fallbackDirs,
+                $targetDir,
+                $isDryRun,
+                $isForce,
+                $output,
+            );
+        }
+
         $targetFile = $targetDir . '/' . $templatePath;
 
         $sourceFile = $this->fallbackResolver->findFirstExistingFile($fallbackDirs, $templatePath);
@@ -212,6 +225,120 @@ class OverrideCommand extends AbstractCommand
         }
 
         $this->io->success(sprintf('Template override created: %s', $this->toRelativePath($targetFile)));
+        return Cli::RETURN_SUCCESS;
+    }
+
+    /**
+     * Copy all files of a template directory into the theme
+     *
+     * Every file is resolved through the fallback chain like a single template, so the copied
+     * files are the ones Magento currently uses. Files that are already overridden are skipped
+     * unless --force is given.
+     *
+     * @param TemplateReference $reference
+     * @param ThemeInterface $theme
+     * @param string[] $fallbackDirs
+     * @param string $targetDir
+     * @param bool $isDryRun
+     * @param bool $isForce
+     * @param OutputInterface $output
+     * @return int
+     */
+    private function overrideDirectory(
+        TemplateReference $reference,
+        ThemeInterface $theme,
+        array $fallbackDirs,
+        string $targetDir,
+        bool $isDryRun,
+        bool $isForce,
+        OutputInterface $output,
+    ): int {
+        $subPath = $reference->getTemplatePath();
+        $sources = $this->fallbackResolver->findDirectoryFiles($fallbackDirs, $subPath, $targetDir);
+        if ($sources === []) {
+            $this->io->error(sprintf('No files found in any fallback location for %s.', $reference->getTemplateId()));
+            $this->displayFallbackDirs($fallbackDirs, null, $targetDir, $subPath);
+            return Cli::RETURN_FAILURE;
+        }
+
+        $targetBase = $subPath === '' ? $targetDir : $targetDir . '/' . $subPath;
+        $copies = [];
+        $skipped = 0;
+        foreach ($sources as $relativePath => $sourceFile) {
+            $templatePath = $subPath === '' ? $relativePath : $subPath . '/' . $relativePath;
+            $alreadyOverridden = $this->fallbackResolver->findFirstExistingFile([$targetDir], $templatePath) !== null;
+            if ($alreadyOverridden && !$isForce) {
+                $skipped++;
+                continue;
+            }
+            $copies[$templatePath] = ['source' => $sourceFile, 'target' => $targetDir . '/' . $templatePath];
+        }
+
+        $skippedNote = $skipped > 0 && !$isForce ? ' (skipped, use --force to replace)' : '';
+        $this->io->newLine();
+        $this->io->definitionList(
+            ['Directory' => $reference->getTemplateId()],
+            ['Theme' => $theme->getCode()],
+            ['Target' => $this->toRelativePath($targetBase)],
+            ['Files to copy' => (string) count($copies)],
+            ['Already overridden' => $skipped . $skippedNote],
+        );
+
+        if ($copies === []) {
+            $this->io->info('All files of this directory are already overridden in this theme.');
+            return Cli::RETURN_SUCCESS;
+        }
+
+        if ($isDryRun || $this->isVerbose($output)) {
+            $this->io->table(
+                ['Source', 'Target'],
+                array_map(
+                    fn(array $copy) => [$this->toRelativePath($copy['source']), $this->toRelativePath($copy['target'])],
+                    array_values($copies),
+                ),
+            );
+        }
+
+        if ($isDryRun) {
+            $this->io->success('Dry run: no files were copied.');
+            return Cli::RETURN_SUCCESS;
+        }
+
+        $unresolved = [];
+        foreach ($copies as $templatePath => $copy) {
+            $sourceModuleName = $this->resolveSourceModuleName($copy['source'], $fallbackDirs, $reference);
+            $this->templateCopier->copy($copy['source'], $copy['target'], $sourceModuleName);
+
+            // Verify that Magento's fallback now resolves the file to the new override
+            $resolved = $this->fallbackResolver->findFirstExistingFile($fallbackDirs, $templatePath);
+            if ($resolved !== $copy['target']) {
+                $unresolved[] = $templatePath;
+            }
+        }
+
+        if ($unresolved !== []) {
+            $this->io->warning(sprintf(
+                "The files were copied, but Magento does not resolve these to the new override:\n  - %s",
+                implode("\n  - ", $unresolved),
+            ));
+            return Cli::RETURN_FAILURE;
+        }
+
+        if (!$this->cacheCleaner->clean($this->io, $this->isVerbose($output))) {
+            $this->io->warning(sprintf(
+                '%d file(s) copied to %s, but cleaning the caches failed. '
+                . "Run 'bin/magento cache:clean full_page block_html layout translate' manually.",
+                count($copies),
+                $this->toRelativePath($targetBase),
+            ));
+            return Cli::RETURN_FAILURE;
+        }
+
+        $this->io->success(sprintf(
+            '%d file(s) copied to %s',
+            count($copies),
+            $this->toRelativePath($targetBase),
+        ));
         return Cli::RETURN_SUCCESS;
     }
 
@@ -454,6 +581,8 @@ class OverrideCommand extends AbstractCommand
         );
         $this->io->writeln('The template can also be given as a file path, e.g.');
         $this->io->writeln('  vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml');
+        $this->io->writeln('Pass a directory path to copy all files inside it, e.g.');
+        $this->io->writeln('  vendor/magento/module-catalog/view/frontend/templates');
     }
 
     /**

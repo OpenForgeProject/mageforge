@@ -8,6 +8,7 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Template\OverrideCommand;
 use OpenForgeProject\MageForge\Model\TemplateReference;
+use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\TemplateOverride\AreaEmulator;
@@ -342,6 +343,84 @@ class OverrideCommandTest extends TestCase
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
         $this->assertStringContainsString('Magento resolves the template to', $tester->getDisplay());
+    }
+
+    public function testCopiesAllFilesOfDirectoryAndSkipsExistingOverrides(): void
+    {
+        $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
+        $this->templatePathParser
+            ->method('parse')
+            ->willReturn(new TemplateReference('Magento_Catalog', '', TemplateType::TEMPLATE, true));
+        $this->fallbackResolver->method('getFallbackDirs')->willReturn([self::THEME_DIR, self::MODULE_DIR]);
+        $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
+        $this->fallbackResolver
+            ->method('findDirectoryFiles')
+            ->with([self::THEME_DIR, self::MODULE_DIR], '', self::THEME_DIR)
+            ->willReturn([
+                'a.phtml' => self::MODULE_DIR . '/a.phtml',
+                'sub/b.phtml' => self::MODULE_DIR . '/sub/b.phtml',
+                'c.phtml' => self::MODULE_DIR . '/c.phtml',
+            ]);
+        $this->fallbackResolver
+            ->method('findFirstExistingFile')
+            ->willReturnCallback(
+                static fn(array $dirs, string $path): ?string => match (true) {
+                    $dirs === [self::THEME_DIR] => $path === 'c.phtml' ? self::THEME_DIR . '/c.phtml' : null,
+                    default => self::THEME_DIR . '/' . $path,
+                },
+            );
+        $copied = [];
+        $this->templateCopier
+            ->expects($this->exactly(2))
+            ->method('copy')
+            ->willReturnCallback(static function (string $source, string $target) use (&$copied): void {
+                $copied[$source] = $target;
+            });
+        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            'template' => self::MODULE_DIR,
+            '--theme' => 'Vendor/theme',
+        ]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertSame(
+            [
+                self::MODULE_DIR . '/a.phtml' => self::THEME_DIR . '/a.phtml',
+                self::MODULE_DIR . '/sub/b.phtml' => self::THEME_DIR . '/sub/b.phtml',
+            ],
+            $copied,
+        );
+        $this->assertStringContainsString('2 file(s) copied', $tester->getDisplay());
+    }
+
+    public function testDirectoryDryRunDoesNotCopy(): void
+    {
+        $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
+        $this->templatePathParser
+            ->method('parse')
+            ->willReturn(new TemplateReference('Magento_Catalog', 'product', TemplateType::TEMPLATE, true));
+        $this->fallbackResolver->method('getFallbackDirs')->willReturn([self::THEME_DIR, self::MODULE_DIR]);
+        $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
+        $this->fallbackResolver
+            ->method('findDirectoryFiles')
+            ->willReturn(['a.phtml' => self::MODULE_DIR . '/product/a.phtml']);
+        $this->fallbackResolver->method('findFirstExistingFile')->willReturn(null);
+        $this->templateCopier->expects($this->never())->method('copy');
+        $this->cacheCleaner->expects($this->never())->method('clean');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            'template' => self::MODULE_DIR . '/product',
+            '--theme' => 'Vendor/theme',
+            '--dry-run' => true,
+        ]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Dry run: no files were copied.', $display);
+        $this->assertStringContainsString('product/a.phtml', $display);
     }
 
     public function testReportsParserErrors(): void
