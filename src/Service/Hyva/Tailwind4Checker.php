@@ -903,7 +903,7 @@ class Tailwind4Checker
         $text = $script;
         $matches = [];
         preg_match_all('/\b(?:npm|pnpm|yarn)\s+(?:run(?:-script)?\s+)?([\w:.-]+)/', $script, $matches);
-        foreach ($matches[1] ?? [] as $reference) {
+        foreach ($matches[1] as $reference) {
             $text .= ' ' . $this->expandScript($scripts, $reference, $depth + 1);
         }
 
