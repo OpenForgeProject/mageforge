@@ -111,7 +111,6 @@ class Tailwind4CheckerTest extends TestCase
         $this->assertContains('hyva.config.json not found.', $messages);
         $this->assertContains('@tailwind base was removed in Tailwind CSS v4.', $messages);
         $this->assertNotContains('@tailwind utilities was removed in Tailwind CSS v4.', $messages);
-        $this->assertContains('The entry file does not import Tailwind CSS v4.', $messages);
         $this->assertContains('@screen was removed in Tailwind CSS v4.', $messages);
         $this->assertContains('@import "theme/colors.css" is not a relative path.', $messages);
     }
@@ -200,6 +199,99 @@ CSS,
             $this->setTailwindRange($this->root . '/theme', $range);
             $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'), $range);
         }
+    }
+
+    public function testRejectsSplitImportsWithoutUtilities(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->write(
+            $this->root . '/theme/web/tailwind/tailwind-source.css',
+            <<<'CSS'
+@import "@hyva-themes/hyva-modules/css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@source "../../**/*.phtml";
+@import "./generated/hyva-source.css";
+@import "./generated/hyva-tokens.css";
+CSS,
+        );
+
+        $messages = $this->messages($this->checker->checkTheme($this->root . '/theme'));
+
+        $this->assertSame(['The entry file does not import Tailwind CSS v4.'], $messages);
+    }
+
+    public function testAcceptsSplitImportsWithTailwindUtilitiesDirective(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->write(
+            $this->root . '/theme/web/tailwind/tailwind-source.css',
+            <<<'CSS'
+@import "@hyva-themes/hyva-modules/css";
+@import "tailwindcss/theme.css" layer(theme);
+@tailwind utilities;
+@source "../../**/*.phtml";
+@import "./generated/hyva-source.css";
+@import "./generated/hyva-tokens.css";
+CSS,
+        );
+
+        $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'));
+    }
+
+    public function testLowerBoundRangeFallsBackToTheInstalledVersion(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->setTailwindRange($this->root . '/theme', '>=3.4.0');
+
+        $this->assertSame(
+            ['The tailwindcss range ">=3.4.0" cannot be evaluated.'],
+            $this->messages($this->checker->checkTheme($this->root . '/theme')),
+        );
+
+        $this->installTailwind($this->root . '/theme', '4.1.0');
+        $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'));
+
+        $this->installTailwind($this->root . '/theme', '3.4.17');
+        $this->assertSame(
+            ['tailwindcss 3.4.17 is installed in node_modules, but >=3.4.0 is declared.'],
+            $this->messages($this->checker->checkTheme($this->root . '/theme')),
+        );
+    }
+
+    public function testWarnsWhenGenerateDoesNotCreateTokens(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->setScript($this->root . '/theme', 'generate', 'npx hyva-sources');
+
+        $this->assertSame(
+            ['The "generate" script does not run hyva-tokens.'],
+            $this->messages($this->checker->checkTheme($this->root . '/theme')),
+        );
+    }
+
+    public function testFollowsDelegatedGenerateScripts(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->setScript($this->root . '/theme', 'generate', 'npm run gen:sources && npm run gen:tokens');
+        $this->setScript($this->root . '/theme', 'gen:sources', 'npx hyva-sources');
+        $this->setScript($this->root . '/theme', 'gen:tokens', 'npx hyva-tokens');
+
+        $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'));
+    }
+
+    public function testWarnsWhenGenerateDelegatesToUnknownScripts(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->setScript($this->root . '/theme', 'generate', './scripts/generate.sh');
+
+        $this->assertSame(
+            [
+                'The "generate" script does not run hyva-sources.',
+                'The "generate" script does not run hyva-tokens.',
+            ],
+            $this->messages($this->checker->checkTheme($this->root . '/theme')),
+        );
     }
 
     public function testWarnsWhenGenerateIsNotRunByBuildAndWatch(): void
@@ -429,6 +521,23 @@ CSS,
         /** @var array{devDependencies: array<string, string>} $package */
         $package = json_decode((string) file_get_contents($packageFile), true, 512, JSON_THROW_ON_ERROR);
         $package['devDependencies']['tailwindcss'] = $range;
+        $this->write($packageFile, json_encode($package, JSON_THROW_ON_ERROR));
+    }
+
+    private function installTailwind(string $themePath, string $version): void
+    {
+        $this->write(
+            $themePath . '/web/tailwind/node_modules/tailwindcss/package.json',
+            json_encode(['version' => $version], JSON_THROW_ON_ERROR),
+        );
+    }
+
+    private function setScript(string $themePath, string $name, string $command): void
+    {
+        $packageFile = $themePath . '/web/tailwind/package.json';
+        /** @var array{scripts: array<string, string>} $package */
+        $package = json_decode((string) file_get_contents($packageFile), true, 512, JSON_THROW_ON_ERROR);
+        $package['scripts'][$name] = $command;
         $this->write($packageFile, json_encode($package, JSON_THROW_ON_ERROR));
     }
 

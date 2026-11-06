@@ -422,18 +422,28 @@ class Tailwind4Checker
         $runsGenerate = static fn(mixed $script): bool => is_string($script)
             && preg_match('/\bgenerate\b|hyva-sources/', $script) === 1;
 
-        $generateMentioned = false;
-        foreach ($scripts as $script) {
-            $generateMentioned = $generateMentioned || (is_string($script) && str_contains($script, 'hyva-sources'));
-        }
+        $generateText = isset($scripts['generate'])
+            ? $this->expandScript($scripts, 'generate')
+            : implode(' ', array_filter($scripts, 'is_string'));
 
-        if (!isset($scripts['generate']) && !$generateMentioned) {
+        if (!isset($scripts['generate']) && !str_contains($generateText, 'hyva-sources')) {
             $findings[] = new Tailwind4Finding(
                 Tailwind4Severity::Warning,
                 'The "generate" script is missing.',
                 'Add "generate": "npx hyva-sources && npx hyva-tokens" and run it from "prewatch" and "prebuild".',
                 'package.json',
             );
+        } else {
+            foreach (['hyva-sources', 'hyva-tokens'] as $command) {
+                if (!str_contains($generateText, $command)) {
+                    $findings[] = new Tailwind4Finding(
+                        Tailwind4Severity::Warning,
+                        sprintf('The "generate" script does not run %s.', $command),
+                        'Make sure "generate" runs: npx hyva-sources && npx hyva-tokens',
+                        'package.json',
+                    );
+                }
+            }
         }
 
         foreach (['build', 'watch'] as $name) {
@@ -560,13 +570,14 @@ class Tailwind4Checker
         $content = $this->stripComments($this->fileDriver->fileGetContents($path));
         $findings = [];
 
-        // The bundled stylesheet or the split theme/preflight/utilities entry points
-        $splitImportPattern = '/@import\s+["\']tailwindcss(?:\/(?:theme|preflight|utilities)(?:\.css)?)?["\']/';
-        if (preg_match($splitImportPattern, $content) !== 1) {
+        // The bundled stylesheet, or split imports that include the utilities layer
+        $importsTailwind = preg_match('/@import\s+["\']tailwindcss(?:\/utilities(?:\.css)?)?["\']/', $content) === 1
+            || preg_match('/@tailwind\s+utilities\b/', $content) === 1;
+        if (!$importsTailwind) {
             $findings[] = new Tailwind4Finding(
                 Tailwind4Severity::Error,
                 'The entry file does not import Tailwind CSS v4.',
-                'Add: @import "tailwindcss" source(none);',
+                'Add: @import "tailwindcss" source(none); (split imports must include tailwindcss/utilities)',
                 self::ENTRY_FILE,
             );
         }
@@ -845,16 +856,48 @@ class Tailwind4Checker
     }
 
     /**
+     * Get the text of a script including the scripts it delegates to via "npm run <name>"
+     *
+     * @param array<mixed> $scripts
+     * @param string $name
+     * @param int $depth
+     * @return string
+     */
+    private function expandScript(array $scripts, string $name, int $depth = 0): string
+    {
+        $script = $scripts[$name] ?? null;
+        if (!is_string($script) || $depth > 5) {
+            return '';
+        }
+
+        $text = $script;
+        if (preg_match_all('/\b(?:npm|pnpm|yarn)\s+(?:run(?:-script)?\s+)?([\w:.-]+)/', $script, $matches) > 0) {
+            foreach ($matches[1] as $reference) {
+                $text .= ' ' . $this->expandScript($scripts, $reference, $depth + 1);
+            }
+        }
+
+        return $text;
+    }
+
+    /**
      * Extract the major version of a simple npm range such as "^3.4.1", "~4.0" or "4.1.x"
+     *
+     * Lower bounds below the required major (">=3.4.0") permit newer versions and are therefore inconclusive.
      *
      * @param string $range
      * @return int|null Null for ranges that cannot be evaluated reliably, e.g. "<4.0.0" or "3 || 4"
      */
     private function parseDeclaredMajor(string $range): ?int
     {
-        $pattern = '/^(?:\^|~|>=|=)?\s*v?(\d+)(?:\.(?:\d+|x|\*))*(?:-[0-9A-Za-z.\-]+)?$/';
+        $pattern = '/^(\^|~|>=|=)?\s*v?(\d+)(?:\.(?:\d+|x|\*))*(?:-[0-9A-Za-z.\-]+)?$/';
+        if (preg_match($pattern, trim($range), $matches) !== 1) {
+            return null;
+        }
 
-        return preg_match($pattern, trim($range), $matches) === 1 ? (int) $matches[1] : null;
+        $major = (int) $matches[2];
+
+        return $matches[1] === '>=' && $major < self::MIN_TAILWIND_MAJOR ? null : $major;
     }
 
     /**
