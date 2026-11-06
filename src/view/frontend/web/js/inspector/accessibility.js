@@ -52,10 +52,16 @@ export const accessibilityMethods = {
       );
     }
 
-    // Alt Text (for images)
+    // Alt Text (for images): false = attribute missing, "" = decorative image
     if (a11yData.altText !== null) {
-      const altStatus = a11yData.altText ? a11yData.altText : "⚠️ Missing";
-      const altColor = a11yData.altText ? "#34d399" : "#ef4444";
+      let altStatus = a11yData.altText;
+      let altColor = "#34d399";
+      if (a11yData.altText === false) {
+        altStatus = "⚠️ Missing";
+        altColor = "#ef4444";
+      } else if (a11yData.altText === "") {
+        altStatus = "Empty (decorative)";
+      }
       container.appendChild(
         this.createInfoSection("Alt Text", altStatus, altColor),
       );
@@ -141,9 +147,14 @@ export const accessibilityMethods = {
 
   /**
    * Get alt text for images
+   *
+   * @returns {string|false|null} The alt value ("" for decorative images),
+   *   false when an image has no alt attribute, null for non-images.
    */
   getAltText(element, tagName) {
-    return tagName === "img" ? element.getAttribute("alt") : null;
+    if (tagName !== "img") return null;
+
+    return element.hasAttribute("alt") ? element.getAttribute("alt") : false;
   },
 
   /**
