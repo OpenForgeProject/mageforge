@@ -14,7 +14,7 @@ Complete reference of all CLI commands provided by the MageForge module.
 | **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`   |
 | **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
 | **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
-| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check modules for Hyvä compatibility issues         | `hyva:check`          |
+| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`          |
 | **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`      |
 | **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`        |
 
