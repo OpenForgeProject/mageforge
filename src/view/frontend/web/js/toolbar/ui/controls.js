@@ -2,7 +2,7 @@
  * MageForge Toolbar – Menu lifecycle and focus trap
  *
  * toggleMenu / openMenu / closeMenu / destroyToolbar
- * _getFocusableEls / _trapFocus / _releaseFocusTrap / setTheme
+ * _getFocusableEls / _trapFocus / _releaseFocusTrap / setTheme / _resolveInitialTheme
  */
 
 export const controls = {
@@ -96,7 +96,25 @@ export const controls = {
     this.runAllButton = null;
     this.resetButton = null;
     this._exportBtnRow = null;
+    this._themeToggleGroup = null;
     this.menuOpen = false;
+  },
+
+  /**
+   * Resolve the initial theme: the user's stored choice wins over the
+   * configured default from the data-theme attribute.
+   *
+   * @returns {'dark'|'auto'|'light'}
+   */
+  _resolveInitialTheme() {
+    const valid = ["dark", "auto", "light"];
+    let stored = null;
+    try {
+      stored = localStorage.getItem("mageforge-theme");
+    } catch (_) {}
+    if (stored && valid.includes(stored)) return stored;
+    const configured = this.$el?.getAttribute("data-theme");
+    return valid.includes(configured) ? configured : "dark";
   },
 
   /**
@@ -110,5 +128,19 @@ export const controls = {
       localStorage.setItem("mageforge-theme", theme);
     } catch (_) {}
     if (this.container) this.container.setAttribute("data-theme", theme);
+    this._updateThemeToggle();
+  },
+
+  /**
+   * Reflect the current theme in the header icon toggle buttons.
+   */
+  _updateThemeToggle() {
+    if (!this._themeToggleGroup) return;
+    this._themeToggleGroup
+      .querySelectorAll(".mageforge-theme-icon-btn")
+      .forEach((btn) => {
+        const active = btn.dataset.themeValue === this.currentTheme;
+        btn.setAttribute("aria-pressed", String(active));
+      });
   },
 };

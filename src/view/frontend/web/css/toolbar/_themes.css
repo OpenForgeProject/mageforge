@@ -59,11 +59,13 @@
 }
 
 /* Theme toggle pill: replace hardcoded white alpha with dark */
-.mageforge-toolbar[data-theme="light"] .mageforge-theme-toggle {
+.mageforge-toolbar[data-theme="light"] .mageforge-segmented-toggle,
+.mageforge-toolbar[data-theme="light"] .mageforge-theme-icon-group {
   background: rgba(var(--mageforge-color-black-rgb), 0.06);
 }
 
-.mageforge-toolbar[data-theme="light"] .mageforge-theme-btn:hover {
+.mageforge-toolbar[data-theme="light"] .mageforge-segmented-btn:hover,
+.mageforge-toolbar[data-theme="light"] .mageforge-theme-icon-btn:hover {
   background: rgba(var(--mageforge-color-black-rgb), 0.08);
 }
 
@@ -130,11 +132,13 @@
     background: rgba(var(--mageforge-color-teal-rgb), 0.14);
   }
 
-  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-toggle {
+  .mageforge-toolbar[data-theme="auto"] .mageforge-segmented-toggle,
+  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-icon-group {
     background: rgba(var(--mageforge-color-black-rgb), 0.06);
   }
 
-  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-btn:hover {
+  .mageforge-toolbar[data-theme="auto"] .mageforge-segmented-btn:hover,
+  .mageforge-toolbar[data-theme="auto"] .mageforge-theme-icon-btn:hover {
     background: rgba(var(--mageforge-color-black-rgb), 0.08);
   }
 
