@@ -295,4 +295,74 @@ class TemplateFallbackResolverTest extends TestCase
 
         $this->assertSame('C:\\app\\design\\frontend\\Vendor\\theme\\Magento_Catalog\\templates', $result);
     }
+
+    public function testFindDirectoryFilesUsesDirectoryRootWithoutSubPathAndSkipsMissingDirs(): void
+    {
+        $this->fileDriver
+            ->method('isDirectory')
+            ->willReturnCallback(static fn(string $path): bool => $path !== '/missing');
+        $this->fileDriver
+            ->expects($this->once())
+            ->method('readDirectoryRecursively')
+            ->with('/module/templates')
+            ->willReturn([
+                '/module/templates/z.phtml',
+                '/module/templates/b.phtml',
+                '/other/place/ignored.phtml',
+                '/module/templates/sub',
+            ]);
+        $this->fileDriver
+            ->method('isFile')
+            ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
+
+        $files = $this->resolver->findDirectoryFiles(['/missing', '/module/templates'], '');
+
+        $this->assertSame(
+            ['b.phtml' => '/module/templates/b.phtml', 'z.phtml' => '/module/templates/z.phtml'],
+            $files,
+            'Files must be sorted by path; entries outside the directory and non-files are ignored',
+        );
+    }
+
+    public function testFindDirectoryFilesNormalizesBackslashes(): void
+    {
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('readDirectoryRecursively')->willReturn(['C:\\module\\templates\\sub\\a.phtml']);
+        $this->fileDriver->method('isFile')->willReturn(true);
+
+        $files = $this->resolver->findDirectoryFiles(['C:\\module\\templates'], '');
+
+        $this->assertSame(['sub/a.phtml' => 'C:/module/templates/sub/a.phtml'], $files);
+    }
+
+    public function testFindDirectoryFilesMergesFallbackDirsFirstDirWinsAndSkipsExcluded(): void
+    {
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver
+            ->method('readDirectoryRecursively')
+            ->willReturnMap([
+                ['/compat/templates/product', ['/compat/templates/product/a.phtml', '/compat/templates/product/sub']],
+                [
+                    '/module/templates/product',
+                    ['/module/templates/product/a.phtml', '/module/templates/product/sub/b.phtml'],
+                ],
+            ]);
+        $this->fileDriver
+            ->method('isFile')
+            ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
+
+        $files = $this->resolver->findDirectoryFiles(
+            ['/theme/templates', '/compat/templates', '/module/templates'],
+            'product',
+            '/theme/templates',
+        );
+
+        $this->assertSame(
+            [
+                'a.phtml' => '/compat/templates/product/a.phtml',
+                'sub/b.phtml' => '/module/templates/product/sub/b.phtml',
+            ],
+            $files,
+        );
+    }
 }
