@@ -7,6 +7,10 @@ namespace OpenForgeProject\MageForge\Test\Unit\Console\Command\Hyva;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
+use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker;
+use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Finding;
+use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -18,6 +22,14 @@ class CompatibilityCheckCommandTest extends TestCase
      */
     private $compatibilityChecker;
     /**
+     * @var Tailwind4Checker&MockObject
+     */
+    private $tailwind4Checker;
+    /**
+     * @var HyvaVersionDetector&MockObject
+     */
+    private $hyvaVersionDetector;
+    /**
      * @var CompatibilityCheckCommand
      */
     private CompatibilityCheckCommand $command;
@@ -25,7 +37,13 @@ class CompatibilityCheckCommandTest extends TestCase
     protected function setUp(): void
     {
         $this->compatibilityChecker = $this->createMock(CompatibilityChecker::class);
-        $this->command = new CompatibilityCheckCommand($this->compatibilityChecker);
+        $this->tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $this->hyvaVersionDetector = $this->createMock(HyvaVersionDetector::class);
+        $this->command = new CompatibilityCheckCommand(
+            $this->compatibilityChecker,
+            $this->tailwind4Checker,
+            $this->hyvaVersionDetector,
+        );
     }
 
     /**
@@ -422,5 +440,190 @@ class CompatibilityCheckCommandTest extends TestCase
     {
         $this->assertSame('mageforge:hyva:compatibility:check', $this->command->getName());
         $this->assertSame(['hyva:check'], $this->command->getAliases());
+    }
+
+    public function testTailwind4CheckIsSkippedWhenHyvaIsNotDetected(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
+        $this->tailwind4Checker->expects($this->never())->method('check');
+
+        $tester = new CommandTester($this->command);
+        $tester->execute([]);
+
+        $this->assertStringNotContainsString('Tailwind CSS v4', $tester->getDisplay());
+    }
+
+    public function testTailwind4CheckRunsAutomaticallyWithHyva14(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.4.2');
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Tailwind CSS v4 Readiness', $display);
+        $this->assertStringContainsString('Hyvä 1.4.2 detected.', $display);
+        $this->assertStringNotContainsString('Checking readiness', $display);
+    }
+
+    public function testTailwind4CheckRunsAutomaticallyWithHyva13AndFailsOnErrors(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.3.18');
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn([
+                'sections' => [
+                    'Theme Vendor/child' => [
+                        new Tailwind4Finding(Tailwind4Severity::Error, 'hyva.config.json not found.'),
+                    ],
+                ],
+                'themes' => 1,
+                'modules' => 0,
+                'errors' => 1,
+                'warnings' => 0,
+            ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString(
+            'Hyvä 1.3.18 detected. Checking readiness for the upgrade to Hyvä 1.4.',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function testTailwind4OptionForcesCheckWithoutDetectedHyva(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--tailwind4' => true]);
+
+        $this->assertStringContainsString('Tailwind CSS v4 Readiness', $tester->getDisplay());
+        $this->assertStringNotContainsString('detected.', $tester->getDisplay());
+    }
+
+    public function testTailwind4ErrorsFailTheCommandAndShowFindings(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->with(true, true)
+            ->willReturn([
+                'sections' => [
+                    'Theme Vendor/child' => [
+                        new Tailwind4Finding(
+                            Tailwind4Severity::Error,
+                            'hyva.config.json not found.',
+                            'Run "npx hyva-init" in web/tailwind.',
+                            'hyva.config.json',
+                        ),
+                        new Tailwind4Finding(
+                            Tailwind4Severity::Warning,
+                            '@screen was removed.',
+                            file: 'a.css',
+                            line: 3,
+                        ),
+                    ],
+                ],
+                'themes' => 1,
+                'modules' => 0,
+                'errors' => 1,
+                'warnings' => 1,
+            ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['--tailwind4' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Tailwind CSS v4 Readiness', $display);
+        $this->assertStringContainsString('Theme Vendor/child', $display);
+        $this->assertStringContainsString('hyva.config.json not found.', $display);
+        $this->assertStringContainsString('a.css:3', $display);
+        $this->assertStringContainsString('npx hyva-init', $display);
+        $this->assertStringContainsString('1 error(s)', $display);
+    }
+
+    public function testTailwind4WarningsOnlyKeepExitCodeSuccessful(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->tailwind4Checker->method('check')->willReturn([
+            'sections' => [
+                'Module Vendor_Module' => [
+                    new Tailwind4Finding(Tailwind4Severity::Warning, '@screen was removed.', file: 'a.css', line: 3),
+                ],
+            ],
+            'themes' => 0,
+            'modules' => 1,
+            'errors' => 0,
+            'warnings' => 1,
+        ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['--tailwind4' => true]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('1 warning(s)', $tester->getDisplay());
+    }
+
+    public function testTailwind4ReportsReadyThemes(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->tailwind4Checker->method('check')->willReturn([
+            'sections' => [],
+            'themes' => 2,
+            'modules' => 1,
+            'errors' => 0,
+            'warnings' => 0,
+        ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['--tailwind4' => true]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('Ready for Tailwind CSS v4', $tester->getDisplay());
+    }
+
+    public function testTailwind4HintsWhenNothingToCheck(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->tailwind4Checker->method('check')->willReturn([
+            'sections' => [],
+            'themes' => 0,
+            'modules' => 0,
+            'errors' => 0,
+            'warnings' => 0,
+        ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['--tailwind4' => true]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('No Hyvä themes or modules with Tailwind sources', $tester->getDisplay());
     }
 }
