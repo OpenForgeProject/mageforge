@@ -103,7 +103,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 self::OPTION_TAILWIND4,
                 null,
                 InputOption::VALUE_NONE,
-                'Force the Tailwind CSS v4 readiness check (runs automatically with Hyvä 1.4 or newer)',
+                'Force the Tailwind CSS v4 readiness check (runs automatically if Hyvä is installed via Composer)',
             );
     }
 
@@ -318,9 +318,10 @@ class CompatibilityCheckCommand extends AbstractCommand
             $this->displayRecommendations();
         }
 
+        $hyvaVersion = $this->hyvaVersionDetector->getVersion();
         $tailwind4Errors = 0;
-        if ($tailwind4 || $this->hyvaVersionDetector->isAtLeast(self::TAILWIND4_MIN_HYVA_VERSION)) {
-            $tailwind4Errors = $this->runTailwind4Check($scanThirdPartyOnly, !$includeVendor, $tailwind4);
+        if ($tailwind4 || $hyvaVersion !== null) {
+            $tailwind4Errors = $this->runTailwind4Check($scanThirdPartyOnly, !$includeVendor, $hyvaVersion);
         }
 
         // Add spacing before exit
@@ -337,16 +338,23 @@ class CompatibilityCheckCommand extends AbstractCommand
      *
      * @param bool $thirdPartyOnly
      * @param bool $excludeVendor
-     * @param bool $forced Whether the check was requested explicitly instead of detected from the Hyvä version
+     * @param string|null $hyvaVersion Installed Hyvä version, null if not detected
      * @return int Number of errors found
      */
-    private function runTailwind4Check(bool $thirdPartyOnly, bool $excludeVendor, bool $forced): int
+    private function runTailwind4Check(bool $thirdPartyOnly, bool $excludeVendor, ?string $hyvaVersion): int
     {
         $this->io->section('Tailwind CSS v4 Readiness (Hyvä 1.4)');
 
-        $version = $this->hyvaVersionDetector->getVersion();
-        if (!$forced && $version !== null) {
-            $this->io->text(sprintf('Hyvä %s detected.', $version));
+        if ($hyvaVersion !== null) {
+            $this->io->text(
+                version_compare($hyvaVersion, self::TAILWIND4_MIN_HYVA_VERSION, '>=')
+                    ? sprintf('Hyvä %s detected.', $hyvaVersion)
+                    : sprintf(
+                        'Hyvä %s detected. Checking readiness for the upgrade to Hyvä %s.',
+                        $hyvaVersion,
+                        self::TAILWIND4_MIN_HYVA_VERSION,
+                    ),
+            );
         }
 
         $results = $this->tailwind4Checker->check($thirdPartyOnly, $excludeVendor);

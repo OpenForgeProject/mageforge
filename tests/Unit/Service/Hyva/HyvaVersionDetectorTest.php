@@ -34,37 +34,30 @@ class HyvaVersionDetectorTest extends TestCase
      * @param array<string, string> $installed
      */
     #[DataProvider('versionProvider')]
-    public function testIsAtLeast(array $installed, bool $expected): void
+    public function testGetVersion(array $installed, ?string $expected): void
     {
-        $this->assertSame($expected, $this->detector($installed)->isAtLeast('1.4'));
+        $this->assertSame($expected, $this->detector($installed)->getVersion());
     }
 
     /**
-     * @return array<string, array{array<string, string>, bool}>
+     * @return array<string, array{array<string, string>, string|null}>
      */
     public static function versionProvider(): array
     {
         return [
-            'default theme 1.4.0' => [['hyva-themes/magento2-default-theme' => '1.4.0'], true],
-            'default theme with v prefix' => [['hyva-themes/magento2-default-theme' => 'v1.4.2'], true],
-            'default theme 1.3.18' => [['hyva-themes/magento2-default-theme' => '1.3.18'], false],
-            'newer module does not count when default theme is older' => [
+            'default theme 1.4.0' => [['hyva-themes/magento2-default-theme' => '1.4.0'], '1.4.0'],
+            'default theme with v prefix' => [['hyva-themes/magento2-default-theme' => 'v1.4.2'], '1.4.2'],
+            'default theme 1.3.18' => [['hyva-themes/magento2-default-theme' => '1.3.18'], '1.3.18'],
+            'default theme wins over a newer theme module' => [
                 [
                     'hyva-themes/magento2-default-theme' => '1.3.18',
                     'hyva-themes/magento2-theme-module' => '1.4.0',
                 ],
-                false,
+                '1.3.18',
             ],
-            'theme module as fallback' => [['hyva-themes/magento2-theme-module' => '1.4.1'], true],
-            'dev branch is not numeric' => [['hyva-themes/magento2-default-theme' => 'dev-main'], false],
-            'not installed' => [[], false],
+            'theme module as fallback' => [['hyva-themes/magento2-theme-module' => '1.4.1'], '1.4.1'],
+            'dev branch is not numeric' => [['hyva-themes/magento2-default-theme' => 'dev-main'], null],
+            'not installed' => [[], null],
         ];
-    }
-
-    public function testGetVersionReturnsNormalisedVersion(): void
-    {
-        $detector = $this->detector(['hyva-themes/magento2-default-theme' => 'v1.4.2']);
-
-        $this->assertSame('1.4.2', $detector->getVersion());
     }
 }

@@ -36,19 +36,6 @@ class HyvaVersionDetector
     }
 
     /**
-     * Check if at least the given Hyvä version is installed
-     *
-     * @param string $minimum
-     * @return bool
-     */
-    public function isAtLeast(string $minimum): bool
-    {
-        $version = $this->getVersion();
-
-        return $version !== null && version_compare($version, $minimum, '>=');
-    }
-
-    /**
      * Get the installed version of a Composer package
      *
      * @param string $package

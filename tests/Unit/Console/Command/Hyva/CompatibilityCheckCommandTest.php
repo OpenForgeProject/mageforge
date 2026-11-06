@@ -442,11 +442,11 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertSame(['hyva:check'], $this->command->getAliases());
     }
 
-    public function testTailwind4CheckIsSkippedForOlderHyvaWithoutOption(): void
+    public function testTailwind4CheckIsSkippedWhenHyvaIsNotDetected(): void
     {
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->hyvaVersionDetector->method('isAtLeast')->with('1.4')->willReturn(false);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
         $this->tailwind4Checker->expects($this->never())->method('check');
 
         $tester = new CommandTester($this->command);
@@ -459,7 +459,6 @@ class CompatibilityCheckCommandTest extends TestCase
     {
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->hyvaVersionDetector->method('isAtLeast')->with('1.4')->willReturn(true);
         $this->hyvaVersionDetector->method('getVersion')->willReturn('1.4.2');
         $this->tailwind4Checker
             ->expects($this->once())
@@ -473,13 +472,44 @@ class CompatibilityCheckCommandTest extends TestCase
         $display = $tester->getDisplay();
         $this->assertStringContainsString('Tailwind CSS v4 Readiness', $display);
         $this->assertStringContainsString('Hyvä 1.4.2 detected.', $display);
+        $this->assertStringNotContainsString('Checking readiness', $display);
     }
 
-    public function testTailwind4OptionForcesCheckWithoutHyva14(): void
+    public function testTailwind4CheckRunsAutomaticallyWithHyva13AndFailsOnErrors(): void
     {
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->hyvaVersionDetector->method('isAtLeast')->willReturn(false);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.3.18');
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn([
+                'sections' => [
+                    'Theme Vendor/child' => [
+                        new Tailwind4Finding(Tailwind4Severity::Error, 'hyva.config.json not found.'),
+                    ],
+                ],
+                'themes' => 1,
+                'modules' => 0,
+                'errors' => 1,
+                'warnings' => 0,
+            ]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString(
+            'Hyvä 1.3.18 detected. Checking readiness for the upgrade to Hyvä 1.4.',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function testTailwind4OptionForcesCheckWithoutDetectedHyva(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
         $this->tailwind4Checker
             ->expects($this->once())
             ->method('check')
