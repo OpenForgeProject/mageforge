@@ -6,6 +6,31 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.29.0](https://github.com/OpenForgeProject/mageforge/compare/0.28.0...0.29.0) (2026-11-06)
+
+
+### Added
+
+* add toggle to switch light/dark/auto theme for toolbar ([4b4f416](https://github.com/OpenForgeProject/mageforge/commit/4b4f4169f5d9a66eae89ef689f90a3405067c05f))
+* **deps-dev:** update infection/infection requirement ([#251](https://github.com/OpenForgeProject/mageforge/issues/251)) ([b9a029a](https://github.com/OpenForgeProject/mageforge/commit/b9a029a022835ac718e38aaecff2de2a7b7fdd71))
+* **deps-dev:** update magento/magento-coding-standard requirement ([#252](https://github.com/OpenForgeProject/mageforge/issues/252)) ([2148678](https://github.com/OpenForgeProject/mageforge/commit/21486785c51122c76d1c74daae8a3d6865e61a95))
+* **deps:** bump the github-actions group with 4 updates ([#262](https://github.com/OpenForgeProject/mageforge/issues/262)) ([517aac2](https://github.com/OpenForgeProject/mageforge/commit/517aac2d268a9a528578014214fbee46b57e26f5))
+* **deps:** bump trunk-io/trunk-action from 1.3.1 to 2.0.0 ([#248](https://github.com/OpenForgeProject/mageforge/issues/248)) ([fda9b96](https://github.com/OpenForgeProject/mageforge/commit/fda9b96f65f45bce073828db48355b7f93f5face))
+* **hyva:** add Tailwind CSS v4 readiness check to compatibility:check ([3d03405](https://github.com/OpenForgeProject/mageforge/commit/3d0340598ebf06ece6c20ee0566e01437ecfd9eb))
+* implement dynamic score color for toolbar health indicators ([557f510](https://github.com/OpenForgeProject/mageforge/commit/557f510741496c0c46579d44158def1d86c353ac))
+* implement dynamic score color for toolbar health indicators ([#255](https://github.com/OpenForgeProject/mageforge/issues/255)) ([d9de173](https://github.com/OpenForgeProject/mageforge/commit/d9de173abd24af356261178aab582c993bdfec30))
+
+
+### Fixed
+
+* **commands:** return failure exit code when themes fail ([1bdf550](https://github.com/OpenForgeProject/mageforge/commit/1bdf550c6690d8f76a3d72075e3cae98db4e4b4c))
+* **inspector:** fix picker toggle, shortcut matching and alt text status ([45060c7](https://github.com/OpenForgeProject/mageforge/commit/45060c7627e592041dbcea28401b430acc2c9d7f))
+
+
+### Maintenance
+
+* update phpunit/phpunit requirement from ^11.5 to ^13.4 ([ad9259c](https://github.com/OpenForgeProject/mageforge/commit/ad9259c09ba5c26a2134502b582a658681505b3a))
+
 ## [0.28.0](https://github.com/OpenForgeProject/mageforge/compare/0.27.0...0.28.0) (2026-08-11)
 
 
