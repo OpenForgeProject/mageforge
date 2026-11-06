@@ -120,6 +120,44 @@ class ThemeCleanerTest extends TestCase
         );
     }
 
+    public function testRecordsDeleteFailuresEvenWithoutVerboseOutput(): void
+    {
+        $this->writeDirectory->method('isDirectory')->willReturn(true);
+        $this->writeDirectory->method('delete')->willThrowException(new \RuntimeException('locked'));
+        $this->io->expects($this->never())->method('writeln');
+
+        $this->cleaner->cleanPubStatic('Vendor/theme', $this->io);
+        $this->cleaner->cleanPageCache($this->io);
+
+        $this->assertSame(
+            ['pub/static/frontend/Vendor/theme - locked', 'var/page_cache - locked'],
+            $this->cleaner->getFailures(),
+        );
+    }
+
+    public function testResetFailuresForgetsRecordedFailures(): void
+    {
+        $this->writeDirectory->method('isDirectory')->willReturn(true);
+        $this->writeDirectory->method('delete')->willThrowException(new \RuntimeException('locked'));
+
+        $this->cleaner->cleanVarTmp($this->io);
+        $this->assertCount(1, $this->cleaner->getFailures());
+
+        $this->cleaner->resetFailures();
+
+        $this->assertSame([], $this->cleaner->getFailures());
+    }
+
+    public function testDryRunAndSuccessfulDeletionsRecordNoFailures(): void
+    {
+        $this->writeDirectory->method('isDirectory')->willReturn(true);
+
+        $this->cleaner->cleanPageCache($this->io, true);
+        $this->cleaner->cleanVarTmp($this->io);
+
+        $this->assertSame([], $this->cleaner->getFailures());
+    }
+
     public function testCleanViewPreprocessedReturnsZeroWhenBaseDirectoryMissing(): void
     {
         $this->writeDirectory->method('isDirectory')->willReturn(false);

@@ -17,6 +17,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ThemeCleaner
 {
     /**
+     * Directories that could not be deleted, as "<path> - <error message>"
+     *
+     * @var array<string>
+     */
+    private array $failures = [];
+
+    /**
      * @param Filesystem $filesystem
      */
     public function __construct(
@@ -70,9 +77,7 @@ class ThemeCleaner
                     }
                     $cleaned++;
                 } catch (\Exception $e) {
-                    if ($isVerbose) {
-                        $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/%s - %s', $path, $e->getMessage()));
-                    }
+                    $this->recordFailure('var/' . $path, $e, $io, $isVerbose);
                 }
             }
         }
@@ -122,13 +127,7 @@ class ThemeCleaner
                 }
                 $cleaned++;
             } catch (\Exception $e) {
-                if ($isVerbose) {
-                    $io->writeln(sprintf(
-                        '  <fg=red>✗</> Failed to clean: pub/static/%s - %s',
-                        $pathToClean,
-                        $e->getMessage(),
-                    ));
-                }
+                $this->recordFailure('pub/static/' . $pathToClean, $e, $io, $isVerbose);
             }
         }
 
@@ -159,9 +158,7 @@ class ThemeCleaner
                 }
                 $cleaned++;
             } catch (\Exception $e) {
-                if ($isVerbose) {
-                    $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/page_cache - %s', $e->getMessage()));
-                }
+                $this->recordFailure('var/page_cache', $e, $io, $isVerbose);
             }
         }
 
@@ -192,9 +189,7 @@ class ThemeCleaner
                 }
                 $cleaned++;
             } catch (\Exception $e) {
-                if ($isVerbose) {
-                    $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: var/tmp - %s', $e->getMessage()));
-                }
+                $this->recordFailure('var/tmp', $e, $io, $isVerbose);
             }
         }
 
@@ -224,9 +219,7 @@ class ThemeCleaner
                     }
                     $deletedCount++;
                 } catch (\Exception $e) {
-                    if ($isVerbose) {
-                        $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated/code - %s', $e->getMessage()));
-                    }
+                    $this->recordFailure('generated/code', $e, $io, $isVerbose);
                 }
             }
 
@@ -237,12 +230,7 @@ class ThemeCleaner
                     }
                     $deletedCount++;
                 } catch (\Exception $e) {
-                    if ($isVerbose) {
-                        $io->writeln(sprintf(
-                            '  <fg=red>✗</> Failed to clean: generated/metadata - %s',
-                            $e->getMessage(),
-                        ));
-                    }
+                    $this->recordFailure('generated/metadata', $e, $io, $isVerbose);
                 }
             }
 
@@ -254,12 +242,48 @@ class ThemeCleaner
                 $cleaned++;
             }
         } catch (\Exception $e) {
-            if ($isVerbose) {
-                $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: generated - %s', $e->getMessage()));
-            }
+            $this->recordFailure('generated', $e, $io, $isVerbose);
         }
 
         return $cleaned;
+    }
+
+    /**
+     * Get the directories that could not be deleted since the last reset
+     *
+     * @return array<string> Entries in the form "<path> - <error message>"
+     */
+    public function getFailures(): array
+    {
+        return $this->failures;
+    }
+
+    /**
+     * Forget previously recorded deletion failures
+     *
+     * @return void
+     */
+    public function resetFailures(): void
+    {
+        $this->failures = [];
+    }
+
+    /**
+     * Record a failed deletion and report it in verbose mode
+     *
+     * @param string $path Path relative to the Magento root
+     * @param \Exception $e
+     * @param SymfonyStyle $io
+     * @param bool $isVerbose
+     * @return void
+     */
+    private function recordFailure(string $path, \Exception $e, SymfonyStyle $io, bool $isVerbose): void
+    {
+        $this->failures[] = sprintf('%s - %s', $path, $e->getMessage());
+
+        if ($isVerbose) {
+            $io->writeln(sprintf('  <fg=red>✗</> Failed to clean: %s - %s', $path, $e->getMessage()));
+        }
     }
 
     /**

@@ -261,14 +261,42 @@ class CleanCommand extends AbstractCommand
             // Use validated/corrected theme name
             $this->displayThemeHeader($validatedTheme, $currentTheme, $totalThemes);
 
+            $this->themeCleaner->resetFailures();
             $cleaned = $this->cleanThemeDirectories($validatedTheme, $dryRun);
+            $failures = $this->themeCleaner->getFailures();
 
-            $this->displayThemeResult($validatedTheme, $cleaned, $dryRun);
+            if ($failures === []) {
+                $this->displayThemeResult($validatedTheme, $cleaned, $dryRun);
+            } else {
+                $this->displayThemeFailures($validatedTheme, $failures);
+                $failedThemes[] = $validatedTheme;
+            }
 
             $totalCleaned += $cleaned;
         }
 
         return [$totalCleaned, $failedThemes];
+    }
+
+    /**
+     * Display the directories that could not be cleaned for a theme
+     *
+     * @param string $themeName
+     * @param array<string> $failures
+     * @return void
+     */
+    private function displayThemeFailures(string $themeName, array $failures): void
+    {
+        $this->io->writeln(sprintf(
+            "  <fg=red>✗</> Failed to clean %d director%s for theme '%s':",
+            count($failures),
+            count($failures) === 1 ? 'y' : 'ies',
+            $themeName,
+        ));
+
+        foreach ($failures as $failure) {
+            $this->io->writeln(sprintf('      %s', $failure));
+        }
     }
 
     /**
