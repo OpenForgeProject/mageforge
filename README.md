@@ -119,7 +119,7 @@ The Inspector can also be enabled in Admin: `Stores > Configuration > MageForge 
 See the dedicated [Commands Reference](./docs/commands_reference.md) for complete documentation of all MageForge commands, including:
 
 - Theme commands (`list`, `build`, `watch`, `clean`, `inspector`)
-- Hyvä commands (`tokens`, `compatibility:check`)
+- Hyvä commands (`tokens`, `compatibility:check` including the Tailwind CSS v4 readiness check)
 - System commands (`version`, `check`)
 - Options, arguments, and usage examples
 

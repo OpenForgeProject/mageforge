@@ -12,6 +12,7 @@
 /**
  * @typedef {object} ParsedShortcut
  * @property {string} key
+ * @property {string} code Physical key code (e.g. "KeyI") for single letters and digits, otherwise empty
  * @property {boolean} ctrlOrMeta
  * @property {boolean} shift
  * @property {boolean} alt
@@ -25,6 +26,19 @@
  * @type {Map<string, ParsedShortcut|null>}
  */
 const parsedShortcutCache = new Map();
+
+/**
+ * Map a single letter or digit to its physical KeyboardEvent.code.
+ *
+ * @param {string} key Lower-cased key from the shortcut string.
+ * @returns {string} Empty string for all other keys.
+ */
+function toKeyCode(key) {
+  if (/^[a-z]$/.test(key)) return `Key${key.toUpperCase()}`;
+  if (/^[0-9]$/.test(key)) return `Digit${key}`;
+
+  return "";
+}
 
 /**
  * Parse a shortcut string into its components.
@@ -48,6 +62,7 @@ export function parseShortcut(shortcut) {
 
     parsed = {
       key,
+      code: toKeyCode(key),
       ctrlOrMeta:
         parts.includes("ctrl") ||
         parts.includes("cmd") ||
@@ -73,8 +88,24 @@ export function matchesShortcut(event, shortcut) {
   const parsed = parseShortcut(shortcut);
   if (!parsed) return false;
 
+  // Some events (autofill, synthetic input) carry no key at all
+  const key = (event.key || "").toLowerCase();
+  if (key === "") return false;
+
+  // With Alt/Option macOS produces special characters (Option+I => "ˆ") or
+  // "Dead", so fall back to the physical key for those. A plain letter or
+  // digit is trusted as is, otherwise layouts where key and code disagree
+  // (key "y" on code KeyZ) would match two different shortcuts.
+  const isPlainKey = /^[a-z0-9]$/.test(key);
+  const keyMatches =
+    key === parsed.key ||
+    (parsed.alt &&
+      !isPlainKey &&
+      parsed.code !== "" &&
+      event.code === parsed.code);
+
   return (
-    event.key.toLowerCase() === parsed.key &&
+    keyMatches &&
     (event.ctrlKey || event.metaKey) === parsed.ctrlOrMeta &&
     event.shiftKey === parsed.shift &&
     event.altKey === parsed.alt

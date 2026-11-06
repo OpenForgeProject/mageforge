@@ -215,10 +215,48 @@ class CleanCommandTest extends TestCase
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/unknown', 'Vendor/missing']]);
 
-        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
         $display = $tester->getDisplay();
         $this->assertStringContainsString('No files were cleaned.', $display);
         $this->assertStringContainsString('Failed to process 2 themes: Vendor/unknown, Vendor/missing', $display);
+    }
+
+    public function testSingleUnknownThemeReportsFailureInsteadOfNothingToClean(): void
+    {
+        $this->themePath->method('getPath')->willReturn(null);
+        $this->themeSuggester->method('findSimilarThemes')->willReturn([]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCodes' => ['Vendor/unknown']]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Failed to process 1 theme: Vendor/unknown', $display);
+        $this->assertStringNotContainsString('No files to clean for theme', $display);
+    }
+
+    public function testDeletionFailureMarksThemeAsFailedAndReturnsFailure(): void
+    {
+        $this->themePath->method('getPath')->willReturn('/path');
+        $this->themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
+        $this->themeCleaner->method('cleanPubStatic')->willReturn(0);
+        $this->themeCleaner->method('cleanPageCache')->willReturn(0);
+        $this->themeCleaner->method('cleanVarTmp')->willReturn(0);
+        $this->themeCleaner->method('cleanGenerated')->willReturn(0);
+        $this->themeCleaner
+            ->method('getFailures')
+            ->willReturn(['pub/static/frontend/Vendor/theme - Permission denied']);
+        $this->themeCleaner->expects($this->once())->method('resetFailures');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString("Failed to clean 1 directory for theme 'Vendor/theme':", $display);
+        $this->assertStringContainsString('pub/static/frontend/Vendor/theme - Permission denied', $display);
+        $this->assertStringContainsString('Failed to process 1 theme: Vendor/theme', $display);
+        $this->assertStringNotContainsString('No files to clean for theme', $display);
     }
 
     public function testResolvesVendorWildcardBeforeCleaning(): void
@@ -257,7 +295,7 @@ class CleanCommandTest extends TestCase
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/good', 'Vendor/bad']]);
 
-        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString('Successfully cleaned 2 directories across 1 theme', $display);
         $this->assertStringNotContainsString('across 1 themes', $display, 'Singular form required for one theme');

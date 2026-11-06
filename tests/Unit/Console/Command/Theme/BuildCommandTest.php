@@ -124,7 +124,7 @@ class BuildCommandTest extends TestCase
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
 
-        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(Command::FAILURE, $exitCode);
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString('Building Vendor/theme (1 of 1) ... failed', $display);
         $this->assertStringContainsString('no themes were built successfully', $display);
@@ -141,7 +141,7 @@ class BuildCommandTest extends TestCase
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
         );
 
-        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(Command::FAILURE, $exitCode);
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString('No suitable builder found for theme Vendor/theme.', $display);
         $this->assertStringContainsString('no themes were built successfully', $display);
@@ -159,7 +159,7 @@ class BuildCommandTest extends TestCase
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
         );
 
-        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(Command::FAILURE, $exitCode);
         $normalized = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
         $this->assertStringContainsString(
             "Theme 'Vendor/unknown' is not installed and no similar themes were found.",
@@ -249,8 +249,24 @@ class BuildCommandTest extends TestCase
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
         );
 
-        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(Command::FAILURE, $exitCode);
         $this->assertStringContainsString('Failed to build theme Vendor/theme.', $tester->getDisplay());
+    }
+
+    public function testReturnsFailureWhenOnlyOneOfSeveralThemesFails(): void
+    {
+        $this->themePath->method('getPath')->willReturn('/path/to/theme');
+        $builder = $this->createNamedBuilder('hyva');
+        $builder->method('build')->willReturnOnConsecutiveCalls(true, false);
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCodes' => ['Vendor/good', 'Vendor/broken']]);
+
+        $this->assertSame(Command::FAILURE, $exitCode);
+        $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
+        $this->assertStringContainsString('Building Vendor/good (1 of 2) ... done', $display);
+        $this->assertStringContainsString('Building Vendor/broken (2 of 2) ... failed', $display);
     }
 
     public function testSummaryColorsBuilderNameInDecoratedOutput(): void
