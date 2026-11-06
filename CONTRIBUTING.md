@@ -45,6 +45,7 @@ Examples:
 - `style:` - Code style changes (no version bump)
 - `test:` - Test updates (no version bump)
 - `chore:` - Maintenance tasks (no version bump)
+- `deps:` - Dependency updates (patch version bump, listed under "Maintenance"; used by Dependabot)
 
 **Breaking Changes**: Add `!` after the type for major version bumps:
 

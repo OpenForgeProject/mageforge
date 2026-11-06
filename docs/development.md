@@ -321,6 +321,7 @@ Release Please groups changes into sections based on the Conventional Commits ty
 | `perf:`     | **Performance**   | ✅ Yes           |
 | `docs:`     | **Documentation** | ✅ Yes           |
 | `style:`    | **Styling**       | ✅ Yes           |
+| `deps:`     | **Maintenance**   | ✅ Yes           |
 | `chore:`    | Chore             | ❌ Hidden        |
 | `test:`     | Tests             | ❌ Hidden        |
 | `build:`    | Build             | ❌ Hidden        |
