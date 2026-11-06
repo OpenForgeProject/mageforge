@@ -6,6 +6,11 @@ updates:
       interval: daily
     labels:
       - Dependencies
+    # Release Please lists the "deps" type under "Maintenance" in the changelog.
+    # Without an explicit prefix Dependabot copies the style of recent commits
+    # and ends up with "feat(deps)", which shows up under "Added".
+    commit-message:
+      prefix: deps
     # Wait after release before opening update PRs — gives the ecosystem time
     # to catch malicious releases (supply-chain protection).
     cooldown:
@@ -37,6 +42,8 @@ updates:
       interval: weekly
     labels:
       - Dependencies
+    commit-message:
+      prefix: deps
     # Actions are pulled by SHA, but a compromised release is still a risk —
     # wait a week so takedowns/reverts can happen first. semver-major-days is
     # not supported for the github-actions ecosystem, so only the default

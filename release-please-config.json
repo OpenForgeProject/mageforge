@@ -46,6 +46,11 @@
           "hidden": false
         },
         {
+          "type": "deps",
+          "section": "Maintenance",
+          "hidden": false
+        },
+        {
           "type": "chore",
           "section": "Chore",
           "hidden": true

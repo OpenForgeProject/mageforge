@@ -33,9 +33,9 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          pattern='^(feat|fix|refactor|perf|docs|style|chore|test|build|ci|revert)(\([^()]+\))?!?: [^[:space:]].*$'
+          pattern='^(feat|fix|refactor|perf|docs|style|deps|chore|test|build|ci|revert)(\([^()]+\))?!?: [^[:space:]].*$'
           if [[ ! "$PR_TITLE" =~ $pattern ]]; then
             echo "::error title=Invalid PR title::The title must follow Conventional Commits, e.g. 'feat(hyva): add readiness check'. Do not start it with an emoji."
-            echo "Allowed types: feat, fix, refactor, perf, docs, style, chore, test, build, ci, revert"
+            echo "Allowed types: feat, fix, refactor, perf, docs, style, deps, chore, test, build, ci, revert"
             exit 1
           fi
