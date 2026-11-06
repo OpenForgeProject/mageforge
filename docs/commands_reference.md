@@ -248,13 +248,13 @@ bin/magento hyva:check
 - `--include-core` — Include Magento core modules in the check.
 - `--include-vendor` — Include modules installed in the vendor directory (default: excluded).
 - `--detailed` — Show detailed compatibility information.
-- `--tailwind4` — Also check Hyvä themes and modules for Tailwind CSS v4 readiness (Hyvä 1.4). See below.
+- `--tailwind4` — Force the Tailwind CSS v4 readiness check. It runs automatically when Hyvä 1.4 or newer is installed. See below.
 
 **Output:** Displays a table with compatibility status per module.
 
-#### Tailwind CSS v4 readiness (`--tailwind4`)
+#### Tailwind CSS v4 readiness
 
-Read-only check of what is still needed for the upgrade from Tailwind CSS v3 (Hyvä 1.3.x) to v4 (Hyvä 1.4). See the [Hyvä upgrade guide](https://docs.hyva.io/hyva-themes/working-with-tailwindcss/updating-to-tailwind-4.html). The same module filters apply (`--include-core`, `--include-vendor`); vendor themes such as `Hyva/default` are skipped unless `--include-vendor` is set.
+Read-only check of what is needed for Tailwind CSS v4 (Hyvä 1.4). See the [Hyvä upgrade guide](https://docs.hyva.io/hyva-themes/working-with-tailwindcss/updating-to-tailwind-4.html). It runs automatically when `hyva-themes/magento2-default-theme` 1.4 or newer is installed via Composer (the theme module is the fallback if the default theme is missing). Use `--tailwind4` to run it anyway, e.g. to prepare the upgrade from 1.3.x. The same module filters apply (`--include-core`, `--include-vendor`); vendor themes such as `Hyva/default` are skipped unless `--include-vendor` is set.
 
 ```bash
 bin/magento hyva:check --tailwind4

@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Console\Command\Hyva;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Hyva\CompatibilityCheckCommand;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Finding;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
@@ -25,6 +26,10 @@ class CompatibilityCheckCommandTest extends TestCase
      */
     private $tailwind4Checker;
     /**
+     * @var HyvaVersionDetector&MockObject
+     */
+    private $hyvaVersionDetector;
+    /**
      * @var CompatibilityCheckCommand
      */
     private CompatibilityCheckCommand $command;
@@ -33,7 +38,12 @@ class CompatibilityCheckCommandTest extends TestCase
     {
         $this->compatibilityChecker = $this->createMock(CompatibilityChecker::class);
         $this->tailwind4Checker = $this->createMock(Tailwind4Checker::class);
-        $this->command = new CompatibilityCheckCommand($this->compatibilityChecker, $this->tailwind4Checker);
+        $this->hyvaVersionDetector = $this->createMock(HyvaVersionDetector::class);
+        $this->command = new CompatibilityCheckCommand(
+            $this->compatibilityChecker,
+            $this->tailwind4Checker,
+            $this->hyvaVersionDetector,
+        );
     }
 
     /**
@@ -432,16 +442,54 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->assertSame(['hyva:check'], $this->command->getAliases());
     }
 
-    public function testTailwind4CheckIsSkippedWithoutOption(): void
+    public function testTailwind4CheckIsSkippedForOlderHyvaWithoutOption(): void
     {
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('isAtLeast')->with('1.4')->willReturn(false);
         $this->tailwind4Checker->expects($this->never())->method('check');
 
         $tester = new CommandTester($this->command);
         $tester->execute([]);
 
         $this->assertStringNotContainsString('Tailwind CSS v4', $tester->getDisplay());
+    }
+
+    public function testTailwind4CheckRunsAutomaticallyWithHyva14(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('isAtLeast')->with('1.4')->willReturn(true);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.4.2');
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Tailwind CSS v4 Readiness', $display);
+        $this->assertStringContainsString('Hyvä 1.4.2 detected.', $display);
+    }
+
+    public function testTailwind4OptionForcesCheckWithoutHyva14(): void
+    {
+        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $this->hyvaVersionDetector->method('isAtLeast')->willReturn(false);
+        $this->tailwind4Checker
+            ->expects($this->once())
+            ->method('check')
+            ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(['--tailwind4' => true]);
+
+        $this->assertStringContainsString('Tailwind CSS v4 Readiness', $tester->getDisplay());
+        $this->assertStringNotContainsString('detected.', $tester->getDisplay());
     }
 
     public function testTailwind4ErrorsFailTheCommandAndShowFindings(): void

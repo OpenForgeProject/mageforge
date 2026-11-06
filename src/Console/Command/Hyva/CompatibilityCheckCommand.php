@@ -9,6 +9,7 @@ use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -35,6 +36,7 @@ class CompatibilityCheckCommand extends AbstractCommand
     private const OPTION_INCLUDE_VENDOR = 'include-vendor';
     private const OPTION_DETAILED = 'detailed';
     private const OPTION_TAILWIND4 = 'tailwind4';
+    private const TAILWIND4_MIN_HYVA_VERSION = '1.4';
 
     private const DISPLAY_MODE_ISSUES = 'issues';
     private const DISPLAY_MODE_INCOMPATIBLE_ONLY = 'incompatible-only';
@@ -46,10 +48,12 @@ class CompatibilityCheckCommand extends AbstractCommand
     /**
      * @param CompatibilityChecker $compatibilityChecker
      * @param Tailwind4Checker $tailwind4Checker
+     * @param HyvaVersionDetector $hyvaVersionDetector
      */
     public function __construct(
         private readonly CompatibilityChecker $compatibilityChecker,
         private readonly Tailwind4Checker $tailwind4Checker,
+        private readonly HyvaVersionDetector $hyvaVersionDetector,
     ) {
         parent::__construct();
     }
@@ -99,7 +103,7 @@ class CompatibilityCheckCommand extends AbstractCommand
                 self::OPTION_TAILWIND4,
                 null,
                 InputOption::VALUE_NONE,
-                'Also check Hyvä themes and modules for Tailwind CSS v4 readiness (Hyvä 1.4)',
+                'Force the Tailwind CSS v4 readiness check (runs automatically with Hyvä 1.4 or newer)',
             );
     }
 
@@ -184,13 +188,6 @@ class CompatibilityCheckCommand extends AbstractCommand
 
             $detailed = (bool) $detailedPrompt->prompt();
 
-            $tailwind4Prompt = new ConfirmPrompt(
-                label: 'Also check Hyvä themes and modules for Tailwind CSS v4 readiness?',
-                default: false,
-            );
-
-            $tailwind4 = (bool) $tailwind4Prompt->prompt();
-
             // Map selected options to flags
             $showAll = $displayMode === self::DISPLAY_MODE_SHOW_ALL;
             $incompatibleOnly = $displayMode === self::DISPLAY_MODE_INCOMPATIBLE_ONLY;
@@ -212,9 +209,6 @@ class CompatibilityCheckCommand extends AbstractCommand
             if ($detailed) {
                 $config[] = 'Detailed issues';
             }
-            if ($tailwind4) {
-                $config[] = 'Tailwind CSS v4 check';
-            }
             $this->io->comment('Configuration: ' . implode(', ', $config));
             $this->io->newLine();
 
@@ -226,7 +220,6 @@ class CompatibilityCheckCommand extends AbstractCommand
                 $includeVendor,
                 $detailed,
                 $incompatibleOnly,
-                $tailwind4,
             );
         } catch (\Throwable $e) {
             $this->io->error('Interactive mode failed: ' . $e->getMessage());
@@ -326,8 +319,8 @@ class CompatibilityCheckCommand extends AbstractCommand
         }
 
         $tailwind4Errors = 0;
-        if ($tailwind4) {
-            $tailwind4Errors = $this->runTailwind4Check($scanThirdPartyOnly, !$includeVendor);
+        if ($tailwind4 || $this->hyvaVersionDetector->isAtLeast(self::TAILWIND4_MIN_HYVA_VERSION)) {
+            $tailwind4Errors = $this->runTailwind4Check($scanThirdPartyOnly, !$includeVendor, $tailwind4);
         }
 
         // Add spacing before exit
@@ -344,11 +337,17 @@ class CompatibilityCheckCommand extends AbstractCommand
      *
      * @param bool $thirdPartyOnly
      * @param bool $excludeVendor
+     * @param bool $forced Whether the check was requested explicitly instead of detected from the Hyvä version
      * @return int Number of errors found
      */
-    private function runTailwind4Check(bool $thirdPartyOnly, bool $excludeVendor): int
+    private function runTailwind4Check(bool $thirdPartyOnly, bool $excludeVendor, bool $forced): int
     {
         $this->io->section('Tailwind CSS v4 Readiness (Hyvä 1.4)');
+
+        $version = $this->hyvaVersionDetector->getVersion();
+        if (!$forced && $version !== null) {
+            $this->io->text(sprintf('Hyvä %s detected.', $version));
+        }
 
         $results = $this->tailwind4Checker->check($thirdPartyOnly, $excludeVendor);
         $this->displayTailwind4Results($results);
