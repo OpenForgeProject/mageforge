@@ -196,7 +196,7 @@ class TemplateFallbackResolver
             }
         }
 
-        ksort($files);
+        ksort($files, SORT_STRING);
 
         return $files;
     }

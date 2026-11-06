@@ -355,23 +355,26 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
         $this->fallbackResolver
             ->method('findDirectoryFiles')
-            ->with([self::THEME_DIR, self::MODULE_DIR], '', self::THEME_DIR)
-            ->willReturn([
-                'a.phtml' => self::MODULE_DIR . '/a.phtml',
-                'sub/b.phtml' => self::MODULE_DIR . '/sub/b.phtml',
-                'c.phtml' => self::MODULE_DIR . '/c.phtml',
-            ]);
+            ->willReturnCallback(
+                static fn(array $dirs): array => $dirs === [self::THEME_DIR]
+                    ? [
+                        'c.phtml' => self::THEME_DIR . '/c.phtml',
+                        'theme-only.phtml' => self::THEME_DIR . '/theme-only.phtml',
+                    ]
+                    : [
+                        'a.phtml' => self::MODULE_DIR . '/a.phtml',
+                        'sub/b.phtml' => self::MODULE_DIR . '/sub/b.phtml',
+                        'c.phtml' => self::MODULE_DIR . '/c.phtml',
+                        // Numeric file names become integer array keys
+                        123 => self::MODULE_DIR . '/123',
+                    ],
+            );
         $this->fallbackResolver
             ->method('findFirstExistingFile')
-            ->willReturnCallback(
-                static fn(array $dirs, string $path): ?string => match (true) {
-                    $dirs === [self::THEME_DIR] => $path === 'c.phtml' ? self::THEME_DIR . '/c.phtml' : null,
-                    default => self::THEME_DIR . '/' . $path,
-                },
-            );
+            ->willReturnCallback(static fn(array $dirs, string $path): string => self::THEME_DIR . '/' . $path);
         $copied = [];
         $this->templateCopier
-            ->expects($this->exactly(2))
+            ->expects($this->exactly(3))
             ->method('copy')
             ->willReturnCallback(static function (string $source, string $target) use (&$copied): void {
                 $copied[$source] = $target;
@@ -389,10 +392,40 @@ class OverrideCommandTest extends TestCase
             [
                 self::MODULE_DIR . '/a.phtml' => self::THEME_DIR . '/a.phtml',
                 self::MODULE_DIR . '/sub/b.phtml' => self::THEME_DIR . '/sub/b.phtml',
+                self::MODULE_DIR . '/123' => self::THEME_DIR . '/123',
             ],
             $copied,
         );
-        $this->assertStringContainsString('2 file(s) copied', $tester->getDisplay());
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('3 file(s) copied', $display);
+        $this->assertStringContainsString('Already overridden', $display);
+    }
+
+    public function testDirectoryWithOnlyThemeFilesSucceedsWithoutCopying(): void
+    {
+        $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
+        $this->templatePathParser
+            ->method('parse')
+            ->willReturn(new TemplateReference('Magento_Catalog', '', TemplateType::TEMPLATE, true));
+        $this->fallbackResolver->method('getFallbackDirs')->willReturn([self::THEME_DIR, self::MODULE_DIR]);
+        $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
+        $this->fallbackResolver
+            ->method('findDirectoryFiles')
+            ->willReturnCallback(
+                static fn(array $dirs): array => $dirs === [self::THEME_DIR]
+                    ? ['a.phtml' => self::THEME_DIR . '/a.phtml']
+                    : [],
+            );
+        $this->templateCopier->expects($this->never())->method('copy');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            'template' => self::THEME_DIR,
+            '--theme' => 'Vendor/theme',
+        ]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('already overridden', $tester->getDisplay());
     }
 
     public function testDirectoryDryRunDoesNotCopy(): void
@@ -405,8 +438,11 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
         $this->fallbackResolver
             ->method('findDirectoryFiles')
-            ->willReturn(['a.phtml' => self::MODULE_DIR . '/product/a.phtml']);
-        $this->fallbackResolver->method('findFirstExistingFile')->willReturn(null);
+            ->willReturnCallback(
+                static fn(array $dirs): array => $dirs === [self::THEME_DIR]
+                    ? []
+                    : ['a.phtml' => self::MODULE_DIR . '/product/a.phtml'],
+            );
         $this->templateCopier->expects($this->never())->method('copy');
         $this->cacheCleaner->expects($this->never())->method('clean');
 

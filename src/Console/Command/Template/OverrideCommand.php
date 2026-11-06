@@ -255,7 +255,8 @@ class OverrideCommand extends AbstractCommand
     ): int {
         $subPath = $reference->getTemplatePath();
         $sources = $this->fallbackResolver->findDirectoryFiles($fallbackDirs, $subPath, $targetDir);
-        if ($sources === []) {
+        $overridden = $this->fallbackResolver->findDirectoryFiles([$targetDir], $subPath);
+        if ($sources === [] && $overridden === []) {
             $this->io->error(sprintf('No files found in any fallback location for %s.', $reference->getTemplateId()));
             $this->displayFallbackDirs($fallbackDirs, null, $targetDir, $subPath);
             return Cli::RETURN_FAILURE;
@@ -263,18 +264,23 @@ class OverrideCommand extends AbstractCommand
 
         $targetBase = $subPath === '' ? $targetDir : $targetDir . '/' . $subPath;
         $copies = [];
-        $skipped = 0;
         foreach ($sources as $relativePath => $sourceFile) {
-            $templatePath = $subPath === '' ? $relativePath : $subPath . '/' . $relativePath;
-            $alreadyOverridden = $this->fallbackResolver->findFirstExistingFile([$targetDir], $templatePath) !== null;
-            if ($alreadyOverridden && !$isForce) {
-                $skipped++;
+            // Numeric file names become integer array keys
+            $relativePath = (string) $relativePath;
+            if (isset($overridden[$relativePath]) && !$isForce) {
                 continue;
             }
+            $templatePath = $subPath === '' ? $relativePath : $subPath . '/' . $relativePath;
             $copies[$templatePath] = ['source' => $sourceFile, 'target' => $targetDir . '/' . $templatePath];
         }
+        // Files that only exist in the theme have no other source to copy from
+        $skipped = count($overridden) - ($isForce ? count(array_intersect_key($overridden, $sources)) : 0);
 
-        $skippedNote = $skipped > 0 && !$isForce ? ' (skipped, use --force to replace)' : '';
+        $skippedNote = match (true) {
+            $skipped === 0 => '',
+            $isForce => ' (not present elsewhere in the fallback chain)',
+            default => ' (skipped, use --force to replace)',
+        };
         $this->io->newLine();
         $this->io->definitionList(
             ['Directory' => $reference->getTemplateId()],
@@ -303,6 +309,7 @@ class OverrideCommand extends AbstractCommand
 
         $unresolved = [];
         foreach ($copies as $templatePath => $copy) {
+            $templatePath = (string) $templatePath;
             $sourceModuleName = $this->resolveSourceModuleName($copy['source'], $fallbackDirs, $reference);
             $this->templateCopier->copy($copy['source'], $copy['target'], $sourceModuleName);
 
