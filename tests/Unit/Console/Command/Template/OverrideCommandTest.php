@@ -428,6 +428,148 @@ class OverrideCommandTest extends TestCase
         $this->assertStringContainsString('already overridden', $tester->getDisplay());
     }
 
+    public function testDirectoryForceReplacesOverriddenFilesAndReportsThemeOnlyFiles(): void
+    {
+        $this->setUpDirectoryTemplate(
+            sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml'],
+            overridden: ['a.phtml' => self::THEME_DIR . '/a.phtml', 'theme-only.phtml' => self::THEME_DIR . '/x.phtml'],
+        );
+        $this->fallbackResolver
+            ->method('findFirstExistingFile')
+            ->willReturn(self::THEME_DIR . '/a.phtml');
+        $this->templateCopier
+            ->expects($this->once())
+            ->method('copy')
+            ->with(self::MODULE_DIR . '/a.phtml', self::THEME_DIR . '/a.phtml', 'Magento_Catalog');
+        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([
+            'template' => self::MODULE_DIR,
+            '--theme' => 'Vendor/theme',
+            '--force' => true,
+        ]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Files to copy', $display);
+        $this->assertStringContainsString('not present elsewhere in the fallback chain', $display);
+        $this->assertStringContainsString('1 file(s) copied to', $display);
+    }
+
+    public function testDirectorySkipsOverriddenFilesWithoutForce(): void
+    {
+        $this->setUpDirectoryTemplate(
+            sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml'],
+            overridden: ['a.phtml' => self::THEME_DIR . '/a.phtml'],
+        );
+        $this->templateCopier->expects($this->never())->method('copy');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('skipped, use --force to replace', $display);
+        $this->assertStringContainsString('All files of this directory are already overridden', $display);
+    }
+
+    public function testDirectoryFailsWhenNoFilesAreFound(): void
+    {
+        $this->setUpDirectoryTemplate(sources: [], overridden: []);
+        $this->templateCopier->expects($this->never())->method('copy');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('No files found in any fallback location for Magento_Catalog::', $display);
+        $this->assertStringContainsString('Fallback search order', $display);
+    }
+
+    public function testDirectoryWarnsWhenFilesDoNotResolveToNewOverride(): void
+    {
+        $this->setUpDirectoryTemplate(
+            sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml', 'b.phtml' => self::MODULE_DIR . '/b.phtml'],
+            overridden: [],
+        );
+        $this->fallbackResolver
+            ->method('findFirstExistingFile')
+            ->willReturnCallback(
+                static fn(array $dirs, string $path): string => $path === 'a.phtml'
+                    ? self::THEME_DIR . '/a.phtml'
+                    : self::MODULE_DIR . '/' . $path,
+            );
+        $this->templateCopier->expects($this->exactly(2))->method('copy');
+        $this->cacheCleaner->expects($this->never())->method('clean');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('Magento does not resolve these to the new override', $display);
+        $this->assertStringContainsString('- b.phtml', $display);
+        $this->assertStringNotContainsString('- a.phtml', $display);
+    }
+
+    public function testDirectoryReportsFailedCacheCleaning(): void
+    {
+        $this->setUpDirectoryTemplate(sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml'], overridden: []);
+        $this->fallbackResolver->method('findFirstExistingFile')->willReturn(self::THEME_DIR . '/a.phtml');
+        $this->cacheCleaner->method('clean')->willReturn(false);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString('1 file(s) copied to', $tester->getDisplay());
+        $this->assertStringContainsString('but cleaning the caches', $tester->getDisplay());
+    }
+
+    public function testDirectoryCopiesIntoSubPathOfTheme(): void
+    {
+        $this->setUpDirectoryTemplate(
+            sources: ['a.phtml' => self::MODULE_DIR . '/product/a.phtml'],
+            overridden: [],
+            subPath: 'product',
+        );
+        $this->fallbackResolver
+            ->method('findFirstExistingFile')
+            ->with([self::THEME_DIR, self::MODULE_DIR], 'product/a.phtml')
+            ->willReturn(self::THEME_DIR . '/product/a.phtml');
+        $this->templateCopier
+            ->expects($this->once())
+            ->method('copy')
+            ->with(self::MODULE_DIR . '/product/a.phtml', self::THEME_DIR . '/product/a.phtml');
+        $this->cacheCleaner->method('clean')->willReturn(true);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['template' => self::MODULE_DIR . '/product', '--theme' => 'Vendor/theme']);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+    }
+
+    /**
+     * @param array<int|string,string> $sources
+     * @param array<int|string,string> $overridden
+     */
+    private function setUpDirectoryTemplate(array $sources, array $overridden, string $subPath = ''): void
+    {
+        $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
+        $this->templatePathParser
+            ->method('parse')
+            ->willReturn(new TemplateReference('Magento_Catalog', $subPath, TemplateType::TEMPLATE, true));
+        $this->fallbackResolver->method('getFallbackDirs')->willReturn([self::THEME_DIR, self::MODULE_DIR]);
+        $this->fallbackResolver->method('getThemeTargetDir')->willReturn(self::THEME_DIR);
+        $this->fallbackResolver
+            ->method('findDirectoryFiles')
+            ->willReturnCallback(
+                static fn(array $dirs): array => $dirs === [self::THEME_DIR] ? $overridden : $sources,
+            );
+    }
+
     public function testDirectoryDryRunDoesNotCopy(): void
     {
         $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);

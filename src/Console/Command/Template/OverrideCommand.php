@@ -271,7 +271,11 @@ class OverrideCommand extends AbstractCommand
                 continue;
             }
             $templatePath = $subPath === '' ? $relativePath : $subPath . '/' . $relativePath;
-            $copies[$templatePath] = ['source' => $sourceFile, 'target' => $targetDir . '/' . $templatePath];
+            $copies[] = [
+                'path' => $templatePath,
+                'source' => $sourceFile,
+                'target' => $targetDir . '/' . $templatePath,
+            ];
         }
         // Files that only exist in the theme have no other source to copy from
         $skipped = count($overridden) - ($isForce ? count(array_intersect_key($overridden, $sources)) : 0);
@@ -299,7 +303,7 @@ class OverrideCommand extends AbstractCommand
             $this->io->table(['Source', 'Target'], array_map(fn(array $copy) => [
                 $this->toRelativePath($copy['source']),
                 $this->toRelativePath($copy['target']),
-            ], array_values($copies)));
+            ], $copies));
         }
 
         if ($isDryRun) {
@@ -308,8 +312,8 @@ class OverrideCommand extends AbstractCommand
         }
 
         $unresolved = [];
-        foreach ($copies as $templatePath => $copy) {
-            $templatePath = (string) $templatePath;
+        foreach ($copies as $copy) {
+            $templatePath = $copy['path'];
             $sourceModuleName = $this->resolveSourceModuleName($copy['source'], $fallbackDirs, $reference);
             $this->templateCopier->copy($copy['source'], $copy['target'], $sourceModuleName);
 

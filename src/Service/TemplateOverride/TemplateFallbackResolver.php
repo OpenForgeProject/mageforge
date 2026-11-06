@@ -169,7 +169,7 @@ class TemplateFallbackResolver
      * @param string[] $fallbackDirs
      * @param string $subPath Directory path relative to the fallback directories, empty for their root
      * @param string|null $excludedDir
-     * @return array<string,string> Source file paths keyed by their path relative to $subPath
+     * @return array<int|string,string> Source file paths keyed by their path relative to $subPath
      * @throws \Magento\Framework\Exception\FileSystemException
      */
     public function findDirectoryFiles(array $fallbackDirs, string $subPath, ?string $excludedDir = null): array
