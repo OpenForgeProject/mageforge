@@ -53,7 +53,9 @@ feat!: remove legacy theme builder API
 fix!: change command argument order
 ```
 
-**Individual Commits**: Your individual commits within the PR can use any format you prefer. We use **squash-merge**, so only the PR title becomes the commit message in the `main` branch.
+**Individual Commits**: Your individual commits within the PR can use any format you prefer (including emojis). We use **squash-merge**, so only the PR title becomes the commit message in the `main` branch.
+
+**PR titles must not start with an emoji.** Release Please cannot parse such titles and silently drops the change from the changelog. The `PR Title` check fails for titles that are not valid Conventional Commits.
 
 ### For Maintainers (Direct Commits)
 
@@ -81,6 +83,7 @@ All pull requests are merged using **squash-merge** to maintain a clean, linear 
 - ✅ PR title becomes the commit message
 - ✅ All PR commits are squashed into a single commit
 - ✅ Easier to follow project history and revert changes if needed
+- ⚠️ Do not use "Create a merge commit" or "Rebase and merge": Release Please then only sees the individual commits and ignores everything that is not a Conventional Commit
 
 ---
 
