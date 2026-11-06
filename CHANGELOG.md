@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.29.1](https://github.com/OpenForgeProject/mageforge/compare/0.29.0...0.29.1) (2026-11-06)
+
+
+### Fixed
+
+* **deps:** revert phpunit to ^11.5 for PHP 8.3 compatibility ([1056514](https://github.com/OpenForgeProject/mageforge/commit/1056514d3504b7ebe230624cf35249f7ac80c126))
+
 ## [0.29.0](https://github.com/OpenForgeProject/mageforge/compare/0.28.0...0.29.0) (2026-11-06)
 
 
