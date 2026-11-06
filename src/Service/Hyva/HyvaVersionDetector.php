@@ -29,7 +29,7 @@ class HyvaVersionDetector
                 continue;
             }
 
-            return preg_match('/\d+(?:\.\d+){0,2}/', $installed, $matches) === 1 ? $matches[0] : null;
+            return preg_match('/^v?(\d+(?:\.\d+){0,2})/', $installed, $matches) === 1 ? $matches[1] : null;
         }
 
         return null;

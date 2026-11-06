@@ -56,6 +56,10 @@ class HyvaVersionDetectorTest extends TestCase
                 '1.3.18',
             ],
             'theme module as fallback' => [['hyva-themes/magento2-theme-module' => '1.4.1'], '1.4.1'],
+            'dev branch with digits is not a release' => [
+                ['hyva-themes/magento2-default-theme' => 'dev-feature-42'],
+                null,
+            ],
             'dev branch is not numeric' => [['hyva-themes/magento2-default-theme' => 'dev-main'], null],
             'not installed' => [[], null],
         ];

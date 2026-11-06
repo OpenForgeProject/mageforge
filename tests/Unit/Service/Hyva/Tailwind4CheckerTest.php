@@ -105,13 +105,114 @@ class Tailwind4CheckerTest extends TestCase
         $this->assertContains('@hyva-themes/hyva-modules is not listed in package.json.', $messages);
         $this->assertContains('The "generate" script is missing.', $messages);
         $this->assertContains('The "build" script still uses PostCSS or tailwind.config.js.', $messages);
+        $this->assertContains('The "build" script does not run "generate" first.', $messages);
         $this->assertContains('postcss.config.js is obsolete with Tailwind CSS v4.', $messages);
         $this->assertContains('tailwind.config.js is obsolete with Tailwind CSS v4.', $messages);
         $this->assertContains('hyva.config.json not found.', $messages);
-        $this->assertContains('The @tailwind directives were removed in Tailwind CSS v4.', $messages);
+        $this->assertContains('@tailwind base was removed in Tailwind CSS v4.', $messages);
+        $this->assertNotContains('@tailwind utilities was removed in Tailwind CSS v4.', $messages);
         $this->assertContains('The entry file does not import Tailwind CSS v4.', $messages);
         $this->assertContains('@screen was removed in Tailwind CSS v4.', $messages);
         $this->assertContains('@import "theme/colors.css" is not a relative path.', $messages);
+    }
+
+    public function testAcceptsSplitTailwindImportsAndUtilitiesPath(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $tailwind = $this->root . '/theme/web/tailwind';
+        $this->write(
+            $tailwind . '/tailwind-source.css',
+            <<<'CSS'
+@import "@hyva-themes/hyva-modules/css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../../**/*.phtml";
+@import "./generated/hyva-source.css";
+@import "./generated/hyva-tokens.css";
+CSS,
+        );
+
+        $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'));
+    }
+
+    public function testFlagsRemovedTailwindImportPaths(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->write(
+            $this->root . '/theme/web/tailwind/base/reset.css',
+            "@import \"tailwindcss/base\";\n@import \"tailwindcss/components.css\";\n",
+        );
+
+        $messages = $this->messages($this->checker->checkTheme($this->root . '/theme'));
+
+        $this->assertSame(
+            [
+                '"tailwindcss/base" does not exist in Tailwind CSS v4.',
+                '"tailwindcss/components.css" does not exist in Tailwind CSS v4.',
+            ],
+            $messages,
+        );
+    }
+
+    public function testIgnoresDirectivesInMultilineAndInlineComments(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->write(
+            $this->root . '/theme/web/tailwind/components/card.css',
+            "/*\n@screen md {\n}\n@tailwind base;\n*/\n.a { color: red; } /* @import 'x.css'; */\n@screen sm {\n}\n",
+        );
+
+        $findings = $this->checker->checkTheme($this->root . '/theme');
+
+        $this->assertCount(1, $findings);
+        $this->assertSame('components/card.css:7', $findings[0]->getLocation());
+    }
+
+    public function testCommentedOutEntryImportIsNotCountedAsConfigured(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->write(
+            $this->root . '/theme/web/tailwind/tailwind-source.css',
+            "/* @import \"tailwindcss\" source(none); */\n@import \"@hyva-themes/hyva-modules/css\";\n"
+            . "@import \"./generated/hyva-source.css\";\n@import \"./generated/hyva-tokens.css\";\n",
+        );
+
+        $messages = $this->messages($this->checker->checkTheme($this->root . '/theme'));
+
+        $this->assertSame(['The entry file does not import Tailwind CSS v4.'], $messages);
+    }
+
+    public function testRangesThatCannotBeEvaluatedAreNotReportedAsReady(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->setTailwindRange($this->root . '/theme', '<4.0.0');
+
+        $messages = $this->messages($this->checker->checkTheme($this->root . '/theme'));
+
+        $this->assertSame(['The tailwindcss range "<4.0.0" cannot be evaluated.'], $messages);
+    }
+
+    public function testAcceptsLatestTagAndSimpleV4Ranges(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+
+        foreach (['latest', '~4.0', '>=4.1.0', '4.1.x', 'v4.0.0'] as $range) {
+            $this->setTailwindRange($this->root . '/theme', $range);
+            $this->assertSame([], $this->checker->checkTheme($this->root . '/theme'), $range);
+        }
+    }
+
+    public function testWarnsWhenGenerateIsNotRunByBuildAndWatch(): void
+    {
+        $this->writeReadyTheme($this->root . '/theme');
+        $this->removeScripts($this->root . '/theme', ['prebuild', 'prewatch']);
+
+        $messages = $this->messages($this->checker->checkTheme($this->root . '/theme'));
+
+        $this->assertSame(
+            ['The "build" script does not run "generate" first.', 'The "watch" script does not run "generate" first.'],
+            $messages,
+        );
     }
 
     public function testReportsFileAndLineOfCssFindings(): void
@@ -155,7 +256,39 @@ class Tailwind4CheckerTest extends TestCase
 
         $messages = $this->messages($this->checker->checkModule($this->root . '/module'));
 
-        $this->assertSame(['@screen was removed in Tailwind CSS v4.'], $messages);
+        $this->assertSame(
+            ['@tailwind base was removed in Tailwind CSS v4.', '@screen was removed in Tailwind CSS v4.'],
+            $messages,
+        );
+    }
+
+    public function testDetectsHyvaGrandchildThroughItsAncestors(): void
+    {
+        $this->writeReadyTheme($this->root . '/app/design/Vendor/grandchild');
+        $this->givenHyvaThemes(
+            ['Vendor/grandchild' => $this->root . '/app/design/Vendor/grandchild'],
+            ['Vendor/grandchild' => 'Hyva/default'],
+            'TailwindCSS',
+        );
+        $this->componentRegistrar->method('getPaths')->willReturn([]);
+        $this->shell->method('execute')->willReturn('v22.0.0');
+
+        $results = $this->checker->check();
+
+        $this->assertSame(1, $results['themes']);
+    }
+
+    public function testIgnoresNonHyvaThemesWithTailwindDirectory(): void
+    {
+        $this->writeReadyTheme($this->root . '/app/design/Vendor/custom');
+        $this->givenHyvaThemes(
+            ['Vendor/custom' => $this->root . '/app/design/Vendor/custom'],
+            ['Vendor/custom' => 'Vendor/base'],
+            'TailwindCSS',
+        );
+        $this->componentRegistrar->method('getPaths')->willReturn([]);
+
+        $this->assertSame(0, $this->checker->check()['themes']);
     }
 
     public function testModuleWithoutTailwindDirectoryHasNoFindings(): void
@@ -210,21 +343,15 @@ class Tailwind4CheckerTest extends TestCase
 
     /**
      * @param array<string, string> $themes Theme code => path
+     * @param array<string, string> $parents Theme code => code of its parent theme
+     * @param string $builderName Name of the builder detected for all themes
      */
-    private function givenHyvaThemes(array $themes): void
+    private function givenHyvaThemes(array $themes, array $parents = [], string $builderName = 'HyvaThemes'): void
     {
         $objects = [];
         foreach (array_keys($themes) as $code) {
-            $objects[$code] = new class ($code) {
-                public function __construct(private readonly string $code)
-                {
-                }
-
-                public function getCode(): string
-                {
-                    return $this->code;
-                }
-            };
+            $parent = isset($parents[$code]) ? $this->fakeTheme($parents[$code]) : null;
+            $objects[$code] = $this->fakeTheme($code, $parent);
         }
 
         $this->themeList->method('getAllThemes')->willReturn($objects);
@@ -233,8 +360,27 @@ class Tailwind4CheckerTest extends TestCase
             ->willReturnCallback(static fn(string $code): ?string => $themes[$code] ?? null);
 
         $builder = $this->createMock(BuilderInterface::class);
-        $builder->method('getName')->willReturn('HyvaThemes');
+        $builder->method('getName')->willReturn($builderName);
         $this->builderPool->method('getBuilder')->willReturn($builder);
+    }
+
+    private function fakeTheme(string $code, ?object $parent = null): object
+    {
+        return new class ($code, $parent) {
+            public function __construct(private readonly string $code, private readonly ?object $parent)
+            {
+            }
+
+            public function getCode(): string
+            {
+                return $this->code;
+            }
+
+            public function getParentTheme(): ?object
+            {
+                return $this->parent;
+            }
+        };
     }
 
     private function writeReadyTheme(string $themePath): void
@@ -248,6 +394,9 @@ class Tailwind4CheckerTest extends TestCase
             ],
             'scripts' => [
                 'generate' => 'npx hyva-sources && npx hyva-tokens',
+                'prewatch' => 'npm run generate',
+                'prebuild' => 'npm run generate',
+                'watch' => 'npx tailwindcss -i tailwind-source.css -o ../css/styles.css --watch',
                 'build' => 'npx tailwindcss -i tailwind-source.css -o ../css/styles.css --minify',
             ],
         ], JSON_THROW_ON_ERROR));
@@ -272,6 +421,29 @@ CSS,
             mkdir(dirname($path), 0o777, true);
         }
         file_put_contents($path, $content);
+    }
+
+    private function setTailwindRange(string $themePath, string $range): void
+    {
+        $packageFile = $themePath . '/web/tailwind/package.json';
+        /** @var array{devDependencies: array<string, string>} $package */
+        $package = json_decode((string) file_get_contents($packageFile), true, 512, JSON_THROW_ON_ERROR);
+        $package['devDependencies']['tailwindcss'] = $range;
+        $this->write($packageFile, json_encode($package, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param array<string> $scripts
+     */
+    private function removeScripts(string $themePath, array $scripts): void
+    {
+        $packageFile = $themePath . '/web/tailwind/package.json';
+        /** @var array{scripts: array<string, string>} $package */
+        $package = json_decode((string) file_get_contents($packageFile), true, 512, JSON_THROW_ON_ERROR);
+        foreach ($scripts as $script) {
+            unset($package['scripts'][$script]);
+        }
+        $this->write($packageFile, json_encode($package, JSON_THROW_ON_ERROR));
     }
 
     /**

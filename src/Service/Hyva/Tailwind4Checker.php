@@ -8,6 +8,7 @@ use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
+use Magento\Framework\View\Design\ThemeInterface;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
@@ -32,6 +33,7 @@ class Tailwind4Checker
     private const MODULE_TAILWIND_DIR = 'view/frontend/tailwind';
     private const ENTRY_FILE = 'tailwind-source.css';
     private const HYVA_BUILDER_NAME = 'HyvaThemes';
+    private const HYVA_THEME_PREFIX = 'Hyva/';
     private const ENVIRONMENT_SECTION = 'Environment';
     private const MIN_NODE_MAJOR = 20;
     private const MIN_TAILWIND_MAJOR = 4;
@@ -53,7 +55,7 @@ class Tailwind4Checker
         'tailwind.config.cjs' => 'Move colours and spacing to hyva.config.json (design tokens) or @theme in CSS.',
     ];
 
-    private const IGNORED_DIRECTORIES = ['/node_modules/', '/generated/', '/backup/'];
+    private const IGNORED_DIRECTORIES = ['node_modules', 'generated', 'backup'];
     private const STRUCTURE_DIRECTORIES = ['base', 'components', 'utilities'];
 
     /**
@@ -201,12 +203,41 @@ class Tailwind4Checker
                 continue;
             }
 
-            if ($this->builderPool->getBuilder($path)?->getName() === self::HYVA_BUILDER_NAME) {
+            if ($this->isHyvaTheme($theme, $path)) {
                 $paths[$code] = $path;
             }
         }
 
         return $paths;
+    }
+
+    /**
+     * Check if a theme is a Hyvä theme, either by its own metadata or by inheriting from a Hyvä theme
+     *
+     * The Hyvä builder only recognises Hyvä in the theme's own theme.xml or composer.json, so a theme extending
+     * a custom Hyvä base theme is detected through its ancestors.
+     *
+     * @param ThemeInterface $theme
+     * @param string $path
+     * @return bool
+     */
+    private function isHyvaTheme(mixed $theme, string $path): bool
+    {
+        if ($this->builderPool->getBuilder($path)?->getName() === self::HYVA_BUILDER_NAME) {
+            return true;
+        }
+
+        if (!$this->fileDriver->isDirectory($path . '/' . self::THEME_TAILWIND_DIR)) {
+            return false;
+        }
+
+        for ($parent = $theme->getParentTheme(); $parent !== null; $parent = $parent->getParentTheme()) {
+            if (str_starts_with($parent->getCode(), self::HYVA_THEME_PREFIX)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -295,7 +326,7 @@ class Tailwind4Checker
             ];
         }
 
-        $declaredMajor = $this->parseMajor($declared);
+        $declaredMajor = $this->parseDeclaredMajor($declared);
         if ($declaredMajor !== null && $declaredMajor < self::MIN_TAILWIND_MAJOR) {
             return [
                 new Tailwind4Finding(
@@ -323,6 +354,17 @@ class Tailwind4Checker
                         $declared,
                     ),
                     'Run npm install in web/tailwind (or mageforge:theme:build) to update node_modules.',
+                    'package.json',
+                ),
+            ];
+        }
+
+        if ($declaredMajor === null && $installedMajor === null && !$this->isAnyVersionTag($declared)) {
+            return [
+                new Tailwind4Finding(
+                    Tailwind4Severity::Warning,
+                    sprintf('The tailwindcss range "%s" cannot be evaluated.', $declared),
+                    'Use a simple range such as ^4.1.0.',
                     'package.json',
                 ),
             ];
@@ -377,8 +419,15 @@ class Tailwind4Checker
     private function checkScripts(array $scripts): array
     {
         $findings = [];
+        $runsGenerate = static fn(mixed $script): bool => is_string($script)
+            && preg_match('/\bgenerate\b|hyva-sources/', $script) === 1;
 
-        if (!isset($scripts['generate'])) {
+        $generateMentioned = false;
+        foreach ($scripts as $script) {
+            $generateMentioned = $generateMentioned || (is_string($script) && str_contains($script, 'hyva-sources'));
+        }
+
+        if (!isset($scripts['generate']) && !$generateMentioned) {
             $findings[] = new Tailwind4Finding(
                 Tailwind4Severity::Warning,
                 'The "generate" script is missing.',
@@ -389,7 +438,11 @@ class Tailwind4Checker
 
         foreach (['build', 'watch'] as $name) {
             $script = $scripts[$name] ?? null;
-            if (is_string($script) && preg_match('/postcss|tailwind\.config/i', $script) === 1) {
+            if (!is_string($script)) {
+                continue;
+            }
+
+            if (preg_match('/postcss|tailwind\.config/i', $script) === 1) {
                 $findings[] = new Tailwind4Finding(
                     Tailwind4Severity::Warning,
                     sprintf('The "%s" script still uses PostCSS or tailwind.config.js.', $name),
@@ -398,6 +451,15 @@ class Tailwind4Checker
                         self::ENTRY_FILE,
                         $name === 'build' ? ' --minify' : ' --watch',
                     ),
+                    'package.json',
+                );
+            }
+
+            if (!$runsGenerate($script) && !$runsGenerate($scripts['pre' . $name] ?? null)) {
+                $findings[] = new Tailwind4Finding(
+                    Tailwind4Severity::Warning,
+                    sprintf('The "%s" script does not run "generate" first.', $name),
+                    sprintf('Add "pre%s": "npm run generate" so the generated Hyvä files exist.', $name),
                     'package.json',
                 );
             }
@@ -495,20 +557,12 @@ class Tailwind4Checker
             ];
         }
 
-        $content = $this->fileDriver->fileGetContents($path);
+        $content = $this->stripComments($this->fileDriver->fileGetContents($path));
         $findings = [];
 
-        foreach ($this->findLines($content, '/@tailwind\s+(base|components|utilities)\b/') as $line) {
-            $findings[] = new Tailwind4Finding(
-                Tailwind4Severity::Error,
-                'The @tailwind directives were removed in Tailwind CSS v4.',
-                'Replace them with: @import "tailwindcss" source(none);',
-                self::ENTRY_FILE,
-                $line,
-            );
-        }
-
-        if (preg_match('/@import\s+["\']tailwindcss["\']/', $content) !== 1) {
+        // The bundled stylesheet or the split theme/preflight/utilities entry points
+        $splitImportPattern = '/@import\s+["\']tailwindcss(?:\/(?:theme|preflight|utilities)(?:\.css)?)?["\']/';
+        if (preg_match($splitImportPattern, $content) !== 1) {
             $findings[] = new Tailwind4Finding(
                 Tailwind4Severity::Error,
                 'The entry file does not import Tailwind CSS v4.',
@@ -569,9 +623,9 @@ class Tailwind4Checker
 
         foreach ($this->getCssFiles($tailwindPath) as $file) {
             $relative = ltrim(substr($file, strlen($tailwindPath)), '/');
-            $lines = preg_split('/\R/', $this->fileDriver->fileGetContents($file)) ?: [];
+            $css = $this->stripComments($this->fileDriver->fileGetContents($file));
 
-            foreach ($lines as $index => $line) {
+            foreach (preg_split('/\R/', $css) ?: [] as $index => $line) {
                 $finding = $this->checkCssLine(trim($line), $relative, $index + 1);
                 if ($finding !== null) {
                     $findings[] = $finding;
@@ -592,8 +646,18 @@ class Tailwind4Checker
      */
     private function checkCssLine(string $line, string $file, int $number): ?Tailwind4Finding
     {
-        if ($this->isCommentLine($line)) {
+        if ($line === '') {
             return null;
+        }
+
+        if (preg_match('/^@tailwind\s+(base|components)\b/', $line, $matches) === 1) {
+            return new Tailwind4Finding(
+                Tailwind4Severity::Error,
+                sprintf('@tailwind %s was removed in Tailwind CSS v4.', $matches[1]),
+                'Replace the @tailwind directives with: @import "tailwindcss" source(none);',
+                $file,
+                $number,
+            );
         }
 
         if (preg_match('/^@screen\b/', $line) === 1) {
@@ -633,7 +697,7 @@ class Tailwind4Checker
      */
     private function checkImportPath(string $path, string $file, int $number): ?Tailwind4Finding
     {
-        if (preg_match('#^tailwindcss/(base|components|utilities)(\.css)?$#', $path) === 1) {
+        if (preg_match('#^tailwindcss/(base|components)(\.css)?$#', $path) === 1) {
             return new Tailwind4Finding(
                 Tailwind4Severity::Error,
                 sprintf('"%s" does not exist in Tailwind CSS v4.', $path),
@@ -659,6 +723,8 @@ class Tailwind4Checker
     /**
      * Get the CSS files below a directory, excluding dependencies and generated output
      *
+     * Ignored directories are pruned before descending, so node_modules is never traversed.
+     *
      * @param string $directory
      * @return array<string>
      */
@@ -666,19 +732,18 @@ class Tailwind4Checker
     {
         $files = [];
 
-        foreach ($this->fileDriver->readDirectoryRecursively($directory) as $path) {
-            if (!str_ends_with($path, '.css') || !$this->fileDriver->isFile($path)) {
+        foreach ($this->fileDriver->readDirectory($directory) as $path) {
+            if ($this->fileDriver->isDirectory($path)) {
+                $name = substr($path, (int) strrpos($path, '/') + 1);
+                if (!in_array($name, self::IGNORED_DIRECTORIES, true)) {
+                    array_push($files, ...$this->getCssFiles($path));
+                }
                 continue;
             }
 
-            $relative = '/' . ltrim(substr($path, strlen($directory)), '/');
-            foreach (self::IGNORED_DIRECTORIES as $ignored) {
-                if (str_contains($relative, $ignored)) {
-                    continue 2;
-                }
+            if (str_ends_with($path, '.css')) {
+                $files[] = $path;
             }
-
-            $files[] = $path;
         }
 
         sort($files);
@@ -687,7 +752,7 @@ class Tailwind4Checker
     }
 
     /**
-     * Find the numbers of lines matching a pattern, ignoring comments
+     * Find the numbers of lines matching a pattern
      *
      * @param string $content
      * @param string $pattern
@@ -698,7 +763,7 @@ class Tailwind4Checker
         $numbers = [];
 
         foreach (preg_split('/\R/', $content) ?: [] as $index => $line) {
-            if (!$this->isCommentLine(trim($line)) && preg_match($pattern, $line) === 1) {
+            if (preg_match($pattern, $line) === 1) {
                 $numbers[] = $index + 1;
             }
         }
@@ -707,17 +772,44 @@ class Tailwind4Checker
     }
 
     /**
-     * Check if a trimmed CSS line is empty or part of a comment
+     * Remove CSS comments while keeping strings and line numbers intact
      *
-     * @param string $line
-     * @return bool
+     * @param string $css
+     * @return string
      */
-    private function isCommentLine(string $line): bool
+    private function stripComments(string $css): string
     {
-        return $line === ''
-            || str_starts_with($line, '/*')
-            || str_starts_with($line, '*')
-            || str_starts_with($line, '//');
+        $result = '';
+        $length = strlen($css);
+        $quote = null;
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $css[$i];
+
+            if ($quote !== null) {
+                $result .= $char;
+                if ($char === '\\' && $i + 1 < $length) {
+                    $result .= $css[++$i];
+                } elseif ($char === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '/' && ($css[$i + 1] ?? '') === '*') {
+                $end = strpos($css, '*/', $i + 2);
+                $comment = $end === false ? substr($css, $i) : substr($css, $i, $end + 2 - $i);
+                $result .= ' ' . str_repeat("\n", substr_count($comment, "\n"));
+                $i += strlen($comment) - 1;
+                continue;
+            }
+
+            $result .= $char;
+        }
+
+        return $result;
     }
 
     /**
@@ -753,7 +845,31 @@ class Tailwind4Checker
     }
 
     /**
-     * Extract the first number of a version or range, e.g. "^3.4.1" or "v20.11.0"
+     * Extract the major version of a simple npm range such as "^3.4.1", "~4.0" or "4.1.x"
+     *
+     * @param string $range
+     * @return int|null Null for ranges that cannot be evaluated reliably, e.g. "<4.0.0" or "3 || 4"
+     */
+    private function parseDeclaredMajor(string $range): ?int
+    {
+        $pattern = '/^(?:\^|~|>=|=)?\s*v?(\d+)(?:\.(?:\d+|x|\*))*(?:-[0-9A-Za-z.\-]+)?$/';
+
+        return preg_match($pattern, trim($range), $matches) === 1 ? (int) $matches[1] : null;
+    }
+
+    /**
+     * Check if a range accepts any version or the latest tag
+     *
+     * @param string $range
+     * @return bool
+     */
+    private function isAnyVersionTag(string $range): bool
+    {
+        return in_array(strtolower(trim($range)), ['', '*', 'x', 'latest', 'next'], true);
+    }
+
+    /**
+     * Extract the first number of a version, e.g. "v20.11.0"
      *
      * @param string $version
      * @return int|null
