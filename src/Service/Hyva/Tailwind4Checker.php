@@ -107,10 +107,7 @@ class Tailwind4Checker
         /** @var array<string, string> $modules */
         $modules = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         foreach ($modules as $moduleName => $modulePath) {
-            if (($excludeVendor && str_contains($modulePath, '/vendor/'))
-                || ($thirdPartyOnly && str_starts_with($moduleName, 'Magento_'))
-                || !$this->fileDriver->isDirectory($modulePath . '/' . self::MODULE_TAILWIND_DIR)
-            ) {
+            if (!$this->shouldCheckModule($moduleName, $modulePath, $thirdPartyOnly, $excludeVendor)) {
                 continue;
             }
 
@@ -136,6 +133,32 @@ class Tailwind4Checker
             'errors' => $errors,
             'warnings' => $warnings,
         ];
+    }
+
+    /**
+     * Check if a module has Tailwind sources and passes the vendor and core filters
+     *
+     * @param string $moduleName
+     * @param string $modulePath
+     * @param bool $thirdPartyOnly
+     * @param bool $excludeVendor
+     * @return bool
+     */
+    private function shouldCheckModule(
+        string $moduleName,
+        string $modulePath,
+        bool $thirdPartyOnly,
+        bool $excludeVendor,
+    ): bool {
+        if ($excludeVendor && str_contains($modulePath, '/vendor/')) {
+            return false;
+        }
+
+        if ($thirdPartyOnly && str_starts_with($moduleName, 'Magento_')) {
+            return false;
+        }
+
+        return $this->fileDriver->isDirectory($modulePath . '/' . self::MODULE_TAILWIND_DIR);
     }
 
     /**
@@ -199,7 +222,7 @@ class Tailwind4Checker
             $code = $theme->getCode();
             $path = $this->themePath->getPath($code);
 
-            if ($path === null || ($excludeVendor && str_contains($path, '/vendor/'))) {
+            if ($path === null || $excludeVendor && str_contains($path, '/vendor/')) {
                 continue;
             }
 
@@ -383,10 +406,10 @@ class Tailwind4Checker
     {
         $findings = [];
 
-        $legacy = array_values(array_filter(
-            self::LEGACY_PACKAGES,
-            static fn(string $package): bool => array_key_exists($package, $dependencies),
-        ));
+        $legacy = array_values(array_filter(self::LEGACY_PACKAGES, static fn(string $package): bool => array_key_exists(
+            $package,
+            $dependencies,
+        )));
         if ($legacy !== []) {
             $findings[] = new Tailwind4Finding(
                 Tailwind4Severity::Warning,
@@ -419,8 +442,10 @@ class Tailwind4Checker
     private function checkScripts(array $scripts): array
     {
         $findings = [];
-        $runsGenerate = static fn(mixed $script): bool => is_string($script)
-            && preg_match('/\bgenerate\b|hyva-sources/', $script) === 1;
+        $runsGenerate = static fn(mixed $script): bool => (
+            is_string($script)
+            && preg_match('/\bgenerate\b|hyva-sources/', $script) === 1
+        );
 
         $generateText = isset($scripts['generate'])
             ? $this->expandScript($scripts, 'generate')
@@ -571,7 +596,8 @@ class Tailwind4Checker
         $findings = [];
 
         // The bundled stylesheet, or split imports that include the utilities layer
-        $importsTailwind = preg_match('/@import\s+["\']tailwindcss(?:\/utilities(?:\.css)?)?["\']/', $content) === 1
+        $importsTailwind =
+            preg_match('/@import\s+["\']tailwindcss(?:\/utilities(?:\.css)?)?["\']/', $content) === 1
             || preg_match('/@tailwind\s+utilities\b/', $content) === 1;
         if (!$importsTailwind) {
             $findings[] = new Tailwind4Finding(
@@ -799,7 +825,7 @@ class Tailwind4Checker
 
             if ($quote !== null) {
                 $result .= $char;
-                if ($char === '\\' && $i + 1 < $length) {
+                if ($char === '\\' && ($i + 1) < $length) {
                     $result .= $css[++$i];
                 } elseif ($char === $quote) {
                     $quote = null;
