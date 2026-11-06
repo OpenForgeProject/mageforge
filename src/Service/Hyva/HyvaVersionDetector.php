@@ -29,6 +29,8 @@ class HyvaVersionDetector
                 continue;
             }
 
+            $matches = [];
+
             return preg_match('/^v?(\d+(?:\.\d+){0,2})/', $installed, $matches) === 1 ? $matches[1] : null;
         }
 

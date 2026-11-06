@@ -254,10 +254,13 @@ class Tailwind4Checker
             return false;
         }
 
-        for ($parent = $theme->getParentTheme(); $parent !== null; $parent = $parent->getParentTheme()) {
+        $parent = $theme->getParentTheme();
+        while ($parent !== null) {
             if (str_starts_with($parent->getCode(), self::HYVA_THEME_PREFIX)) {
                 return true;
             }
+
+            $parent = $parent->getParentTheme();
         }
 
         return false;
@@ -687,6 +690,7 @@ class Tailwind4Checker
             return null;
         }
 
+        $matches = [];
         if (preg_match('/^@tailwind\s+(base|components)\b/', $line, $matches) === 1) {
             return new Tailwind4Finding(
                 Tailwind4Severity::Error,
@@ -897,10 +901,10 @@ class Tailwind4Checker
         }
 
         $text = $script;
-        if (preg_match_all('/\b(?:npm|pnpm|yarn)\s+(?:run(?:-script)?\s+)?([\w:.-]+)/', $script, $matches) > 0) {
-            foreach ($matches[1] as $reference) {
-                $text .= ' ' . $this->expandScript($scripts, $reference, $depth + 1);
-            }
+        $matches = [];
+        preg_match_all('/\b(?:npm|pnpm|yarn)\s+(?:run(?:-script)?\s+)?([\w:.-]+)/', $script, $matches);
+        foreach ($matches[1] ?? [] as $reference) {
+            $text .= ' ' . $this->expandScript($scripts, $reference, $depth + 1);
         }
 
         return $text;
@@ -917,6 +921,7 @@ class Tailwind4Checker
     private function parseDeclaredMajor(string $range): ?int
     {
         $pattern = '/^(\^|~|>=|=)?\s*v?(\d+)(?:\.(?:\d+|x|\*))*(?:-[0-9A-Za-z.\-]+)?$/';
+        $matches = [];
         if (preg_match($pattern, trim($range), $matches) !== 1) {
             return null;
         }
@@ -945,6 +950,8 @@ class Tailwind4Checker
      */
     private function parseMajor(string $version): ?int
     {
+        $matches = [];
+
         return preg_match('/\d+/', $version, $matches) === 1 ? (int) $matches[0] : null;
     }
 }
