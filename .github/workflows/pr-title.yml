@@ -1,0 +1,41 @@
+# Release Please builds the changelog from the PR title of squash-merged pull
+# requests. A title that is not a Conventional Commit (for example one that
+# starts with an emoji) is silently ignored and the change never reaches the
+# release notes, so reject it before merging.
+
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-title:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    # Only the release PR that the Release Please bot opens from this repository
+    # is exempt (it is titled "Next Release <version>"). A branch name alone
+    # must not be enough, otherwise any fork branch could skip the check.
+    if: >-
+      ${{ !(
+      github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.user.login == 'github-actions[bot]'
+      && startsWith(github.head_ref, 'release-please--')
+      ) }}
+
+    steps:
+      # The title is passed via env (never interpolated into the script) and
+      # only used as regex match data, so it cannot inject shell commands.
+      - name: Check PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|refactor|perf|docs|style|chore|test|build|ci|revert)(\([^()]+\))?!?: [^[:space:]].*$'
+          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+            echo "::error title=Invalid PR title::The title must follow Conventional Commits, e.g. 'feat(hyva): add readiness check'. Do not start it with an emoji."
+            echo "Allowed types: feat, fix, refactor, perf, docs, style, chore, test, build, ci, revert"
+            exit 1
+          fi
