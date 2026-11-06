@@ -185,7 +185,7 @@ class UpdateCommandTest extends TestCase
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/broken', 'Vendor/fine']]);
 
-        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
         $display = $tester->getDisplay();
         $this->assertStringContainsString('Updated dependencies for 1 theme(s)', $display);
         $this->assertStringContainsString('Failed to process 1 theme(s): Vendor/broken', $display);

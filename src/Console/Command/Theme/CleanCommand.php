@@ -93,7 +93,7 @@ class CleanCommand extends AbstractCommand
 
         $this->displaySummary($themeCodes, $totalCleaned, $failedThemes, $dryRun);
 
-        return Cli::RETURN_SUCCESS;
+        return $failedThemes === [] ? Cli::RETURN_SUCCESS : Cli::RETURN_FAILURE;
     }
 
     /**
@@ -387,7 +387,7 @@ class CleanCommand extends AbstractCommand
         $this->io->newLine();
         $totalThemes = count($themeCodes);
 
-        if ($totalThemes === 1) {
+        if ($totalThemes === 1 && $failedThemes === []) {
             $this->displaySingleThemeSummary($themeCodes[0], $totalCleaned, $dryRun);
         } else {
             $this->displayMultiThemeSummary($totalThemes, $totalCleaned, $failedThemes, $dryRun);

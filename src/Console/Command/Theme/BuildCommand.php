@@ -169,6 +169,7 @@ class BuildCommand extends AbstractCommand
     ): int {
         $startTime = microtime(true);
         $successList = [];
+        $failedCount = 0;
         $totalThemes = count($themeCodes);
 
         if ($isVerbose) {
@@ -176,7 +177,7 @@ class BuildCommand extends AbstractCommand
 
             foreach ($themeCodes as $themeCode) {
                 if (!$this->processTheme($themeCode, $io, $output, $isVerbose, $successList)) {
-                    continue;
+                    $failedCount++;
                 }
             }
         } else {
@@ -189,6 +190,7 @@ class BuildCommand extends AbstractCommand
 
                 if ($validatedTheme === null) {
                     // Theme validation failed or user cancelled - skip this theme
+                    $failedCount++;
                     continue;
                 }
 
@@ -216,6 +218,7 @@ class BuildCommand extends AbstractCommand
                         $totalThemes,
                     ));
                 } else {
+                    $failedCount++;
                     // Show that an error occurred while building the theme
                     $io->writeln(sprintf(
                         '   Building %s (%d of %d) ... <fg=red>failed</>',
@@ -229,7 +232,7 @@ class BuildCommand extends AbstractCommand
 
         $this->displayBuildSummary($io, $successList, microtime(true) - $startTime);
 
-        return Command::SUCCESS;
+        return $failedCount > 0 ? Command::FAILURE : Command::SUCCESS;
     }
 
     /**

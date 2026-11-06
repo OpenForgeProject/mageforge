@@ -90,7 +90,7 @@ class UpdateCommand extends AbstractCommand
 
         $this->displaySummary($updatedThemes, $skippedThemes, $failedThemes, $dryRun, microtime(true) - $startTime);
 
-        if (empty($updatedThemes) && !empty($failedThemes)) {
+        if (!empty($failedThemes)) {
             return Cli::RETURN_FAILURE;
         }
 
