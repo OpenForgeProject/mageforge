@@ -77,7 +77,8 @@ class TemplateUsageIndex
                     continue;
                 }
 
-                if (preg_match_all(self::REFERENCE_PATTERN, $content, $matches, PREG_SET_ORDER) > 0) {
+                $matches = [];
+                if (preg_match_all(self::REFERENCE_PATTERN, $content, $matches, PREG_SET_ORDER) !== false) {
                     foreach ($matches as $match) {
                         $references[$match[1] . '::' . $match[2]] = true;
                     }

@@ -33,6 +33,11 @@ class ObsoleteCommandTest extends TestCase
     private MockObject $remover;
 
     /**
+     * @var CacheCleaner&MockObject
+     */
+    private MockObject $cacheCleaner;
+
+    /**
      * @var CommandTester
      */
     private CommandTester $tester;
@@ -48,6 +53,7 @@ class ObsoleteCommandTest extends TestCase
         $this->scanner->method('isVendorTheme')
             ->willReturnCallback(static fn(FakeTheme $theme): bool => $theme->getCode() === 'Magento/luma');
         $this->remover = $this->createMock(OverrideRemover::class);
+        $this->cacheCleaner = $this->createMock(CacheCleaner::class);
         $this->tester = $this->createTester($themeList);
     }
 
@@ -128,6 +134,142 @@ class ObsoleteCommandTest extends TestCase
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
     }
 
+    public function testPrintsTableWithSafeMarkerAndRelativePaths(): void
+    {
+        $this->scanner->method('scan')->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+            $this->finding('b', ObsoleteReason::OUTDATED, false),
+        ]);
+
+        $exitCode = $this->tester->execute([]);
+        $display = $this->tester->getDisplay();
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('Vendor/theme', $display);
+        $this->assertStringContainsString('Reason', $display);
+        $this->assertStringContainsString(ObsoleteReason::IDENTICAL->label() . ' *', $display);
+        $this->assertStringNotContainsString(ObsoleteReason::OUTDATED->label() . ' *', $display);
+        $this->assertStringContainsString('app/design/a.phtml', $display);
+        $this->assertStringNotContainsString('/magento/app/design/a.phtml', $display);
+        $this->assertStringContainsString('2 obsolete override(s) found, 1 marked with *', $display);
+    }
+
+    public function testReportsCheckedThemesWhenNothingIsFound(): void
+    {
+        $this->scanner->method('scan')->willReturn([]);
+
+        $this->tester->execute([]);
+
+        $this->assertStringContainsString('No obsolete overrides found in: Vendor/theme', $this->tester->getDisplay());
+    }
+
+    public function testChecksExplicitlyGivenVendorTheme(): void
+    {
+        $this->scanner->expects($this->once())->method('scan')->willReturn([]);
+
+        $this->tester->execute(['--theme' => 'Magento/luma']);
+
+        $this->assertStringContainsString('Magento/luma', $this->tester->getDisplay());
+    }
+
+    public function testDoesNotDeleteWhenConfirmationIsDeclined(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->setInputs(['no']);
+        $this->tester->execute(['--delete' => true], ['interactive' => true]);
+
+        $this->assertStringContainsString('Delete 1 override file(s)?', $this->tester->getDisplay());
+        $this->assertStringContainsString('Aborted, no files were deleted.', $this->tester->getDisplay());
+    }
+
+    public function testDeclinesByDefaultWhenConfirmationIsAnsweredWithEnter(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->setInputs(['']);
+        $this->tester->execute(['--delete' => true], ['interactive' => true]);
+    }
+
+    public function testDeletesAfterConfirmationAndCleansCaches(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+        $this->remover->expects($this->once())->method('remove')->willReturn(true);
+        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+
+        $this->tester->setInputs(['yes']);
+        $exitCode = $this->tester->execute(['--delete' => true, '--fail-on-found' => true], ['interactive' => true]);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertStringContainsString('Deleted 1 override file(s).', $this->tester->getDisplay());
+    }
+
+    public function testDeletesOnlySafeFindingsAndNamesFailedFiles(): void
+    {
+        $safe = $this->finding('a', ObsoleteReason::IDENTICAL, true);
+        $unsafe = $this->finding('b', ObsoleteReason::OUTDATED, false);
+        $this->scanner->method('scan')->willReturn([$safe, $unsafe]);
+        $this->remover->expects($this->once())->method('remove')->with($safe)->willReturn(false);
+        $this->cacheCleaner->expects($this->never())->method('clean');
+
+        $exitCode = $this->tester->execute(['--delete' => true, '--yes' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+        $this->assertStringContainsString('Could not delete app/design/a.phtml', $this->tester->getDisplay());
+    }
+
+    public function testFailsWhenCacheCleaningFailsAfterDeletion(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+        $this->remover->method('remove')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(false);
+
+        $exitCode = $this->tester->execute(['--delete' => true, '--yes' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    public function testReportsNothingToDeleteWhenNoFindingIsSafe(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('b', ObsoleteReason::OUTDATED, false)]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->execute(['--delete' => true, '--yes' => true]);
+
+        $this->assertStringContainsString('Nothing to delete.', $this->tester->getDisplay());
+    }
+
+    public function testJsonOutputIsPrettyPrintedWithUnescapedSlashes(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+
+        $this->tester->execute(['--format' => 'json']);
+
+        $this->assertStringContainsString("\n    {", $this->tester->getDisplay());
+        $this->assertStringContainsString('"template": "Magento_Catalog::a.phtml"', $this->tester->getDisplay());
+        $this->assertStringContainsString('"safe_to_delete": true', $this->tester->getDisplay());
+        $this->assertStringNotContainsString('\\/', $this->tester->getDisplay());
+    }
+
+    public function testRejectsUnknownFormat(): void
+    {
+        $this->assertSame(Cli::RETURN_FAILURE, $this->tester->execute(['--format' => 'xml']));
+    }
+
+    private function finding(string $name, ObsoleteReason $reason, bool $safe): ObsoleteOverride
+    {
+        return new ObsoleteOverride(
+            'Vendor/theme',
+            '/magento/app/design/' . $name . '.phtml',
+            'Magento_Catalog::' . $name . '.phtml',
+            $reason,
+            'Details',
+            $safe,
+        );
+    }
+
     private function createTester(ThemeList $themeList): CommandTester
     {
         $directoryList = $this->createMock(DirectoryList::class);
@@ -139,7 +281,7 @@ class ObsoleteCommandTest extends TestCase
             $this->scanner,
             $this->remover,
             $this->createMock(AreaEmulator::class),
-            $this->createMock(CacheCleaner::class),
+            $this->cacheCleaner,
             $directoryList,
         ));
     }

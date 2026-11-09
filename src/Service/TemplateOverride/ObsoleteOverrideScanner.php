@@ -181,12 +181,7 @@ class ObsoleteOverrideScanner
 
         $content = $this->fileDriver->fileGetContents($file);
         $header = $this->contentAnalyzer->parseHeader($content);
-        $original = $this->findOriginal(
-            $theme,
-            $themePath . '/' . $moduleName . '/' . $subDir,
-            $file,
-            new TemplateReference($moduleName, $templatePath, $type),
-        );
+        $original = $this->findOriginal($theme, $file, new TemplateReference($moduleName, $templatePath, $type));
 
         if ($original !== null && $this->isIdentical($content, $original)) {
             return $create(ObsoleteReason::IDENTICAL, 'Identical to ' . $this->relativePath($original), true);
@@ -223,31 +218,19 @@ class ObsoleteOverrideScanner
      * Find the file Magento would use if the override did not exist
      *
      * @param ThemeInterface $theme
-     * @param string $ownDirectory
      * @param string $overrideFile
      * @param TemplateReference $reference
      * @return string|null
      */
-    private function findOriginal(
-        ThemeInterface $theme,
-        string $ownDirectory,
-        string $overrideFile,
-        TemplateReference $reference,
-    ): ?string {
-        $ownDirectory = $this->normalize($ownDirectory);
+    private function findOriginal(ThemeInterface $theme, string $overrideFile, TemplateReference $reference): ?string
+    {
         $overrideFile = $this->normalize($overrideFile);
 
         foreach ($this->fallbackResolver->getFallbackDirs($reference, $theme) as $dir) {
             $candidate = $this->normalize($dir) . '/' . $reference->getTemplatePath();
-            $isCandidate =
-                $this->normalize($dir) !== $ownDirectory
-                && $candidate !== $overrideFile
-                && $this->fileDriver->isFile($candidate);
-            if (!$isCandidate) {
-                continue;
+            if ($candidate !== $overrideFile && $this->fileDriver->isFile($candidate)) {
+                return $candidate;
             }
-
-            return $candidate;
         }
 
         return null;

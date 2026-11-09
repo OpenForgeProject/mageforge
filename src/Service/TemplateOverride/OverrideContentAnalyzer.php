@@ -41,6 +41,7 @@ class OverrideContentAnalyzer
     {
         $content = str_replace("\r\n", "\n", $content);
 
+        $count = 0;
         foreach ([self::PHP_BLOCK_PREFIX, self::MARKUP_COMMENT, self::C_BLOCK, self::SHELL_LINES] as $pattern) {
             $stripped = preg_replace($pattern, '', $content, 1, $count);
             if ($count === 1 && is_string($stripped)) {
@@ -75,6 +76,7 @@ class OverrideContentAnalyzer
             'module' => '/(?:@module|Source Module:|Override For:)[ \t]+([A-Za-z0-9]+_[A-Za-z0-9]+)/',
             'version' => '/(?:@module-version|Module-Version:)[ \t]+(\S+)/',
         ];
+        $matches = [];
         foreach ($patterns as $key => $pattern) {
             if (preg_match($pattern, $content, $matches) === 1) {
                 $header[$key] = $matches[1];

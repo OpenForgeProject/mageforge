@@ -103,6 +103,9 @@ class ObsoleteOverrideScannerTest extends TestCase
         $this->assertCount(1, $findings);
         $this->assertSame(ObsoleteReason::IDENTICAL, $findings[0]->getReason());
         $this->assertSame('Magento_Catalog::a.phtml', $findings[0]->getTemplateId());
+        $this->assertSame('Vendor/theme', $findings[0]->getThemeCode());
+        $this->assertStringEndsWith('Magento_Catalog/templates/a.phtml', $findings[0]->getFile());
+        $this->assertSame('Identical to original/a.phtml', $findings[0]->getDetails());
         $this->assertTrue($findings[0]->isSafeToDelete());
     }
 
@@ -114,6 +117,7 @@ class ObsoleteOverrideScannerTest extends TestCase
 
         $this->assertCount(1, $findings);
         $this->assertSame(ObsoleteReason::ORPHANED, $findings[0]->getReason());
+        $this->assertSame('Module Gone_Module is not installed or enabled', $findings[0]->getDetails());
         $this->assertTrue($findings[0]->isSafeToDelete());
     }
 
@@ -126,6 +130,7 @@ class ObsoleteOverrideScannerTest extends TestCase
 
         $this->assertCount(1, $findings);
         $this->assertSame(ObsoleteReason::ORPHANED, $findings[0]->getReason());
+        $this->assertSame('Source file no longer exists: vendor/gone/a.phtml', $findings[0]->getDetails());
         $this->assertFalse($findings[0]->isSafeToDelete());
     }
 
@@ -139,6 +144,8 @@ class ObsoleteOverrideScannerTest extends TestCase
         $findings = $this->scanner->scan($this->createTheme(), true);
         $this->assertCount(1, $findings);
         $this->assertSame(ObsoleteReason::UNUSED, $findings[0]->getReason());
+        $this->assertSame('Template is not referenced in any layout, PHP or PHTML file', $findings[0]->getDetails());
+        $this->assertFalse($findings[0]->isSafeToDelete());
     }
 
     public function testReportsOverrideCopiedFromOlderModuleVersionAsOutdated(): void
@@ -153,7 +160,109 @@ class ObsoleteOverrideScannerTest extends TestCase
 
         $this->assertCount(1, $findings);
         $this->assertSame(ObsoleteReason::OUTDATED, $findings[0]->getReason());
+        $this->assertSame('Copied from Magento_Catalog 1.0.0, installed is 2.0.0', $findings[0]->getDetails());
         $this->assertFalse($findings[0]->isSafeToDelete());
+    }
+
+    public function testIgnoresOverrideWhoseRecordedSourceStillExists(): void
+    {
+        $this->write('src/a.phtml', 'a');
+        $header = "<?php\n/**\n * @mageforge-template-override\n * @source src/a.phtml\n */\n?>\n\n";
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/c.phtml', $header . 'c');
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme()));
+
+        $absolute = str_replace('src/a.phtml', $this->root . '/src/a.phtml', $header);
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/c.phtml', $absolute . 'c');
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testSkipsLayoutFilesAndTranslationsOfExistingModules(): void
+    {
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/layout/catalog_product_view.xml', '<x/>');
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/web/i18n/de_DE/a.js', 'a');
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testIgnoresFilesOutsideModuleDirectoriesAndUnknownSubdirectories(): void
+    {
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/other/a.phtml', 'a');
+        $this->write('app/design/frontend/Vendor/theme/not_a_module_dir/templates/a.phtml', 'a');
+        $this->write('app/design/frontend/Vendor/theme/NoUnderscore/templates/a.phtml', 'a');
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testDoesNotTreatOwnFileAsOriginal(): void
+    {
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/solo.phtml', 'solo');
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testMeasuresFallbackFromTheOverridesOwnDirectory(): void
+    {
+        $this->resolver = $this->createMock(TemplateFallbackResolver::class);
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/x.phtml', 'x');
+        $own = $this->root . '/app/design/frontend/Vendor/theme/Magento_Catalog/templates';
+        $this->resolver->method('getFallbackDirs')->willReturn([$own . '/', $own . '/sub']);
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/sub/x.phtml', 'x');
+
+        $scanner = $this->buildScanner();
+
+        $findings = $scanner->scan($this->createTheme());
+
+        $this->assertCount(1, $findings);
+        $this->assertSame(
+            'Identical to app/design/frontend/Vendor/theme/Magento_Catalog/templates/sub/x.phtml',
+            $findings[0]->getDetails(),
+        );
+    }
+
+    public function testDetectsVendorThemes(): void
+    {
+        $this->assertFalse($this->scanner->isVendorTheme($this->createTheme()));
+        $this->assertFalse($this->scanner->isVendorTheme(new FakeTheme('Missing/theme')));
+
+        $vendorRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $vendorRegistrar->method('getPath')->willReturn($this->root . '/vendor/acme/theme');
+        $directoryList = $this->createMock(DirectoryList::class);
+        $directoryList->method('getRoot')->willReturn($this->root);
+        $scanner = new ObsoleteOverrideScanner(
+            $vendorRegistrar,
+            $this->resolver,
+            new OverrideContentAnalyzer(),
+            $this->usageIndex,
+            $this->packageInfo,
+            new File(),
+            $directoryList,
+        );
+
+        $this->assertTrue($scanner->isVendorTheme($this->createTheme()));
+    }
+
+    private function buildScanner(): ObsoleteOverrideScanner
+    {
+        $registrar = $this->createMock(ComponentRegistrarInterface::class);
+        $registrar->method('getPath')->willReturnCallback(fn(string $type, string $name): ?string => match (true) {
+            $type === ComponentRegistrar::THEME => $this->root . '/app/design/frontend/Vendor/theme',
+            $name === 'Magento_Catalog' => $this->root . '/module',
+            default => null,
+        });
+        $directoryList = $this->createMock(DirectoryList::class);
+        $directoryList->method('getRoot')->willReturn($this->root);
+
+        return new ObsoleteOverrideScanner(
+            $registrar,
+            $this->resolver,
+            new OverrideContentAnalyzer(),
+            $this->usageIndex,
+            $this->packageInfo,
+            new File(),
+            $directoryList,
+        );
     }
 
     private function write(string $relativePath, string $content): void
