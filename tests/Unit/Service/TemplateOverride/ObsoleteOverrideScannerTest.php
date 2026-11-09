@@ -94,7 +94,7 @@ class ObsoleteOverrideScannerTest extends TestCase
     public function testReportsIdenticalOverrideAsSafeToDelete(): void
     {
         $this->write('original/a.phtml', '<p>same</p>');
-        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/a.phtml', "<p>same</p>\n");
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/a.phtml', '<p>same</p>');
         $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/b.phtml', '<p>custom</p>');
         $this->write('original/b.phtml', '<p>original</p>');
 

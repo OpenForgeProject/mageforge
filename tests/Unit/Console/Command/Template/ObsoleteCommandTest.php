@@ -28,6 +28,11 @@ class ObsoleteCommandTest extends TestCase
     private MockObject $scanner;
 
     /**
+     * @var OverrideRemover&MockObject
+     */
+    private MockObject $remover;
+
+    /**
      * @var CommandTester
      */
     private CommandTester $tester;
@@ -42,19 +47,8 @@ class ObsoleteCommandTest extends TestCase
         $this->scanner = $this->createMock(ObsoleteOverrideScanner::class);
         $this->scanner->method('isVendorTheme')
             ->willReturnCallback(static fn(FakeTheme $theme): bool => $theme->getCode() === 'Magento/luma');
-        $directoryList = $this->createMock(DirectoryList::class);
-        $directoryList->method('getRoot')->willReturn('/magento');
-
-        $command = new ObsoleteCommand(
-            $themeList,
-            $this->createMock(ThemeSuggester::class),
-            $this->scanner,
-            $this->createMock(OverrideRemover::class),
-            $this->createMock(AreaEmulator::class),
-            $this->createMock(CacheCleaner::class),
-            $directoryList,
-        );
-        $this->tester = new CommandTester($command);
+        $this->remover = $this->createMock(OverrideRemover::class);
+        $this->tester = $this->createTester($themeList);
     }
 
     public function testChecksOnlyNonVendorThemesByDefaultAndPrintsJson(): void
@@ -84,5 +78,69 @@ class ObsoleteCommandTest extends TestCase
         $exitCode = $this->tester->execute(['--delete' => true, '--format' => 'json']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    public function testPrintsEmptyJsonArrayWhenOnlyVendorThemesExist(): void
+    {
+        $themeList = $this->createMock(ThemeList::class);
+        $themeList->method('getAllThemes')->willReturn(['frontend/Magento/luma' => new FakeTheme('Magento/luma')]);
+        $tester = $this->createTester($themeList);
+
+        $exitCode = $tester->execute(['--format' => 'json']);
+
+        $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
+        $this->assertSame('[]', trim($tester->getDisplay()));
+    }
+
+    public function testFailOnFoundStillAppliesWhenDeleteLeavesUnsafeFindings(): void
+    {
+        $this->scanner->method('scan')->willReturn([
+            new ObsoleteOverride(
+                'Vendor/theme',
+                '/magento/app/design/b.phtml',
+                'Magento_Catalog::b.phtml',
+                ObsoleteReason::OUTDATED,
+                'Outdated',
+                false,
+            ),
+        ]);
+
+        $exitCode = $this->tester->execute(['--delete' => true, '--yes' => true, '--fail-on-found' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    public function testFailsWhenAFileCouldNotBeDeleted(): void
+    {
+        $finding = new ObsoleteOverride(
+            'Vendor/theme',
+            '/magento/app/design/a.phtml',
+            'Magento_Catalog::a.phtml',
+            ObsoleteReason::IDENTICAL,
+            'Identical',
+            true,
+        );
+        $this->scanner->method('scan')->willReturn([$finding]);
+        $this->remover->method('remove')->willReturn(false);
+
+        $exitCode = $this->tester->execute(['--delete' => true, '--yes' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    private function createTester(ThemeList $themeList): CommandTester
+    {
+        $directoryList = $this->createMock(DirectoryList::class);
+        $directoryList->method('getRoot')->willReturn('/magento');
+
+        return new CommandTester(new ObsoleteCommand(
+            $themeList,
+            $this->createMock(ThemeSuggester::class),
+            $this->scanner,
+            $this->remover,
+            $this->createMock(AreaEmulator::class),
+            $this->createMock(CacheCleaner::class),
+            $directoryList,
+        ));
     }
 }

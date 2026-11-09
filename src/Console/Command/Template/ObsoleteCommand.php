@@ -115,7 +115,11 @@ class ObsoleteCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
         if ($themes === []) {
-            $this->io->warning('No frontend themes found to check.');
+            if ($format === 'json') {
+                $this->io->writeln('[]');
+            } else {
+                $this->io->warning('No frontend themes found to check.');
+            }
             return Cli::RETURN_SUCCESS;
         }
 
@@ -131,13 +135,22 @@ class ObsoleteCommand extends AbstractCommand
             $this->displayFindings($findings, array_map(static fn($theme) => $theme->getCode(), $themes));
         }
 
-        if ($isDelete && !$this->deleteSafeFindings($findings, (bool) $input->getOption('yes'), $output)) {
+        $deletionFailed = false;
+        if ($isDelete) {
+            [$findings, $deletionFailed] = $this->deleteSafeFindings(
+                $findings,
+                (bool) $input->getOption('yes'),
+                $output,
+            );
+        }
+
+        if ($deletionFailed) {
             return Cli::RETURN_FAILURE;
         }
 
         $failOnFound = (bool) $input->getOption('fail-on-found');
 
-        return $failOnFound && $findings !== [] && !$isDelete ? Cli::RETURN_FAILURE : Cli::RETURN_SUCCESS;
+        return $failOnFound && $findings !== [] ? Cli::RETURN_FAILURE : Cli::RETURN_SUCCESS;
     }
 
     /**
@@ -228,33 +241,41 @@ class ObsoleteCommand extends AbstractCommand
      * @param ObsoleteOverride[] $findings
      * @param bool $assumeYes
      * @param OutputInterface $output
-     * @return bool
+     * @return array{0: ObsoleteOverride[], 1: bool} Remaining findings and whether the deletion failed
      */
-    private function deleteSafeFindings(array $findings, bool $assumeYes, OutputInterface $output): bool
+    private function deleteSafeFindings(array $findings, bool $assumeYes, OutputInterface $output): array
     {
         $safe = array_values(array_filter($findings, static fn($finding) => $finding->isSafeToDelete()));
         if ($safe === []) {
             $this->io->text('Nothing to delete.');
-            return true;
+            return [$findings, false];
         }
 
         if (!$assumeYes && !$this->io->confirm(sprintf('Delete %d override file(s)?', count($safe)), false)) {
             $this->io->text('Aborted, no files were deleted.');
-            return true;
+            return [$findings, false];
         }
 
-        $deleted = 0;
+        $deleted = [];
+        $failed = false;
         foreach ($safe as $finding) {
             if (!$this->remover->remove($finding)) {
                 $this->io->warning('Could not delete ' . $this->toRelativePath($finding->getFile()));
+                $failed = true;
                 continue;
             }
-            $deleted++;
+            $deleted[] = $finding;
         }
 
-        $this->io->success(sprintf('Deleted %d override file(s).', $deleted));
+        $remaining = array_values(array_filter($findings, static fn($finding) => !in_array($finding, $deleted, true)));
+        if ($deleted === []) {
+            return [$remaining, $failed];
+        }
 
-        return $deleted === 0 || $this->cacheCleaner->clean($this->io, $this->isVerbose($output));
+        $this->io->success(sprintf('Deleted %d override file(s).', count($deleted)));
+        $cacheCleaned = $this->cacheCleaner->clean($this->io, $this->isVerbose($output));
+
+        return [$remaining, $failed || !$cacheCleaned];
     }
 
     /**

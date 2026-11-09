@@ -31,14 +31,28 @@ class OverrideContentAnalyzerTest extends TestCase
     {
         $override = "<?php\n/**\n * @mageforge-template-override\n */\n\ndeclare(strict_types=1);\n";
 
-        $this->assertTrue($this->analyzer->isIdentical($override, "<?php\ndeclare(strict_types=1);"));
+        $this->assertTrue($this->analyzer->isIdentical($override, "<?php\ndeclare(strict_types=1);\n"));
     }
 
     public function testHtmlHeaderAndLineEndingsAreIgnored(): void
     {
-        $override = "<!--\n  MageForge Template Override\n  Source: a/b.html\n-->\n\r\n<p>x</p>";
+        $override = "<!--\n  MageForge Template Override\n  Source: a/b.html\n-->\n\n<p>x</p>\n";
 
-        $this->assertTrue($this->analyzer->isIdentical(str_replace("\n\r\n", "\n\n", $override), "<p>x</p>\r\n"));
+        $this->assertTrue($this->analyzer->isIdentical($override, "<p>x</p>\r\n"));
+    }
+
+    public function testTrailingWhitespaceIsSignificant(): void
+    {
+        $this->assertFalse($this->analyzer->isIdentical("<?= \$a ?> ", '<?= $a ?>'));
+        $this->assertFalse($this->analyzer->isIdentical('<i>a</i> <?= $b ?>', '<i>a</i><?= $b ?>'));
+    }
+
+    public function testHeaderMarkerDoesNotConsumeContentBeyondItsClosingDelimiter(): void
+    {
+        $override = "<!--\n  MageForge Template Override\n<p>custom</p>\n-->\n\nrest";
+
+        $this->assertSame($override, $this->analyzer->stripHeader($override));
+        $this->assertFalse($this->analyzer->isIdentical($override, 'rest'));
     }
 
     public function testChangedContentIsNotIdentical(): void

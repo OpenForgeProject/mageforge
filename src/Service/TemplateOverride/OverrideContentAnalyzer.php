@@ -9,14 +9,18 @@ namespace OpenForgeProject\MageForge\Service\TemplateOverride;
  */
 class OverrideContentAnalyzer
 {
-    private const PHP_BLOCK_PREFIX = '#^<\?php\n/\*\*(?:(?!\*/).)*?@mageforge-template-override.*?\*/\n\?>\n\n#s';
-    private const PHP_DOC_INLINE = '#/\*\*(?:(?!\*/).)*?@mageforge-template-override.*?\*/\n\n#s';
-    private const MARKUP_COMMENT = '#^<!--\n\s*MageForge Template Override.*?-->\n\n#s';
-    private const C_BLOCK = '#^/\*\*\n \* MageForge Template Override.*?\*/\n\n#s';
+    private const DOC_LINES = '(?: \* (?:(?!\*/)[^\n])*\n)*';
+    private const PHP_BLOCK_PREFIX =
+        '#^<\?php\n/\*\*\n \* @mageforge-template-override\n' . self::DOC_LINES . ' \*/\n\?>\n\n#';
+    private const PHP_DOC_INLINE =
+        '#^(\s*<\?php)\n/\*\*\n \* @mageforge-template-override\n' . self::DOC_LINES . ' \*/\n\n#';
+    private const MARKUP_COMMENT = '#^<!--\n  MageForge Template Override\n(?:  (?:(?!-->)[^\n])*\n)*-->\n\n#';
+    private const C_BLOCK = '#^/\*\*\n \* MageForge Template Override\n(?: \* (?:(?!\*/)[^\n])*\n)* \*/\n\n#';
     private const SHELL_LINES = '/^# MageForge Template Override\n(?:# [^\n]*\n)*\n/';
 
     /**
      * Check whether two files have the same content, ignoring the MageForge header and line endings
+     * (any other whitespace is significant)
      *
      * @param string $override
      * @param string $original
@@ -44,7 +48,7 @@ class OverrideContentAnalyzer
             }
         }
 
-        $stripped = preg_replace(self::PHP_DOC_INLINE, '', $content, 1, $count);
+        $stripped = preg_replace(self::PHP_DOC_INLINE, "$1\n", $content, 1, $count);
 
         return $count === 1 && is_string($stripped) ? $stripped : $content;
     }
@@ -81,13 +85,18 @@ class OverrideContentAnalyzer
     }
 
     /**
-     * Normalise line endings and surrounding whitespace for comparison
+     * Normalise line endings and the whitespace after an opening PHP tag
+     *
+     * TemplateCopier replaces the whitespace following "<?php" when injecting a header, so it
+     * cannot be compared. All other whitespace is significant for the rendered output.
      *
      * @param string $content
      * @return string
      */
     private function normalize(string $content): string
     {
-        return trim(str_replace("\r\n", "\n", $content));
+        $content = str_replace("\r\n", "\n", $content);
+
+        return preg_replace('/^(\s*<\?php)\s+/', '$1 ', $content) ?? $content;
     }
 }
