@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OpenForgeProject\MageForge\Test\Unit\Service\TemplateOverride;
+
+use OpenForgeProject\MageForge\Service\TemplateOverride\OverrideContentAnalyzer;
+use PHPUnit\Framework\TestCase;
+
+class OverrideContentAnalyzerTest extends TestCase
+{
+    /**
+     * @var OverrideContentAnalyzer
+     */
+    private OverrideContentAnalyzer $analyzer;
+
+    protected function setUp(): void
+    {
+        $this->analyzer = new OverrideContentAnalyzer();
+    }
+
+    public function testPhpBlockHeaderIsIgnoredWhenComparing(): void
+    {
+        $original = "<div>Hello</div>\n";
+        $override = "<?php\n/**\n * @mageforge-template-override\n * @source vendor/a/b.phtml\n */\n?>\n\n" . $original;
+
+        $this->assertTrue($this->analyzer->isIdentical($override, $original));
+    }
+
+    public function testInjectedPhpDocHeaderIsIgnoredWhenComparing(): void
+    {
+        $override = "<?php\n/**\n * @mageforge-template-override\n */\n\ndeclare(strict_types=1);\n";
+
+        $this->assertTrue($this->analyzer->isIdentical($override, "<?php\ndeclare(strict_types=1);"));
+    }
+
+    public function testHtmlHeaderAndLineEndingsAreIgnored(): void
+    {
+        $override = "<!--\n  MageForge Template Override\n  Source: a/b.html\n-->\n\r\n<p>x</p>";
+
+        $this->assertTrue($this->analyzer->isIdentical(str_replace("\n\r\n", "\n\n", $override), "<p>x</p>\r\n"));
+    }
+
+    public function testChangedContentIsNotIdentical(): void
+    {
+        $override = "<?php\n/**\n * @mageforge-template-override\n */\n?>\n\n<div>Changed</div>";
+
+        $this->assertFalse($this->analyzer->isIdentical($override, '<div>Hello</div>'));
+    }
+
+    public function testParseHeaderReadsSourceModuleAndVersion(): void
+    {
+        $content = "<?php\n/**\n * @mageforge-template-override\n * @source vendor/m/a.phtml\n"
+            . " * @module Magento_Catalog\n * @module-version 104.0.1\n */\n?>\n";
+
+        $this->assertSame(
+            ['source' => 'vendor/m/a.phtml', 'module' => 'Magento_Catalog', 'version' => '104.0.1'],
+            $this->analyzer->parseHeader($content),
+        );
+    }
+
+    public function testParseHeaderSupportsPlainTextStyle(): void
+    {
+        $content = "<!--\n  MageForge Template Override\n  Source: vendor/m/a.html\n"
+            . "  Source Module: Magento_Email\n  Source Module-Version: 2.0.0\n-->\n";
+
+        $this->assertSame(
+            ['source' => 'vendor/m/a.html', 'module' => 'Magento_Email', 'version' => '2.0.0'],
+            $this->analyzer->parseHeader($content),
+        );
+    }
+
+    public function testParseHeaderWithoutMarkerReturnsNulls(): void
+    {
+        $this->assertSame(
+            ['source' => null, 'module' => null, 'version' => null],
+            $this->analyzer->parseHeader('<p>@source nothing</p>'),
+        );
+    }
+}

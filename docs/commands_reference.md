@@ -12,6 +12,7 @@ Complete reference of all CLI commands provided by the MageForge module.
 | **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
 | **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                     |
 | **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`   |
+| **Template**     | `mageforge:template:obsolete`        | Find theme overrides that are no longer needed      | `template:obsolete`   |
 | **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
 | **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
 | **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`          |
@@ -178,6 +179,47 @@ bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less'
 
 ---
 
+### `mageforge:template:obsolete`
+
+Finds theme overrides (`<theme>/<Module_Name>/{templates,email,web}`) that are no longer needed.
+By default all frontend themes outside `vendor/` are checked; the command only reports unless
+`--delete` is given.
+
+```bash
+bin/magento mageforge:template:obsolete
+bin/magento mageforge:template:obsolete --theme Vendor/theme --deep
+bin/magento mageforge:template:obsolete --delete
+bin/magento mageforge:template:obsolete --format=json --fail-on-found
+```
+
+**Options:**
+
+- `-t, --theme=VALUE` — Theme to check (format: `Vendor/theme`). Also allows vendor themes.
+- `--deep` — Also report templates that are not referenced anywhere (slower, heuristic).
+- `--delete` — Delete the overrides marked as safe (asks for confirmation) and clean the caches.
+- `-y, --yes` — Delete without confirmation.
+- `--format=VALUE` — `table` (default) or `json`.
+- `--fail-on-found` — Exit with a failure code if obsolete overrides exist (for CI).
+
+**Findings:**
+
+| Reason    | Meaning                                                                        | Safe to delete |
+| --------- | ------------------------------------------------------------------------------ | -------------- |
+| Identical | Same content as the file Magento would use without the override                | Yes            |
+| Orphaned  | The module is not installed/enabled, or the recorded source file no longer exists | Only if the module is missing |
+| Unused    | `--deep`: the `.phtml` template is not referenced in any layout, PHP or PHTML file | No             |
+| Outdated  | Copied from an older module version (taken from the MageForge header)          | No             |
+
+**Notes:**
+
+- The comparison ignores the MageForge source header and line endings, and uses Magento's
+  fallback rule, so parent themes and Hyvä compat modules are taken into account.
+- Theme layout files extend the module layout and are only checked for missing modules.
+- `Unused` cannot see references stored in the database (e.g. CMS blocks) or built dynamically;
+  review these results manually.
+
+---
+
 ## Dependencies Commands
 
 ### `mageforge:dependencies:update`
@@ -315,6 +357,7 @@ mageforge:theme:watch         → Watch & auto-rebuild
 mageforge:theme:clean         → Clean static files
 mageforge:theme:inspector     → Manage inspector tool
 mageforge:template:override   → Copy module template into a theme
+mageforge:template:obsolete   → Find unneeded theme overrides
 mageforge:dependencies:update → Update theme Node.js dependencies
 mageforge:hyva:tokens         → Generate Hyvä design tokens
 mageforge:hyva:compatibility:check → Check Hyvä compatibility
