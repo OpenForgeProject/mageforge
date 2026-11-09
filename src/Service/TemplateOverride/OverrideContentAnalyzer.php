@@ -20,7 +20,7 @@ class OverrideContentAnalyzer
 
     /**
      * Check whether two files have the same content, ignoring the MageForge header and line endings
-     * (any other whitespace is significant)
+     * (any other whitespace is significant). Binary files are compared byte for byte.
      *
      * @param string $override
      * @param string $original
@@ -28,6 +28,10 @@ class OverrideContentAnalyzer
      */
     public function isIdentical(string $override, string $original): bool
     {
+        if (str_contains($override, "\0") || str_contains($original, "\0")) {
+            return $override === $original;
+        }
+
         return $this->normalize($this->stripHeader($override)) === $this->normalize($original);
     }
 

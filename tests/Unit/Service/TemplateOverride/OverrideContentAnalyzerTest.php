@@ -91,4 +91,14 @@ class OverrideContentAnalyzerTest extends TestCase
             $this->analyzer->parseHeader('<p>@source nothing</p>'),
         );
     }
+
+    public function testComparesBinaryContentByteForByte(): void
+    {
+        $analyzer = new OverrideContentAnalyzer();
+
+        $this->assertTrue($analyzer->isIdentical("BM\0\x0a\0", "BM\0\x0a\0"));
+        $this->assertFalse($analyzer->isIdentical("BM\0\x0a\0", "BM\0\x0d\0"));
+        $this->assertFalse($analyzer->isIdentical("BM\0\x0a\0\n", "BM\0\x0a\0"));
+        $this->assertFalse($analyzer->isIdentical("BM\0\r\n", "BM\0\n"));
+    }
 }
