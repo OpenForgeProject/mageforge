@@ -37,10 +37,12 @@ class TemplateUsageIndex
      */
     public function collect(): array
     {
-        $roots = array_merge(
-            array_values($this->componentRegistrar->getPaths(ComponentRegistrar::MODULE)),
-            array_values($this->componentRegistrar->getPaths(ComponentRegistrar::THEME)),
-        );
+        $roots = [];
+        foreach ([ComponentRegistrar::MODULE, ComponentRegistrar::THEME] as $type) {
+            foreach ($this->componentRegistrar->getPaths($type) as $path) {
+                $roots[] = (string) $path;
+            }
+        }
 
         return $this->collectFromDirectories($roots);
     }
@@ -62,7 +64,8 @@ class TemplateUsageIndex
 
             $filter = new \RecursiveCallbackFilterIterator(
                 new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
-                static fn(\SplFileInfo $file): bool => !$file->isDir()
+                static fn(mixed $file): bool => !$file instanceof \SplFileInfo
+                || !$file->isDir()
                 || !in_array($file->getFilename(), self::SKIPPED_DIRECTORIES, true),
             );
 
