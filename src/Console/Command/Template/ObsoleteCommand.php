@@ -202,15 +202,15 @@ class ObsoleteCommand extends AbstractCommand
 
         foreach ($byTheme as $themeCode => $themeFindings) {
             $this->io->section($themeCode);
-            $this->io->table(
-                ['Reason', 'Template', 'File', 'Details'],
-                array_map(fn(ObsoleteOverride $finding): array => [
+            $this->io->table(['Reason', 'Template', 'File', 'Details'], array_map(
+                fn(ObsoleteOverride $finding): array => [
                     $finding->getReason()->label() . ($finding->isSafeToDelete() ? ' *' : ''),
                     $finding->getTemplateId(),
                     $this->toRelativePath($finding->getFile()),
                     $finding->getDetails(),
-                ], $themeFindings),
-            );
+                ],
+                $themeFindings,
+            ));
         }
 
         $safeCount = count(array_filter($findings, static fn($finding) => $finding->isSafeToDelete()));

@@ -63,7 +63,7 @@ class TemplateUsageIndex
             $filter = new \RecursiveCallbackFilterIterator(
                 new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
                 static fn(\SplFileInfo $file): bool => !$file->isDir()
-                    || !in_array($file->getFilename(), self::SKIPPED_DIRECTORIES, true),
+                || !in_array($file->getFilename(), self::SKIPPED_DIRECTORIES, true),
             );
 
             /** @var \SplFileInfo $file */

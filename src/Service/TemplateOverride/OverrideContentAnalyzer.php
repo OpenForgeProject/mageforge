@@ -59,7 +59,8 @@ class OverrideContentAnalyzer
     {
         $header = ['source' => null, 'module' => null, 'version' => null];
 
-        $isMarked = str_contains($content, '@mageforge-template-override')
+        $isMarked =
+            str_contains($content, '@mageforge-template-override')
             || str_contains($content, 'MageForge Template Override');
         if (!$isMarked) {
             return $header;

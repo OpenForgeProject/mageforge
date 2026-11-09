@@ -23,7 +23,7 @@ use OpenForgeProject\MageForge\Model\TemplateType;
  */
 class ObsoleteOverrideScanner
 {
-    private const MODULE_DIRECTORY_PATTERN = '/^[A-Za-z0-9]+_[A-Za-z0-9]+$/';
+    private const MODULE_DIRECTORY_PATTERN = '#/[A-Za-z0-9]+_[A-Za-z0-9]+$#';
     private const VIEW_DIRECTORIES = [
         'templates' => TemplateType::TEMPLATE,
         'email' => TemplateType::EMAIL,
@@ -109,9 +109,10 @@ class ObsoleteOverrideScanner
         sort($moduleDirs);
 
         foreach ($moduleDirs as $moduleDir) {
-            if (!$this->fileDriver->isDirectory($moduleDir)
-                || preg_match(self::MODULE_DIRECTORY_PATTERN, basename($moduleDir)) !== 1
-            ) {
+            $isModuleDir =
+                $this->fileDriver->isDirectory($moduleDir)
+                && preg_match(self::MODULE_DIRECTORY_PATTERN, $moduleDir) === 1;
+            if (!$isModuleDir) {
                 continue;
             }
 
@@ -161,14 +162,11 @@ class ObsoleteOverrideScanner
         }
 
         $templateId = $moduleName . '::' . $templatePath;
-        $create = fn(ObsoleteReason $reason, string $details, bool $safe): ObsoleteOverride => new ObsoleteOverride(
-            $theme->getCode(),
-            $file,
-            $templateId,
-            $reason,
-            $details,
-            $safe,
-        );
+        $create = static fn(
+            ObsoleteReason $reason,
+            string $details,
+            bool $safe,
+        ): ObsoleteOverride => new ObsoleteOverride($theme->getCode(), $file, $templateId, $reason, $details, $safe);
 
         if ($this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName) === null) {
             $details = sprintf('Module %s is not installed or enabled', $moduleName);
@@ -190,9 +188,7 @@ class ObsoleteOverrideScanner
             new TemplateReference($moduleName, $templatePath, $type),
         );
 
-        if ($original !== null
-            && $this->contentAnalyzer->isIdentical($content, $this->fileDriver->fileGetContents($original))
-        ) {
+        if ($original !== null && $this->isIdentical($content, $original)) {
             return $create(ObsoleteReason::IDENTICAL, 'Identical to ' . $this->relativePath($original), true);
         }
 
@@ -200,11 +196,12 @@ class ObsoleteOverrideScanner
             return $create(ObsoleteReason::ORPHANED, 'Source file no longer exists: ' . $header['source'], false);
         }
 
-        if ($references !== null
+        $isUnused =
+            $references !== null
             && $type === TemplateType::TEMPLATE
             && str_ends_with($templatePath, '.phtml')
-            && !isset($references[$templateId])
-        ) {
+            && !isset($references[$templateId]);
+        if ($isUnused) {
             $details = 'Template is not referenced in any layout, PHP or PHTML file';
 
             return $create(ObsoleteReason::UNUSED, $details, false);
@@ -214,12 +211,7 @@ class ObsoleteOverrideScanner
         if ($header['version'] !== null && $installedVersion !== '' && $installedVersion !== $header['version']) {
             return $create(
                 ObsoleteReason::OUTDATED,
-                sprintf(
-                    'Copied from %s %s, installed is %s',
-                    $header['module'],
-                    $header['version'],
-                    $installedVersion,
-                ),
+                sprintf('Copied from %s %s, installed is %s', $header['module'], $header['version'], $installedVersion),
                 false,
             );
         }
@@ -247,10 +239,11 @@ class ObsoleteOverrideScanner
 
         foreach ($this->fallbackResolver->getFallbackDirs($reference, $theme) as $dir) {
             $candidate = $this->normalize($dir) . '/' . $reference->getTemplatePath();
-            if ($this->normalize($dir) === $ownDirectory
-                || $candidate === $overrideFile
-                || !$this->fileDriver->isFile($candidate)
-            ) {
+            $isCandidate =
+                $this->normalize($dir) !== $ownDirectory
+                && $candidate !== $overrideFile
+                && $this->fileDriver->isFile($candidate);
+            if (!$isCandidate) {
                 continue;
             }
 
@@ -258,6 +251,18 @@ class ObsoleteOverrideScanner
         }
 
         return null;
+    }
+
+    /**
+     * Check whether the override content equals the original file
+     *
+     * @param string $content
+     * @param string $original
+     * @return bool
+     */
+    private function isIdentical(string $content, string $original): bool
+    {
+        return $this->contentAnalyzer->isIdentical($content, $this->fileDriver->fileGetContents($original));
     }
 
     /**

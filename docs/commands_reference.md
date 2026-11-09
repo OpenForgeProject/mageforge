@@ -203,12 +203,12 @@ bin/magento mageforge:template:obsolete --format=json --fail-on-found
 
 **Findings:**
 
-| Reason    | Meaning                                                                        | Safe to delete |
-| --------- | ------------------------------------------------------------------------------ | -------------- |
-| Identical | Same content as the file Magento would use without the override                | Yes            |
-| Orphaned  | The module is not installed/enabled, or the recorded source file no longer exists | Only if the module is missing |
-| Unused    | `--deep`: the `.phtml` template is not referenced in any layout, PHP or PHTML file | No             |
-| Outdated  | Copied from an older module version (taken from the MageForge header)          | No             |
+| Reason    | Meaning                                                                            | Safe to delete                |
+| --------- | ---------------------------------------------------------------------------------- | ----------------------------- |
+| Identical | Same content as the file Magento would use without the override                    | Yes                           |
+| Orphaned  | The module is not installed/enabled, or the recorded source file no longer exists  | Only if the module is missing |
+| Unused    | `--deep`: the `.phtml` template is not referenced in any layout, PHP or PHTML file | No                            |
+| Outdated  | Copied from an older module version (taken from the MageForge header)              | No                            |
 
 **Notes:**
 
