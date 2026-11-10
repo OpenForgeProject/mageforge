@@ -240,6 +240,45 @@ class ObsoleteOverrideScannerTest extends TestCase
         );
     }
 
+    public function testReturnsAllFindingsOfATheme(): void
+    {
+        foreach (['a', 'b'] as $name) {
+            $this->write('original/' . $name . '.phtml', 'same');
+            $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/' . $name . '.phtml', 'same');
+        }
+
+        $this->assertCount(2, $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testAnalysesStaticFilesAndTemplatesInsideI18nDirectories(): void
+    {
+        $this->write('original/logo.svg', '<svg/>');
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/web/logo.svg', '<svg/>');
+        $this->write('original/i18n/x.phtml', 'x');
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/i18n/x.phtml', 'x');
+
+        $this->assertCount(2, $this->scanner->scan($this->createTheme()));
+    }
+
+    public function testDoesNotTreatDirectoriesStartingWithVendorAsVendorThemes(): void
+    {
+        $registrar = $this->createMock(ComponentRegistrarInterface::class);
+        $registrar->method('getPath')->willReturn($this->root . '/vendor-custom/theme');
+        $directoryList = $this->createMock(DirectoryList::class);
+        $directoryList->method('getRoot')->willReturn($this->root);
+        $scanner = new ObsoleteOverrideScanner(
+            $registrar,
+            $this->resolver,
+            new OverrideContentAnalyzer(),
+            $this->usageIndex,
+            $this->packageInfo,
+            new File(),
+            $directoryList,
+        );
+
+        $this->assertFalse($scanner->isVendorTheme($this->createTheme()));
+    }
+
     public function testDetectsVendorThemes(): void
     {
         $this->assertFalse($this->scanner->isVendorTheme($this->createTheme()));

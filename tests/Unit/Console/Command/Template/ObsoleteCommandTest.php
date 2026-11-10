@@ -309,6 +309,72 @@ class ObsoleteCommandTest extends TestCase
         $this->assertSame(Cli::RETURN_FAILURE, $this->tester->execute(['--format' => 'xml']));
     }
 
+    public function testShowsErrorMessagesForInvalidOptions(): void
+    {
+        $this->tester->execute(['--format' => 'xml']);
+        $this->assertStringContainsString("Invalid format 'xml'", $this->tester->getDisplay());
+
+        $this->tester->execute(['--delete' => true, '--format' => 'json']);
+        $this->assertStringContainsString(
+            '--delete cannot be combined with --format=json',
+            $this->tester->getDisplay(),
+        );
+    }
+
+    public function testWarnsThatPossiblyUnusedResultsMayBeFalsePositives(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::POSSIBLY_UNUSED, false)]);
+
+        $this->tester->execute([]);
+
+        $this->assertStringContainsString('Obsolete template overrides', $this->tester->getDisplay());
+        $this->assertStringContainsString('Do not delete them without checking', $this->tester->getDisplay());
+        $this->assertStringContainsString('need a manual review', $this->tester->getDisplay());
+    }
+
+    public function testDoesNotWarnAboutPossiblyUnusedWhenNoneWasFound(): void
+    {
+        $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
+
+        $this->tester->execute([]);
+
+        $this->assertStringNotContainsString('Do not delete them without checking', $this->tester->getDisplay());
+    }
+
+    public function testKeepsDeletingRemainingFilesAfterOneFailed(): void
+    {
+        $this->scanner->method('scan')->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+            $this->finding('b', ObsoleteReason::IDENTICAL, true),
+        ]);
+        $this->remover->expects($this->exactly(2))->method('remove')->willReturnOnConsecutiveCalls(false, true);
+
+        $exitCode = $this->tester->execute(['--delete' => true, '--yes' => true]);
+
+        $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    public function testJsonContainsThemeAndDetailsAndKeepsPathsOutsideTheRoot(): void
+    {
+        $finding = new ObsoleteOverride(
+            'Vendor/theme',
+            '/magento-other/a.phtml',
+            'Magento_Catalog::a.phtml',
+            ObsoleteReason::IDENTICAL,
+            'Some details',
+            true,
+        );
+        $this->scanner->method('scan')->willReturn([$finding]);
+
+        $this->tester->execute(['--format' => 'json']);
+
+        /** @var array<int, array<string, mixed>> $json */
+        $json = json_decode($this->tester->getDisplay(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('Vendor/theme', $json[0]['theme']);
+        $this->assertSame('Some details', $json[0]['details']);
+        $this->assertSame('/magento-other/a.phtml', $json[0]['file']);
+    }
+
     private function finding(string $name, ObsoleteReason $reason, bool $safe): ObsoleteOverride
     {
         return new ObsoleteOverride(
