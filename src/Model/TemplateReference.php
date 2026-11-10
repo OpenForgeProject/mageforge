@@ -13,11 +13,13 @@ class TemplateReference
      * @param string $moduleName Module name in Vendor_Module notation
      * @param string $templatePath Path relative to the module's templates directory
      * @param TemplateType $type Whether this is a block template or an email template
+     * @param bool $isDirectory Whether the reference points to a directory instead of a single file
      */
     public function __construct(
         private readonly string $moduleName,
         private readonly string $templatePath,
         private readonly TemplateType $type = TemplateType::TEMPLATE,
+        private readonly bool $isDirectory = false,
     ) {
     }
 
@@ -49,6 +51,16 @@ class TemplateReference
     public function getType(): TemplateType
     {
         return $this->type;
+    }
+
+    /**
+     * Check whether the reference points to a directory (all files inside are meant)
+     *
+     * @return bool
+     */
+    public function isDirectory(): bool
+    {
+        return $this->isDirectory;
     }
 
     /**

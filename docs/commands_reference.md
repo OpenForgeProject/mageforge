@@ -142,17 +142,20 @@ bin/magento mageforge:template:override 'Magento_Catalog::product/view/details.p
 bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml -t Vendor/theme
 bin/magento mageforge:template:override 'Magento_Sales::order/new.html' --theme Vendor/theme
 bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less' --theme Vendor/theme
+bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates --theme Vendor/theme
 ```
 
 **Arguments:**
 
-- `template` — The view file to override. Accepts the `Module_Name::path/to/file.phtml`
+- `template` — The view file or directory to override. Accepts the `Module_Name::path/to/file.phtml`
   notation or a file path (absolute, or relative to the Magento root / current directory).
   File paths may point into a module's `view/<area>/templates`, `view/<area>/email` or
   `view/<area>/web` directory, a Hyvä compat module, or another theme's override directory.
   Email templates (`.html`) and static view files (CSS, LESS, JS, images, fonts, ...) are
   detected automatically and copied to `<theme>/<Module_Name>/email/` or
   `<theme>/<Module_Name>/web/` respectively.
+  A directory path (e.g. `vendor/magento/module-catalog/view/frontend/templates`) copies
+  all files inside it, including subdirectories.
 
 **Options:**
 
@@ -175,7 +178,8 @@ bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less'
 - After copying, the command re-resolves the file to verify the new override wins and cleans
   the relevant caches (`full_page`, `block_html`, `layout`, `translate`).
 - If the file is already overridden in the target theme, nothing is copied unless `--force`
-  is given.
+  is given. When copying a directory, already overridden files are skipped and the rest is
+  copied; with `--force` they are replaced as well.
 
 ---
 

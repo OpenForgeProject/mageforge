@@ -26,6 +26,12 @@ class TemplateReferenceTest extends TestCase
         $this->assertSame('Magento_Checkout::cart/item/default.phtml', $reference->getTemplateId());
     }
 
+    public function testIsNotADirectoryByDefaultAndExposesDirectoryFlag(): void
+    {
+        $this->assertFalse((new TemplateReference('Magento_Catalog', 'product'))->isDirectory());
+        $this->assertTrue((new TemplateReference('Magento_Catalog', 'product', isDirectory: true))->isDirectory());
+    }
+
     public function testExposesTemplateType(): void
     {
         $reference = new TemplateReference(
