@@ -2,7 +2,7 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.25.0
+  version: 1.29.0
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
@@ -41,10 +41,10 @@ lint:
     # single-dash flags), so every workflow change fails with a
     # "pinact/config-error". Stay on 4.x until
     # https://github.com/trunk-io/plugins/issues/1177 is fixed.
-    - pinact@4.1.1
+    - pinact@5.0.2
     - svgo@4.1.0
     - taplo@0.10.0
-    - checkov@3.4.2
+    - checkov@3.4.3
     - actionlint@1.7.12
     - git-diff-check
     - hadolint@2.15.1
@@ -53,7 +53,7 @@ lint:
     - prettier@3.9.10
     - shellcheck@0.11.0
     - shfmt@3.14.1
-    - trufflehog@3.99.7
+    - trufflehog@3.99.8
     - yamllint@1.38.0
 actions:
   disabled:
