@@ -44,6 +44,16 @@ class ObsoleteCommandTest extends TestCase
     private bool $isTerminal = true;
 
     /**
+     * @var string[]
+     */
+    private array $selectedOptions = [];
+
+    /**
+     * @var array<int, array{0: bool, 1: bool}>
+     */
+    private array $offered = [];
+
+    /**
      * @var CommandTester
      */
     private CommandTester $tester;
@@ -182,9 +192,10 @@ class ObsoleteCommandTest extends TestCase
     {
         $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
         $this->remover->expects($this->never())->method('remove');
+        $this->selectedOptions = ['delete'];
 
-        $this->tester->setInputs(['no', 'no']);
-        $this->tester->execute(['--delete' => true], ['interactive' => true]);
+        $this->tester->setInputs(['no']);
+        $this->tester->execute([], ['interactive' => true]);
 
         $this->assertStringContainsString('Delete 1 override file(s)?', $this->tester->getDisplay());
         $this->assertStringContainsString('Aborted, no files were deleted.', $this->tester->getDisplay());
@@ -194,45 +205,63 @@ class ObsoleteCommandTest extends TestCase
     {
         $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
         $this->remover->expects($this->never())->method('remove');
+        $this->selectedOptions = ['delete'];
 
-        $this->tester->setInputs(['no', '']);
-        $this->tester->execute(['--delete' => true], ['interactive' => true]);
+        $this->tester->setInputs(['']);
+        $this->tester->execute([], ['interactive' => true]);
     }
 
-    public function testDeletesAfterConfirmationAndCleansCaches(): void
+    public function testDeletesAfterMenuSelectionAndConfirmationAndCleansCaches(): void
     {
         $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
         $this->remover->expects($this->once())->method('remove')->willReturn(true);
         $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+        $this->selectedOptions = ['delete'];
 
-        $this->tester->setInputs(['no', 'yes']);
-        $exitCode = $this->tester->execute(['--delete' => true, '--fail-on-found' => true], ['interactive' => true]);
+        $this->tester->setInputs(['yes']);
+        $exitCode = $this->tester->execute(['--fail-on-found' => true], ['interactive' => true]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
         $this->assertStringContainsString('Deleted 1 override file(s).', $this->tester->getDisplay());
     }
 
-    public function testAsksForDeepScanInteractivelyAndPassesAnswerToScanner(): void
+    public function testPassesDeepSelectionFromMenuToScannerWithoutDeleting(): void
     {
-        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), true)->willReturn([]);
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), true)->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+        ]);
+        $this->remover->expects($this->never())->method('remove');
+        $this->selectedOptions = ['deep'];
 
-        $this->tester->setInputs(['yes']);
         $this->tester->execute([], ['interactive' => true]);
 
-        $this->assertStringContainsString('--deep', $this->tester->getDisplay());
+        $this->assertSame([[true, true]], $this->offered);
     }
 
-    public function testDoesNotAskOrDeleteWhenInputIsInteractiveButNoTerminalIsAttached(): void
+    public function testDoesNotDeleteWhenMenuSelectionIsEmpty(): void
     {
-        $this->isTerminal = false;
         $this->scanner->expects($this->once())->method('scan')->with($this->anything(), false)->willReturn([
             $this->finding('a', ObsoleteReason::IDENTICAL, true),
         ]);
         $this->remover->expects($this->never())->method('remove');
 
-        $this->tester->setInputs(['yes', 'yes']);
         $this->tester->execute([], ['interactive' => true]);
 
+        $this->assertStringNotContainsString('Delete 1 override', $this->tester->getDisplay());
+    }
+
+    public function testDoesNotAskOrDeleteWhenInputIsInteractiveButNoTerminalIsAttached(): void
+    {
+        $this->isTerminal = false;
+        $this->selectedOptions = ['deep', 'delete'];
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), false)->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+        ]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->execute([], ['interactive' => true]);
+
+        $this->assertSame([], $this->offered);
         $this->assertStringNotContainsString('Delete 1 override', $this->tester->getDisplay());
     }
 
@@ -248,13 +277,13 @@ class ObsoleteCommandTest extends TestCase
         $this->assertStringNotContainsString('Delete 1 override', $this->tester->getDisplay());
     }
 
-    public function testSkipsDeepQuestionWhenFlagIsGiven(): void
+    public function testOffersOnlyOptionsNotAlreadyGivenAsFlags(): void
     {
         $this->scanner->expects($this->once())->method('scan')->with($this->anything(), true)->willReturn([]);
 
         $this->tester->execute(['--deep' => true], ['interactive' => true]);
 
-        $this->assertStringNotContainsString('slower)?', $this->tester->getDisplay());
+        $this->assertSame([[false, true]], $this->offered);
     }
 
     public function testDeletesOnlySafeFindingsAndNamesFailedFiles(): void
@@ -393,6 +422,8 @@ class ObsoleteCommandTest extends TestCase
         $directoryList->method('getRoot')->willReturn('/magento');
 
         $isTerminal = &$this->isTerminal;
+        $selectedOptions = &$this->selectedOptions;
+        $offered = &$this->offered;
 
         return new CommandTester(new class(
             $themeList,
@@ -403,6 +434,8 @@ class ObsoleteCommandTest extends TestCase
             $this->cacheCleaner,
             $directoryList,
             $isTerminal,
+            $selectedOptions,
+            $offered,
         ) extends ObsoleteCommand {
             public function __construct(
                 ThemeList $themeList,
@@ -413,6 +446,8 @@ class ObsoleteCommandTest extends TestCase
                 CacheCleaner $cacheCleaner,
                 DirectoryList $directoryList,
                 private bool &$isTerminal,
+                private array &$selectedOptions,
+                private array &$offered,
             ) {
                 parent::__construct(
                     $themeList,
@@ -433,6 +468,13 @@ class ObsoleteCommandTest extends TestCase
             protected function promptForThemes(array $options): array
             {
                 return ['Vendor/theme'];
+            }
+
+            protected function promptForOptions(bool $offerDeep, bool $offerDelete): array
+            {
+                $this->offered[] = [$offerDeep, $offerDelete];
+
+                return $this->selectedOptions;
             }
         });
     }

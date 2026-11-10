@@ -182,9 +182,9 @@ bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less'
 ### `mageforge:template:obsolete`
 
 Finds theme overrides (`<theme>/<Module_Name>/{templates,email,web}`) that are no longer needed.
-In a terminal it shows the same searchable theme selection as `mageforge:theme:build`, then asks
-whether to include the slower `--deep` check and whether to delete the overrides that are safe to
-remove. Without a terminal (CI, pipes) or with `--format=json` all frontend themes outside `vendor/`
+In a terminal it shows the same searchable theme selection as `mageforge:theme:build`, then an
+options menu (Space to toggle) for the slower `--deep` check and for deleting the overrides that are
+safe to remove (deleting still asks for confirmation). Options already given as flags are not offered. Without a terminal (CI, pipes) or with `--format=json` all frontend themes outside `vendor/`
 are checked and nothing is deleted unless `--delete` is given.
 
 ```bash

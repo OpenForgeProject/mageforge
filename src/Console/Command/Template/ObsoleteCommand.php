@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Console\Command\Template;
 
 use Laravel\Prompts\MultiSearchPrompt;
+use Laravel\Prompts\MultiSelectPrompt;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
@@ -128,11 +129,10 @@ class ObsoleteCommand extends AbstractCommand
         }
 
         $isDeep = (bool) $input->getOption('deep');
-        if (!$isDeep && $isInteractive) {
-            $isDeep = $this->io->confirm(
-                'Also list templates without a found reference (--deep, slower, results may be false positives)?',
-                false,
-            );
+        if ($isInteractive) {
+            $selected = $this->promptForOptions(!$isDeep, !$isDelete);
+            $isDeep = $isDeep || in_array('deep', $selected, true);
+            $isDelete = $isDelete || in_array('delete', $selected, true);
         }
 
         $findings = [];
@@ -148,8 +148,7 @@ class ObsoleteCommand extends AbstractCommand
         }
 
         $deletionFailed = false;
-        $hasSafeFindings = array_filter($findings, static fn($finding) => $finding->isSafeToDelete()) !== [];
-        if ($isDelete || $isInteractive && $hasSafeFindings) {
+        if ($isDelete) {
             [$findings, $deletionFailed] = $this->deleteSafeFindings(
                 $findings,
                 (bool) $input->getOption('yes'),
@@ -237,6 +236,49 @@ class ObsoleteCommand extends AbstractCommand
                 placeholder: 'Type to search theme...',
                 hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
                 required: false,
+            );
+            /** @var string[] $selected */
+            $selected = $prompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+
+            return $selected;
+        } catch (\Exception $e) {
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+
+            return [];
+        } finally {
+            $this->resetPromptEnvironment();
+        }
+    }
+
+    /**
+     * Let the user pick the scan options in a menu
+     *
+     * @param bool $offerDeep
+     * @param bool $offerDelete
+     * @return string[] Selected option keys (deep, delete)
+     */
+    protected function promptForOptions(bool $offerDeep, bool $offerDelete): array
+    {
+        $options = [];
+        if ($offerDeep) {
+            $options['deep'] = 'Deep scan: also list templates without a found reference (slower, hints only)';
+        }
+        if ($offerDelete) {
+            $options['delete'] = 'Remove safe findings after the scan (asks for confirmation)';
+        }
+        if ($options === []) {
+            return [];
+        }
+
+        $this->setPromptEnvironment();
+
+        try {
+            $prompt = new MultiSelectPrompt(
+                label: 'Select options',
+                options: $options,
+                required: false,
+                hint: 'Arrow keys to navigate, Space to toggle, Enter to confirm (none = quick, read-only scan)',
             );
             /** @var string[] $selected */
             $selected = $prompt->prompt();
