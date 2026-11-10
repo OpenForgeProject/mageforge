@@ -435,7 +435,9 @@ class ObsoleteCommandTest extends TestCase
             $directoryList,
             $isTerminal,
             $selectedOptions,
-            $offered,
+            function (bool $deep, bool $delete) use (&$offered): void {
+                $offered[] = [$deep, $delete];
+            },
         ) extends ObsoleteCommand {
             public function __construct(
                 ThemeList $themeList,
@@ -446,8 +448,11 @@ class ObsoleteCommandTest extends TestCase
                 CacheCleaner $cacheCleaner,
                 DirectoryList $directoryList,
                 private bool &$isTerminal,
+                /**
+                 * @var string[]
+                 */
                 private array &$selectedOptions,
-                private array &$offered,
+                private \Closure $recordOffer,
             ) {
                 parent::__construct(
                     $themeList,
@@ -472,7 +477,7 @@ class ObsoleteCommandTest extends TestCase
 
             protected function promptForOptions(bool $offerDeep, bool $offerDelete): array
             {
-                $this->offered[] = [$offerDeep, $offerDelete];
+                ($this->recordOffer)($offerDeep, $offerDelete);
 
                 return $this->selectedOptions;
             }
