@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command\Template;
 
+use Laravel\Prompts\MultiSearchPrompt;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
@@ -16,6 +17,7 @@ use OpenForgeProject\MageForge\Service\TemplateOverride\AreaEmulator;
 use OpenForgeProject\MageForge\Service\TemplateOverride\ObsoleteOverrideScanner;
 use OpenForgeProject\MageForge\Service\TemplateOverride\OverrideRemover;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -60,11 +62,10 @@ class ObsoleteCommand extends AbstractCommand
         $this
             ->setName($this->getCommandName('template', 'obsolete'))
             ->setDescription('Finds theme template overrides that are no longer needed')
-            ->addOption(
-                'theme',
-                't',
-                InputOption::VALUE_REQUIRED,
-                'Theme code to check (format: Vendor/theme). Defaults to all themes outside vendor/',
+            ->addArgument(
+                'themeCodes',
+                InputArgument::IS_ARRAY,
+                'Theme codes to check (format: Vendor/theme). Without it a theme selection is shown',
             )
             ->addOption(
                 'deep',
@@ -110,7 +111,9 @@ class ObsoleteCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
 
-        $themes = $this->resolveThemes($input, $output);
+        $isInteractive = $format === 'table' && $input->isInteractive();
+
+        $themes = $this->resolveThemes($input, $output, $isInteractive);
         if ($themes === null) {
             return Cli::RETURN_FAILURE;
         }
@@ -123,10 +126,18 @@ class ObsoleteCommand extends AbstractCommand
             return Cli::RETURN_SUCCESS;
         }
 
+        $isDeep = (bool) $input->getOption('deep');
+        if (!$isDeep && $isInteractive) {
+            $isDeep = $this->io->confirm(
+                'Also search for templates that are not referenced anywhere (--deep, slower)?',
+                false,
+            );
+        }
+
         $findings = [];
         foreach ($themes as $theme) {
             $this->areaEmulator->emulate($theme->getArea());
-            array_push($findings, ...$this->scanner->scan($theme, (bool) $input->getOption('deep')));
+            array_push($findings, ...$this->scanner->scan($theme, $isDeep));
         }
 
         if ($format === 'json') {
@@ -136,7 +147,8 @@ class ObsoleteCommand extends AbstractCommand
         }
 
         $deletionFailed = false;
-        if ($isDelete) {
+        $hasSafeFindings = array_filter($findings, static fn($finding) => $finding->isSafeToDelete()) !== [];
+        if ($isDelete || $isInteractive && $hasSafeFindings) {
             [$findings, $deletionFailed] = $this->deleteSafeFindings(
                 $findings,
                 (bool) $input->getOption('yes'),
@@ -158,9 +170,10 @@ class ObsoleteCommand extends AbstractCommand
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return ThemeInterface[]|null Null when the given theme is invalid
+     * @param bool $isInteractive
+     * @return ThemeInterface[]|null Null when a given theme is invalid
      */
-    private function resolveThemes(InputInterface $input, OutputInterface $output): ?array
+    private function resolveThemes(InputInterface $input, OutputInterface $output, bool $isInteractive): ?array
     {
         /** @var array<string, ThemeInterface> $frontendThemes */
         $frontendThemes = [];
@@ -172,24 +185,70 @@ class ObsoleteCommand extends AbstractCommand
             }
         }
 
-        /** @var string|null $themeOption */
-        $themeOption = $input->getOption('theme');
-        if ($themeOption === null || $themeOption === '') {
+        /** @var string[] $themeCodes */
+        $themeCodes = $input->getArgument('themeCodes');
+        if ($themeCodes === [] && $isInteractive && $this->isInteractiveTerminal($output)) {
+            $themeCodes = $this->promptForThemes(array_keys($frontendThemes));
+            if ($themeCodes === []) {
+                $this->io->info('No themes selected.');
+                return [];
+            }
+        }
+
+        if ($themeCodes === []) {
             return array_values(array_filter(
                 $frontendThemes,
                 fn(ThemeInterface $theme): bool => !$this->scanner->isVendorTheme($theme),
             ));
         }
 
-        if (!isset($frontendThemes[$themeOption])) {
-            $corrected = $this->handleInvalidThemeWithSuggestions($themeOption, $this->themeSuggester, $output);
-            if ($corrected === null || !isset($frontendThemes[$corrected])) {
-                return null;
+        $themes = [];
+        foreach ($themeCodes as $themeCode) {
+            if (!isset($frontendThemes[$themeCode])) {
+                $corrected = $this->handleInvalidThemeWithSuggestions($themeCode, $this->themeSuggester, $output);
+                if ($corrected === null || !isset($frontendThemes[$corrected])) {
+                    return null;
+                }
+                $themeCode = $corrected;
             }
-            $themeOption = $corrected;
+            $themes[$themeCode] = $frontendThemes[$themeCode];
         }
 
-        return [$frontendThemes[$themeOption]];
+        return array_values($themes);
+    }
+
+    /**
+     * Let the user pick the themes in the same searchable menu the build command uses
+     *
+     * @param string[] $options
+     * @return string[]
+     */
+    private function promptForThemes(array $options): array
+    {
+        $this->setPromptEnvironment();
+
+        try {
+            $prompt = new MultiSearchPrompt(
+                label: 'Select themes to check for obsolete overrides',
+                options: static fn(string $value) => $value === ''
+                    ? $options
+                    : array_values(array_filter($options, static fn($option) => stripos($option, $value) !== false)),
+                placeholder: 'Type to search theme...',
+                hint: 'Type to search, arrow keys to navigate, Space to toggle, Enter to confirm',
+                required: false,
+            );
+            /** @var string[] $selected */
+            $selected = $prompt->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+
+            return $selected;
+        } catch (\Exception $e) {
+            $this->io->error('Interactive mode failed: ' . $e->getMessage());
+
+            return [];
+        } finally {
+            $this->resetPromptEnvironment();
+        }
     }
 
     /**

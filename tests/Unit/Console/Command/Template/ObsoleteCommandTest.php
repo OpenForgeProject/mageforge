@@ -167,7 +167,7 @@ class ObsoleteCommandTest extends TestCase
     {
         $this->scanner->expects($this->once())->method('scan')->willReturn([]);
 
-        $this->tester->execute(['--theme' => 'Magento/luma']);
+        $this->tester->execute(['themeCodes' => ['Magento/luma']]);
 
         $this->assertStringContainsString('Magento/luma', $this->tester->getDisplay());
     }
@@ -177,7 +177,7 @@ class ObsoleteCommandTest extends TestCase
         $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
         $this->remover->expects($this->never())->method('remove');
 
-        $this->tester->setInputs(['no']);
+        $this->tester->setInputs(['no', 'no']);
         $this->tester->execute(['--delete' => true], ['interactive' => true]);
 
         $this->assertStringContainsString('Delete 1 override file(s)?', $this->tester->getDisplay());
@@ -189,7 +189,7 @@ class ObsoleteCommandTest extends TestCase
         $this->scanner->method('scan')->willReturn([$this->finding('a', ObsoleteReason::IDENTICAL, true)]);
         $this->remover->expects($this->never())->method('remove');
 
-        $this->tester->setInputs(['']);
+        $this->tester->setInputs(['no', '']);
         $this->tester->execute(['--delete' => true], ['interactive' => true]);
     }
 
@@ -199,11 +199,42 @@ class ObsoleteCommandTest extends TestCase
         $this->remover->expects($this->once())->method('remove')->willReturn(true);
         $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 
-        $this->tester->setInputs(['yes']);
+        $this->tester->setInputs(['no', 'yes']);
         $exitCode = $this->tester->execute(['--delete' => true, '--fail-on-found' => true], ['interactive' => true]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
         $this->assertStringContainsString('Deleted 1 override file(s).', $this->tester->getDisplay());
+    }
+
+    public function testAsksForDeepScanInteractivelyAndPassesAnswerToScanner(): void
+    {
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), true)->willReturn([]);
+
+        $this->tester->setInputs(['yes']);
+        $this->tester->execute([], ['interactive' => true]);
+
+        $this->assertStringContainsString('--deep', $this->tester->getDisplay());
+    }
+
+    public function testDoesNotAskAnyQuestionWhenNonInteractive(): void
+    {
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), false)->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+        ]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->execute([], ['interactive' => false]);
+
+        $this->assertStringNotContainsString('Delete 1 override', $this->tester->getDisplay());
+    }
+
+    public function testSkipsDeepQuestionWhenFlagIsGiven(): void
+    {
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), true)->willReturn([]);
+
+        $this->tester->execute(['--deep' => true], ['interactive' => true]);
+
+        $this->assertStringNotContainsString('slower)?', $this->tester->getDisplay());
     }
 
     public function testDeletesOnlySafeFindingsAndNamesFailedFiles(): void
