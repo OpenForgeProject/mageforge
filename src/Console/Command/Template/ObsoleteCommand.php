@@ -11,6 +11,7 @@ use Magento\Framework\Console\Cli;
 use Magento\Framework\View\Design\ThemeInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ObsoleteOverride;
+use OpenForgeProject\MageForge\Model\ObsoleteReason;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
 use OpenForgeProject\MageForge\Service\TemplateOverride\AreaEmulator;
@@ -71,7 +72,7 @@ class ObsoleteCommand extends AbstractCommand
                 'deep',
                 null,
                 InputOption::VALUE_NONE,
-                'Also report templates that are not referenced in any layout, PHP or PHTML file (slower)',
+                'Also list templates with no found reference (slower, heuristic, may include templates still in use)',
             )
             ->addOption(
                 'delete',
@@ -111,7 +112,7 @@ class ObsoleteCommand extends AbstractCommand
             return Cli::RETURN_FAILURE;
         }
 
-        $isInteractive = $format === 'table' && $input->isInteractive();
+        $isInteractive = $format === 'table' && $input->isInteractive() && $this->isInteractiveTerminal($output);
 
         $themes = $this->resolveThemes($input, $output, $isInteractive);
         if ($themes === null) {
@@ -129,7 +130,7 @@ class ObsoleteCommand extends AbstractCommand
         $isDeep = (bool) $input->getOption('deep');
         if (!$isDeep && $isInteractive) {
             $isDeep = $this->io->confirm(
-                'Also search for templates that are not referenced anywhere (--deep, slower)?',
+                'Also list templates without a found reference (--deep, slower, results may be false positives)?',
                 false,
             );
         }
@@ -187,7 +188,7 @@ class ObsoleteCommand extends AbstractCommand
 
         /** @var string[] $themeCodes */
         $themeCodes = $input->getArgument('themeCodes');
-        if ($themeCodes === [] && $isInteractive && $this->isInteractiveTerminal($output)) {
+        if ($themeCodes === [] && $isInteractive) {
             $themeCodes = $this->promptForThemes(array_keys($frontendThemes));
             if ($themeCodes === []) {
                 $this->io->info('No themes selected.');
@@ -223,7 +224,7 @@ class ObsoleteCommand extends AbstractCommand
      * @param string[] $options
      * @return string[]
      */
-    private function promptForThemes(array $options): array
+    protected function promptForThemes(array $options): array
     {
         $this->setPromptEnvironment();
 
@@ -285,13 +286,23 @@ class ObsoleteCommand extends AbstractCommand
             ));
         }
 
+        $hasPossiblyUnused = array_filter(
+            $findings,
+            static fn($finding) => $finding->getReason() === ObsoleteReason::POSSIBLY_UNUSED,
+        ) !== [];
         $safeCount = count(array_filter($findings, static fn($finding) => $finding->isSafeToDelete()));
         $this->io->text(sprintf(
             '%d obsolete override(s) found, %d marked with * can be deleted safely (--delete).',
             count($findings),
             $safeCount,
         ));
-        $this->io->text('Unused/Outdated/Orphaned (source missing) results need a manual review.');
+        $this->io->text('Outdated/Orphaned (source missing) results need a manual review.');
+        if ($hasPossiblyUnused) {
+            $this->io->warning(
+                '"Possibly unused" is only a hint. Templates can still be used through widget.xml, di.xml, '
+                . 'the database or dynamically built paths. Do not delete them without checking.',
+            );
+        }
     }
 
     /**

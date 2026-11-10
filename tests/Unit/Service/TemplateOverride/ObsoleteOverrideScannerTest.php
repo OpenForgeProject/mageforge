@@ -143,9 +143,28 @@ class ObsoleteOverrideScannerTest extends TestCase
 
         $findings = $this->scanner->scan($this->createTheme(), true);
         $this->assertCount(1, $findings);
-        $this->assertSame(ObsoleteReason::UNUSED, $findings[0]->getReason());
-        $this->assertSame('Template is not referenced in any layout, PHP or PHTML file', $findings[0]->getDetails());
+        $this->assertSame(ObsoleteReason::POSSIBLY_UNUSED, $findings[0]->getReason());
+        $this->assertSame(
+            'No reference found. It may still be used (widget, DI, database, dynamic path) - verify before deleting',
+            $findings[0]->getDetails(),
+        );
         $this->assertFalse($findings[0]->isSafeToDelete());
+    }
+
+    public function testTemplateReferencedByLiteralPathIsNotUnused(): void
+    {
+        $this->write('app/design/frontend/Vendor/theme/Magento_Catalog/templates/w.phtml', 'w');
+        $this->usageIndex->method('collect')->willReturn(['*::w.phtml' => true]);
+
+        $this->assertSame([], $this->scanner->scan($this->createTheme(), true));
+    }
+
+    public function testBuildsTheReferenceIndexOnlyOnce(): void
+    {
+        $this->usageIndex->expects($this->once())->method('collect')->willReturn([]);
+
+        $this->scanner->scan($this->createTheme(), true);
+        $this->scanner->scan($this->createTheme(), true);
     }
 
     public function testReportsOverrideCopiedFromOlderModuleVersionAsOutdated(): void

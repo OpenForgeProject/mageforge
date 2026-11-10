@@ -200,7 +200,7 @@ bin/magento mageforge:template:obsolete --format=json --fail-on-found
 
 **Options:**
 
-- `--deep` — Also report templates that are not referenced anywhere (slower, heuristic).
+- `--deep` — Also list templates without a found reference (slower, heuristic, may include templates that are still used).
 - `--delete` — Delete the overrides marked as safe (asks for confirmation) and clean the caches.
 - `-y, --yes` — Delete without confirmation.
 - `--format=VALUE` — `table` (default) or `json`.
@@ -208,20 +208,22 @@ bin/magento mageforge:template:obsolete --format=json --fail-on-found
 
 **Findings:**
 
-| Reason    | Meaning                                                                            | Safe to delete                |
-| --------- | ---------------------------------------------------------------------------------- | ----------------------------- |
-| Identical | Same content as the file Magento would use without the override                    | Yes                           |
-| Orphaned  | The module is not installed/enabled, or the recorded source file no longer exists  | Only if the module is missing |
-| Unused    | `--deep`: the `.phtml` template is not referenced in any layout, PHP or PHTML file | No                            |
-| Outdated  | Copied from an older module version (taken from the MageForge header)              | No                            |
+| Reason          | Meaning                                                                           | Safe to delete                |
+| --------------- | --------------------------------------------------------------------------------- | ----------------------------- |
+| Identical       | Same content as the file Magento would use without the override                   | Yes                           |
+| Orphaned        | The module is not installed/enabled, or the recorded source file no longer exists | Only if the module is missing |
+| Possibly unused | `--deep`: no reference to the `.phtml` template was found (hint only, see notes)  | No                            |
+| Outdated        | Copied from an older module version (taken from the MageForge header)             | No                            |
 
 **Notes:**
 
 - The comparison ignores the MageForge source header and line endings, and uses Magento's
   fallback rule, so parent themes and Hyvä compat modules are taken into account.
 - Theme layout files extend the module layout and are only checked for missing modules.
-- `Unused` cannot see references stored in the database (e.g. CMS blocks) or built dynamically;
-  review these results manually.
+- `Possibly unused` is only a hint and often a false positive. Templates can be used through
+  `widget.xml`, `di.xml`, vendor layouts, the database (e.g. CMS blocks) or dynamically built
+  paths, none of which are reliably detected. Never delete them without checking; `--delete`
+  never touches them.
 
 ---
 

@@ -11,7 +11,7 @@ enum ObsoleteReason: string
 {
     case IDENTICAL = 'identical';
     case ORPHANED = 'orphaned';
-    case UNUSED = 'unused';
+    case POSSIBLY_UNUSED = 'possibly_unused';
     case OUTDATED = 'outdated';
 
     /**
@@ -24,7 +24,7 @@ enum ObsoleteReason: string
         return match ($this) {
             self::IDENTICAL => 'Identical',
             self::ORPHANED => 'Orphaned',
-            self::UNUSED => 'Unused',
+            self::POSSIBLY_UNUSED => 'Possibly unused',
             self::OUTDATED => 'Outdated',
         };
     }

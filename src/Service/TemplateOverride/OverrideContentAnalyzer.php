@@ -32,7 +32,7 @@ class OverrideContentAnalyzer
             return $override === $original;
         }
 
-        return $this->normalize($this->stripHeader($override)) === $this->normalize($original);
+        return $this->normalize($this->stripHeader($override)) === $this->normalize($this->stripHeader($original));
     }
 
     /**

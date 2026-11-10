@@ -32,6 +32,11 @@ class ObsoleteOverrideScanner
     ];
 
     /**
+     * @var array<string,true>|null
+     */
+    private ?array $references = null;
+
+    /**
      * @param ComponentRegistrarInterface $componentRegistrar
      * @param TemplateFallbackResolver $fallbackResolver
      * @param OverrideContentAnalyzer $contentAnalyzer
@@ -65,7 +70,7 @@ class ObsoleteOverrideScanner
             return [];
         }
 
-        $references = $deep ? $this->usageIndex->collect() : null;
+        $references = $deep ? $this->getReferences() : null;
 
         $findings = [];
         foreach ($this->listFiles($themePath) as $file) {
@@ -76,6 +81,16 @@ class ObsoleteOverrideScanner
         }
 
         return $findings;
+    }
+
+    /**
+     * Build the reference index once and reuse it for every scanned theme
+     *
+     * @return array<string,true>
+     */
+    private function getReferences(): array
+    {
+        return $this->references ??= $this->usageIndex->collect();
     }
 
     /**
@@ -195,11 +210,14 @@ class ObsoleteOverrideScanner
             $references !== null
             && $type === TemplateType::TEMPLATE
             && str_ends_with($templatePath, '.phtml')
-            && !isset($references[$templateId]);
+            && !isset($references[$templateId])
+            && !isset($references[TemplateUsageIndex::ANY_MODULE . $templatePath]);
         if ($isUnused) {
-            $details = 'Template is not referenced in any layout, PHP or PHTML file';
+            $details =
+                'No reference found. It may still be used (widget, DI, database, dynamic path)'
+                . ' - verify before deleting';
 
-            return $create(ObsoleteReason::UNUSED, $details, false);
+            return $create(ObsoleteReason::POSSIBLY_UNUSED, $details, false);
         }
 
         $installedVersion = $header['module'] !== null ? $this->packageInfo->getVersion($header['module']) : '';

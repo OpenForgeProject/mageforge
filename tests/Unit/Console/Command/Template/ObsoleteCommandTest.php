@@ -18,6 +18,7 @@ use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use OpenForgeProject\MageForge\Test\Unit\Service\TemplateOverride\FakeTheme;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class ObsoleteCommandTest extends TestCase
@@ -36,6 +37,11 @@ class ObsoleteCommandTest extends TestCase
      * @var CacheCleaner&MockObject
      */
     private MockObject $cacheCleaner;
+
+    /**
+     * @var bool
+     */
+    private bool $isTerminal = true;
 
     /**
      * @var CommandTester
@@ -216,6 +222,20 @@ class ObsoleteCommandTest extends TestCase
         $this->assertStringContainsString('--deep', $this->tester->getDisplay());
     }
 
+    public function testDoesNotAskOrDeleteWhenInputIsInteractiveButNoTerminalIsAttached(): void
+    {
+        $this->isTerminal = false;
+        $this->scanner->expects($this->once())->method('scan')->with($this->anything(), false)->willReturn([
+            $this->finding('a', ObsoleteReason::IDENTICAL, true),
+        ]);
+        $this->remover->expects($this->never())->method('remove');
+
+        $this->tester->setInputs(['yes', 'yes']);
+        $this->tester->execute([], ['interactive' => true]);
+
+        $this->assertStringNotContainsString('Delete 1 override', $this->tester->getDisplay());
+    }
+
     public function testDoesNotAskAnyQuestionWhenNonInteractive(): void
     {
         $this->scanner->expects($this->once())->method('scan')->with($this->anything(), false)->willReturn([
@@ -306,7 +326,9 @@ class ObsoleteCommandTest extends TestCase
         $directoryList = $this->createMock(DirectoryList::class);
         $directoryList->method('getRoot')->willReturn('/magento');
 
-        return new CommandTester(new ObsoleteCommand(
+        $isTerminal = &$this->isTerminal;
+
+        return new CommandTester(new class(
             $themeList,
             $this->createMock(ThemeSuggester::class),
             $this->scanner,
@@ -314,6 +336,38 @@ class ObsoleteCommandTest extends TestCase
             $this->createMock(AreaEmulator::class),
             $this->cacheCleaner,
             $directoryList,
-        ));
+            $isTerminal,
+        ) extends ObsoleteCommand {
+            public function __construct(
+                ThemeList $themeList,
+                ThemeSuggester $themeSuggester,
+                ObsoleteOverrideScanner $scanner,
+                OverrideRemover $remover,
+                AreaEmulator $areaEmulator,
+                CacheCleaner $cacheCleaner,
+                DirectoryList $directoryList,
+                private bool &$isTerminal,
+            ) {
+                parent::__construct(
+                    $themeList,
+                    $themeSuggester,
+                    $scanner,
+                    $remover,
+                    $areaEmulator,
+                    $cacheCleaner,
+                    $directoryList,
+                );
+            }
+
+            protected function isInteractiveTerminal(OutputInterface $output): bool
+            {
+                return $this->isTerminal;
+            }
+
+            protected function promptForThemes(array $options): array
+            {
+                return ['Vendor/theme'];
+            }
+        });
     }
 }

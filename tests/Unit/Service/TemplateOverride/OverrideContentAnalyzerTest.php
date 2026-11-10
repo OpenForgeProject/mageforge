@@ -92,6 +92,15 @@ class OverrideContentAnalyzerTest extends TestCase
         );
     }
 
+    public function testIgnoresTheHeaderOfTheOriginalToo(): void
+    {
+        $analyzer = new OverrideContentAnalyzer();
+        $header = "<!--\n  MageForge Template Override\n  Source: a\n-->\n\n";
+
+        $this->assertTrue($analyzer->isIdentical($header . '<p>x</p>', $header . '<p>x</p>'));
+        $this->assertTrue($analyzer->isIdentical('<p>x</p>', $header . '<p>x</p>'));
+    }
+
     public function testComparesBinaryContentByteForByte(): void
     {
         $analyzer = new OverrideContentAnalyzer();

@@ -11,11 +11,18 @@ use Magento\Framework\Filesystem\Driver\File;
 /**
  * Collects all Module_Name::path/to/template.phtml references found in module and theme sources
  *
+ * Relative paths without a module (e.g. $_template = 'widget.phtml', <argument>sidebar/a.phtml</argument>,
+ * widget.xml values) are recorded for any module,
+ * because the owning module is only known to the block class at runtime.
+ *
  * Scans layout XML, PHP and PHTML files. References stored in the database (e.g. CMS blocks)
  * or built dynamically at runtime cannot be detected.
  */
 class TemplateUsageIndex
 {
+    public const ANY_MODULE = '*::';
+
+    private const LITERAL_PATTERN = '#(?<![A-Za-z0-9_\-/.:])([A-Za-z0-9_\-/.]+\.phtml)\b#';
     private const REFERENCE_PATTERN = '/\b([A-Za-z0-9]+_[A-Za-z0-9]+)::([A-Za-z0-9_\-\/.]+\.phtml)/';
     private const EXTENSIONS = ['xml', 'php', 'phtml'];
     private const SKIPPED_DIRECTORIES = ['node_modules', '.git', 'Test', 'tests', 'dev'];
@@ -76,11 +83,18 @@ class TemplateUsageIndex
                 }
 
                 $content = $this->readFile($file->getPathname());
-                if ($content === null || !str_contains($content, '::')) {
+                if ($content === null || !str_contains($content, '.phtml')) {
                     continue;
                 }
 
                 $matches = [];
+                $literals = [];
+                if (preg_match_all(self::LITERAL_PATTERN, $content, $literals) !== false) {
+                    foreach ($literals[1] as $path) {
+                        $references[self::ANY_MODULE . $path] = true;
+                    }
+                }
+
                 if (preg_match_all(self::REFERENCE_PATTERN, $content, $matches, PREG_SET_ORDER) !== false) {
                     foreach ($matches as $match) {
                         $references[$match[1] . '::' . $match[2]] = true;

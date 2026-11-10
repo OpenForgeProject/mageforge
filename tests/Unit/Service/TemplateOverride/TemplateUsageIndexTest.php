@@ -53,4 +53,25 @@ class TemplateUsageIndexTest extends TestCase
 
         $this->assertSame(['Magento_Catalog::product/view/details.phtml', 'Vendor_Mod::foo.phtml'], $keys);
     }
+
+    public function testRecordsRelativeTemplatePathsWithoutModuleForAnyModule(): void
+    {
+        file_put_contents($this->directory . '/Block.php', "<?php protected \$_template = 'widget/list.phtml';");
+        file_put_contents(
+            $this->directory . '/view/frontend/layout/blog.xml',
+            '<block template="sidebar/archive.phtml"><argument name="template" xsi:type="string">post/view.phtml'
+            . '</argument><value>product/widget/link.phtml</value>'
+            . '<x>Magento_Paypal::express/shortcut.phtml</x></block>',
+        );
+
+        $index = new TemplateUsageIndex($this->createMock(ComponentRegistrarInterface::class), new File());
+
+        $references = $index->collectFromDirectories([$this->directory]);
+
+        foreach (['widget/list', 'sidebar/archive', 'post/view', 'product/widget/link'] as $path) {
+            $this->assertArrayHasKey(TemplateUsageIndex::ANY_MODULE . $path . '.phtml', $references);
+        }
+        $this->assertArrayHasKey('Magento_Paypal::express/shortcut.phtml', $references);
+        $this->assertArrayNotHasKey(TemplateUsageIndex::ANY_MODULE . 'express/shortcut.phtml', $references);
+    }
 }

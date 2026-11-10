@@ -36,7 +36,24 @@ class OverrideRemover
             return false;
         }
 
-        $directory = $this->fileDriver->getParentDirectory($override->getFile());
+        // The file is already gone, so a failing directory cleanup must not turn this into a failure
+        try {
+            $this->removeEmptyDirectories($this->fileDriver->getParentDirectory($override->getFile()));
+        } catch (\Exception) {
+            return true;
+        }
+
+        return true;
+    }
+
+    /**
+     * Remove empty directories upwards until (and including) the module directory
+     *
+     * @param string $directory
+     * @return void
+     */
+    private function removeEmptyDirectories(string $directory): void
+    {
         while ($this->fileDriver->isDirectory($directory) && $this->fileDriver->readDirectory($directory) === []) {
             $this->fileDriver->deleteDirectory($directory);
             if (preg_match(self::MODULE_DIRECTORY_PATTERN, $directory) === 1) {
@@ -44,7 +61,5 @@ class OverrideRemover
             }
             $directory = $this->fileDriver->getParentDirectory($directory);
         }
-
-        return true;
     }
 }
