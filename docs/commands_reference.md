@@ -7,6 +7,7 @@ Complete reference of all CLI commands provided by the MageForge module.
 | Group            | Command                              | Description                                         | Aliases               |
 | ---------------- | ------------------------------------ | --------------------------------------------------- | --------------------- |
 | **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`       |
+| **Theme**        | `mageforge:theme:info`               | Show theme details (parents, builder, Node, Tailwind) | `frontend:info`, `m:t:i` |
 | **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`      |
 | **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`      |
 | **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
@@ -36,6 +37,15 @@ bin/magento frontend:list
 **Output:** Displays a table with Code, Title, and Path for each theme.
 
 ---
+
+### `mageforge:theme:info`
+
+Shows details about a theme: area, path, parent chain, detected builder, Node.js version, Tailwind CSS version (required vs. installed) and `node_modules` status. Without an argument, a select menu is shown.
+
+```bash
+bin/magento mageforge:theme:info [<theme-code>]
+bin/magento mageforge:theme:info Magento/luma --json
+```
 
 ### `mageforge:theme:build`
 
@@ -363,6 +373,7 @@ bin/magento system:check
 
 ```text
 mageforge:theme:list          → List available themes
+mageforge:theme:info          → Show theme details
 mageforge:theme:build         → Build theme assets
 mageforge:theme:watch         → Watch & auto-rebuild
 mageforge:theme:clean         → Clean static files
