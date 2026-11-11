@@ -27,10 +27,18 @@ The hero is generated with `npm run pixel` (output: `src/assets/hero-pixel.svg`)
 
 ## Deploy
 
+### GitHub Pages (default)
+
+`.github/workflows/website.yml` builds the site and publishes it with GitHub Pages. One-off setup: **Settings → Pages → Source: GitHub Actions**. The workflow takes the origin and base path from Pages, so project sites (`/mageforge`) and custom domains both work.
+
+It runs on pushes to docs and website files, when a release is published, every six hours (so new releases show up even when the release event does not fire) and manually.
+
+### Your own server
+
 ```bash
 SITE_URL=https://mageforge.example.com \
 DEPLOY_TARGET=user@server:/var/www/mageforge \
 ./deploy.sh            # DRY_RUN=1 to preview
 ```
 
-The script builds and rsyncs `dist/`. Run it from cron or a systemd timer (for example hourly) so new releases appear automatically. See `nginx.example.conf` for a server configuration with a strict CSP; the site uses no inline scripts.
+The script builds and rsyncs `dist/`. See `nginx.example.conf` for a server configuration with a strict CSP; the site uses no inline scripts.
