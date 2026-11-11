@@ -172,6 +172,7 @@ hr {
   font-size: 1.15rem;
   text-decoration: none;
   min-height: 44px;
+  margin-right: auto;
 }
 .brand img {
   width: 32px;
@@ -220,9 +221,6 @@ hr {
 }
 .nav-toggle[hidden] {
   display: none;
-}
-.brand {
-  margin-right: auto;
 }
 @media (max-width: 47.99rem) {
   .nav {
