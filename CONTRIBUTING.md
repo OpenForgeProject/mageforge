@@ -78,13 +78,13 @@ git commit -m "chore: update GitHub Actions to latest versions"
 
 ### Merge Strategy
 
-All pull requests are merged using **squash-merge** to maintain a clean, linear git history. This means:
+Pull requests are normally merged using **squash-merge** to maintain a clean, linear git history. This means:
 
 - ✅ Only one commit per PR in `main` branch
 - ✅ PR title becomes the commit message
 - ✅ All PR commits are squashed into a single commit
 - ✅ Easier to follow project history and revert changes if needed
-- ⚠️ The changelog is built from the PR title, so it must be a valid Conventional Commit whichever merge button is used. A merge commit also works because Release Please reads the PR title; avoid "Rebase and merge", where only the individual commits are visible and these would have to be Conventional Commits too
+- ⚠️ Squash-merge is not guaranteed for every PR. The changelog is built from the PR title, so it must be a valid Conventional Commit whichever merge button is used. A merge commit also works because Release Please reads the PR title; avoid "Rebase and merge", where only the individual commits are visible and these would have to be Conventional Commits too
 
 ---
 
