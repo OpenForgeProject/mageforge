@@ -12,8 +12,15 @@ export const escapeHtml = (s) =>
       ],
   );
 
-// Drops tags, then any stray angle brackets so no markup can survive.
-const stripTags = (s) => s.replace(/<[^>]+>/g, "").replace(/[<>]/g, "");
+// Repeats until stable so nested fragments such as "<<b>script>" cannot reassemble into a tag.
+const stripTags = (s) => {
+  let prev;
+  do {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  } while (s !== prev);
+  return s.replace(/[<>]/g, "");
+};
 
 export const slugify = (s) =>
   stripTags(s.toLowerCase())
