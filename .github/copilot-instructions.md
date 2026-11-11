@@ -150,6 +150,7 @@ Release Please generates the changelog, so commits must follow Conventional Comm
 - **No emojis** in commit messages or PR titles. They break Release Please parsing. This overrides any global
   "use emojis" preference.
 - Keep the type prefix at the very start of the message.
+- `CONTRIBUTING.md` also forbids emojis in commit messages and PR titles; follow it for the full rules.
 
 ## Testing
 
