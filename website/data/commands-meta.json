@@ -1,0 +1,48 @@
+{
+  "mageforge:theme:list": {
+    "since": "0.0.3",
+    "keywords": ["theme:list", "frontend:list"]
+  },
+  "mageforge:theme:build": {
+    "since": "0.0.3",
+    "keywords": ["theme:build", "frontend:build", "build command"]
+  },
+  "mageforge:theme:watch": {
+    "since": "0.0.3",
+    "keywords": ["theme:watch", "frontend:watch", "watch task", "watch output"]
+  },
+  "mageforge:theme:clean": {
+    "since": "0.5.0",
+    "keywords": ["theme:clean", "frontend:clean", "static:clean"]
+  },
+  "mageforge:theme:inspector": { "since": "0.6.0", "keywords": ["inspector"] },
+  "mageforge:template:override": {
+    "since": "0.28.0",
+    "keywords": ["template override", "template:override"]
+  },
+  "mageforge:template:obsolete": {
+    "since": null,
+    "keywords": ["template:obsolete", "obsolete"]
+  },
+  "mageforge:dependencies:update": {
+    "since": "0.28.0",
+    "keywords": [
+      "dependency updater",
+      "dependencies:update",
+      "dependency update"
+    ]
+  },
+  "mageforge:hyva:tokens": {
+    "since": "0.3.0",
+    "keywords": ["hyva:tokens", "theme:tokens", "design tokens"]
+  },
+  "mageforge:hyva:compatibility:check": {
+    "since": "0.3.0",
+    "keywords": ["compatibility:check", "compatibility checker", "hyva:check"]
+  },
+  "mageforge:system:version": {
+    "since": "0.0.3",
+    "keywords": ["system:version"]
+  },
+  "mageforge:system:check": { "since": "0.0.3", "keywords": ["system:check"] }
+}

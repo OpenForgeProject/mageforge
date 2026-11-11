@@ -1,0 +1,20 @@
+{
+  "name": "mageforge-website",
+  "private": true,
+  "type": "module",
+  "description": "Static website for MageForge (landing page, docs, commands, changelog)",
+  "scripts": {
+    "build": "node build.mjs",
+    "pixel": "node scripts/pixel-hero.mjs",
+    "serve": "node scripts/serve.mjs",
+    "dev": "node build.mjs && node scripts/serve.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "dejavu-fonts-ttf": "^2.37.3",
+    "marked": "^18.2.0"
+  }
+}
