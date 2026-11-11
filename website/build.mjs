@@ -336,7 +336,7 @@ ${body}
 `;
 }
 
-function addPage({ path, title, description, kind, body, ...rest }) {
+function addPage({ path, title, description, body, ...rest }) {
   const html = layout({ title, description, path, body, ...rest });
   out(`${path}index.html`.replace(/^\//, ""), html);
   pages.push({ path, lastmod: rest.lastmod });
@@ -768,24 +768,49 @@ bin/magento setup:upgrade</code></pre></div></li>
       )
       .join("")}</ul>`;
 
-  const releaseHtml = (r, idx) => {
+  const plural = (n) => `${n} new command${n > 1 ? "s" : ""}`;
+
+  const releaseHead = (r, idx, open) => {
+    const level = open ? 2 : 3;
+    const latestBadge =
+      idx === 0 ? '<span class="badge badge-new">Latest</span>' : "";
+    const cmdBadge = r.newCommands.length
+      ? `<span class="badge badge-new">${plural(r.newCommands.length)}</span>`
+      : "";
+    return `<header><h${level} id="v${e(r.version)}">v${e(r.version)}</h${level}><time datetime="${e(r.date)}">${fmtDate(r.date)}</time>${latestBadge}${cmdBadge}<a href="${e(r.url)}" rel="noopener noreferrer">GitHub release<span class="visually-hidden"> v${e(r.version)}</span></a></header>`;
+  };
+
+  const commandLink = (c) =>
+    `<a href="${url(`/commands/${c.slug}/`)}"><code>${e(c.name)}</code></a>`;
+
+  const releaseBody = (r, open) => {
     const added = r.groups.added.filter((i) => !i.noise);
     const fixed = r.groups.fixed;
     const rest = [...r.groups.other, ...r.groups.added.filter((i) => i.noise)];
-    const empty = !added.length && !fixed.length && !rest.length;
-    const open = idx < 3;
     const sub = open ? 3 : 4;
-    const head = `<header><h${open ? 2 : 3} id="v${e(r.version)}">v${e(r.version)}</h${open ? 2 : 3}><time datetime="${e(r.date)}">${fmtDate(r.date)}</time>${idx === 0 ? '<span class="badge badge-new">Latest</span>' : ""}${r.newCommands.length ? `<span class="badge badge-new">${r.newCommands.length} new command${r.newCommands.length > 1 ? "s" : ""}</span>` : ""}<a href="${e(r.url)}" rel="noopener noreferrer">GitHub release<span class="visually-hidden"> v${e(r.version)}</span></a></header>`;
-    const inner = `
+    const section = (label, list) =>
+      list.length
+        ? `<h${sub} class="rel-label">${label}</h${sub}>${items(list)}`
+        : "";
+    const empty = !added.length && !fixed.length && !rest.length;
+    return `
     ${r.newCommands.map((c) => `<p class="callout"><span class="badge badge-new">New command</span><a href="${url(`/commands/${c.slug}/`)}">${e(c.name)}</a><span>${e(c.description)}</span></p>`).join("")}
-    ${added.length ? `<h${sub} class="rel-label">Added</h${sub}>${items(added)}` : ""}
-    ${fixed.length ? `<h${sub} class="rel-label">Fixed</h${sub}>${items(fixed)}` : ""}
+    ${section("Added", added)}
+    ${section("Fixed", fixed)}
     ${rest.length ? `<details><summary>Maintenance and other changes (${rest.length})</summary>${items(rest)}</details>` : ""}
     ${empty ? `<p>Early release – see the <a href="${e(r.url)}" rel="noopener noreferrer">release notes on GitHub</a>.</p>` : ""}
-    ${r.mentions.length ? `<p class="hint">Related commands: ${r.mentions.map((c) => `<a href="${url(`/commands/${c.slug}/`)}"><code>${e(c.name)}</code></a>`).join(", ")}</p>` : ""}`;
-    return open
-      ? `<article class="release${idx === 0 ? " is-latest" : ""}" aria-labelledby="v${e(r.version)}">${head}${inner}</article>`
-      : `<article class="release collapsed"><details><summary><span><strong id="v${e(r.version)}">v${e(r.version)}</strong> · ${fmtDate(r.date)}${r.newCommands.length ? ` · ${r.newCommands.length} new command${r.newCommands.length > 1 ? "s" : ""}` : ""}</span></summary>${head}${inner}</details></article>`;
+    ${r.mentions.length ? `<p class="hint">Related commands: ${r.mentions.map(commandLink).join(", ")}</p>` : ""}`;
+  };
+
+  const releaseHtml = (r, idx) => {
+    const open = idx < 3;
+    const head = releaseHead(r, idx, open);
+    const inner = releaseBody(r, open);
+    if (open) {
+      return `<article class="release${idx === 0 ? " is-latest" : ""}" aria-labelledby="v${e(r.version)}">${head}${inner}</article>`;
+    }
+    const summary = `<strong id="v${e(r.version)}">v${e(r.version)}</strong> · ${fmtDate(r.date)}${r.newCommands.length ? ` · ${plural(r.newCommands.length)}` : ""}`;
+    return `<article class="release collapsed"><details><summary><span>${summary}</span></summary>${head}${inner}</details></article>`;
   };
 
   const timeline = releases
