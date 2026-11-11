@@ -30,8 +30,8 @@ use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
 class ThemeInfoCollector
 {
     private const MODULE_DIR_PATTERN = '/^[A-Za-z0-9]+_[A-Za-z0-9]+$/';
-    private const WEB_ASSET_EXTENSIONS = ['less', 'css', 'js'];
-    private const TAILWIND_CONFIGS = ['tailwind.config.js', 'tailwind-source.css'];
+    private const IGNORED_DIRECTORIES = ['node_modules'];
+    private const TAILWIND_CONFIGS = ['tailwind.config.js', 'tailwind.config.cjs', 'tailwind-source.css'];
 
     /**
      * @param File $fileDriver
@@ -104,7 +104,7 @@ class ThemeInfoCollector
         $counts = ['modules' => 0, 'templates' => 0, 'layouts' => 0, 'requirejs' => 0, 'webAssets' => 0];
 
         foreach ($this->fileDriver->readDirectory(rtrim($themePath, '/')) as $entry) {
-            if (!$this->fileDriver->isDirectory($entry) || !$this->isModuleDirectory($entry)) {
+            if (!$this->isModuleDirectory($entry) || !$this->fileDriver->isDirectory($entry)) {
                 continue;
             }
 
@@ -117,7 +117,13 @@ class ThemeInfoCollector
             }
         }
 
-        return $counts;
+        return [
+            'modules' => $counts['modules'],
+            'templates' => $counts['templates'],
+            'layouts' => $counts['layouts'],
+            'requirejs' => $counts['requirejs'],
+            'webAssets' => $counts['webAssets'],
+        ];
     }
 
     /**
@@ -217,21 +223,9 @@ class ThemeInfoCollector
             $extension === 'phtml' && str_starts_with($relative, 'templates/') => 'templates',
             $extension === 'xml' && str_starts_with($relative, 'layout/') => 'layouts',
             $relative === 'requirejs-config.js' => 'requirejs',
-            $this->isWebAsset($relative, $extension) => 'webAssets',
+            str_starts_with($relative, 'web/') => 'webAssets',
             default => null,
         };
-    }
-
-    /**
-     * Check whether a file is a LESS, CSS or JS asset below the module's web directory.
-     *
-     * @param string $relative
-     * @param string $extension
-     * @return bool
-     */
-    private function isWebAsset(string $relative, string $extension): bool
-    {
-        return str_starts_with($relative, 'web/') && in_array($extension, self::WEB_ASSET_EXTENSIONS, true);
     }
 
     /**
@@ -245,7 +239,7 @@ class ThemeInfoCollector
         $position = strrpos(rtrim($path, '/'), '/');
         $name = $position === false ? $path : substr(rtrim($path, '/'), $position + 1);
 
-        return preg_match(self::MODULE_DIR_PATTERN, $name) === 1;
+        return !in_array($name, self::IGNORED_DIRECTORIES, true) && preg_match(self::MODULE_DIR_PATTERN, $name) === 1;
     }
 
     /**

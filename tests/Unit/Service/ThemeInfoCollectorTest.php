@@ -30,6 +30,10 @@ class ThemeInfoCollectorTest extends TestCase
         touch($this->themePath . '/Magento_Catalog/requirejs-config.js');
         touch($this->themePath . '/Magento_Theme/web/css/custom.less');
         touch($this->themePath . '/web/css/ignored.css');
+        mkdir($this->themePath . '/node_modules/pkg/templates', 0777, true);
+        touch($this->themePath . '/node_modules/pkg/templates/ignored.phtml');
+        mkdir($this->themePath . '/Magento_Theme/web/images', 0777, true);
+        touch($this->themePath . '/Magento_Theme/web/images/logo.svg');
     }
 
     protected function tearDown(): void
@@ -37,12 +41,12 @@ class ThemeInfoCollectorTest extends TestCase
         (new File())->deleteDirectory($this->themePath);
     }
 
-    public function testCountsOverridesOnlyInsideModuleDirectories(): void
+    public function testCountsOverridesInsideModuleDirectoriesOnly(): void
     {
         $counts = $this->createCollector()->getOverrideCounts($this->themePath);
 
         $this->assertSame(
-            ['modules' => 2, 'templates' => 1, 'layouts' => 1, 'requirejs' => 1, 'webAssets' => 1],
+            ['modules' => 2, 'templates' => 1, 'layouts' => 1, 'requirejs' => 1, 'webAssets' => 2],
             $counts,
         );
     }

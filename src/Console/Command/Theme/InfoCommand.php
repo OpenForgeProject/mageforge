@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Console\Command\Theme;
 
 use Laravel\Prompts\SelectPrompt;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
+use Magento\Framework\DataObject;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
+use Magento\Framework\View\Design\ThemeInterface;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
@@ -25,6 +28,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class InfoCommand extends AbstractCommand
 {
     private const MAX_PARENT_DEPTH = 20;
+    private const HYVA_BUILDER_NAME = 'HyvaThemes';
+    private const STANDARD_BUILDER_NAME = 'MagentoStandard';
+    private const HYVA_THEME_PREFIX = 'Hyva/';
 
     /**
      * @param ThemeList $themeList
@@ -34,6 +40,7 @@ class InfoCommand extends AbstractCommand
      * @param Shell $shell
      * @param File $fileDriver
      * @param ThemeInfoCollector $infoCollector
+     * @param DirectoryList $directoryList
      */
     public function __construct(
         private readonly ThemeList $themeList,
@@ -43,6 +50,7 @@ class InfoCommand extends AbstractCommand
         private readonly Shell $shell,
         private readonly File $fileDriver,
         private readonly ThemeInfoCollector $infoCollector,
+        private readonly DirectoryList $directoryList,
     ) {
         parent::__construct();
     }
@@ -80,7 +88,7 @@ class InfoCommand extends AbstractCommand
         $asJson = (bool) $input->getOption('json');
 
         if ($themeCode === null) {
-            $themeCode = $this->selectThemeInteractively($output);
+            $themeCode = $this->selectThemeInteractively($input, $output);
             if ($themeCode === null) {
                 return Cli::RETURN_SUCCESS;
             }
@@ -102,7 +110,7 @@ class InfoCommand extends AbstractCommand
         $builder = $this->builderPool->getBuilder($path);
         $info = [
             'code' => $theme->getCode(),
-            'title' => (string) $theme->getThemeTitle(),
+            'title' => $theme instanceof DataObject ? $this->stringify($theme->getData('theme_title')) : '',
             'area' => (string) $theme->getArea(),
             'path' => $path,
             'composer' => $this->infoCollector->getComposerInfo($path),
@@ -110,9 +118,11 @@ class InfoCommand extends AbstractCommand
             'builder' => $builder?->getName(),
             'node' => $this->getNodeVersion(),
             'tailwind' => $this->getTailwindInfo($path),
-            'node_modules' => $this->hasNodeModules($path),
+            'node_modules' => $this->hasNodeModules($path, $builder?->getName()),
             'overrides' => $this->infoCollector->getOverrideCounts($path),
-            'hyva' => $builder?->getName() === 'HyvaThemes' ? $this->infoCollector->getHyvaInfo($path) : null,
+            'hyva' => $this->isHyvaTheme($theme, $path, $builder?->getName())
+                ? $this->infoCollector->getHyvaInfo($path)
+                : null,
             'locales' => $this->infoCollector->getDeployedLocales((string) $theme->getArea(), $theme->getCode()),
         ];
 
@@ -129,19 +139,23 @@ class InfoCommand extends AbstractCommand
     /**
      * Let the user pick a theme from a select menu.
      *
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return string|null
      */
-    private function selectThemeInteractively(OutputInterface $output): ?string
+    private function selectThemeInteractively(InputInterface $input, OutputInterface $output): ?string
     {
-        $options = array_values(array_map(static fn($theme) => $theme->getCode(), $this->themeList->getAllThemes()));
+        $options = array_values(array_map(
+            static fn(ThemeInterface $theme) => (string) $theme->getCode(),
+            $this->themeList->getAllThemes(),
+        ));
 
         if ($options === []) {
             $this->io->info('No themes found.');
             return null;
         }
 
-        if (!$this->isInteractiveTerminal($output)) {
+        if (!$input->isInteractive() || !$this->isInteractiveTerminal($output)) {
             $this->io->warning('No theme specified. Available themes:');
             $this->io->listing($options);
             $this->io->info('Usage: bin/magento mageforge:theme:info <theme-code>');
@@ -160,13 +174,10 @@ class InfoCommand extends AbstractCommand
         try {
             $selection = $prompt->prompt();
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
-            $this->resetPromptEnvironment();
 
             return is_string($selection) ? $selection : null;
-        } catch (\Exception $e) {
+        } finally {
             $this->resetPromptEnvironment();
-            $this->io->error('Interactive mode failed: ' . $e->getMessage());
-            return null;
         }
     }
 
@@ -217,7 +228,7 @@ class InfoCommand extends AbstractCommand
             ['node_modules' => $info['node_modules'] ? 'present' : 'missing'],
             [
                 'Overrides' => sprintf(
-                    '%d modules: %d templates, %d layouts, %d requirejs-config, %d web assets',
+                    '%d modules: %d templates, %d layouts, %d requirejs-config, %d web files',
                     $overrides['modules'],
                     $overrides['templates'],
                     $overrides['layouts'],
@@ -256,9 +267,9 @@ class InfoCommand extends AbstractCommand
      * Find a theme model by its code.
      *
      * @param string $themeCode
-     * @return \Magento\Theme\Model\Theme|null
+     * @return ThemeInterface|null
      */
-    private function findTheme(string $themeCode): ?\Magento\Theme\Model\Theme
+    private function findTheme(string $themeCode): ?ThemeInterface
     {
         foreach ($this->themeList->getAllThemes() as $theme) {
             if ($theme->getCode() === $themeCode) {
@@ -272,10 +283,10 @@ class InfoCommand extends AbstractCommand
     /**
      * Get the codes of all parent themes, nearest first.
      *
-     * @param \Magento\Theme\Model\Theme $theme
+     * @param ThemeInterface $theme
      * @return string[]
      */
-    private function getParentChain(\Magento\Theme\Model\Theme $theme): array
+    private function getParentChain(ThemeInterface $theme): array
     {
         $chain = [];
         $parent = $theme->getParentTheme();
@@ -350,15 +361,58 @@ class InfoCommand extends AbstractCommand
     /**
      * Check whether the theme has installed Node.js dependencies.
      *
+     * Standard Magento themes are built with Grunt from the Magento root, so its node_modules counts as well.
+     *
      * @param string $themePath
+     * @param string|null $builderName
      * @return bool
      */
-    private function hasNodeModules(string $themePath): bool
+    private function hasNodeModules(string $themePath, ?string $builderName): bool
     {
-        return (
-            $this->fileDriver->isDirectory($themePath . '/node_modules')
-            || $this->fileDriver->isDirectory($themePath . '/web/tailwind/node_modules')
-        );
+        $candidates = [$themePath . '/node_modules', $themePath . '/web/tailwind/node_modules'];
+        if ($builderName === self::STANDARD_BUILDER_NAME) {
+            $candidates[] = $this->directoryList->getRoot() . '/node_modules';
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($this->fileDriver->isDirectory($candidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check whether a theme is a Hyvä theme, by its builder or by inheriting from a Hyvä theme.
+     *
+     * A theme extending a custom Hyvä base is detected as plain Tailwind theme by the builders, so its ancestors
+     * are checked as well.
+     *
+     * @param ThemeInterface $theme
+     * @param string $themePath
+     * @param string|null $builderName
+     * @return bool
+     */
+    private function isHyvaTheme(ThemeInterface $theme, string $themePath, ?string $builderName): bool
+    {
+        if ($builderName === self::HYVA_BUILDER_NAME) {
+            return true;
+        }
+
+        if (!$this->fileDriver->isDirectory($themePath . '/web/tailwind')) {
+            return false;
+        }
+
+        $parent = $theme->getParentTheme();
+        for ($depth = 0; $parent !== null && $depth < self::MAX_PARENT_DEPTH; $depth++) {
+            if (str_starts_with((string) $parent->getCode(), self::HYVA_THEME_PREFIX)) {
+                return true;
+            }
+            $parent = $parent->getParentTheme();
+        }
+
+        return false;
     }
 
     /**
