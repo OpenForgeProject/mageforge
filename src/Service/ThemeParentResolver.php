@@ -48,7 +48,7 @@ class ThemeParentResolver
         $parent = $theme?->getParentTheme();
 
         while ($parent !== null) {
-            $code = (string) $parent->getCode();
+            $code = $parent->getCode();
             if (isset($visited[$code])) {
                 break;
             }

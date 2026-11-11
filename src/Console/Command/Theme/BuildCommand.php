@@ -132,9 +132,26 @@ class BuildCommand extends AbstractCommand
             }
         }
 
-        $themeCodes = $this->expandWithParents($input, $output, $themeCodes);
+        // Correct theme names first so parents are resolved for the final theme codes
+        $validatedCodes = [];
+        $invalidCount = 0;
+        foreach ($themeCodes as $themeCode) {
+            $validated = $this->validateAndCorrectTheme($themeCode, $this->io, $output);
+            if ($validated === null) {
+                $invalidCount++;
+                continue;
+            }
+            $validatedCodes[] = $validated;
+        }
 
-        return $this->processBuildThemes($themeCodes, $this->io, $output, $isVerbose);
+        if ($validatedCodes === []) {
+            return Command::FAILURE;
+        }
+
+        $validatedCodes = $this->expandWithParents($input, $output, $validatedCodes);
+        $result = $this->processBuildThemes($validatedCodes, $this->io, $output, $isVerbose);
+
+        return $invalidCount > 0 ? Command::FAILURE : $result;
     }
 
     /**

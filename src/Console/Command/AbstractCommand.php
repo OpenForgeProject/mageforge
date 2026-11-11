@@ -205,9 +205,12 @@ abstract class AbstractCommand extends Command
      */
     protected function addParentThemeOptions(): void
     {
-        $this
-            ->addOption('with-parents', null, InputOption::VALUE_NONE, 'Also build all parent themes first')
-            ->addOption('no-parents', null, InputOption::VALUE_NONE, 'Never build parent themes (skips the prompt)');
+        $this->addOption(
+            'with-parents',
+            null,
+            InputOption::VALUE_NONE,
+            'Also build all parent themes first',
+        )->addOption('no-parents', null, InputOption::VALUE_NONE, 'Never build parent themes (skips the prompt)');
     }
 
     /**
@@ -236,7 +239,7 @@ abstract class AbstractCommand extends Command
             return true;
         }
 
-        if (!$this->isInteractiveTerminal($output)) {
+        if (!$input->isInteractive() || !$this->isInteractiveTerminal($output)) {
             return false;
         }
 

@@ -154,9 +154,11 @@ class WatchCommand extends AbstractCommand
             return false;
         }
 
-        $this->io->section(
-            sprintf('Building parent theme %s using %s builder', $parentCode, $parentBuilder->getName()),
-        );
+        $this->io->section(sprintf(
+            'Building parent theme %s using %s builder',
+            $parentCode,
+            $parentBuilder->getName(),
+        ));
         if (!$parentBuilder->build($parentCode, $parentPath, $this->io, $output, $isVerbose)) {
             $this->io->error("Failed to build parent theme $parentCode.");
             return false;
