@@ -223,7 +223,7 @@ abstract class AbstractCommand extends Command
      * @param OutputInterface $output
      * @param string $label
      * @param array<string> $parents
-     * @param array<string, array<array{code: string, skipReason: ?string}>> $chains Inheritance chains by theme
+     * @param array<mixed> $chains
      * @return bool
      */
     protected function confirmParentThemes(
@@ -269,7 +269,7 @@ abstract class AbstractCommand extends Command
      * Render a theme and its ancestors as an indented tree, child on top.
      *
      * @param string $themeCode
-     * @param array<array{code: string, skipReason: ?string}> $chain Direct parent first
+     * @param array<mixed> $chain
      * @return void
      */
     protected function renderInheritanceTree(string $themeCode, array $chain): void
