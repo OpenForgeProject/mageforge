@@ -413,7 +413,7 @@ Hyva/default      Hyvä Default     Hyvä (Tailwind 4)
         <a class="btn btn-secondary" href="${url("/commands/")}">Explore ${commands.length} commands</a>
       </div>
       <div class="install"><code id="install-cmd">composer require openforgeproject/mageforge</code><button type="button" class="copy" data-copy="composer require openforgeproject/mageforge" data-label="Install command" aria-label="Copy install command">Copy</button></div>
-      <div style="margin-top:1.5rem">${searchBox("hero-search")}<p class="hint">Press <kbd>/</kbd> anywhere to search.</p></div>
+      <div class="mt-lg">${searchBox("hero-search")}<p class="hint">Press <kbd>/</kbd> anywhere to search.</p></div>
       <ul class="hero-meta">
         <li><strong>${commands.length}</strong> commands</li>
         ${latest ? `<li>Latest <a href="${url("/changelog/")}"><strong>v${e(latest.version)}</strong></a></li>` : ""}
@@ -431,7 +431,7 @@ ${
   latest
     ? `<section class="section" aria-labelledby="latest-h"><div class="container">
   <div class="latest-strip">
-    <div><h2 id="latest-h" style="margin:0 0 .25rem;font-size:1.2rem">What's new in v${e(latest.version)}</h2>
+    <div><h2 id="latest-h" class="h-compact">What's new in v${e(latest.version)}</h2>
     <p>Released ${fmtDate(latest.date)} · ${latest.groups.added.filter((i) => !i.noise).length} new features · ${latest.groups.fixed.length} fixes${newest.length ? ` · new: ${newest.map((c) => `<a href="${url(`/commands/${c.slug}/`)}"><code>${e(c.name)}</code></a>`).join(", ")}` : ""}</p></div>
     <a class="btn btn-secondary" href="${url("/changelog/")}">Read the changelog</a>
   </div>
@@ -446,11 +446,11 @@ ${upcomingSection()}
   <div class="section-head"><h2 id="cmd-h">One toolkit, every theme type</h2>
   <p>Magento Standard, Hyvä, Hyvä Checkout, custom Tailwind CSS themes or your own builder – MageForge detects the theme type and does the right thing.</p></div>
   <ul class="grid">${featured.map(commandCard).join("")}</ul>
-  <p style="margin-top:1.5rem"><a class="btn btn-secondary" href="${url("/commands/")}">See all commands</a></p>
+  <p class="mt-lg"><a class="btn btn-secondary" href="${url("/commands/")}">See all commands</a></p>
 </div></section>
 
 <section class="section" aria-labelledby="see-h"><div class="container split">
-  <div><h2 id="see-h" style="margin-top:0">Fast feedback, minimal ceremony</h2>
+  <div><h2 id="see-h" class="mt-0">Fast feedback, minimal ceremony</h2>
   <p class="lead">Pick a theme interactively or pass codes and wildcards like <code>Magento/*</code>. Parent themes, Node dependencies and static content are handled for you.</p>
   <p><a href="${url("/commands/theme-build/")}">Learn about <code>theme:build</code> →</a></p></div>
   ${terminal}
@@ -458,7 +458,7 @@ ${upcomingSection()}
 
 <section class="section" aria-labelledby="insp-h"><div class="container split">
   <div class="shot"><img src="${url("/assets/img/MageForge-Toolbar.jpeg")}" alt="MageForge toolbar and inspector overlay running in a Magento storefront" loading="lazy" decoding="async" width="1668" height="1312"></div>
-  <div><h2 id="insp-h" style="margin-top:0">Inspect and audit in the browser</h2>
+  <div><h2 id="insp-h" class="mt-0">Inspect and audit in the browser</h2>
   <p class="lead">The frontend inspector shows template paths, block classes, cache status and Web Vitals right on the page. The toolbar adds accessibility and usability audits with a health score.</p>
   <ul>
     <li>Template, block and module names at a glance</li>
@@ -548,7 +548,7 @@ bin/magento setup:upgrade</code></pre></div></li>
   <h1>Commands</h1>
   <p>${commands.length} commands for building, watching, cleaning and inspecting themes. Every command page is shareable and shows the version it arrived in.</p>
 </div></div>
-<div class="container" style="padding-block:2rem 4rem">
+<div class="container commands-list">
   ${groups
     .map(
       (g) =>
@@ -615,7 +615,7 @@ bin/magento setup:upgrade</code></pre></div></li>
     ["Commands", "/commands/"],
     [c.name, path],
   ])}
-  <h1><code style="font-size:.8em;background:none;border:0;padding:0">${e(c.name)}</code></h1>
+  <h1><code class="h1-code">${e(c.name)}</code></h1>
   <p>${e(c.description)}</p>
   <div class="meta-row">${sinceBadge(c)}<span class="badge">${e(c.group)}</span>${c.aliases.map((a) => `<span class="badge">alias: <code>${e(a)}</code></span>`).join("")}</div>
 </div></div>
@@ -831,9 +831,9 @@ bin/magento setup:upgrade</code></pre></div></li>
   <h1>Changelog</h1>
   <p>Every release, straight from <a href="${GITHUB}/releases" rel="noopener noreferrer">GitHub</a>. Rebuilt automatically whenever a new version is published${latest ? ` – currently <strong>v${e(latest.version)}</strong> (${fmtDate(latest.date)})` : ""}. <a href="${url("/feed.xml")}">Subscribe via Atom</a>.</p>
 </div></div>
-<div class="container layout" style="grid-template-columns:minmax(0,1fr)">
+<div class="container layout layout-single">
   <section aria-labelledby="newcmd-h">
-    <h2 id="newcmd-h" style="margin-top:0">New commands by version</h2>
+    <h2 id="newcmd-h" class="mt-0">New commands by version</h2>
     ${unreleased.length ? `<p class="callout"><span class="badge badge-new">Coming in the next release</span>${unreleased.map((c) => `<a href="${url(`/commands/${c.slug}/`)}">${e(c.name)}</a>`).join(" ")}</p>` : ""}
     <ol class="timeline" reversed>${timeline}</ol>
   </section>
@@ -913,6 +913,7 @@ bin/magento setup:upgrade</code></pre></div></li>
 <feed xmlns="http://www.w3.org/2005/Atom">
 <title>MageForge releases</title>
 <subtitle>${e(TAGLINE)}</subtitle>
+<author><name>OpenForgeProject</name></author>
 <id>${abs("/changelog/")}</id>
 <link rel="self" href="${abs("/feed.xml")}"/>
 <link rel="alternate" href="${abs("/changelog/")}"/>
@@ -940,15 +941,15 @@ addPage({
     ["Home", "/"],
     ["Search", "/search/"],
   ])}<h1>Search</h1></div></div>
-<div class="container layout" style="grid-template-columns:minmax(0,1fr)">
+<div class="container layout layout-single">
   <div data-search-page>
-    <form role="search" action="${url("/search/")}" method="get" style="display:flex;gap:.5rem;max-width:40rem" class="search">
+    <form role="search" action="${url("/search/")}" method="get" class="search search-page-form">
       <label for="page-q" class="visually-hidden">Search</label>
       <input id="page-q" type="search" name="q" placeholder="Search commands, docs, releases…" autocomplete="off" spellcheck="false" autofocus>
       <button class="btn btn-primary" type="submit">Search</button>
     </form>
     <p id="search-status" role="status" class="hint"></p>
-    <ul id="search-results" class="search-results" style="position:static;max-height:none;box-shadow:none;margin-top:1rem"></ul>
+    <ul id="search-results" class="search-results search-results--page"></ul>
     <noscript><p>Search needs JavaScript. Browse the <a href="${url("/commands/")}">commands</a>, <a href="${url("/docs/")}">docs</a> or <a href="${url("/changelog/")}">changelog</a> instead.</p></noscript>
   </div>
 </div>`,

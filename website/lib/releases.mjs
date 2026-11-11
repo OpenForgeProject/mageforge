@@ -106,14 +106,18 @@ export function parseBody(body) {
 
 function fromChangelog(md) {
   const out = [];
-  const parts = md.split(/^## \[/m).slice(1);
+  // Release Please: "## [0.4.0](compare-url) (date)"; older entries: "### [0.3.1] - date".
+  const parts = md.split(/^##+ \[/m).slice(1);
   for (const part of parts) {
-    const head = part.match(/^([\d.]+)\]\(([^)]*)\)\s*\((\d{4}-\d{2}-\d{2})\)/);
+    const head =
+      part.match(/^([\d.]+)\]\(([^)]*)\)\s*\((\d{4}-\d{2}-\d{2})\)/) ||
+      part.match(/^([\d.]+)\]\s*-\s*(\d{4}-\d{2}-\d{2})/);
     if (!head) continue;
+    const date = head[3] || head[2];
     out.push({
       tag_name: head[1],
       html_url: `https://github.com/${REPO}/releases/tag/${head[1]}`,
-      published_at: `${head[3]}T00:00:00Z`,
+      published_at: `${date}T00:00:00Z`,
       body: part.slice(part.indexOf("\n") + 1),
       draft: false,
       prerelease: false,

@@ -131,8 +131,11 @@
     const status = $("[data-search-status]", root);
     const form = $("form", root);
     let active = -1;
+    let generation = 0;
 
     const close = () => {
+      generation++;
+      list.replaceChildren();
       list.hidden = true;
       input.setAttribute("aria-expanded", "false");
       input.removeAttribute("aria-activedescendant");
@@ -151,7 +154,10 @@
     const update = async () => {
       const q = input.value.trim();
       if (q.length < 2) return close();
-      const results = search(await loadIndex(), q).slice(0, 8);
+      const mine = ++generation;
+      const items = await loadIndex();
+      if (mine !== generation) return;
+      const results = search(items, q).slice(0, 8);
       list.replaceChildren();
       if (!results.length) {
         const li = document.createElement("li");
@@ -179,9 +185,11 @@
     );
     input.addEventListener("keydown", (e) => {
       const n = $$('[role="option"]', list).length;
-      if (e.key === "ArrowDown" && n) {
+      if (e.key === "ArrowDown" && !n && input.value.trim().length > 1) {
         e.preventDefault();
-        if (list.hidden) update();
+        update();
+      } else if (e.key === "ArrowDown" && n) {
+        e.preventDefault();
         setActive((active + 1) % n);
       } else if (e.key === "ArrowUp" && n) {
         e.preventDefault();
@@ -210,14 +218,19 @@
     const input = $('input[type="search"]', page);
     const out = $("#search-results");
     const status = $("#search-status");
+    let generation = 0;
     const render = async () => {
       const q = input.value.trim();
-      out.replaceChildren();
+      const mine = ++generation;
       if (!q) {
+        out.replaceChildren();
         status.textContent = "";
         return;
       }
-      const results = search(await loadIndex(), q);
+      const items = await loadIndex();
+      if (mine !== generation) return;
+      out.replaceChildren();
+      const results = search(items, q);
       status.textContent = results.length
         ? `${results.length} result${results.length > 1 ? "s" : ""} for “${q}”`
         : `No results for “${q}”. Try a command name such as “theme build”.`;
@@ -248,10 +261,9 @@
   };
   $$("[data-open-search]").forEach((b) => b.addEventListener("click", open));
   $("[data-close-search]")?.addEventListener("click", () => dialog.close());
-  dialog?.addEventListener(
-    "click",
-    (e) => e.target === dialog && dialog.close(),
-  );
+  dialog?.addEventListener("click", (e) => {
+    if (e.target === dialog || e.target.closest?.("a[href]")) dialog.close();
+  });
   document.addEventListener("keydown", (e) => {
     const typing =
       /^(input|textarea|select)$/i.test(document.activeElement?.tagName) ||

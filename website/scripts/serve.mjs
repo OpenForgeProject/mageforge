@@ -19,10 +19,22 @@ const types = {
   ".webmanifest": "application/manifest+json",
 };
 
+const base = (process.env.BASE_PATH || "").replace(/\/$/, "");
+
 createServer(async (req, res) => {
-  const path = normalize(
-    decodeURIComponent(new URL(req.url, "http://x").pathname),
-  ).replace(/^(\.\.[/\\])+/, "");
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  } catch {
+    res.writeHead(400, { "Content-Type": "text/plain" });
+    return res.end("Bad request");
+  }
+  if (base) {
+    if (pathname !== base && !pathname.startsWith(`${base}/`))
+      pathname = "/__outside__";
+    else pathname = pathname.slice(base.length) || "/";
+  }
+  const path = normalize(pathname).replace(/^(\.\.[/\\])+/, "");
   let file = join(dist, path);
   try {
     if ((await stat(file)).isDirectory()) file = join(file, "index.html");
@@ -34,4 +46,4 @@ createServer(async (req, res) => {
     res.writeHead(404, { "Content-Type": "text/html" });
     res.end(await readFile(join(dist, "404.html")));
   }
-}).listen(port, () => console.log(`http://localhost:${port}`));
+}).listen(port, () => console.log(`http://localhost:${port}${base}/`));

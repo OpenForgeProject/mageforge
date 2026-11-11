@@ -1426,3 +1426,38 @@ tr:last-child td {
     display: none;
   }
 }
+
+/* Layout helpers (no inline styles, so a strict style-src CSP works) */
+.mt-lg {
+  margin-top: 1.5rem;
+}
+.mt-0 {
+  margin-top: 0;
+}
+.h-compact {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+.h1-code {
+  font-size: 0.8em;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.commands-list {
+  padding-block: 2rem 4rem;
+}
+.layout.layout-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.search-page-form {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 40rem;
+}
+.search-results.search-results--page {
+  position: static;
+  max-height: none;
+  box-shadow: none;
+  margin-top: 1rem;
+}
