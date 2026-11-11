@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service;
 
+use OpenForgeProject\MageForge\Model\ThemeAncestor;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
@@ -38,8 +39,8 @@ class ThemeParentResolver
     {
         $parents = [];
         foreach ($this->getInheritanceChain($themeCode) as $ancestor) {
-            if ($ancestor['skipReason'] === null) {
-                array_unshift($parents, $ancestor['code']);
+            if ($ancestor->skipReason === null) {
+                array_unshift($parents, $ancestor->code);
             }
         }
 
@@ -50,7 +51,7 @@ class ThemeParentResolver
      * Get all ancestors of a theme, direct parent first, with the reason a build is skipped (if any).
      *
      * @param string $themeCode
-     * @return array<array{code: string, skipReason: ?string}>
+     * @return array<ThemeAncestor>
      */
     public function getInheritanceChain(string $themeCode): array
     {
@@ -80,7 +81,7 @@ class ThemeParentResolver
                 $this->builderPool->getBuilder($path) === null => 'no builder',
                 default => null,
             };
-            $chain[] = ['code' => $code, 'skipReason' => $skipReason];
+            $chain[] = new ThemeAncestor($code, $skipReason);
 
             $parent = $parent->getParentTheme();
         }

@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Console\Command;
 use Laravel\Prompts\ConfirmPrompt;
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
+use OpenForgeProject\MageForge\Model\ThemeAncestor;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
@@ -223,7 +224,7 @@ abstract class AbstractCommand extends Command
      * @param OutputInterface $output
      * @param string $label
      * @param array<string> $parents
-     * @param array<mixed> $chains
+     * @param array<array<ThemeAncestor>> $chains
      * @return bool
      */
     protected function confirmParentThemes(
@@ -269,7 +270,7 @@ abstract class AbstractCommand extends Command
      * Render a theme and its ancestors as an indented tree, child on top.
      *
      * @param string $themeCode
-     * @param array<mixed> $chain
+     * @param array<ThemeAncestor> $chain
      * @return void
      */
     protected function renderInheritanceTree(string $themeCode, array $chain): void
@@ -277,15 +278,15 @@ abstract class AbstractCommand extends Command
         $this->io->newLine();
         $this->io->writeln(sprintf('  <fg=cyan;options=bold>%s</> <fg=gray>(selected)</>', $themeCode));
 
-        foreach ($chain as $level => $ancestor) {
+        foreach (array_values($chain) as $level => $ancestor) {
             $indent = str_repeat('   ', $level);
-            $status = $ancestor['skipReason'] === null
+            $status = $ancestor->skipReason === null
                 ? '<fg=green>will be built</>'
-                : sprintf('<fg=gray>skipped: %s</>', $ancestor['skipReason']);
+                : sprintf('<fg=gray>skipped: %s</>', $ancestor->skipReason);
             $this->io->writeln(sprintf(
                 '  %s└─ <fg=yellow>%s</> <fg=gray>(parent)</> · %s',
                 $indent,
-                $ancestor['code'],
+                $ancestor->code,
                 $status,
             ));
         }

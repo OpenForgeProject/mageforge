@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenForgeProject\MageForge\Test\Unit\Service;
 
 use Magento\Framework\View\Design\ThemeInterface;
+use OpenForgeProject\MageForge\Model\ThemeAncestor;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
@@ -74,11 +75,8 @@ class ThemeParentResolverTest extends TestCase
         $resolver = new ThemeParentResolver($themeList, $themePath, $builderPool);
 
         $this->assertSame(['App/base'], $resolver->getBuildableParents('App/child'));
-        $this->assertSame(
-            [
-                ['code' => 'Hyva/default', 'skipReason' => 'vendor'],
-                ['code' => 'App/base', 'skipReason' => null],
-            ],
+        $this->assertEquals(
+            [new ThemeAncestor('Hyva/default', 'vendor'), new ThemeAncestor('App/base')],
             $resolver->getInheritanceChain('App/child'),
         );
     }
