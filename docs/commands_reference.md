@@ -4,21 +4,21 @@ Complete reference of all CLI commands provided by the MageForge module.
 
 ## Quick Overview
 
-| Group            | Command                              | Description                                         | Aliases               |
-| ---------------- | ------------------------------------ | --------------------------------------------------- | --------------------- |
-| **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`       |
-| **Theme**        | `mageforge:theme:info`               | Show theme details (package, builder, overrides, …)     | `frontend:info`, `m:t:i` |
-| **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`      |
-| **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`      |
-| **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
-| **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                     |
-| **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`   |
-| **Template**     | `mageforge:template:obsolete`        | Find theme overrides that are no longer needed      | `template:obsolete`   |
-| **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
-| **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
-| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`          |
-| **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`      |
-| **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`        |
+| Group            | Command                              | Description                                         | Aliases                  |
+| ---------------- | ------------------------------------ | --------------------------------------------------- | ------------------------ |
+| **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`          |
+| **Theme**        | `mageforge:theme:info`               | Show theme details (package, builder, overrides, …) | `frontend:info`, `m:t:i` |
+| **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`         |
+| **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`         |
+| **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`         |
+| **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                        |
+| **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`      |
+| **Template**     | `mageforge:template:obsolete`        | Find theme overrides that are no longer needed      | `template:obsolete`      |
+| **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update`    |
+| **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`            |
+| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`             |
+| **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`         |
+| **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`           |
 
 ---
 

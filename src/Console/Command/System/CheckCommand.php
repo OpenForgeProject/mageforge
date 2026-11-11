@@ -527,9 +527,10 @@ class CheckCommand extends AbstractCommand
             $hostValue = $this->getEnvironmentVariable($envVar);
             if (!empty($hostValue)) {
                 $port =
-                    $this->getEnvironmentVariable('ELASTICSEARCH_PORT') ?? $this->getEnvironmentVariable(
-                        'ES_PORT',
-                    ) ?? $this->getEnvironmentVariable('OPENSEARCH_PORT') ?? '9200';
+                    $this->getEnvironmentVariable('ELASTICSEARCH_PORT')
+                    ?? $this->getEnvironmentVariable('ES_PORT')
+                    ?? $this->getEnvironmentVariable('OPENSEARCH_PORT')
+                    ?? '9200';
                 $elasticHosts[] = "http://{$hostValue}:{$port}";
             }
         }
