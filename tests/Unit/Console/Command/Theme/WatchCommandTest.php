@@ -9,6 +9,7 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -34,6 +35,10 @@ class WatchCommandTest extends TestCase
      */
     private $themeSuggester;
     /**
+     * @var ThemeParentResolver&MockObject
+     */
+    private $parentResolver;
+    /**
      * @var WatchCommand
      */
     private WatchCommand $command;
@@ -44,11 +49,13 @@ class WatchCommandTest extends TestCase
         $this->themeList = $this->createMock(ThemeList::class);
         $this->themePath = $this->createMock(ThemePath::class);
         $this->themeSuggester = $this->createMock(ThemeSuggester::class);
+        $this->parentResolver = $this->createMock(ThemeParentResolver::class);
         $this->command = new WatchCommand(
             $this->builderPool,
             $this->themeList,
             $this->themePath,
             $this->themeSuggester,
+            $this->parentResolver,
         );
     }
 
@@ -71,6 +78,59 @@ class WatchCommandTest extends TestCase
 
         $tester = new CommandTester($this->command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+    }
+
+    public function testWithParentsBuildsParentsBeforeWatching(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base', 'Vendor/video']);
+        $this->themePath->method('getPath')->willReturnCallback(static fn(string $code): string => '/p/' . $code);
+        $calls = [];
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('build')->willReturnCallback(static function (string $code) use (&$calls): bool {
+            $calls[] = 'build:' . $code;
+            return true;
+        });
+        $builder->method('watch')->willReturnCallback(static function (string $code) use (&$calls): bool {
+            $calls[] = 'watch:' . $code;
+            return true;
+        });
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child', '--with-parents' => true]);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(['build:Vendor/base', 'build:Vendor/video', 'watch:Vendor/child'], $calls);
+    }
+
+    public function testFailedParentBuildPreventsWatch(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base']);
+        $this->themePath->method('getPath')->willReturn('/p');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('build')->willReturn(false);
+        $builder->expects($this->never())->method('watch');
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child', '--with-parents' => true]);
+
+        $this->assertSame(Command::FAILURE, $exitCode);
+    }
+
+    public function testParentsAreSkippedWithoutOption(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base']);
+        $this->themePath->method('getPath')->willReturn('/p');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->expects($this->never())->method('build');
+        $builder->expects($this->once())->method('watch')->willReturn(true);
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child']);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
     }

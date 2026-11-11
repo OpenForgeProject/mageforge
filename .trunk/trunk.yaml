@@ -41,7 +41,7 @@ lint:
     # single-dash flags), so every workflow change fails with a
     # "pinact/config-error". Stay on 4.x until
     # https://github.com/trunk-io/plugins/issues/1177 is fixed.
-    - pinact@5.0.2
+    - pinact@4.1.1
     - svgo@4.1.0
     - taplo@0.10.0
     - checkov@3.4.3
