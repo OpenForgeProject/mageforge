@@ -13,6 +13,7 @@ use Magento\Framework\Module\PackageInfo;
 use OpenForgeProject\MageForge\Model\Config\TemplateOverride as TemplateOverrideConfig;
 use OpenForgeProject\MageForge\Service\TemplateOverride\CommentStyle;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplateCopier;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -541,12 +542,7 @@ class TemplateCopierTest extends TestCase
         $this->assertStringNotContainsString('@override-for', $captured ?? '');
     }
 
-    /**
-     * @dataProvider formatToggleProvider
-     * @param string $sourcePath
-     * @param string $targetPath
-     * @param string $enableConfigPath
-     */
+    #[DataProvider('formatToggleProvider')]
     public function testSkipsHeaderWhenFormatToggleDisabled(
         string $sourcePath,
         string $targetPath,
@@ -602,12 +598,7 @@ class TemplateCopierTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider enabledFormatProvider
-     * @param string $sourcePath
-     * @param string $targetPath
-     * @param string $headerMarker
-     */
+    #[DataProvider('enabledFormatProvider')]
     public function testAddsHeaderForEachEnabledFileFormat(
         string $sourcePath,
         string $targetPath,
