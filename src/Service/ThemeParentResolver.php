@@ -67,6 +67,8 @@ class ThemeParentResolver
     }
 
     /**
+     * Check whether a theme path lies inside the Composer vendor directory.
+     *
      * @param string $path
      * @return bool
      */
