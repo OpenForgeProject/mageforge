@@ -50,10 +50,16 @@ bin/magento frontend:build Magento/luma Magento/blank
 
 - `themeCodes` — One or more theme codes in format `Vendor/theme`. Accepts wildcards like `Magento/*`.
 
+**Options:**
+
+- `--with-parents` — Build all parent themes first, without asking.
+- `--no-parents` — Never build parent themes (default in non-interactive environments).
+
 **Behavior:**
 
 - If no theme codes are provided, an interactive prompt lets you select themes.
 - For each theme, the appropriate builder is determined automatically (Hyvä, TailwindCSS, Magento Standard, etc.).
+- If a selected theme has parent themes (e.g. a child of `Vendor/base`), you are asked whether to build them first, topmost ancestor first. Parents are only offered if they have a builder.
 - Displays a summary of built themes and execution time.
 
 ---
@@ -74,9 +80,12 @@ bin/magento frontend:watch Magento/luma
 **Options:**
 
 - `-t, --theme=VALUE` — Alternative way to specify the theme code.
+- `--with-parents` — Build all parent themes once before watching, without asking.
+- `--no-parents` — Never build parent themes (default in non-interactive environments).
 
 **Behavior:**
 
+- For child themes, you are asked whether to build the parent themes once before the watcher starts. Only the selected theme is watched.
 - Runs indefinitely until interrupted (Ctrl+C).
 - Monitors source files (SCSS, JS, etc.) and triggers rebuilds on change.
 - Useful for active theme development.

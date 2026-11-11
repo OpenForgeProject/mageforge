@@ -10,6 +10,7 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -37,6 +38,10 @@ class BuildCommandTest extends TestCase
      */
     private $themeSuggester;
     /**
+     * @var ThemeParentResolver&MockObject
+     */
+    private $parentResolver;
+    /**
      * @var BuildCommand
      */
     private BuildCommand $command;
@@ -52,11 +57,13 @@ class BuildCommandTest extends TestCase
         $this->themeList = $this->createMock(ThemeList::class);
         $this->builderPool = $this->createMock(BuilderPool::class);
         $this->themeSuggester = $this->createMock(ThemeSuggester::class);
+        $this->parentResolver = $this->createMock(ThemeParentResolver::class);
         $this->command = new BuildCommand(
             $this->themePath,
             $this->themeList,
             $this->builderPool,
             $this->themeSuggester,
+            $this->parentResolver,
         );
     }
 
@@ -96,6 +103,48 @@ class BuildCommandTest extends TestCase
             (string) preg_replace('/\s+/', ' ', $display),
             'Duration must be a small positive number of seconds',
         );
+    }
+
+    public function testWithParentsBuildsParentsBeforeChild(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base', 'Vendor/video']);
+        $this->themePath->method('getPath')->willReturnCallback(static fn(string $code): string => '/p/' . $code);
+        $built = [];
+        $builder = $this->createNamedBuilder('tailwind');
+        $builder->method('build')->willReturnCallback(static function (string $code) use (&$built): bool {
+            $built[] = $code;
+            return true;
+        });
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(
+            ['themeCodes' => ['Vendor/child'], '--with-parents' => true],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $this->assertSame(['Vendor/base', 'Vendor/video', 'Vendor/child'], $built);
+    }
+
+    public function testNoParentsOptionSkipsParents(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base']);
+        $this->themePath->method('getPath')->willReturn('/p');
+        $built = [];
+        $builder = $this->createNamedBuilder('tailwind');
+        $builder->method('build')->willReturnCallback(static function (string $code) use (&$built): bool {
+            $built[] = $code;
+            return true;
+        });
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(
+            ['themeCodes' => ['Vendor/child'], '--no-parents' => true],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $this->assertSame(['Vendor/child'], $built);
     }
 
     public function testBuildsThemeNonVerboseWithProgressLine(): void
