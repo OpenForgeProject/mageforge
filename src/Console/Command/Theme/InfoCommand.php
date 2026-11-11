@@ -12,6 +12,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeInfoCollector;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,6 +33,7 @@ class InfoCommand extends AbstractCommand
      * @param ThemeSuggester $themeSuggester
      * @param Shell $shell
      * @param File $fileDriver
+     * @param ThemeInfoCollector $infoCollector
      */
     public function __construct(
         private readonly ThemeList $themeList,
@@ -40,6 +42,7 @@ class InfoCommand extends AbstractCommand
         private readonly ThemeSuggester $themeSuggester,
         private readonly Shell $shell,
         private readonly File $fileDriver,
+        private readonly ThemeInfoCollector $infoCollector,
     ) {
         parent::__construct();
     }
@@ -102,11 +105,15 @@ class InfoCommand extends AbstractCommand
             'title' => (string) $theme->getThemeTitle(),
             'area' => (string) $theme->getArea(),
             'path' => $path,
+            'composer' => $this->infoCollector->getComposerInfo($path),
             'parents' => $this->getParentChain($theme),
             'builder' => $builder?->getName(),
             'node' => $this->getNodeVersion(),
             'tailwind' => $this->getTailwindInfo($path),
             'node_modules' => $this->hasNodeModules($path),
+            'overrides' => $this->infoCollector->getOverrideCounts($path),
+            'hyva' => $builder?->getName() === 'HyvaThemes' ? $this->infoCollector->getHyvaInfo($path) : null,
+            'locales' => $this->infoCollector->getDeployedLocales((string) $theme->getArea(), $theme->getCode()),
         ];
 
         if ($asJson) {
@@ -175,6 +182,14 @@ class InfoCommand extends AbstractCommand
         $parents = $info['parents'];
         /** @var array{required: ?string, installed: ?string}|null $tailwind */
         $tailwind = $info['tailwind'];
+        /** @var array{package: ?string, version: ?string, source: string} $composer */
+        $composer = $info['composer'];
+        /** @var array{modules: int, templates: int, layouts: int, requirejs: int, webAssets: int} $overrides */
+        $overrides = $info['overrides'];
+        /** @var array{version: ?string, tailwindConfig: ?string, extensions: array<int, string>}|null $hyva */
+        $hyva = $info['hyva'];
+        /** @var string[] $locales */
+        $locales = $info['locales'];
         $none = '<fg=gray>-</>';
 
         $this->io->section('Theme: ' . $this->stringify($info['code']));
@@ -182,6 +197,11 @@ class InfoCommand extends AbstractCommand
             ['Title' => $info['title']],
             ['Area' => $info['area']],
             ['Path' => $info['path']],
+            [
+                'Composer' => $composer['package'] === null
+                    ? sprintf('%s (no composer.json)', $composer['source'])
+                    : sprintf('%s %s (%s)', $composer['package'], $composer['version'] ?? '?', $composer['source']),
+            ],
             ['Parent chain' => $parents === [] ? $none : implode(' → ', $parents)],
             ['Builder' => $info['builder'] ?? '<fg=red>none detected</>'],
             ['Node.js' => $info['node'] ?? '<fg=red>not found</>'],
@@ -195,7 +215,30 @@ class InfoCommand extends AbstractCommand
                     ),
             ],
             ['node_modules' => $info['node_modules'] ? 'present' : 'missing'],
+            [
+                'Overrides' => sprintf(
+                    '%d modules: %d templates, %d layouts, %d requirejs-config, %d web assets',
+                    $overrides['modules'],
+                    $overrides['templates'],
+                    $overrides['layouts'],
+                    $overrides['requirejs'],
+                    $overrides['webAssets'],
+                ),
+            ],
+            ['Deployed locales' => $locales === [] ? $none : implode(', ', $locales)],
         );
+
+        if ($hyva !== null) {
+            $this->io->definitionList(
+                ['Hyvä version' => $hyva['version'] ?? '?'],
+                ['Tailwind config' => $hyva['tailwindConfig'] ?? $none],
+                [
+                    'Extensions (hyva-themes.json)' => $hyva['extensions'] === []
+                        ? $none
+                        : implode(PHP_EOL, $hyva['extensions']),
+                ],
+            );
+        }
     }
 
     /**
