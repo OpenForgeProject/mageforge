@@ -172,6 +172,7 @@ hr {
   font-size: 1.15rem;
   text-decoration: none;
   min-height: 44px;
+  margin-right: auto;
 }
 .brand img {
   width: 32px;
@@ -213,6 +214,31 @@ hr {
 .search-trigger {
   border: 1px solid var(--border-strong);
   color: var(--muted);
+}
+.nav-toggle {
+  border: 1px solid var(--border-strong);
+  padding: 0 0.7rem;
+}
+.nav-toggle[hidden] {
+  display: none;
+}
+@media (max-width: 47.99rem) {
+  .nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .js-nav .nav:not(.is-open) {
+    display: none;
+  }
+  .nav a {
+    flex: 1 1 100%;
+  }
+}
+@media (min-width: 48rem) {
+  .nav-toggle {
+    display: none;
+  }
 }
 .search-trigger kbd {
   margin-left: 0.5rem;
@@ -280,12 +306,15 @@ hr {
 .hero-grid {
   display: grid;
   gap: 2.5rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
+}
+.hero-grid > * {
+  min-width: 0;
 }
 @media (min-width: 62rem) {
   .hero-grid {
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   }
 }
 .eyebrow {
@@ -683,12 +712,12 @@ dialog.search-dialog::backdrop {
 .split {
   display: grid;
   gap: 2rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
 }
 @media (min-width: 56rem) {
   .split {
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   }
 }
 .latest-strip {
@@ -823,11 +852,11 @@ dialog.search-dialog::backdrop {
 .up-cols {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 @media (min-width: 56rem) {
   .up-cols {
-    grid-template-columns: 1.3fr 1fr;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   }
 }
 .up-cols > div {
@@ -938,6 +967,7 @@ dialog.search-dialog::backdrop {
 }
 .install code {
   flex: 1;
+  min-width: 0;
   padding: 0.9rem 1rem;
   background: none;
   border: 0;
@@ -1282,6 +1312,7 @@ tr:last-child td {
   border: 1px solid rgb(229 98 42 / 0.45);
 }
 .callout a {
+  overflow-wrap: anywhere;
   font-family: var(--mono);
   font-weight: 700;
 }
@@ -1322,6 +1353,7 @@ tr:last-child td {
 }
 .timeline ul a {
   display: inline-block;
+  overflow-wrap: anywhere;
   padding: 0.3rem 0.7rem;
   min-height: 32px;
   border: 1px solid var(--border-strong);

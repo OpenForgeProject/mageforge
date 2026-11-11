@@ -4,6 +4,33 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+  /* ---------- Mobile navigation ---------- */
+  const navToggle = $("[data-nav-toggle]");
+  const siteNav = $("#site-nav");
+  if (navToggle && siteNav) {
+    navToggle.hidden = false;
+    const setNav = (open) => {
+      navToggle.setAttribute("aria-expanded", String(open));
+      siteNav.classList.toggle("is-open", open);
+    };
+    navToggle.addEventListener("click", () => {
+      const open = navToggle.getAttribute("aria-expanded") !== "true";
+      setNav(open);
+      // The menu precedes the button in the DOM, so move focus into it.
+      if (open) $("a", siteNav).focus();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && siteNav.classList.contains("is-open")) {
+        setNav(false);
+        navToggle.focus();
+      }
+    });
+    siteNav.addEventListener("click", (e) => {
+      if (e.target.closest("a")) setNav(false);
+    });
+    document.documentElement.classList.add("js-nav");
+  }
+
   /* ---------- Copy buttons ---------- */
   const announce = (msg) => {
     const live = $("#live-region");
@@ -129,7 +156,6 @@
     const input = $('input[type="search"]', root);
     const list = $('[role="listbox"]', root);
     const status = $("[data-search-status]", root);
-    const form = $("form", root);
     let active = -1;
     let generation = 0;
 
@@ -193,7 +219,7 @@
         setActive((active + 1) % n);
       } else if (e.key === "ArrowUp" && n) {
         e.preventDefault();
-        setActive((active - 1 + n) % n);
+        setActive(active < 0 ? n - 1 : (active - 1 + n) % n);
       } else if (e.key === "Enter" && active >= 0) {
         e.preventDefault();
         $("a", $$('[role="option"]', list)[active]).click();
@@ -206,9 +232,6 @@
       "click",
       (e) => !root.contains(e.target) && close(),
     );
-    form.addEventListener("submit", (e) => {
-      if (active >= 0) e.preventDefault();
-    });
   };
   $$("[data-search]").forEach(mountSearch);
 
@@ -225,6 +248,7 @@
       if (!q) {
         out.replaceChildren();
         status.textContent = "";
+        history.replaceState(null, "", location.pathname);
         return;
       }
       const items = await loadIndex();
