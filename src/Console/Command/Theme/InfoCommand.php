@@ -120,7 +120,7 @@ class InfoCommand extends AbstractCommand
             'tailwind' => $this->getTailwindInfo($path),
             'node_modules' => $this->hasNodeModules($path, $builder?->getName()),
             'overrides' => $this->infoCollector->getOverrideCounts($path),
-            'hyva' => $this->isHyvaTheme($theme, $path, $builder?->getName())
+            'hyva' => $this->isHyvaTheme($theme, $builder?->getName())
                 ? $this->infoCollector->getHyvaInfo($path)
                 : null,
             'locales' => $this->infoCollector->getDeployedLocales((string) $theme->getArea(), $theme->getCode()),
@@ -390,18 +390,13 @@ class InfoCommand extends AbstractCommand
      * are checked as well.
      *
      * @param ThemeInterface $theme
-     * @param string $themePath
      * @param string|null $builderName
      * @return bool
      */
-    private function isHyvaTheme(ThemeInterface $theme, string $themePath, ?string $builderName): bool
+    private function isHyvaTheme(ThemeInterface $theme, ?string $builderName): bool
     {
         if ($builderName === self::HYVA_BUILDER_NAME) {
             return true;
-        }
-
-        if (!$this->fileDriver->isDirectory($themePath . '/web/tailwind')) {
-            return false;
         }
 
         $parent = $theme->getParentTheme();
