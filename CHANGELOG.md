@@ -6,6 +6,30 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.30.0](https://github.com/OpenForgeProject/mageforge/compare/0.29.0...0.30.0) (2026-11-11)
+
+
+### Added
+
+* **Command:** add theme info command ([037465c](https://github.com/OpenForgeProject/mageforge/commit/037465c3163a6ef1320feb84ab8af253fb695680))
+* **Command:** offer to build parent themes for build and watch ([4aaeb20](https://github.com/OpenForgeProject/mageforge/commit/4aaeb20bce781eefdc81e8466c7964430a27540e))
+* **template:** add template:obsolete command to find unneeded them… ([6d346d3](https://github.com/OpenForgeProject/mageforge/commit/6d346d309dc66da4b7574fd4feba5a0406eedb99))
+* **template:** copy whole template directory with template:override ([df5a397](https://github.com/OpenForgeProject/mageforge/commit/df5a3978eb81d6f30c03443e15d032f5e7824cff))
+
+
+### Fixed
+
+* **ci:** pin pinact to 4.1.1 for Trunk compatibility ([6953959](https://github.com/OpenForgeProject/mageforge/commit/6953959189bc697394d75413810964e810d0f8fb))
+* **deps:** revert phpunit to ^11.5 for PHP 8.3 compatibility ([1056514](https://github.com/OpenForgeProject/mageforge/commit/1056514d3504b7ebe230624cf35249f7ac80c126))
+* Pin pinact to 4.1.1 for Trunk compatibility ([36300e9](https://github.com/OpenForgeProject/mageforge/commit/36300e9e54715f1c56d35b079277d5b80443f018))
+* **theme:** detect Hyvä ancestors without local tailwind setup in theme:info ([36a43ae](https://github.com/OpenForgeProject/mageforge/commit/36a43aecb05d52f5a7575310087e97f255fd9e77))
+
+
+### Documentation
+
+* align merge strategy section with squash policy ([020275c](https://github.com/OpenForgeProject/mageforge/commit/020275cb1de14ccf645bb46d59069e72708c13e2))
+* forbid emojis in commits and PR titles ([6a18fdd](https://github.com/OpenForgeProject/mageforge/commit/6a18fdd0ba865bbe0ee4ce6662bfa44baf836acf))
+
 ## [0.29.0](https://github.com/OpenForgeProject/mageforge/compare/0.28.0...0.29.0) (2026-11-06)
 
 
