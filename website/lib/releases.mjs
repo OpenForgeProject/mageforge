@@ -50,7 +50,7 @@ function cleanItem(raw) {
     (_, s, u) => {
       sha = { short: s, url: u };
       return "";
-    },
+    }
   );
   text = text.replace(/\s*\(\[#(\d+)\]\(([^)]+)\)\)/, (_, n, u) => {
     pr = { number: n, url: u };
@@ -61,7 +61,7 @@ function cleanItem(raw) {
     (_, u, n) => {
       pr = { number: n, url: u };
       return "";
-    },
+    }
   );
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 
@@ -72,7 +72,7 @@ function cleanItem(raw) {
     text = text.slice(scoped[0].length);
   }
   const conv = text.match(
-    /^(feat|fix|docs|refactor|chore|removed|perf|style|test|build|ci)(?:\(([\w-]+)\))?:\s*/i,
+    /^(feat|fix|docs|refactor|chore|removed|perf|style|test|build|ci)(?:\(([\w-]+)\))?:\s*/i
   );
   if (conv) {
     scope = scope || conv[2] || null;
@@ -133,7 +133,7 @@ export async function loadReleases({ cacheFile, changelogFile }) {
     raw = await fetchReleases(cacheFile);
   } catch (error) {
     console.warn(
-      `! GitHub releases unavailable (${error.message}); trying cache`,
+      `! GitHub releases unavailable (${error.message}); trying cache`
     );
     try {
       raw = JSON.parse(await readFile(cacheFile, "utf8"));
@@ -169,9 +169,11 @@ export function compareVersions(a, b) {
   return 0;
 }
 
-// Conventional commits on main that are not in a release yet.
-export async function loadUpcoming({ cacheFile, since }) {
-  if (!since) return [];
+const EXCLUDED_SCOPES = ["deps", "deps-dev", "ci", "test"];
+const COMMIT_PATTERN =
+  /^(feat|fix|perf)(?:\(([\w-]+)\))?!?:\s*(.+?)(?:\s*\(#(\d+)\))?$/i;
+
+async function fetchCommitSubjects(since) {
   const headers = {
     Accept: "application/vnd.github+json",
     "User-Agent": "mageforge-website",
@@ -179,47 +181,39 @@ export async function loadUpcoming({ cacheFile, since }) {
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let commits;
-  try {
-    let res;
-    for (const tag of [since, `v${since}`]) {
-      res = await fetch(
-        `https://api.github.com/repos/${REPO}/compare/${tag}...main`,
-        { headers, signal: AbortSignal.timeout(20000) },
-      );
-      if (res.ok) break;
-    }
-    if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
-    commits = (await res.json()).commits.map(
-      (c) => c.commit.message.split("\n")[0],
+  let res;
+  for (const tag of [since, `v${since}`]) {
+    res = await fetch(
+      `https://api.github.com/repos/${REPO}/compare/${tag}...main`,
+      { headers, signal: AbortSignal.timeout(20000) }
     );
-    await mkdir(dirname(cacheFile), { recursive: true });
-    await writeFile(cacheFile, JSON.stringify({ since, commits }));
-  } catch (err) {
-    console.warn(`! Upcoming features: ${err.message}; using cache if present`);
-    try {
-      // Only trust a cache that was compared against the current release.
-      const cached = JSON.parse(await readFile(cacheFile, "utf8"));
-      if (cached.since !== since || !Array.isArray(cached.commits)) return [];
-      commits = cached.commits;
-    } catch {
-      return [];
-    }
+    if (res.ok) break;
   }
+  if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
+  return (await res.json()).commits.map((c) => c.commit.message.split("\n")[0]);
+}
 
+// Only trust a cache that was compared against the current release.
+async function readCache(cacheFile, since) {
+  try {
+    const cached = JSON.parse(await readFile(cacheFile, "utf8"));
+    return cached.since === since && Array.isArray(cached.commits)
+      ? cached.commits
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseCommits(commits) {
   const seen = new Set();
   const items = [];
   for (const line of commits) {
-    const m = line
-      .replace(/^[^\p{L}\p{N}]+/u, "")
-      .match(
-        /^(feat|fix|perf)(?:\(([\w-]+)\))?!?:\s*(.+?)(?:\s*\(#(\d+)\))?$/i,
-      );
+    const m = line.replace(/^[^\p{L}\p{N}]+/u, "").match(COMMIT_PATTERN);
     if (!m) continue;
     const [, type, scope, text, pr] = m;
     const key = `${type}:${scope}:${text}`.toLowerCase();
-    if (seen.has(key) || ["deps", "deps-dev", "ci", "test"].includes(scope))
-      continue;
+    if (seen.has(key) || EXCLUDED_SCOPES.includes(scope)) continue;
     seen.add(key);
     items.push({
       type: type.toLowerCase(),
@@ -229,4 +223,20 @@ export async function loadUpcoming({ cacheFile, since }) {
     });
   }
   return items;
+}
+
+// Conventional commits on main that are not in a release yet.
+export async function loadUpcoming({ cacheFile, since }) {
+  if (!since) return [];
+  let commits;
+  try {
+    commits = await fetchCommitSubjects(since);
+    await mkdir(dirname(cacheFile), { recursive: true });
+    await writeFile(cacheFile, JSON.stringify({ since, commits }));
+  } catch (err) {
+    console.warn(`! Upcoming features: ${err.message}; using cache if present`);
+    commits = await readCache(cacheFile, since);
+    if (!commits) return [];
+  }
+  return parseCommits(commits);
 }
