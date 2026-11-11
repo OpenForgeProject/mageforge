@@ -135,7 +135,6 @@ for (let y = 0; y < 48; y++)
 
 // Logo, rasterised from the real SVG and thresholded into pixels
 const LH = 31;
-const LW = Math.round((LH * 352) / 399);
 const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="352" height="399" viewBox="0 0 352 399"><path fill="#fff" fill-rule="evenodd" d="${LOGO}"/></svg>`;
 const img = new Resvg(logoSvg, {
   fitTo: { mode: "height", value: LH },
