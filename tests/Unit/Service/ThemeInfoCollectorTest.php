@@ -53,7 +53,15 @@ class ThemeInfoCollectorTest extends TestCase
 
         $this->assertNull($info['package']);
         $this->assertNull($info['version']);
-        $this->assertSame('app/design', $info['source']);
+        $this->assertSame('local path', $info['source']);
+    }
+
+    public function testDetectsVendorAndAppDesignSources(): void
+    {
+        $collector = $this->createCollector();
+
+        $this->assertSame('vendor', $collector->getComposerInfo('/var/www/vendor/acme/theme')['source']);
+        $this->assertSame('app/design', $collector->getComposerInfo('/var/www/app/design/frontend/Acme/x')['source']);
     }
 
     public function testReadsPackageNameFromComposerJson(): void

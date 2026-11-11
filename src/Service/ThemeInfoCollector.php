@@ -48,7 +48,7 @@ class ThemeInfoCollector
     /**
      * Get the Composer package name and installed version of a theme.
      *
-     * Themes without a composer.json (e.g. in app/design) are reported as local.
+     * The source is "vendor", "app/design" or "local path" (e.g. a Composer path repository).
      *
      * @param string $themePath
      * @return array{package: ?string, version: ?string, source: string}
@@ -73,8 +73,23 @@ class ThemeInfoCollector
         return [
             'package' => $package,
             'version' => $version,
-            'source' => str_contains($themePath, '/vendor/') ? 'vendor' : 'app/design',
+            'source' => $this->detectSource($themePath),
         ];
+    }
+
+    /**
+     * Detect where a theme is installed from.
+     *
+     * @param string $themePath
+     * @return string
+     */
+    private function detectSource(string $themePath): string
+    {
+        return match (true) {
+            str_contains($themePath, '/vendor/') => 'vendor',
+            str_contains($themePath, '/app/design/') => 'app/design',
+            default => 'local path',
+        };
     }
 
     /**
