@@ -1312,6 +1312,7 @@ tr:last-child td {
   border: 1px solid rgb(229 98 42 / 0.45);
 }
 .callout a {
+  overflow-wrap: anywhere;
   font-family: var(--mono);
   font-weight: 700;
 }
@@ -1352,6 +1353,7 @@ tr:last-child td {
 }
 .timeline ul a {
   display: inline-block;
+  overflow-wrap: anywhere;
   padding: 0.3rem 0.7rem;
   min-height: 32px;
   border: 1px solid var(--border-strong);

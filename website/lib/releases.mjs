@@ -194,11 +194,14 @@ export async function loadUpcoming({ cacheFile, since }) {
       (c) => c.commit.message.split("\n")[0],
     );
     await mkdir(dirname(cacheFile), { recursive: true });
-    await writeFile(cacheFile, JSON.stringify(commits));
+    await writeFile(cacheFile, JSON.stringify({ since, commits }));
   } catch (err) {
     console.warn(`! Upcoming features: ${err.message}; using cache if present`);
     try {
-      commits = JSON.parse(await readFile(cacheFile, "utf8"));
+      // Only trust a cache that was compared against the current release.
+      const cached = JSON.parse(await readFile(cacheFile, "utf8"));
+      if (cached.since !== since || !Array.isArray(cached.commits)) return [];
+      commits = cached.commits;
     } catch {
       return [];
     }

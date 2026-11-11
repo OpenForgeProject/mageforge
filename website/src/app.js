@@ -153,7 +153,6 @@
     const input = $('input[type="search"]', root);
     const list = $('[role="listbox"]', root);
     const status = $("[data-search-status]", root);
-    const form = $("form", root);
     let active = -1;
     let generation = 0;
 
@@ -217,7 +216,7 @@
         setActive((active + 1) % n);
       } else if (e.key === "ArrowUp" && n) {
         e.preventDefault();
-        setActive((active - 1 + n) % n);
+        setActive(active < 0 ? n - 1 : (active - 1 + n) % n);
       } else if (e.key === "Enter" && active >= 0) {
         e.preventDefault();
         $("a", $$('[role="option"]', list)[active]).click();
@@ -230,9 +229,6 @@
       "click",
       (e) => !root.contains(e.target) && close(),
     );
-    form.addEventListener("submit", (e) => {
-      if (active >= 0) e.preventDefault();
-    });
   };
   $$("[data-search]").forEach(mountSearch);
 
@@ -249,6 +245,7 @@
       if (!q) {
         out.replaceChildren();
         status.textContent = "";
+        history.replaceState(null, "", location.pathname);
         return;
       }
       const items = await loadIndex();
