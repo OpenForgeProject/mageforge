@@ -59,7 +59,7 @@ bin/magento frontend:build Magento/luma Magento/blank
 
 - If no theme codes are provided, an interactive prompt lets you select themes.
 - For each theme, the appropriate builder is determined automatically (Hyvä, TailwindCSS, Magento Standard, etc.).
-- If a selected theme has parent themes (e.g. a child of `Vendor/base`), you are asked whether to build them first, topmost ancestor first. Parents are only offered if they have a builder.
+- If a selected theme has parent themes (e.g. a child of `Vendor/base`), you are asked whether to build them first, topmost ancestor first. Only parents with a builder are offered; vendor (Composer) themes are skipped.
 - Displays a summary of built themes and execution time.
 
 ---
