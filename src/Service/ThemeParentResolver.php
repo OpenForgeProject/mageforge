@@ -36,6 +36,24 @@ class ThemeParentResolver
      */
     public function getBuildableParents(string $themeCode): array
     {
+        $parents = [];
+        foreach ($this->getInheritanceChain($themeCode) as $ancestor) {
+            if ($ancestor['skipReason'] === null) {
+                array_unshift($parents, $ancestor['code']);
+            }
+        }
+
+        return $parents;
+    }
+
+    /**
+     * Get all ancestors of a theme, direct parent first, with the reason a build is skipped (if any).
+     *
+     * @param string $themeCode
+     * @return array<array{code: string, skipReason: ?string}>
+     */
+    public function getInheritanceChain(string $themeCode): array
+    {
         $theme = null;
         foreach ($this->themeList->getAllThemes() as $candidate) {
             if ($candidate->getCode() === $themeCode) {
@@ -44,7 +62,7 @@ class ThemeParentResolver
             }
         }
 
-        $parents = [];
+        $chain = [];
         $visited = [$themeCode => true];
         $parent = $theme?->getParentTheme();
 
@@ -56,14 +74,18 @@ class ThemeParentResolver
             $visited[$code] = true;
 
             $path = $this->themePath->getPath($code);
-            if ($path !== null && !$this->isVendorTheme($path) && $this->builderPool->getBuilder($path) !== null) {
-                array_unshift($parents, $code);
-            }
+            $skipReason = match (true) {
+                $path === null => 'not installed',
+                $this->isVendorTheme($path) => 'vendor',
+                $this->builderPool->getBuilder($path) === null => 'no builder',
+                default => null,
+            };
+            $chain[] = ['code' => $code, 'skipReason' => $skipReason];
 
             $parent = $parent->getParentTheme();
         }
 
-        return $parents;
+        return $chain;
     }
 
     /**

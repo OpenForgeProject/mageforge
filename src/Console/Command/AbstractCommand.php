@@ -223,6 +223,7 @@ abstract class AbstractCommand extends Command
      * @param OutputInterface $output
      * @param string $label
      * @param array<string> $parents
+     * @param array<string, array<array{code: string, skipReason: ?string}>> $chains Inheritance chains by theme
      * @return bool
      */
     protected function confirmParentThemes(
@@ -230,6 +231,7 @@ abstract class AbstractCommand extends Command
         OutputInterface $output,
         string $label,
         array $parents,
+        array $chains = [],
     ): bool {
         if ($parents === [] || $input->getOption('no-parents')) {
             return false;
@@ -243,10 +245,14 @@ abstract class AbstractCommand extends Command
             return false;
         }
 
+        foreach ($chains as $themeCode => $chain) {
+            $this->renderInheritanceTree((string) $themeCode, $chain);
+        }
+
         $this->setPromptEnvironment();
         try {
             $confirmed = (new ConfirmPrompt(
-                label: sprintf('%s has parent theme(s): %s. Build them first?', $label, implode(', ', $parents)),
+                label: sprintf('Build parent theme(s) of %s first? (%s)', $label, implode(' → ', $parents)),
                 default: true,
             ))->prompt();
             \Laravel\Prompts\Prompt::terminal()->restoreTty();
@@ -257,6 +263,34 @@ abstract class AbstractCommand extends Command
         }
 
         return $confirmed === true;
+    }
+
+    /**
+     * Render a theme and its ancestors as an indented tree, child on top.
+     *
+     * @param string $themeCode
+     * @param array<array{code: string, skipReason: ?string}> $chain Direct parent first
+     * @return void
+     */
+    protected function renderInheritanceTree(string $themeCode, array $chain): void
+    {
+        $this->io->newLine();
+        $this->io->writeln(sprintf('  <fg=cyan;options=bold>%s</> <fg=gray>(selected)</>', $themeCode));
+
+        foreach ($chain as $level => $ancestor) {
+            $indent = str_repeat('   ', $level);
+            $status = $ancestor['skipReason'] === null
+                ? '<fg=green>will be built</>'
+                : sprintf('<fg=gray>skipped: %s</>', $ancestor['skipReason']);
+            $this->io->writeln(sprintf(
+                '  %s└─ <fg=yellow>%s</> <fg=gray>(parent)</> · %s',
+                $indent,
+                $ancestor['code'],
+                $status,
+            ));
+        }
+
+        $this->io->newLine();
     }
 
     /**

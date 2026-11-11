@@ -74,6 +74,13 @@ class ThemeParentResolverTest extends TestCase
         $resolver = new ThemeParentResolver($themeList, $themePath, $builderPool);
 
         $this->assertSame(['App/base'], $resolver->getBuildableParents('App/child'));
+        $this->assertSame(
+            [
+                ['code' => 'Hyva/default', 'skipReason' => 'vendor'],
+                ['code' => 'App/base', 'skipReason' => null],
+            ],
+            $resolver->getInheritanceChain('App/child'),
+        );
     }
 
     private function theme(string $code, ?ThemeInterface $parent): ThemeInterface

@@ -165,10 +165,14 @@ class BuildCommand extends AbstractCommand
     private function expandWithParents(InputInterface $input, OutputInterface $output, array $themeCodes): array
     {
         $parentsByTheme = [];
+        $chains = [];
         $missing = [];
         foreach ($themeCodes as $themeCode) {
             $parents = $this->parentResolver->getBuildableParents($themeCode);
             $parentsByTheme[$themeCode] = $parents;
+            if ($parents !== []) {
+                $chains[$themeCode] = $this->parentResolver->getInheritanceChain($themeCode);
+            }
             foreach ($parents as $parent) {
                 if (!in_array($parent, $themeCodes, true)) {
                     $missing[$parent] = true;
@@ -181,6 +185,7 @@ class BuildCommand extends AbstractCommand
             $output,
             count($themeCodes) === 1 ? $themeCodes[array_key_first($themeCodes)] : 'Selected themes',
             array_keys($missing),
+            $chains,
         );
 
         $result = [];

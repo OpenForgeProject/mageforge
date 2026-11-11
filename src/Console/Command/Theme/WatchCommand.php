@@ -126,7 +126,9 @@ class WatchCommand extends AbstractCommand
         }
 
         $parents = $this->parentResolver->getBuildableParents($themeCode);
-        if ($this->confirmParentThemes($input, $output, $themeCode, $parents)) {
+        if ($this->confirmParentThemes($input, $output, $themeCode, $parents, [
+            $themeCode => $this->parentResolver->getInheritanceChain($themeCode),
+        ])) {
             foreach ($parents as $parent) {
                 if (!$this->buildParent($parent, $output, $isVerbose)) {
                     return self::FAILURE;
