@@ -280,12 +280,15 @@ hr {
 .hero-grid {
   display: grid;
   gap: 2.5rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
+}
+.hero-grid > * {
+  min-width: 0;
 }
 @media (min-width: 62rem) {
   .hero-grid {
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   }
 }
 .eyebrow {
@@ -683,12 +686,12 @@ dialog.search-dialog::backdrop {
 .split {
   display: grid;
   gap: 2rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
 }
 @media (min-width: 56rem) {
   .split {
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   }
 }
 .latest-strip {
@@ -823,11 +826,11 @@ dialog.search-dialog::backdrop {
 .up-cols {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 @media (min-width: 56rem) {
   .up-cols {
-    grid-template-columns: 1.3fr 1fr;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   }
 }
 .up-cols > div {
@@ -938,6 +941,7 @@ dialog.search-dialog::backdrop {
 }
 .install code {
   flex: 1;
+  min-width: 0;
   padding: 0.9rem 1rem;
   background: none;
   border: 0;
