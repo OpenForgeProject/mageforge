@@ -24,9 +24,9 @@ class ThemeParentResolverTest extends TestCase
         $themeList->method('getAllThemes')->willReturn([$base, $video, $child]);
 
         $themePath = $this->createMock(ThemePath::class);
-        $themePath->method('getPath')->willReturnCallback(
-            static fn(string $code): ?string => $code === 'Vendor/video' ? null : '/path/' . $code,
-        );
+        $themePath->method('getPath')->willReturnCallback(static fn(string $code): ?string => $code === 'Vendor/video'
+            ? null
+            : '/path/' . $code);
 
         $builderPool = $this->createMock(BuilderPool::class);
         $builderPool->method('getBuilder')->willReturn($this->createMock(BuilderInterface::class));
@@ -54,6 +54,26 @@ class ThemeParentResolverTest extends TestCase
         $resolver = new ThemeParentResolver($themeList, $themePath, $builderPool);
 
         $this->assertSame(['Vendor/base', 'Vendor/video'], $resolver->getBuildableParents('Vendor/child'));
+    }
+
+    public function testSkipsVendorThemes(): void
+    {
+        $base = $this->theme('App/base', null);
+        $vendor = $this->theme('Hyva/default', $base);
+        $child = $this->theme('App/child', $vendor);
+
+        $themeList = $this->createMock(ThemeList::class);
+        $themeList->method('getAllThemes')->willReturn([$child]);
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->method('getPath')->willReturnCallback(static fn(string $code): string => $code === 'Hyva/default'
+            ? '/var/www/html/vendor/hyva-themes/default-theme'
+            : '/var/www/html/app/design/frontend/' . $code);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->method('getBuilder')->willReturn($this->createMock(BuilderInterface::class));
+
+        $resolver = new ThemeParentResolver($themeList, $themePath, $builderPool);
+
+        $this->assertSame(['App/base'], $resolver->getBuildableParents('App/child'));
     }
 
     private function theme(string $code, ?ThemeInterface $parent): ThemeInterface

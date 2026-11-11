@@ -28,7 +28,8 @@ class ThemeParentResolver
     /**
      * Get the codes of all parent themes that can be built, topmost ancestor first.
      *
-     * Ancestors without a registered path or a matching builder are skipped.
+     * Ancestors without a registered path or a matching builder are skipped, as are
+     * vendor (Composer) themes, which are not meant to be built directly.
      *
      * @param string $themeCode
      * @return array<string>
@@ -55,7 +56,7 @@ class ThemeParentResolver
             $visited[$code] = true;
 
             $path = $this->themePath->getPath($code);
-            if ($path !== null && $this->builderPool->getBuilder($path) !== null) {
+            if ($path !== null && !$this->isVendorTheme($path) && $this->builderPool->getBuilder($path) !== null) {
                 array_unshift($parents, $code);
             }
 
@@ -63,5 +64,14 @@ class ThemeParentResolver
         }
 
         return $parents;
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    private function isVendorTheme(string $path): bool
+    {
+        return str_contains(str_replace('\\', '/', $path), '/vendor/');
     }
 }
