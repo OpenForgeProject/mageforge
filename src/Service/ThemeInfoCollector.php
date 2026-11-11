@@ -169,7 +169,8 @@ class ThemeInfoCollector
         }
 
         $locales = [];
-        foreach ($staticDirectory->read($themeDir) as $path) {
+        foreach ($staticDirectory->read($themeDir) as $entry) {
+            $path = (string) $entry;
             if ($staticDirectory->isDirectory($path)) {
                 $locales[] = substr($path, (int) strrpos($path, '/') + 1);
             }

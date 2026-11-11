@@ -111,7 +111,7 @@ class InfoCommand extends AbstractCommand
         $info = [
             'code' => $theme->getCode(),
             'title' => $theme instanceof DataObject ? $this->stringify($theme->getData('theme_title')) : '',
-            'area' => (string) $theme->getArea(),
+            'area' => $theme->getArea(),
             'path' => $path,
             'composer' => $this->infoCollector->getComposerInfo($path),
             'parents' => $this->getParentChain($theme),
@@ -123,7 +123,7 @@ class InfoCommand extends AbstractCommand
             'hyva' => $this->isHyvaTheme($theme, $builder?->getName())
                 ? $this->infoCollector->getHyvaInfo($path)
                 : null,
-            'locales' => $this->infoCollector->getDeployedLocales((string) $theme->getArea(), $theme->getCode()),
+            'locales' => $this->infoCollector->getDeployedLocales($theme->getArea(), $theme->getCode()),
         ];
 
         if ($asJson) {
@@ -146,7 +146,7 @@ class InfoCommand extends AbstractCommand
     private function selectThemeInteractively(InputInterface $input, OutputInterface $output): ?string
     {
         $options = array_values(array_map(
-            static fn(ThemeInterface $theme) => (string) $theme->getCode(),
+            static fn(ThemeInterface $theme) => $theme->getCode(),
             $this->themeList->getAllThemes(),
         ));
 
@@ -292,7 +292,7 @@ class InfoCommand extends AbstractCommand
         $parent = $theme->getParentTheme();
 
         while ($parent !== null && count($chain) < self::MAX_PARENT_DEPTH) {
-            $chain[] = (string) $parent->getCode();
+            $chain[] = $parent->getCode();
             $parent = $parent->getParentTheme();
         }
 
@@ -401,7 +401,7 @@ class InfoCommand extends AbstractCommand
 
         $parent = $theme->getParentTheme();
         for ($depth = 0; $parent !== null && $depth < self::MAX_PARENT_DEPTH; $depth++) {
-            if (str_starts_with((string) $parent->getCode(), self::HYVA_THEME_PREFIX)) {
+            if (str_starts_with($parent->getCode(), self::HYVA_THEME_PREFIX)) {
                 return true;
             }
             $parent = $parent->getParentTheme();
@@ -424,6 +424,15 @@ class InfoCommand extends AbstractCommand
 
         $data = json_decode($this->fileDriver->fileGetContents($file), true);
 
-        return is_array($data) ? $data : [];
+        if (!is_array($data)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($data as $key => $value) {
+            $result[(string) $key] = $value;
+        }
+
+        return $result;
     }
 }
