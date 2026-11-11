@@ -214,6 +214,34 @@ hr {
   border: 1px solid var(--border-strong);
   color: var(--muted);
 }
+.nav-toggle {
+  border: 1px solid var(--border-strong);
+  padding: 0 0.7rem;
+}
+.nav-toggle[hidden] {
+  display: none;
+}
+.brand {
+  margin-right: auto;
+}
+@media (max-width: 47.99rem) {
+  .nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .js-nav .nav:not(.is-open) {
+    display: none;
+  }
+  .nav a {
+    flex: 1 1 100%;
+  }
+}
+@media (min-width: 48rem) {
+  .nav-toggle {
+    display: none;
+  }
+}
 .search-trigger kbd {
   margin-left: 0.5rem;
 }

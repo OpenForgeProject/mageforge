@@ -4,6 +4,30 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+  /* ---------- Mobile navigation ---------- */
+  const navToggle = $("[data-nav-toggle]");
+  const siteNav = $("#site-nav");
+  if (navToggle && siteNav) {
+    navToggle.hidden = false;
+    const setNav = (open) => {
+      navToggle.setAttribute("aria-expanded", String(open));
+      siteNav.classList.toggle("is-open", open);
+    };
+    navToggle.addEventListener("click", () =>
+      setNav(navToggle.getAttribute("aria-expanded") !== "true"),
+    );
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && siteNav.classList.contains("is-open")) {
+        setNav(false);
+        navToggle.focus();
+      }
+    });
+    siteNav.addEventListener("click", (e) => {
+      if (e.target.closest("a")) setNav(false);
+    });
+    document.documentElement.classList.add("js-nav");
+  }
+
   /* ---------- Copy buttons ---------- */
   const announce = (msg) => {
     const live = $("#live-region");
