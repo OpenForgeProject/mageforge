@@ -194,7 +194,6 @@ hr {
   border-radius: 10px;
   color: var(--text);
   text-decoration: none;
-  font-weight: 600;
   background: none;
   border: 0;
   cursor: pointer;
@@ -228,7 +227,6 @@ hr {
   min-height: 48px;
   padding: 0 1.4rem;
   border-radius: 12px;
-  font-weight: 700;
   text-decoration: none;
   border: 2px solid transparent;
   cursor: pointer;
