@@ -10,6 +10,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -28,12 +29,14 @@ class BuildCommand extends AbstractCommand
      * @param ThemeList $themeList
      * @param BuilderPool $builderPool
      * @param ThemeSuggester $themeSuggester
+     * @param ThemeParentResolver $parentResolver
      */
     public function __construct(
         private readonly ThemePath $themePath,
         private readonly ThemeList $themeList,
         private readonly BuilderPool $builderPool,
         private readonly ThemeSuggester $themeSuggester,
+        private readonly ThemeParentResolver $parentResolver,
     ) {
         parent::__construct();
     }
@@ -54,6 +57,7 @@ class BuildCommand extends AbstractCommand
                 'Theme codes to build (format: Vendor/theme, Vendor, ...)',
             )
             ->setAliases(['frontend:build']);
+        $this->addParentThemeOptions();
     }
 
     /**
@@ -128,7 +132,73 @@ class BuildCommand extends AbstractCommand
             }
         }
 
-        return $this->processBuildThemes($themeCodes, $this->io, $output, $isVerbose);
+        // Correct theme names first so parents are resolved for the final theme codes
+        $validatedCodes = [];
+        $invalidCount = 0;
+        foreach ($themeCodes as $themeCode) {
+            $validated = $this->validateAndCorrectTheme($themeCode, $this->io, $output);
+            if ($validated === null) {
+                $invalidCount++;
+                continue;
+            }
+            $validatedCodes[] = $validated;
+        }
+
+        if ($validatedCodes === []) {
+            return Command::FAILURE;
+        }
+
+        $validatedCodes = $this->expandWithParents($input, $output, $validatedCodes);
+        $result = $this->processBuildThemes($validatedCodes, $this->io, $output, $isVerbose);
+
+        return $invalidCount > 0 ? Command::FAILURE : $result;
+    }
+
+    /**
+     * Prepend the parent themes of the selected themes, topmost ancestor first, without duplicates.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @param array<string> $themeCodes
+     * @return array<string>
+     */
+    private function expandWithParents(InputInterface $input, OutputInterface $output, array $themeCodes): array
+    {
+        $parentsByTheme = [];
+        $chains = [];
+        $missing = [];
+        foreach ($themeCodes as $themeCode) {
+            $parents = $this->parentResolver->getBuildableParents($themeCode);
+            $parentsByTheme[$themeCode] = $parents;
+            if ($parents !== []) {
+                $chains[$themeCode] = $this->parentResolver->getInheritanceChain($themeCode);
+            }
+            foreach ($parents as $parent) {
+                if (!in_array($parent, $themeCodes, true)) {
+                    $missing[$parent] = true;
+                }
+            }
+        }
+
+        $includeMissing = $this->confirmParentThemes(
+            $input,
+            $output,
+            count($themeCodes) === 1 ? $themeCodes[array_key_first($themeCodes)] : 'Selected themes',
+            array_keys($missing),
+            $chains,
+        );
+
+        $result = [];
+        foreach ($themeCodes as $themeCode) {
+            foreach ($parentsByTheme[$themeCode] as $parent) {
+                if (in_array($parent, $themeCodes, true) || $includeMissing) {
+                    $result[$parent] = true;
+                }
+            }
+            $result[$themeCode] = true;
+        }
+
+        return array_map('strval', array_keys($result));
     }
 
     /**

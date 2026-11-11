@@ -9,6 +9,7 @@ use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,12 +26,14 @@ class WatchCommand extends AbstractCommand
      * @param ThemeList $themeList
      * @param ThemePath $themePath
      * @param ThemeSuggester $themeSuggester
+     * @param ThemeParentResolver $parentResolver
      */
     public function __construct(
         private readonly BuilderPool $builderPool,
         private readonly ThemeList $themeList,
         private readonly ThemePath $themePath,
         private readonly ThemeSuggester $themeSuggester,
+        private readonly ThemeParentResolver $parentResolver,
     ) {
         parent::__construct();
     }
@@ -48,6 +51,7 @@ class WatchCommand extends AbstractCommand
             ->addArgument('themeCode', InputArgument::OPTIONAL, 'Theme to watch (format: Vendor/theme)')
             ->addOption('theme', 't', InputOption::VALUE_OPTIONAL, 'Theme to watch (format: Vendor/theme)')
             ->setAliases(['frontend:watch']);
+        $this->addParentThemeOptions();
     }
 
     /**
@@ -121,6 +125,47 @@ class WatchCommand extends AbstractCommand
             return self::FAILURE;
         }
 
+        $parents = $this->parentResolver->getBuildableParents($themeCode);
+        if ($this->confirmParentThemes($input, $output, $themeCode, $parents, [
+            $themeCode => $this->parentResolver->getInheritanceChain($themeCode),
+        ])) {
+            foreach ($parents as $parent) {
+                if (!$this->buildParent($parent, $output, $isVerbose)) {
+                    return self::FAILURE;
+                }
+            }
+        }
+
         return $builder->watch($themeCode, $themePath, $this->io, $output, $isVerbose) ? self::SUCCESS : self::FAILURE;
+    }
+
+    /**
+     * Build a parent theme once before watching its child.
+     *
+     * @param string $parentCode
+     * @param OutputInterface $output
+     * @param bool $isVerbose
+     * @return bool
+     */
+    private function buildParent(string $parentCode, OutputInterface $output, bool $isVerbose): bool
+    {
+        $parentPath = $this->themePath->getPath($parentCode);
+        $parentBuilder = $parentPath === null ? null : $this->builderPool->getBuilder($parentPath);
+        if ($parentPath === null || $parentBuilder === null) {
+            $this->io->error("Cannot build parent theme $parentCode.");
+            return false;
+        }
+
+        $this->io->section(sprintf(
+            'Building parent theme %s using %s builder',
+            $parentCode,
+            $parentBuilder->getName(),
+        ));
+        if (!$parentBuilder->build($parentCode, $parentPath, $this->io, $output, $isVerbose)) {
+            $this->io->error("Failed to build parent theme $parentCode.");
+            return false;
+        }
+
+        return true;
     }
 }

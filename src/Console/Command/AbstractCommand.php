@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Console\Command;
 
+use Laravel\Prompts\ConfirmPrompt;
 use Laravel\Prompts\SelectPrompt;
 use Magento\Framework\Console\Cli;
+use OpenForgeProject\MageForge\Model\ThemeAncestor;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -194,6 +197,101 @@ abstract class AbstractCommand extends Command
             $this->io->error('Selection failed: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Register the --with-parents / --no-parents options
+     *
+     * @return void
+     */
+    protected function addParentThemeOptions(): void
+    {
+        $this->addOption(
+            'with-parents',
+            null,
+            InputOption::VALUE_NONE,
+            'Also build all parent themes first',
+        )->addOption('no-parents', null, InputOption::VALUE_NONE, 'Never build parent themes (skips the prompt)');
+    }
+
+    /**
+     * Decide whether the given parent themes should be built as well.
+     *
+     * Explicit options win; otherwise the user is asked in interactive terminals
+     * and parents are skipped in non-interactive environments.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @param string $label
+     * @param array<string> $parents
+     * @param array<array<ThemeAncestor>> $chains
+     * @return bool
+     */
+    protected function confirmParentThemes(
+        InputInterface $input,
+        OutputInterface $output,
+        string $label,
+        array $parents,
+        array $chains = [],
+    ): bool {
+        if ($parents === [] || $input->getOption('no-parents')) {
+            return false;
+        }
+
+        if ($input->getOption('with-parents')) {
+            return true;
+        }
+
+        if (!$input->isInteractive() || !$this->isInteractiveTerminal($output)) {
+            return false;
+        }
+
+        foreach ($chains as $themeCode => $chain) {
+            $this->renderInheritanceTree((string) $themeCode, $chain);
+        }
+
+        $this->setPromptEnvironment();
+        try {
+            $confirmed = (new ConfirmPrompt(
+                label: sprintf('Build parent theme(s) of %s first? (%s)', $label, implode(' → ', $parents)),
+                default: true,
+            ))->prompt();
+            \Laravel\Prompts\Prompt::terminal()->restoreTty();
+        } catch (\Exception) {
+            $confirmed = false;
+        } finally {
+            $this->resetPromptEnvironment();
+        }
+
+        return $confirmed === true;
+    }
+
+    /**
+     * Render a theme and its ancestors as an indented tree, child on top.
+     *
+     * @param string $themeCode
+     * @param array<ThemeAncestor> $chain
+     * @return void
+     */
+    protected function renderInheritanceTree(string $themeCode, array $chain): void
+    {
+        $this->io->newLine();
+        $this->io->writeln(sprintf('  <fg=cyan;options=bold>%s</> <fg=gray>(selected)</>', $themeCode));
+
+        foreach (array_values($chain) as $level => $ancestor) {
+            $indent = str_repeat('   ', $level);
+            $status = $ancestor->skipReason === null
+                ? '<fg=green>will be built</>'
+                : sprintf('<fg=gray>skipped: %s</>', $ancestor->skipReason);
+            $this->io->writeln(sprintf(
+                '  %s└─ <fg=yellow>%s</> <fg=gray>(parent)</> · %s',
+                $indent,
+                $ancestor->code,
+                $status,
+            ));
+        }
+
+        $this->io->newLine();
     }
 
     /**
