@@ -1,0 +1,54 @@
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - website/**
+      - docs/**
+      - README.md
+      - CHANGELOG.md
+  release:
+    types: [published]
+  schedule:
+    - cron: 17 */6 * * *
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Prepare SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Build and deploy
+        working-directory: website
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          BASE_PATH: ${{ vars.BASE_PATH }}
+          DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
+          DEPLOY_SSH_OPTS: -i ~/.ssh/deploy_key
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./deploy.sh
