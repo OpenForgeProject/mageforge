@@ -13,9 +13,12 @@
       navToggle.setAttribute("aria-expanded", String(open));
       siteNav.classList.toggle("is-open", open);
     };
-    navToggle.addEventListener("click", () =>
-      setNav(navToggle.getAttribute("aria-expanded") !== "true"),
-    );
+    navToggle.addEventListener("click", () => {
+      const open = navToggle.getAttribute("aria-expanded") !== "true";
+      setNav(open);
+      // The menu precedes the button in the DOM, so move focus into it.
+      if (open) $("a", siteNav).focus();
+    });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && siteNav.classList.contains("is-open")) {
         setNav(false);
