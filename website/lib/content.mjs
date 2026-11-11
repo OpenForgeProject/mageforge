@@ -12,10 +12,11 @@ export const escapeHtml = (s) =>
       ],
   );
 
+// Drops tags, then any stray angle brackets so no markup can survive.
+const stripTags = (s) => s.replace(/<[^>]+>/g, "").replace(/[<>]/g, "");
+
 export const slugify = (s) =>
-  s
-    .toLowerCase()
-    .replace(/<[^>]+>/g, "")
+  stripTags(s.toLowerCase())
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "");
 
@@ -117,7 +118,7 @@ export function extractToc(html) {
   ].map((m) => ({
     level: Number(m[1]),
     id: m[2],
-    text: m[3].replace(/<[^>]+>/g, ""),
+    text: stripTags(m[3]),
   }));
 }
 
