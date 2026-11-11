@@ -50,7 +50,7 @@ function cleanItem(raw) {
     (_, s, u) => {
       sha = { short: s, url: u };
       return "";
-    }
+    },
   );
   text = text.replace(/\s*\(\[#(\d+)\]\(([^)]+)\)\)/, (_, n, u) => {
     pr = { number: n, url: u };
@@ -61,7 +61,7 @@ function cleanItem(raw) {
     (_, u, n) => {
       pr = { number: n, url: u };
       return "";
-    }
+    },
   );
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 
@@ -72,7 +72,7 @@ function cleanItem(raw) {
     text = text.slice(scoped[0].length);
   }
   const conv = text.match(
-    /^(feat|fix|docs|refactor|chore|removed|perf|style|test|build|ci)(?:\(([\w-]+)\))?:\s*/i
+    /^(feat|fix|docs|refactor|chore|removed|perf|style|test|build|ci)(?:\(([\w-]+)\))?:\s*/i,
   );
   if (conv) {
     scope = scope || conv[2] || null;
@@ -133,7 +133,7 @@ export async function loadReleases({ cacheFile, changelogFile }) {
     raw = await fetchReleases(cacheFile);
   } catch (error) {
     console.warn(
-      `! GitHub releases unavailable (${error.message}); trying cache`
+      `! GitHub releases unavailable (${error.message}); trying cache`,
     );
     try {
       raw = JSON.parse(await readFile(cacheFile, "utf8"));
@@ -185,7 +185,7 @@ async function fetchCommitSubjects(since) {
   for (const tag of [since, `v${since}`]) {
     res = await fetch(
       `https://api.github.com/repos/${REPO}/compare/${tag}...main`,
-      { headers, signal: AbortSignal.timeout(20000) }
+      { headers, signal: AbortSignal.timeout(20000) },
     );
     if (res.ok) break;
   }
