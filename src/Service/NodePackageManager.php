@@ -234,16 +234,22 @@ class NodePackageManager
      */
     public function checkOutdatedPackages(string $path, SymfonyStyle $io): void
     {
-        try {
-            $outdated = $this->shell->execute('cd %s && npm outdated --json', [$path]);
-            if ($outdated) {
-                $io->warning('Outdated packages found:');
-                $io->writeln($outdated);
-            }
-        } catch (\Exception $e) {
+        $outdated = $this->getOutdatedPackages($path);
+
+        if ($outdated === null) {
             if ($io->isVerbose()) {
-                $io->warning('Failed to check outdated packages: ' . $e->getMessage());
+                $io->warning('Failed to check outdated packages.');
             }
+            return;
+        }
+
+        if ($outdated === []) {
+            return;
+        }
+
+        $io->warning('Outdated packages found:');
+        foreach ($outdated as $package) {
+            $io->writeln(sprintf('  %s: %s -> %s', $package['name'], $package['current'], $package['latest']));
         }
     }
 

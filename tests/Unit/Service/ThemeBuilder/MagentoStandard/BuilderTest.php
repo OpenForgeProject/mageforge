@@ -593,18 +593,13 @@ class BuilderTest extends TestCase
 
     public function testAutoRepairChecksOutdatedPackagesInVerboseMode(): void
     {
-        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $nodePackageManager->expects($this->once())->method('checkOutdatedPackages')->with('/magento-root', $this->io);
+        $this->shell->method('execute')->willReturn('');
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
-        $executedCommands = [];
-        $this->shell
-            ->method('execute')
-            ->willReturnCallback(function (string $command) use (&$executedCommands): string {
-                $executedCommands[] = $command;
-                return '';
-            });
-
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
-        $this->assertSame(['which grunt', 'npm outdated --json'], $executedCommands);
+        $this->assertTrue($builder->autoRepair($this->themePath, $this->io, $this->output, true));
     }
 
     public function testInstallsGruntWithExactMessagesWhenMissing(): void

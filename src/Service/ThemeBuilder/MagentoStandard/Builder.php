@@ -176,7 +176,7 @@ class Builder implements BuilderInterface
 
         // Check for outdated packages
         if ($isVerbose) {
-            $this->checkOutdatedPackages($io);
+            $this->nodePackageManager->checkOutdatedPackages($rootPath, $io);
         }
 
         return true;
@@ -210,27 +210,6 @@ class Builder implements BuilderInterface
             } catch (\Exception $e) {
                 $io->error('Failed to install grunt: ' . $e->getMessage());
                 return false;
-            }
-        }
-    }
-
-    /**
-     * Check for outdated packages and report them
-     *
-     * @param SymfonyStyle $io
-     * @return void
-     */
-    private function checkOutdatedPackages(SymfonyStyle $io): void
-    {
-        try {
-            $outdated = $this->shell->execute('npm outdated --json');
-            if ($outdated) {
-                $io->warning('Outdated packages found:');
-                $io->writeln($outdated);
-            }
-        } catch (\Exception $e) {
-            if ($io->isVerbose()) {
-                $io->warning('Failed to check outdated packages: ' . $e->getMessage());
             }
         }
     }
