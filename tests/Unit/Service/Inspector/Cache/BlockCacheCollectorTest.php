@@ -35,10 +35,10 @@ class BlockCacheCollectorTest extends TestCase
      */
     private function createBlock(): AbstractBlock&Stub
     {
-        return $this->getStubBuilder(AbstractBlock::class)
+        return $this->getMockBuilder(AbstractBlock::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['isScopePrivate', 'getCacheKey'])
-            ->getStub();
+            ->getMock();
     }
 
     public function testGetCacheInfoReturnsNotCacheableWhenLifetimeIsFalse(): void

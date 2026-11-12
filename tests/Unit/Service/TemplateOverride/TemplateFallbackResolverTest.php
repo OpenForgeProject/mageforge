@@ -340,8 +340,8 @@ class TemplateFallbackResolverTest extends TestCase
             ->method('isFile')
             ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
 
-        $resolver = $this->createResolver(fileDriver: $fileDriver);
-        $files = $resolver->findDirectoryFiles(['/missing', '/module/templates'], '');
+        $files = $this->createResolver(fileDriver: $fileDriver)
+            ->findDirectoryFiles(['/missing', '/module/templates'], '');
 
         $this->assertSame(
             ['b.phtml' => '/module/templates/b.phtml', 'z.phtml' => '/module/templates/z.phtml'],
