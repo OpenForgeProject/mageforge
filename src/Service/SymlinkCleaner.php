@@ -50,12 +50,18 @@ class SymlinkCleaner
                 return true;
             }
 
+            $realCssPath = $this->fileDriver->getRealPath($cssPath);
+            if (!is_string($realCssPath)) {
+                return true;
+            }
+            $realCssPath = rtrim($realCssPath, '/');
+
             $items = $this->fileDriver->readDirectory($cssPath);
             $deletedCount = 0;
 
             foreach ($items as $item) {
                 // Check if item is a symlink
-                if ($this->isSymlink($item)) {
+                if ($this->isSymlink($item, $realCssPath)) {
                     $this->fileDriver->deleteFile($item);
                     $deletedCount++;
 
@@ -81,20 +87,29 @@ class SymlinkCleaner
     }
 
     /**
-     * Check if a path is a symlink using stat info.
+     * Check if a directory entry is a symlink by comparing its resolved path with its expected location.
+     *
+     * The file driver offers no lstat(), and stat() follows links, so the file mode cannot be used.
+     * An entry whose real path differs from "<real directory>/<name>" (or cannot be resolved,
+     * i.e. a broken link) is a symlink.
      *
      * @param string $path
+     * @param string $realDirectory Resolved path of the directory containing the entry
      * @return bool
      */
-    private function isSymlink(string $path): bool
+    private function isSymlink(string $path, string $realDirectory): bool
     {
         try {
-            $stat = $this->fileDriver->stat($path);
+            $realPath = $this->fileDriver->getRealPath($path);
         } catch (\Exception $e) {
             return false;
         }
 
-        return ((int) ($stat['mode'] ?? 0) & 0o12_0000) === 0o12_0000;
+        if (!is_string($realPath)) {
+            return true;
+        }
+
+        return $realPath !== $realDirectory . '/' . $this->getBasename($path);
     }
 
     /**
