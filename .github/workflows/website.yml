@@ -8,6 +8,9 @@ on:
       - docs/**
       - README.md
       - CHANGELOG.md
+      - src/Console/**
+      - src/view/**
+      - .github/workflows/website.yml
   release:
     types: [published]
   schedule:
