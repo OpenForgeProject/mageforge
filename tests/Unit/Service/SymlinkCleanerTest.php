@@ -13,9 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class SymlinkCleanerTest extends TestCase
 {
-    private const SYMLINK_MODE = 0o12_0777;
-    private const REGULAR_FILE_MODE = 0o10_0644;
-
     /**
      * @var File&Stub
      */
@@ -69,10 +66,11 @@ class SymlinkCleanerTest extends TestCase
             ->method('readDirectory')
             ->willReturn(['/theme/web/css/styles.css', '/theme/web/css/link.css']);
         $fileDriver
-            ->method('stat')
+            ->method('getRealPath')
             ->willReturnMap([
-                ['/theme/web/css/styles.css', ['mode' => self::REGULAR_FILE_MODE]],
-                ['/theme/web/css/link.css', ['mode' => self::SYMLINK_MODE]],
+                ['/theme/web/css', '/theme/web/css'],
+                ['/theme/web/css/styles.css', '/theme/web/css/styles.css'],
+                ['/theme/web/css/link.css', '/shared/link.css'],
             ]);
         $fileDriver->expects($this->once())->method('deleteFile')->with('/theme/web/css/link.css');
         $io = $this->createMock(SymfonyStyle::class);
@@ -87,23 +85,90 @@ class SymlinkCleanerTest extends TestCase
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->fileDriver->method('isDirectory')->willReturn(true);
         $this->fileDriver->method('readDirectory')->willReturn(['/theme/web/css/styles.css']);
-        $this->fileDriver->method('stat')->willReturn(['mode' => self::REGULAR_FILE_MODE]);
+        $this->fileDriver->method('getRealPath')->willReturnArgument(0);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->never())->method('success');
 
         $this->assertTrue($this->cleaner->cleanSymlinks('/theme', $io, true));
     }
 
-    public function testTreatsUnstatableItemsAsRegularFiles(): void
+    public function testDeletesBrokenSymlinks(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $fileDriver = $this->createMock(File::class);
         $fileDriver->method('isDirectory')->willReturn(true);
         $fileDriver->method('readDirectory')->willReturn(['/theme/web/css/broken.css']);
-        $fileDriver->method('stat')->willThrowException(new \RuntimeException('stat failed'));
+        $fileDriver
+            ->method('getRealPath')
+            ->willReturnMap([
+                ['/theme/web/css', '/theme/web/css'],
+                ['/theme/web/css/broken.css', false],
+            ]);
+        $fileDriver->expects($this->once())->method('deleteFile')->with('/theme/web/css/broken.css');
+
+        $this->assertTrue($this->createCleaner(fileDriver: $fileDriver)->cleanSymlinks('/theme', $this->io, false));
+    }
+
+    public function testKeepsRegularFilesInsideSymlinkedThemeDirectory(): void
+    {
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('readDirectory')->willReturn(['/theme/web/css/styles.css']);
+        $fileDriver
+            ->method('getRealPath')
+            ->willReturnMap([
+                ['/theme/web/css', '/real/theme/web/css'],
+                ['/theme/web/css/styles.css', '/real/theme/web/css/styles.css'],
+            ]);
         $fileDriver->expects($this->never())->method('deleteFile');
 
         $this->assertTrue($this->createCleaner(fileDriver: $fileDriver)->cleanSymlinks('/theme', $this->io, false));
+    }
+
+    public function testKeepsRegularFileWithBackslashInName(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $this->markTestSkipped('A backslash is a path separator on Windows.');
+        }
+
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('readDirectory')->willReturn(['/theme/web/css/vendor\\styles.css']);
+        $fileDriver->method('getRealPath')->willReturnArgument(0);
+        $fileDriver->expects($this->never())->method('deleteFile');
+
+        $this->assertTrue($this->createCleaner(fileDriver: $fileDriver)->cleanSymlinks('/theme', $this->io, false));
+    }
+
+    public function testRemovesRealSymlinksFromFilesystem(): void
+    {
+        $state = $this->createStub(State::class);
+        $state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $themePath = sys_get_temp_dir() . '/mageforge-symlink-' . uniqid();
+        $cssPath = $themePath . '/web/css';
+        mkdir($cssPath, 0o777, true);
+        file_put_contents($cssPath . '/styles.css', 'a{}');
+        file_put_contents($themePath . '/target.css', 'b{}');
+        symlink($themePath . '/target.css', $cssPath . '/link.css');
+        symlink($themePath . '/missing.css', $cssPath . '/broken.css');
+
+        try {
+            $cleaner = $this->createCleaner(fileDriver: new File(), state: $state);
+            $this->assertTrue($cleaner->cleanSymlinks($themePath, $this->io, false));
+
+            $this->assertFileExists($cssPath . '/styles.css');
+            $this->assertFileExists($themePath . '/target.css');
+            $this->assertFalse(is_link($cssPath . '/link.css'));
+            $this->assertFalse(is_link($cssPath . '/broken.css'));
+        } finally {
+            array_map('unlink', glob($cssPath . '/*') ?: []);
+            unlink($themePath . '/target.css');
+            rmdir($cssPath);
+            rmdir($themePath . '/web');
+            rmdir($themePath);
+        }
     }
 
     public function testReportsRemovedSymlinksInVerboseMode(): void
@@ -111,7 +176,10 @@ class SymlinkCleanerTest extends TestCase
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->fileDriver->method('isDirectory')->willReturn(true);
         $this->fileDriver->method('readDirectory')->willReturn(['/theme/web/css/link.css']);
-        $this->fileDriver->method('stat')->willReturn(['mode' => self::SYMLINK_MODE]);
+        $this->fileDriver->method('getRealPath')->willReturnMap([
+            ['/theme/web/css', '/theme/web/css'],
+            ['/theme/web/css/link.css', '/shared/link.css'],
+        ]);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('writeln')->with('  <fg=yellow>⚠</> Removed symlink: link.css');
         $io->expects($this->once())->method('success')->with('Removed 1 symlink(s) from web/css/');
@@ -123,6 +191,7 @@ class SymlinkCleanerTest extends TestCase
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturnArgument(0);
         $this->fileDriver->method('readDirectory')->willThrowException(new \RuntimeException('permission denied'));
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('warning')->with('Could not clean symlinks: permission denied');
@@ -135,7 +204,10 @@ class SymlinkCleanerTest extends TestCase
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->fileDriver->method('isDirectory')->willReturn(true);
         $this->fileDriver->method('readDirectory')->willReturn(['link.css']);
-        $this->fileDriver->method('stat')->willReturn(['mode' => self::SYMLINK_MODE]);
+        $this->fileDriver->method('getRealPath')->willReturnMap([
+            ['/theme/web/css', '/theme/web/css'],
+            ['link.css', '/shared/link.css'],
+        ]);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('writeln')->with('  <fg=yellow>⚠</> Removed symlink: link.css');
 
