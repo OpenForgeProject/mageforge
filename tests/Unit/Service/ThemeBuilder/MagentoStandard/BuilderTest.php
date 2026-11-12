@@ -14,6 +14,7 @@ use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -390,6 +391,63 @@ class BuilderTest extends TestCase
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
 
         $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
+    /**
+     * @return array<string, array{int, bool}>
+     */
+    public static function watchExitCodeProvider(): array
+    {
+        return [
+            'successful exit' => [0, true],
+            'non-zero exit' => [3, false],
+        ];
+    }
+
+    #[DataProvider('watchExitCodeProvider')]
+    public function testWatchRunsGruntFromMagentoRootWithQuotedPath(int $exitCode, bool $expected): void
+    {
+        $root = sys_get_temp_dir() . "/mage forge's root " . uniqid();
+        $binDir = $root . '/node_modules/.bin';
+        mkdir($binDir, 0o777, true);
+        $cwdFile = $root . '/cwd.txt';
+        file_put_contents(
+            $binDir . '/grunt',
+            sprintf("#!/bin/sh\npwd > \"%s\"\necho \"$@\" >> \"%s\"\nexit %d\n", $cwdFile, $cwdFile, $exitCode),
+        );
+        chmod($binDir . '/grunt', 0o755);
+
+        $directoryList = $this->createStub(DirectoryList::class);
+        $directoryList->method('getRoot')->willReturn($root);
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            [$root . '/package.json', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $this->shell->method('execute')->willReturn('');
+        $builder = $this->createBuilder(directoryList: $directoryList);
+
+        $originalCwd = getcwd();
+        try {
+            ob_start();
+            $result = $builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false);
+            ob_end_clean();
+            $recorded = (string) file_get_contents($cwdFile);
+        } finally {
+            unlink($binDir . '/grunt');
+            if (is_file($cwdFile)) {
+                unlink($cwdFile);
+            }
+            rmdir($binDir);
+            rmdir($root . '/node_modules');
+            rmdir($root);
+        }
+
+        $this->assertNotSame($root, $originalCwd);
+        $this->assertSame($expected, $result);
+        $this->assertSame([$root, 'watch'], array_map('trim', explode("\n", trim($recorded))));
     }
 
     public function testWatchReturnsFalseWhenAutoRepairFails(): void
