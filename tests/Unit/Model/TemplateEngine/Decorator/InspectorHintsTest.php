@@ -224,16 +224,10 @@ class InspectorHintsTest extends TestCase
 
     public function testRenderDetectsParentBlockAndAlias(): void
     {
-        $parentBlock = $this->getStubBuilder(AbstractBlock::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getNameInLayout'])
-            ->getStub();
+        $parentBlock = $this->createStub(AbstractBlock::class);
         $parentBlock->method('getNameInLayout')->willReturn('parent.block');
 
-        $block = $this->getStubBuilder(AbstractBlock::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getParentBlock', 'getNameInLayout'])
-            ->getStub();
+        $block = $this->createStub(AbstractBlock::class);
         $block->method('getParentBlock')->willReturn($parentBlock);
         $block->method('getNameInLayout')->willReturn('child.block');
 
