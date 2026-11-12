@@ -556,7 +556,11 @@ class BuilderTest extends TestCase
     public function testAutoRepairInstallsWithExactWarningWhenOutOfSync(): void
     {
         $nodePackageManager = $this->createMock(NodePackageManager::class);
-        $nodePackageManager->expects($this->once())->method('isNodeModulesInSync')->with('/magento-root')->willReturn(false);
+        $nodePackageManager
+            ->expects($this->once())
+            ->method('isNodeModulesInSync')
+            ->with('/magento-root')
+            ->willReturn(false);
         $nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
         $io = $this->createMock(SymfonyStyle::class);
         $io

@@ -290,6 +290,7 @@ class Builder implements BuilderInterface
 
             $exitCode = 0;
             // Run from the Magento root so grunt finds its config regardless of the current working directory
+            // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged -- quotes the root path for the shell
             $command = 'cd ' . escapeshellarg($this->getRootPath()) . ' && node_modules/.bin/grunt watch';
             // phpcs:ignore Magento2.Security.InsecureFunction.Found -- passthru required for interactive watch mode
             passthru($command, $exitCode);
