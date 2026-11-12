@@ -60,7 +60,8 @@ class Builder implements BuilderInterface
         }
 
         // Must be a theme at all, and must not be claimed by the Hyva builder
-        $hasThemeFile = $this->fileDriver->isExists($themePath . '/theme.xml')
+        $hasThemeFile =
+            $this->fileDriver->isExists($themePath . '/theme.xml')
             || $this->fileDriver->isExists($themePath . '/composer.json');
 
         return $hasThemeFile && !$this->hyvaThemeDetector->isHyvaTheme($themePath);
