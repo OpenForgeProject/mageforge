@@ -247,6 +247,7 @@ function layout({
   noindex = false,
   current = "",
   fullTitle = false,
+  lang = "en",
 }) {
   const pageTitle = fullTitle ? title : `${title} · ${SITE_NAME}`;
   const canonical = abs(path);
@@ -257,7 +258,7 @@ function layout({
     ["/changelog/", "Changelog", "changelog"],
   ];
   return `<!doctype html>
-<html lang="en" data-base="${e(BASE)}">
+<html lang="${lang}" data-base="${e(BASE)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -330,6 +331,10 @@ ${body}
       <li><a href="${GITHUB}/discussions">Discussions</a></li>
       <li><a href="https://packagist.org/packages/openforgeproject/mageforge">Packagist</a></li>
       <li><a href="https://mageforge.myspreadshop.de/">Merch</a></li>
+    </ul></nav>
+    <nav aria-label="Legal"><h2>Legal</h2><ul>
+      <li><a href="${url("/impressum/")}" hreflang="de">Impressum</a></li>
+      <li><a href="${url("/datenschutz/")}" hreflang="de">Datenschutz</a></li>
     </ul></nav>
   </div>
 </footer>
@@ -957,6 +962,86 @@ addPage({
 </div>`,
 });
 pages.pop(); // keep the search page out of the sitemap
+
+/* ----------------------------------------------------------------- LEGAL */
+const OPERATOR = `<p><strong>Mathias Elle</strong><br>Schöneberger Weg 26<br>78056 Villingen-Schwenningen<br>E-Mail: <a href="mailto:hello@dermatz.de">hello@dermatz.de</a></p>`;
+
+const legalPages = [
+  {
+    path: "/impressum/",
+    title: "Impressum",
+    description: "Anbieterkennzeichnung und rechtliche Hinweise zu mageforge.",
+    html: `
+<h2>Angaben gemäß § 5 DDG</h2>
+${OPERATOR}
+<p>Kleinunternehmer nach § 19 UStG</p>
+<h2>Umsatzsteuer-ID</h2>
+<p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: <em>DE288302596</em></p>
+<h2>Haftungsausschluss (Disclaimer)</h2>
+<h3>1. Haftung für Inhalte</h3>
+<p>Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Wir sind als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.</p>
+<p>Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.</p>
+<h3>2. Haftung für Links</h3>
+<p>Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.</p>
+<p>Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+<h3>3. Urheberrecht</h3>
+<p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.</p>
+<p>MageForge selbst ist Open-Source-Software und steht unter der <a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener noreferrer">GPL-3.0</a>; für den Quellcode gelten die Bedingungen dieser Lizenz.</p>
+<p>Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.</p>
+<h2>Alternative Streitbeilegung</h2>
+<p>Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle sind wir nicht verpflichtet und nicht bereit (§ 36 VSBG).</p>`,
+  },
+  {
+    path: "/datenschutz/",
+    title: "Datenschutz",
+    description: "Datenschutzerklärung für die MageForge-Website.",
+    html: `
+<h2>Verantwortlicher</h2>
+${OPERATOR}
+<h2>Allgemeine Hinweise</h2>
+<p>Der Schutz deiner persönlichen Daten ist uns ein besonderes Anliegen. Wir verarbeiten deine Daten ausschließlich auf Grundlage der gesetzlichen Bestimmungen (DSGVO, TDDDG). Diese Erklärung informiert dich über die wichtigsten Aspekte der Datenverarbeitung auf dieser Website.</p>
+<h2>Hosting über GitHub Pages</h2>
+<p>Diese Website wird über <strong>GitHub Pages</strong> bereitgestellt, einen Dienst der GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA (für Nutzer im EWR: GitHub B.V., Prins Bernhardplein 200, 1097 JB Amsterdam, Niederlande).</p>
+<p>Beim Aufruf der Seite verarbeitet GitHub technisch notwendige Verbindungsdaten, insbesondere deine IP-Adresse, Datum und Uhrzeit des Zugriffs, die aufgerufene URL, Browser- und Betriebssysteminformationen sowie die Referrer-URL. Wir selbst erheben und speichern diese Daten nicht und haben keinen Zugriff auf diese Logs. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer sicheren und effizienten Bereitstellung der Website).</p>
+<p>Eine Übermittlung in die USA ist möglich. GitHub ist unter dem EU-US Data Privacy Framework zertifiziert. Weitere Informationen findest du in der <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener noreferrer">Datenschutzerklärung von GitHub</a>.</p>
+<h2>Cookies, Tracking und externe Inhalte</h2>
+<p>Diese Website setzt keine Cookies, verwendet keine Analyse- oder Tracking-Dienste und lädt keine Schriftarten, Skripte oder sonstigen Inhalte von Drittanbietern nach. Die Suche läuft vollständig in deinem Browser.</p>
+<h2>Externe Links</h2>
+<p>Diese Website verlinkt auf externe Angebote, etwa <a href="${GITHUB}" rel="noopener noreferrer">GitHub</a>, <a href="https://packagist.org/packages/openforgeproject/mageforge" rel="noopener noreferrer">Packagist</a> und den <a href="https://mageforge.myspreadshop.de/" rel="noopener noreferrer">Merch-Shop</a>. Erst wenn du einem Link folgst, werden Daten an den jeweiligen Anbieter übermittelt. Für die dortige Datenverarbeitung gelten deren Datenschutzerklärungen.</p>
+<h2>Kontaktaufnahme</h2>
+<p>Wenn du uns per E-Mail kontaktierst, speichern wir die von dir übermittelten Daten nur so lange, wie es zur Bearbeitung deiner Anfrage erforderlich ist. Eine Weitergabe an Dritte erfolgt nicht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen) bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung von Anfragen).</p>
+<h2>Deine Rechte</h2>
+<p>Dir stehen grundsätzlich folgende Rechte zu:</p>
+<ul>
+<li>Recht auf Auskunft (Art. 15 DSGVO)</li>
+<li>Recht auf Berichtigung (Art. 16 DSGVO)</li>
+<li>Recht auf Löschung (Art. 17 DSGVO)</li>
+<li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+<li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
+<li>Recht auf Widerspruch (Art. 21 DSGVO)</li>
+</ul>
+<p>Zur Wahrnehmung deiner Rechte kannst du dich jederzeit per E-Mail an <a href="mailto:hello@dermatz.de">hello@dermatz.de</a> an uns wenden.</p>
+<h2>Beschwerderecht</h2>
+<p>Du hast das Recht, bei der zuständigen Datenschutzaufsichtsbehörde Beschwerde einzulegen:</p>
+<p><strong>Der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg</strong><br>Königstraße 10a<br>70173 Stuttgart<br><a href="https://www.baden-wuerttemberg.datenschutz.de" rel="noopener noreferrer">https://www.baden-wuerttemberg.datenschutz.de</a></p>`,
+  },
+];
+for (const p of legalPages) {
+  addPage({
+    path: p.path,
+    title: p.title,
+    description: p.description,
+    lang: "de",
+    body: `
+<div class="page-head"><div class="container">${breadcrumbs([
+      ["Home", "/"],
+      [p.title, p.path],
+    ])}<h1>${p.title}</h1></div></div>
+<div class="container layout layout-single">
+  <article class="prose">${p.html}</article>
+</div>`,
+  });
+}
 
 out(
   "404.html",
