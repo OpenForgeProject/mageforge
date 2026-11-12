@@ -7,7 +7,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\Hyva;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\Hyva\IncompatibilityDetector;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class IncompatibilityDetectorTest extends TestCase
 {
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileMock;
 
@@ -27,7 +27,7 @@ class IncompatibilityDetectorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->fileMock = $this->createMock(File::class);
+        $this->fileMock = $this->createStub(File::class);
         $this->fileMock->method('isExists')->willReturn(true);
         $this->detector = new IncompatibilityDetector($this->fileMock);
     }

@@ -13,7 +13,7 @@ use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
 use OpenForgeProject\MageForge\Service\SymlinkCleaner;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -21,43 +21,43 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class BuilderTest extends TestCase
 {
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var StaticContentDeployer&MockObject
+     * @var StaticContentDeployer&Stub
      */
     private $staticContentDeployer;
     /**
-     * @var StaticContentCleaner&MockObject
+     * @var StaticContentCleaner&Stub
      */
     private $staticContentCleaner;
     /**
-     * @var CacheCleaner&MockObject
+     * @var CacheCleaner&Stub
      */
     private $cacheCleaner;
     /**
-     * @var SymlinkCleaner&MockObject
+     * @var SymlinkCleaner&Stub
      */
     private $symlinkCleaner;
     /**
-     * @var NodePackageManager&MockObject
+     * @var NodePackageManager&Stub
      */
     private $nodePackageManager;
     /**
-     * @var GruntTaskRunner&MockObject
+     * @var GruntTaskRunner&Stub
      */
     private $gruntTaskRunner;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
-     * @var OutputInterface&MockObject
+     * @var OutputInterface&Stub
      */
     private $output;
     /**
@@ -71,26 +71,39 @@ class BuilderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->shell = $this->createMock(Shell::class);
-        $this->fileDriver = $this->createMock(File::class);
-        $this->staticContentDeployer = $this->createMock(StaticContentDeployer::class);
-        $this->staticContentCleaner = $this->createMock(StaticContentCleaner::class);
-        $this->cacheCleaner = $this->createMock(CacheCleaner::class);
-        $this->symlinkCleaner = $this->createMock(SymlinkCleaner::class);
-        $this->nodePackageManager = $this->createMock(NodePackageManager::class);
-        $this->gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->output = $this->createMock(OutputInterface::class);
+        $this->shell = $this->createStub(Shell::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->staticContentDeployer = $this->createStub(StaticContentDeployer::class);
+        $this->staticContentCleaner = $this->createStub(StaticContentCleaner::class);
+        $this->cacheCleaner = $this->createStub(CacheCleaner::class);
+        $this->symlinkCleaner = $this->createStub(SymlinkCleaner::class);
+        $this->nodePackageManager = $this->createStub(NodePackageManager::class);
+        $this->gruntTaskRunner = $this->createStub(GruntTaskRunner::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->output = $this->createStub(OutputInterface::class);
 
-        $this->builder = new Builder(
-            $this->shell,
-            $this->fileDriver,
-            $this->staticContentDeployer,
-            $this->staticContentCleaner,
-            $this->cacheCleaner,
-            $this->symlinkCleaner,
-            $this->nodePackageManager,
-            $this->gruntTaskRunner,
+        $this->builder = $this->createBuilder();
+    }
+
+    private function createBuilder(
+        ?Shell $shell = null,
+        ?File $fileDriver = null,
+        ?StaticContentDeployer $staticContentDeployer = null,
+        ?StaticContentCleaner $staticContentCleaner = null,
+        ?CacheCleaner $cacheCleaner = null,
+        ?SymlinkCleaner $symlinkCleaner = null,
+        ?NodePackageManager $nodePackageManager = null,
+        ?GruntTaskRunner $gruntTaskRunner = null,
+    ): Builder {
+        return new Builder(
+            $shell ?? $this->shell,
+            $fileDriver ?? $this->fileDriver,
+            $staticContentDeployer ?? $this->staticContentDeployer,
+            $staticContentCleaner ?? $this->staticContentCleaner,
+            $cacheCleaner ?? $this->cacheCleaner,
+            $symlinkCleaner ?? $this->symlinkCleaner,
+            $nodePackageManager ?? $this->nodePackageManager,
+            $gruntTaskRunner ?? $this->gruntTaskRunner,
         );
     }
 
@@ -129,9 +142,9 @@ class BuilderTest extends TestCase
         $this->assertFalse($this->builder->detect($this->themePath));
     }
 
-    private function configureSuccessfulDetection(): void
+    private function configureSuccessfulDetection(File&Stub $fileDriver): void
     {
-        $this->fileDriver->method('isExists')->willReturnMap([
+        $fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
         ]);
@@ -146,7 +159,7 @@ class BuilderTest extends TestCase
 
     public function testBuildReturnsFalseWhenStaticContentCleanFails(): void
     {
-        $this->configureSuccessfulDetection();
+        $this->configureSuccessfulDetection($this->fileDriver);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
 
         $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
@@ -160,20 +173,23 @@ class BuilderTest extends TestCase
             [$vendorThemePath . '/web/tailwind', false],
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
-        $this->io->expects($this->once())->method('warning')
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('warning')
             ->with('Vendor theme detected. Skipping Grunt steps.');
-        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
         $this->assertTrue(
-            $this->builder->build('Vendor/theme', $vendorThemePath, $this->io, $this->output, false),
+            $builder->build('Vendor/theme', $vendorThemePath, $io, $this->output, false),
         );
     }
 
     public function testBuildSkipsGruntStepsWhenNoNodeSetupDetected(): void
     {
-        $this->configureSuccessfulDetection();
+        $this->configureSuccessfulDetection($this->fileDriver);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
@@ -183,11 +199,13 @@ class BuilderTest extends TestCase
             ['./gruntfile.js', false],
             ['./grunt-config.json', false],
         ]);
-        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
-        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
     }
 
     public function testBuildRunsNodeSetupWhenDetected(): void
@@ -204,18 +222,21 @@ class BuilderTest extends TestCase
             $executedCommands[] = $command;
             return '';
         });
-        $this->symlinkCleaner->expects($this->once())
+        $symlinkCleaner = $this->createMock(SymlinkCleaner::class);
+        $symlinkCleaner->expects($this->once())
             ->method('cleanSymlinks')
             ->with($this->themePath, $this->io, false)
             ->willReturn(true);
-        $this->gruntTaskRunner->expects($this->once())
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->once())
             ->method('runTasks')
             ->with($this->io, $this->output, false)
             ->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
+        $builder = $this->createBuilder(symlinkCleaner: $symlinkCleaner, gruntTaskRunner: $gruntTaskRunner);
 
-        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertTrue($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
         $this->assertSame(['which grunt'], $executedCommands);
     }
 
@@ -243,20 +264,24 @@ class BuilderTest extends TestCase
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(false);
-        $this->cacheCleaner->expects($this->never())->method('clean');
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
+        $cacheCleaner->expects($this->never())->method('clean');
+        $builder = $this->createBuilder(cacheCleaner: $cacheCleaner);
 
         $this->assertFalse(
-            $this->builder->build('Vendor/theme', $vendorThemePath, $this->io, $this->output, false),
+            $builder->build('Vendor/theme', $vendorThemePath, $this->io, $this->output, false),
         );
     }
 
     public function testAutoRepairInstallsWhenOutOfSync(): void
     {
-        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
-        $this->nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
+        $nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
         $this->shell->method('execute')->willReturn('');
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($builder->autoRepair($this->themePath, $this->io, $this->output, true));
     }
 
     public function testAutoRepairReturnsFalseWhenInstallFails(): void
@@ -278,9 +303,10 @@ class BuilderTest extends TestCase
             }
             return '';
         });
-        $this->io->expects($this->atLeastOnce())->method('success');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->atLeastOnce())->method('success');
 
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $io, $this->output, true));
     }
 
     public function testAutoRepairReturnsFalseWhenGruntInstallFails(): void
@@ -366,78 +392,98 @@ class BuilderTest extends TestCase
     public function testBuildStopsBeforeCleaningWhenDetectFails(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
-        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $staticContentCleaner = $this->createMock(StaticContentCleaner::class);
+        $staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $builder = $this->createBuilder(staticContentCleaner: $staticContentCleaner);
 
-        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertFalse($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
     }
 
     public function testVendorThemeSkipsGruntStepsWithExactWarning(): void
     {
         $vendorPath = '/app/vendor/vendor-name/theme';
-        $this->givenFilesystem($vendorPath, nodeSetup: true);
+        $this->givenFilesystem($this->fileDriver, $vendorPath, nodeSetup: true);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
-        $this->io->expects($this->once())->method('warning')->with('Vendor theme detected. Skipping Grunt steps.');
-        $this->io->expects($this->once())->method('newLine')->with(2);
-        $this->gruntTaskRunner->expects($this->never())->method('runTasks');
-        $this->nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('warning')->with('Vendor theme detected. Skipping Grunt steps.');
+        $io->expects($this->once())->method('newLine')->with(2);
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->never())->method('runTasks');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager, gruntTaskRunner: $gruntTaskRunner);
 
-        $this->assertTrue($this->builder->build('Vendor/theme', $vendorPath, $this->io, $this->output, false));
+        $this->assertTrue($builder->build('Vendor/theme', $vendorPath, $io, $this->output, false));
     }
 
     public function testMissingNodeSetupIsAnnouncedOnlyInVerboseMode(): void
     {
-        $this->givenFilesystem($this->themePath, nodeSetup: false);
+        $this->givenFilesystem($this->fileDriver, $this->themePath, nodeSetup: false);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
-        $this->gruntTaskRunner->expects($this->never())->method('runTasks');
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->never())->method('runTasks');
         $noteMessage = 'No Node.js/Grunt setup detected. Skipping Grunt steps.';
-        $this->io->expects($this->once())->method('note')->with($noteMessage);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('note')->with($noteMessage);
+        $builder = $this->createBuilder(gruntTaskRunner: $gruntTaskRunner);
 
-        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($builder->build('Vendor/theme', $this->themePath, $io, $this->output, true));
     }
 
     public function testMissingNodeSetupStaysSilentWhenNotVerbose(): void
     {
-        $this->givenFilesystem($this->themePath, nodeSetup: false);
+        $this->givenFilesystem($this->fileDriver, $this->themePath, nodeSetup: false);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
         $this->cacheCleaner->method('clean')->willReturn(true);
-        $this->io->expects($this->never())->method('note');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('note');
 
-        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertTrue($this->builder->build('Vendor/theme', $this->themePath, $io, $this->output, false));
     }
 
     public function testBuildFailsWhenSymlinkCleaningFails(): void
     {
-        $this->givenFilesystem($this->themePath, nodeSetup: true);
+        $this->givenFilesystem($this->fileDriver, $this->themePath, nodeSetup: true);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
         $this->symlinkCleaner->method('cleanSymlinks')->willReturn(false);
-        $this->gruntTaskRunner->expects($this->never())->method('runTasks');
-        $this->staticContentDeployer->expects($this->never())->method('deploy');
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->never())->method('runTasks');
+        $staticContentDeployer = $this->createMock(StaticContentDeployer::class);
+        $staticContentDeployer->expects($this->never())->method('deploy');
+        $builder = $this->createBuilder(
+            staticContentDeployer: $staticContentDeployer,
+            gruntTaskRunner: $gruntTaskRunner,
+        );
 
-        $this->assertFalse($this->builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertFalse($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
     }
 
     public function testAutoRepairInstallsWithExactWarningWhenOutOfSync(): void
     {
-        $this->nodePackageManager->method('isNodeModulesInSync')->with('.')->willReturn(false);
-        $this->nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
-        $this->io
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->once())->method('isNodeModulesInSync')->with('.')->willReturn(false);
+        $nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with('Node modules out of sync, missing, or no lock file found. Installing...');
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($builder->autoRepair($this->themePath, $io, $this->output, true));
     }
 
     public function testAutoRepairSkipsInstallAndOutdatedCheckWhenQuietAndInSync(): void
     {
-        $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
-        $this->nodePackageManager->expects($this->never())->method('installNodeModules');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
+        $nodePackageManager->expects($this->never())->method('installNodeModules');
 
         $executedCommands = [];
         $this->shell
@@ -446,8 +492,9 @@ class BuilderTest extends TestCase
                 $executedCommands[] = $command;
                 return '';
             });
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
 
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, false));
+        $this->assertTrue($builder->autoRepair($this->themePath, $this->io, $this->output, false));
         $this->assertSame(['which grunt'], $executedCommands, 'Outdated check must not run in quiet mode');
     }
 
@@ -478,66 +525,76 @@ class BuilderTest extends TestCase
                 }
                 return '';
             });
-        $this->io->expects($this->once())->method('warning')->with('Grunt not found globally. Installing grunt...');
-        $this->io->expects($this->once())->method('success')->with('Grunt installed successfully.');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('warning')->with('Grunt not found globally. Installing grunt...');
+        $io->expects($this->once())->method('success')->with('Grunt installed successfully.');
 
-        $this->assertTrue($this->builder->autoRepair($this->themePath, $this->io, $this->output, true));
+        $this->assertTrue($this->builder->autoRepair($this->themePath, $io, $this->output, true));
     }
 
     public function testGruntInstallFailureReportsExactError(): void
     {
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
         $this->shell->method('execute')->willThrowException(new \RuntimeException('registry down'));
-        $this->io->expects($this->once())->method('error')->with('Failed to install grunt: registry down');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('error')->with('Failed to install grunt: registry down');
 
-        $this->assertFalse($this->builder->autoRepair($this->themePath, $this->io, $this->output, false));
+        $this->assertFalse($this->builder->autoRepair($this->themePath, $io, $this->output, false));
     }
 
     public function testWatchStopsBeforeCleaningWhenDetectFails(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
-        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $staticContentCleaner = $this->createMock(StaticContentCleaner::class);
+        $staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $builder = $this->createBuilder(staticContentCleaner: $staticContentCleaner);
 
-        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertFalse($builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
     }
 
     public function testWatchRejectsVendorThemesWithExactError(): void
     {
         $vendorPath = '/app/vendor/vendor-name/theme';
-        $this->givenFilesystem($vendorPath, nodeSetup: true);
-        $this->io
+        $this->givenFilesystem($this->fileDriver, $vendorPath, nodeSetup: true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with(
                 'Watch mode is not supported for vendor themes. Vendor themes are read-only and '
                 . 'should have pre-built assets.',
             );
-        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $staticContentCleaner = $this->createMock(StaticContentCleaner::class);
+        $staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $builder = $this->createBuilder(staticContentCleaner: $staticContentCleaner);
 
-        $this->assertFalse($this->builder->watch('Vendor/theme', $vendorPath, $this->io, $this->output, false));
+        $this->assertFalse($builder->watch('Vendor/theme', $vendorPath, $io, $this->output, false));
     }
 
     public function testWatchRequiresNodeSetupWithExactError(): void
     {
-        $this->givenFilesystem($this->themePath, nodeSetup: false);
-        $this->io
+        $this->givenFilesystem($this->fileDriver, $this->themePath, nodeSetup: false);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with(
                 'Watch mode requires Node.js/Grunt setup. No package.json, package-lock.json, '
                 . 'node_modules, or grunt-config.json found.',
             );
-        $this->staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $staticContentCleaner = $this->createMock(StaticContentCleaner::class);
+        $staticContentCleaner->expects($this->never())->method('cleanIfNeeded');
+        $builder = $this->createBuilder(staticContentCleaner: $staticContentCleaner);
 
-        $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+        $this->assertFalse($builder->watch('Vendor/theme', $this->themePath, $io, $this->output, false));
     }
 
     /**
      * Configure the file driver: valid standard theme, node setup toggled.
      */
-    private function givenFilesystem(string $themePath, bool $nodeSetup): void
+    private function givenFilesystem(File&Stub $fileDriver, string $themePath, bool $nodeSetup): void
     {
-        $this->fileDriver
+        $fileDriver
             ->method('isExists')
             ->willReturnCallback(static function (string $path) use ($themePath, $nodeSetup): bool {
                 if ($path === $themePath . '/theme.xml') {

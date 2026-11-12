@@ -10,7 +10,7 @@ use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -18,19 +18,19 @@ use Symfony\Component\Console\Tester\CommandTester;
 class WatchCommandTest extends TestCase
 {
     /**
-     * @var BuilderPool&MockObject
+     * @var BuilderPool&Stub
      */
     private $builderPool;
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
     private $themeSuggester;
     /**
@@ -40,16 +40,11 @@ class WatchCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->builderPool = $this->createMock(BuilderPool::class);
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->command = new WatchCommand(
-            $this->builderPool,
-            $this->themeList,
-            $this->themePath,
-            $this->themeSuggester,
-        );
+        $this->builderPool = $this->createStub(BuilderPool::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -60,16 +55,19 @@ class WatchCommandTest extends TestCase
 
     public function testWatchesThemeViaArgument(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/path/to/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/theme')->willReturn('/path/to/theme');
         $builder = $this->createMock(BuilderInterface::class);
         $builder
             ->expects($this->once())
             ->method('watch')
             ->with('Vendor/theme', '/path/to/theme')
             ->willReturn(true);
-        $this->builderPool->method('getBuilder')->with('/path/to/theme')->willReturn($builder);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->expects($this->once())->method('getBuilder')->with('/path/to/theme')->willReturn($builder);
+        $command = $this->createCommand(builderPool: $builderPool, themePath: $themePath);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
@@ -77,12 +75,14 @@ class WatchCommandTest extends TestCase
 
     public function testWatchesThemeViaOption(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/path/to/theme');
-        $builder = $this->createMock(BuilderInterface::class);
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/theme')->willReturn('/path/to/theme');
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('watch')->willReturn(true);
         $this->builderPool->method('getBuilder')->willReturn($builder);
+        $command = $this->createCommand(themePath: $themePath);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['--theme' => 'Vendor/theme']);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
@@ -91,7 +91,7 @@ class WatchCommandTest extends TestCase
     public function testFailsWhenWatcherReportsFailure(): void
     {
         $this->themePath->method('getPath')->willReturn('/path/to/theme');
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('watch')->willReturn(false);
         $this->builderPool->method('getBuilder')->willReturn($builder);
 
@@ -143,5 +143,19 @@ class WatchCommandTest extends TestCase
         $this->assertStringContainsString('Did you mean one of these?', $display);
         $this->assertStringContainsString('- Vendor/theme', $display);
         $this->assertStringContainsString('- Vendor/other', $display);
+    }
+
+    private function createCommand(
+        ?BuilderPool $builderPool = null,
+        ?ThemeList $themeList = null,
+        ?ThemePath $themePath = null,
+        ?ThemeSuggester $themeSuggester = null,
+    ): WatchCommand {
+        return new WatchCommand(
+            $builderPool ?? $this->builderPool,
+            $themeList ?? $this->themeList,
+            $themePath ?? $this->themePath,
+            $themeSuggester ?? $this->themeSuggester,
+        );
     }
 }

@@ -15,29 +15,29 @@ use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Finding;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class Tailwind4CheckerTest extends TestCase
 {
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var BuilderPool&MockObject
+     * @var BuilderPool&Stub
      */
     private $builderPool;
     /**
-     * @var ComponentRegistrarInterface&MockObject
+     * @var ComponentRegistrarInterface&Stub
      */
     private $componentRegistrar;
     /**
@@ -54,19 +54,12 @@ class Tailwind4CheckerTest extends TestCase
         $this->root = sys_get_temp_dir() . '/mageforge-tw4-' . bin2hex(random_bytes(4));
         mkdir($this->root, 0o777, true);
 
-        $this->shell = $this->createMock(Shell::class);
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->builderPool = $this->createMock(BuilderPool::class);
-        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
-        $this->checker = new Tailwind4Checker(
-            new File(),
-            $this->shell,
-            $this->themeList,
-            $this->themePath,
-            $this->builderPool,
-            $this->componentRegistrar,
-        );
+        $this->shell = $this->createStub(Shell::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->builderPool = $this->createStub(BuilderPool::class);
+        $this->componentRegistrar = $this->createStub(ComponentRegistrarInterface::class);
+        $this->checker = $this->createChecker();
     }
 
     protected function tearDown(): void
@@ -402,13 +395,19 @@ CSS,
             'Vendor/child' => $this->root . '/app/design/Vendor/child',
             'Hyva/default' => $this->root . '/vendor/hyva/default',
         ]);
-        $this->componentRegistrar->method('getPaths')->with(ComponentRegistrar::MODULE)->willReturn([
-            'Vendor_Module' => $this->root . '/app/code/Vendor/Module',
-            'Vendor_Plain' => $this->root . '/app/code/Vendor/Plain',
-        ]);
-        $this->shell->method('execute')->with('node --version')->willReturn("v18.19.0\n");
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn([
+                'Vendor_Module' => $this->root . '/app/code/Vendor/Module',
+                'Vendor_Plain' => $this->root . '/app/code/Vendor/Plain',
+            ]);
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->once())->method('execute')->with('node --version')->willReturn("v18.19.0\n");
 
-        $results = $this->checker->check();
+        $results = $this->createChecker(shell: $shell, componentRegistrar: $componentRegistrar)->check();
 
         $this->assertSame(1, $results['themes']);
         $this->assertSame(1, $results['modules']);
@@ -433,6 +432,20 @@ CSS,
         $this->assertSame(1, $results['warnings']);
     }
 
+    private function createChecker(
+        ?Shell $shell = null,
+        ?ComponentRegistrarInterface $componentRegistrar = null,
+    ): Tailwind4Checker {
+        return new Tailwind4Checker(
+            new File(),
+            $shell ?? $this->shell,
+            $this->themeList,
+            $this->themePath,
+            $this->builderPool,
+            $componentRegistrar ?? $this->componentRegistrar,
+        );
+    }
+
     /**
      * @param array<string, string> $themes Theme code => path
      * @param array<string, string> $parents Theme code => code of its parent theme
@@ -451,7 +464,7 @@ CSS,
             ->method('getPath')
             ->willReturnCallback(static fn(string $code): ?string => $themes[$code] ?? null);
 
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn($builderName);
         $this->builderPool->method('getBuilder')->willReturn($builder);
     }

@@ -6,7 +6,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder;
 
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class BuilderPoolTest extends TestCase
@@ -53,9 +53,9 @@ class BuilderPoolTest extends TestCase
         $this->assertSame([], (new BuilderPool())->getBuilders());
     }
 
-    private function createBuilder(bool $detects): BuilderInterface&MockObject
+    private function createBuilder(bool $detects): BuilderInterface&Stub
     {
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('detect')->willReturn($detects);
 
         return $builder;

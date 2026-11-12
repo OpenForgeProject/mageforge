@@ -7,22 +7,22 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\DependencyChecker;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DependencyCheckerTest extends TestCase
 {
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
@@ -32,27 +32,37 @@ class DependencyCheckerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->fileDriver = $this->createMock(File::class);
-        $this->shell = $this->createMock(Shell::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->checker = new DependencyChecker($this->fileDriver, $this->shell);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->shell = $this->createStub(Shell::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->checker = $this->createChecker();
+    }
+
+    private function createChecker(?File $fileDriver = null, ?Shell $shell = null): DependencyChecker
+    {
+        return new DependencyChecker($fileDriver ?? $this->fileDriver, $shell ?? $this->shell);
     }
 
     public function testSucceedsWhenAllDependenciesArePresent(): void
     {
-        $this->givenFiles(['package.json' => true, 'Gruntfile.js' => true]);
-        $this->fileDriver->method('isDirectory')->with('node_modules')->willReturn(true);
-        $this->io->expects($this->never())->method('error');
-        $this->io->expects($this->never())->method('success');
-        $this->io->expects($this->never())->method('warning');
+        $fileDriver = $this->createMock(File::class);
+        $this->givenFiles($fileDriver, ['package.json' => true, 'Gruntfile.js' => true]);
+        $fileDriver->expects($this->once())->method('isDirectory')->with('node_modules')->willReturn(true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('error');
+        $io->expects($this->never())->method('success');
+        $io->expects($this->never())->method('warning');
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(fileDriver: $fileDriver);
+
+        $this->assertTrue($checker->checkDependencies($io, false));
     }
 
     public function testReportsEveryFoundDependencyInVerboseMode(): void
     {
-        $this->givenFiles(['package.json' => true, 'Gruntfile.js' => true]);
-        $this->fileDriver->method('isDirectory')->with('node_modules')->willReturn(true);
+        $fileDriver = $this->createMock(File::class);
+        $this->givenFiles($fileDriver, ['package.json' => true, 'Gruntfile.js' => true]);
+        $fileDriver->expects($this->once())->method('isDirectory')->with('node_modules')->willReturn(true);
 
         $successMessages = [];
         $this->io
@@ -61,7 +71,9 @@ class DependencyCheckerTest extends TestCase
                 $successMessages[] = $message;
             });
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, true));
+        $checker = $this->createChecker(fileDriver: $fileDriver);
+
+        $this->assertTrue($checker->checkDependencies($this->io, true));
         $this->assertSame(
             [
                 "The 'package.json' file found.",
@@ -74,7 +86,7 @@ class DependencyCheckerTest extends TestCase
 
     public function testWarnsAboutMissingFilesInVerboseMode(): void
     {
-        $this->givenFiles(['package.json' => false, 'package.json.sample' => false]);
+        $this->givenFiles($this->fileDriver, ['package.json' => false, 'package.json.sample' => false]);
 
         $warnings = [];
         $this->io
@@ -95,120 +107,139 @@ class DependencyCheckerTest extends TestCase
 
     public function testFailsWhenPackageJsonAndSampleAreMissing(): void
     {
-        $this->givenFiles(['package.json' => false, 'package.json.sample' => false]);
-        $this->io->expects($this->once())->method('error')->with('Skipping this theme build.');
+        $this->givenFiles($this->fileDriver, ['package.json' => false, 'package.json.sample' => false]);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('error')->with('Skipping this theme build.');
 
-        $this->assertFalse($this->checker->checkDependencies($this->io, false));
+        $this->assertFalse($this->checker->checkDependencies($io, false));
     }
 
     public function testCopiesPackageJsonFromSampleWhenConfirmed(): void
     {
-        $this->givenFiles([
+        $fileDriver = $this->createMock(File::class);
+        $this->givenFiles($fileDriver, [
             'package.json' => false,
             'package.json.sample' => true,
             'Gruntfile.js' => true,
         ]);
-        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('isDirectory')->willReturn(true);
         $this->io->method('confirm')->willReturn(true);
-        $this->fileDriver
+        $fileDriver
             ->expects($this->once())
             ->method('copy')
             ->with('package.json.sample', 'package.json');
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(fileDriver: $fileDriver);
+
+        $this->assertTrue($checker->checkDependencies($this->io, false));
     }
 
     public function testRunsNpmInstallWhenNodeModulesMissingAndConfirmed(): void
     {
-        $this->givenFiles(['package.json' => true, 'Gruntfile.js' => true]);
+        $this->givenFiles($this->fileDriver, ['package.json' => true, 'Gruntfile.js' => true]);
         $this->fileDriver->method('isDirectory')->willReturn(false);
         $this->io->method('confirm')->willReturn(true);
-        $this->shell->expects($this->once())->method('execute')->with('npm install --quiet');
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->once())->method('execute')->with('npm install --quiet');
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(shell: $shell);
+
+        $this->assertTrue($checker->checkDependencies($this->io, false));
     }
 
     public function testFailsWhenNpmInstallFails(): void
     {
-        $this->givenFiles(['package.json' => true]);
+        $this->givenFiles($this->fileDriver, ['package.json' => true]);
         $this->fileDriver->method('isDirectory')->willReturn(false);
-        $this->io->method('confirm')->willReturn(true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->method('confirm')->willReturn(true);
         $this->shell->method('execute')->willThrowException(new \RuntimeException('npm error'));
-        $this->io->expects($this->once())->method('error')->with('npm error');
+        $io->expects($this->once())->method('error')->with('npm error');
 
-        $this->assertFalse($this->checker->checkDependencies($this->io, false));
+        $this->assertFalse($this->checker->checkDependencies($io, false));
     }
 
     public function testFailsWhenNpmInstallIsDeclined(): void
     {
-        $this->givenFiles(['package.json' => true]);
+        $this->givenFiles($this->fileDriver, ['package.json' => true]);
         $this->fileDriver->method('isDirectory')->willReturn(false);
-        $this->io->method('confirm')->willReturn(false);
-        $this->shell->expects($this->never())->method('execute');
-        $this->io->expects($this->once())->method('error')->with('Skipping this theme build.');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->method('confirm')->willReturn(false);
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->never())->method('execute');
+        $io->expects($this->once())->method('error')->with('Skipping this theme build.');
 
-        $this->assertFalse($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(shell: $shell);
+
+        $this->assertFalse($checker->checkDependencies($io, false));
     }
 
     public function testFailsWhenGruntfileAndSampleAreMissing(): void
     {
-        $this->givenFiles([
+        $this->givenFiles($this->fileDriver, [
             'package.json' => true,
             'Gruntfile.js' => false,
             'Gruntfile.js.sample' => false,
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->io->expects($this->once())->method('error')->with('Skipping this theme build.');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('error')->with('Skipping this theme build.');
 
-        $this->assertFalse($this->checker->checkDependencies($this->io, false));
+        $this->assertFalse($this->checker->checkDependencies($io, false));
     }
 
     public function testCopiesGruntfileFromSampleWhenConfirmed(): void
     {
-        $this->givenFiles([
+        $fileDriver = $this->createMock(File::class);
+        $this->givenFiles($fileDriver, [
             'package.json' => true,
             'Gruntfile.js' => false,
             'Gruntfile.js.sample' => true,
         ]);
-        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('isDirectory')->willReturn(true);
         $this->io->method('confirm')->willReturn(true);
-        $this->fileDriver
+        $fileDriver
             ->expects($this->once())
             ->method('copy')
             ->with('Gruntfile.js.sample', 'Gruntfile.js');
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(fileDriver: $fileDriver);
+
+        $this->assertTrue($checker->checkDependencies($this->io, false));
     }
 
     public function testSkippingSampleCopyStillSucceeds(): void
     {
-        $this->givenFiles([
+        $fileDriver = $this->createMock(File::class);
+        $this->givenFiles($fileDriver, [
             'package.json' => false,
             'package.json.sample' => true,
             'Gruntfile.js' => true,
         ]);
-        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('isDirectory')->willReturn(true);
         $this->io->method('confirm')->willReturn(false);
-        $this->fileDriver->expects($this->never())->method('copy');
+        $fileDriver->expects($this->never())->method('copy');
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, false));
+        $checker = $this->createChecker(fileDriver: $fileDriver);
+
+        $this->assertTrue($checker->checkDependencies($this->io, false));
     }
 
     /**
-     * Configure the file driver mock; unlisted files do not exist.
+     * Configure the file driver; unlisted files do not exist.
      *
      * @param array<string, bool> $files
      */
-    private function givenFiles(array $files): void
+    private function givenFiles(File&Stub $fileDriver, array $files): void
     {
-        $this->fileDriver
+        $fileDriver
             ->method('isFile')
             ->willReturnCallback(static fn(string $path): bool => $files[$path] ?? false);
     }
 
     public function testVerboseSampleCopyFlowReportsEachStep(): void
     {
-        $this->givenFiles([
+        $this->givenFiles($this->fileDriver, [
             'package.json' => false,
             'package.json.sample' => true,
             'Gruntfile.js' => true,
@@ -237,27 +268,35 @@ class DependencyCheckerTest extends TestCase
 
     public function testVerboseNpmInstallFlowReportsEachStep(): void
     {
-        $this->givenFiles(['package.json' => true, 'Gruntfile.js' => true]);
+        $this->givenFiles($this->fileDriver, ['package.json' => true, 'Gruntfile.js' => true]);
         $this->fileDriver->method('isDirectory')->willReturn(false);
-        $this->io->method('confirm')->willReturn(true);
-        $this->shell->method('execute')->with('npm install --quiet')->willReturn('added 120 packages');
-        $this->io->expects($this->once())->method('section')->with("Running 'npm install'... Please wait.");
-        $this->io->expects($this->once())->method('writeln')->with('added 120 packages');
+        $shell = $this->createMock(Shell::class);
+        $shell
+            ->expects($this->once())
+            ->method('execute')
+            ->with('npm install --quiet')
+            ->willReturn('added 120 packages');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->method('confirm')->willReturn(true);
+        $io->expects($this->once())->method('section')->with("Running 'npm install'... Please wait.");
+        $io->expects($this->once())->method('writeln')->with('added 120 packages');
 
         $warnings = [];
-        $this->io
+        $io
             ->method('warning')
             ->willReturnCallback(function (string $message) use (&$warnings): void {
                 $warnings[] = $message;
             });
 
-        $this->assertTrue($this->checker->checkDependencies($this->io, true));
+        $checker = $this->createChecker(shell: $shell);
+
+        $this->assertTrue($checker->checkDependencies($io, true));
         $this->assertSame(["The 'node_modules' folder does not exist in the Magento root path."], $warnings);
     }
 
     public function testVerboseGruntfileSampleCopyReportsEachStep(): void
     {
-        $this->givenFiles([
+        $this->givenFiles($this->fileDriver, [
             'package.json' => true,
             'Gruntfile.js' => false,
             'Gruntfile.js.sample' => true,

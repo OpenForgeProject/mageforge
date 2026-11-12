@@ -14,6 +14,7 @@ use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -21,27 +22,27 @@ use Symfony\Component\Console\Tester\CommandTester;
 class TokensCommandTest extends TestCase
 {
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var BuilderPool&MockObject
+     * @var BuilderPool&Stub
      */
     private $builderPool;
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
     private $themeSuggester;
     /**
@@ -51,20 +52,13 @@ class TokensCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->builderPool = $this->createMock(BuilderPool::class);
-        $this->fileDriver = $this->createMock(File::class);
-        $this->shell = $this->createMock(Shell::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->command = new TokensCommand(
-            $this->themeList,
-            $this->themePath,
-            $this->builderPool,
-            $this->fileDriver,
-            $this->shell,
-            $this->themeSuggester,
-        );
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->builderPool = $this->createStub(BuilderPool::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->shell = $this->createStub(Shell::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -75,14 +69,18 @@ class TokensCommandTest extends TestCase
 
     public function testGeneratesTokensForLocalHyvaTheme(): void
     {
-        $this->givenHyvaTheme('/app/design/frontend/Vendor/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/app/design/frontend/Vendor/theme');
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npx hyva-tokens', ['/app/design/frontend/Vendor/theme/web/tailwind']);
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool, shell: $shell);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -96,24 +94,28 @@ class TokensCommandTest extends TestCase
 
     public function testCopiesTokensToVarGeneratedForVendorTheme(): void
     {
-        $this->givenHyvaTheme('/app/vendor/hyva-themes/theme');
-        $this->fileDriver
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/app/vendor/hyva-themes/theme');
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => !str_contains($path, 'var/generated'));
-        $this->fileDriver->method('isExists')->willReturn(true);
-        $this->fileDriver
+        $fileDriver->method('isExists')->willReturn(true);
+        $fileDriver
             ->expects($this->once())
             ->method('createDirectory')
             ->with($this->stringContains('var/generated/hyva-token/Vendor/theme'), 0o755);
-        $this->fileDriver
+        $fileDriver
             ->expects($this->once())
             ->method('copy')
             ->with(
                 '/app/vendor/hyva-themes/theme/web/tailwind/generated/hyva-tokens.css',
                 $this->stringContains('var/generated/hyva-token/Vendor/theme/hyva-tokens.css'),
             );
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool, fileDriver: $fileDriver);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -130,10 +132,13 @@ class TokensCommandTest extends TestCase
 
     public function testVerboseModeAnnouncesWorkingDirectory(): void
     {
-        $this->givenHyvaTheme('/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/theme');
         $this->fileDriver->method('isDirectory')->willReturn(true);
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(
             ['themeCode' => 'Vendor/theme'],
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
@@ -148,11 +153,14 @@ class TokensCommandTest extends TestCase
 
     public function testFailsWhenTokenGenerationFails(): void
     {
-        $this->givenHyvaTheme('/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/theme');
         $this->fileDriver->method('isDirectory')->willReturn(true);
         $this->shell->method('execute')->willThrowException(new \RuntimeException('npx not found'));
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -165,12 +173,14 @@ class TokensCommandTest extends TestCase
     public function testFailsForNonHyvaTheme(): void
     {
         $this->themePath->method('getPath')->willReturn('/theme');
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn('MagentoStandard');
         $this->builderPool->method('getBuilder')->willReturn($builder);
-        $this->shell->expects($this->never())->method('execute');
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->never())->method('execute');
+        $command = $this->createCommand(shell: $shell);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -192,13 +202,17 @@ class TokensCommandTest extends TestCase
 
     public function testFailsWhenTailwindDirectoryIsMissing(): void
     {
-        $this->givenHyvaTheme('/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/theme');
         $this->fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, 'node_modules'));
-        $this->shell->expects($this->never())->method('execute');
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->never())->method('execute');
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool, shell: $shell);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -210,13 +224,17 @@ class TokensCommandTest extends TestCase
 
     public function testWarnsWhenNodeModulesAreMissing(): void
     {
-        $this->givenHyvaTheme('/theme');
+        $themePath = $this->createMock(ThemePath::class);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $this->givenHyvaTheme($themePath, $builderPool, '/theme');
         $this->fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => !str_ends_with($path, 'node_modules'));
-        $this->shell->expects($this->never())->method('execute');
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->never())->method('execute');
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool, shell: $shell);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -237,27 +255,51 @@ class TokensCommandTest extends TestCase
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
     }
 
-    private function givenHyvaTheme(string $path): void
-    {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn($path);
-        $builder = $this->createMock(BuilderInterface::class);
+    private function createCommand(
+        ?ThemeList $themeList = null,
+        ?ThemePath $themePath = null,
+        ?BuilderPool $builderPool = null,
+        ?File $fileDriver = null,
+        ?Shell $shell = null,
+        ?ThemeSuggester $themeSuggester = null,
+    ): TokensCommand {
+        return new TokensCommand(
+            $themeList ?? $this->themeList,
+            $themePath ?? $this->themePath,
+            $builderPool ?? $this->builderPool,
+            $fileDriver ?? $this->fileDriver,
+            $shell ?? $this->shell,
+            $themeSuggester ?? $this->themeSuggester,
+        );
+    }
+
+    private function givenHyvaTheme(
+        ThemePath&MockObject $themePath,
+        BuilderPool&MockObject $builderPool,
+        string $path,
+    ): void {
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/theme')->willReturn($path);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn('HyvaThemes');
-        $this->builderPool->method('getBuilder')->with($path)->willReturn($builder);
+        $builderPool->expects($this->once())->method('getBuilder')->with($path)->willReturn($builder);
     }
 
     public function testNormalizesTrailingSlashInThemePath(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/theme/');
-        $builder = $this->createMock(BuilderInterface::class);
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/theme')->willReturn('/theme/');
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn('HyvaThemes');
         $this->builderPool->method('getBuilder')->willReturn($builder);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npx hyva-tokens', ['/theme/web/tailwind']);
+        $command = $this->createCommand(themePath: $themePath, shell: $shell);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);

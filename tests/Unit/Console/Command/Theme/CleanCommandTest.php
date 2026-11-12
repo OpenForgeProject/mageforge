@@ -10,26 +10,26 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeCleaner;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class CleanCommandTest extends TestCase
 {
     /**
-     * @var ThemeCleaner&MockObject
+     * @var ThemeCleaner&Stub
      */
     private $themeCleaner;
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
     private $themeSuggester;
     /**
@@ -39,16 +39,11 @@ class CleanCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->themeCleaner = $this->createMock(ThemeCleaner::class);
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->command = new CleanCommand(
-            $this->themeCleaner,
-            $this->themeList,
-            $this->themePath,
-            $this->themeSuggester,
-        );
+        $this->themeCleaner = $this->createStub(ThemeCleaner::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -59,14 +54,17 @@ class CleanCommandTest extends TestCase
 
     public function testCleansSingleThemeIncludingGlobalDirectories(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/path');
-        $this->themeCleaner->method('cleanViewPreprocessed')->with('Vendor/theme')->willReturn(2);
-        $this->themeCleaner->method('cleanPubStatic')->with('Vendor/theme')->willReturn(1);
-        $this->themeCleaner->expects($this->once())->method('cleanPageCache')->willReturn(1);
-        $this->themeCleaner->expects($this->once())->method('cleanVarTmp')->willReturn(1);
-        $this->themeCleaner->expects($this->once())->method('cleanGenerated')->willReturn(1);
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/theme')->willReturn('/path');
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->expects($this->once())->method('cleanViewPreprocessed')->with('Vendor/theme')->willReturn(2);
+        $themeCleaner->expects($this->once())->method('cleanPubStatic')->with('Vendor/theme')->willReturn(1);
+        $themeCleaner->expects($this->once())->method('cleanPageCache')->willReturn(1);
+        $themeCleaner->expects($this->once())->method('cleanVarTmp')->willReturn(1);
+        $themeCleaner->expects($this->once())->method('cleanGenerated')->willReturn(1);
+        $command = $this->createCommand(themeCleaner: $themeCleaner, themePath: $themePath);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -79,13 +77,15 @@ class CleanCommandTest extends TestCase
     public function testCleansGlobalDirectoriesOnlyOnceForMultipleThemes(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
-        $this->themeCleaner->method('cleanPubStatic')->willReturn(1);
-        $this->themeCleaner->expects($this->once())->method('cleanPageCache')->willReturn(0);
-        $this->themeCleaner->expects($this->once())->method('cleanVarTmp')->willReturn(0);
-        $this->themeCleaner->expects($this->once())->method('cleanGenerated')->willReturn(0);
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
+        $themeCleaner->method('cleanPubStatic')->willReturn(1);
+        $themeCleaner->expects($this->once())->method('cleanPageCache')->willReturn(0);
+        $themeCleaner->expects($this->once())->method('cleanVarTmp')->willReturn(0);
+        $themeCleaner->expects($this->once())->method('cleanGenerated')->willReturn(0);
+        $command = $this->createCommand(themeCleaner: $themeCleaner);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/one', 'Vendor/two']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -98,33 +98,35 @@ class CleanCommandTest extends TestCase
     public function testDryRunDoesNotDeleteAndAnnouncesMode(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->themeCleaner
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanViewPreprocessed')
             ->with('Vendor/theme', $this->anything(), true, true)
             ->willReturn(1);
-        $this->themeCleaner
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanPubStatic')
             ->with('Vendor/theme', $this->anything(), true, true)
             ->willReturn(0);
-        $this->themeCleaner
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanPageCache')
             ->with($this->anything(), true, true)
             ->willReturn(0);
-        $this->themeCleaner
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanVarTmp')
             ->with($this->anything(), true, true)
             ->willReturn(0);
-        $this->themeCleaner
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanGenerated')
             ->with($this->anything(), true, true)
             ->willReturn(0);
+        $command = $this->createCommand(themeCleaner: $themeCleaner);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme'], '--dry-run' => true]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -176,9 +178,11 @@ class CleanCommandTest extends TestCase
     public function testAllOptionWithoutThemesShowsInfo(): void
     {
         $this->themeList->method('getAllThemes')->willReturn([]);
-        $this->themeCleaner->expects($this->never())->method('cleanViewPreprocessed');
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->expects($this->never())->method('cleanViewPreprocessed');
+        $command = $this->createCommand(themeCleaner: $themeCleaner);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['--all' => true]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -192,9 +196,11 @@ class CleanCommandTest extends TestCase
         $this->themeList->method('getAllThemes')->willReturn([
             new FakeThemeWithTitle('Vendor/theme', 'Vendor Theme'),
         ]);
-        $this->themeCleaner->expects($this->never())->method('cleanViewPreprocessed');
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->expects($this->never())->method('cleanViewPreprocessed');
+        $command = $this->createCommand(themeCleaner: $themeCleaner);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -238,17 +244,19 @@ class CleanCommandTest extends TestCase
     public function testDeletionFailureMarksThemeAsFailedAndReturnsFailure(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
-        $this->themeCleaner->method('cleanPubStatic')->willReturn(0);
-        $this->themeCleaner->method('cleanPageCache')->willReturn(0);
-        $this->themeCleaner->method('cleanVarTmp')->willReturn(0);
-        $this->themeCleaner->method('cleanGenerated')->willReturn(0);
-        $this->themeCleaner
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
+        $themeCleaner->method('cleanPubStatic')->willReturn(0);
+        $themeCleaner->method('cleanPageCache')->willReturn(0);
+        $themeCleaner->method('cleanVarTmp')->willReturn(0);
+        $themeCleaner->method('cleanGenerated')->willReturn(0);
+        $themeCleaner
             ->method('getFailures')
             ->willReturn(['pub/static/frontend/Vendor/theme - Permission denied']);
-        $this->themeCleaner->expects($this->once())->method('resetFailures');
+        $themeCleaner->expects($this->once())->method('resetFailures');
+        $command = $this->createCommand(themeCleaner: $themeCleaner);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -265,14 +273,16 @@ class CleanCommandTest extends TestCase
             new FakeThemeWithTitle('Vendor/one', 'One'),
             new FakeThemeWithTitle('Other/theme', 'Other'),
         ]);
-        $this->themePath->method('getPath')->with('Vendor/one')->willReturn('/path');
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->once())->method('getPath')->with('Vendor/one')->willReturn('/path');
         $this->themeCleaner->method('cleanViewPreprocessed')->willReturn(1);
         $this->themeCleaner->method('cleanPubStatic')->willReturn(0);
         $this->themeCleaner->method('cleanPageCache')->willReturn(0);
         $this->themeCleaner->method('cleanVarTmp')->willReturn(0);
         $this->themeCleaner->method('cleanGenerated')->willReturn(0);
+        $command = $this->createCommand(themePath: $themePath);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/*']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -300,5 +310,19 @@ class CleanCommandTest extends TestCase
         $this->assertStringContainsString('Successfully cleaned 2 directories across 1 theme', $display);
         $this->assertStringNotContainsString('across 1 themes', $display, 'Singular form required for one theme');
         $this->assertStringContainsString('Failed to process 1 theme: Vendor/bad', $display);
+    }
+
+    private function createCommand(
+        ?ThemeCleaner $themeCleaner = null,
+        ?ThemeList $themeList = null,
+        ?ThemePath $themePath = null,
+        ?ThemeSuggester $themeSuggester = null,
+    ): CleanCommand {
+        return new CleanCommand(
+            $themeCleaner ?? $this->themeCleaner,
+            $themeList ?? $this->themeList,
+            $themePath ?? $this->themePath,
+            $themeSuggester ?? $this->themeSuggester,
+        );
     }
 }

@@ -7,13 +7,13 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\Inspector\Cache;
 use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\LayoutInterface;
 use OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class BlockCacheCollectorTest extends TestCase
 {
     /**
-     * @var LayoutInterface&MockObject
+     * @var LayoutInterface&Stub
      */
     private $layout;
     /**
@@ -23,7 +23,7 @@ class BlockCacheCollectorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->layout = $this->createMock(LayoutInterface::class);
+        $this->layout = $this->createStub(LayoutInterface::class);
         $this->collector = new BlockCacheCollector($this->layout);
     }
 
@@ -33,12 +33,12 @@ class BlockCacheCollectorTest extends TestCase
      * reads the raw value from the block's data bag. Configuring the block via setData() lets
      * us control exactly what the collector sees without fighting mock visibility rules.
      */
-    private function createBlock(): AbstractBlock&MockObject
+    private function createBlock(): AbstractBlock&Stub
     {
-        return $this->getMockBuilder(AbstractBlock::class)
+        return $this->getStubBuilder(AbstractBlock::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['isScopePrivate', 'getCacheKey'])
-            ->getMock();
+            ->getStub();
     }
 
     public function testGetCacheInfoReturnsNotCacheableWhenLifetimeIsFalse(): void

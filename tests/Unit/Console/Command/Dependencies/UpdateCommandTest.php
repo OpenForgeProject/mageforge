@@ -12,26 +12,26 @@ use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\DependencyUpdater;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use OpenForgeProject\MageForge\Test\Unit\Console\Command\Theme\FakeThemeWithTitle;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class UpdateCommandTest extends TestCase
 {
     /**
-     * @var DependencyUpdater&MockObject
+     * @var DependencyUpdater&Stub
      */
     private $dependencyUpdater;
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
     private $themeSuggester;
     /**
@@ -41,16 +41,11 @@ class UpdateCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dependencyUpdater = $this->createMock(DependencyUpdater::class);
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->command = new UpdateCommand(
-            $this->dependencyUpdater,
-            $this->themePath,
-            $this->themeList,
-            $this->themeSuggester,
-        );
+        $this->dependencyUpdater = $this->createStub(DependencyUpdater::class);
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -61,14 +56,17 @@ class UpdateCommandTest extends TestCase
 
     public function testUpdatesSingleThemeAndSuggestsRebuild(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/path');
-        $this->dependencyUpdater
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath->expects($this->atLeastOnce())->method('getPath')->with('Vendor/theme')->willReturn('/path');
+        $dependencyUpdater = $this->createMock(DependencyUpdater::class);
+        $dependencyUpdater
             ->expects($this->once())
             ->method('updateThemeDependencies')
             ->with('Vendor/theme', '/path', $this->anything(), false, false, false)
             ->willReturn(DependencyUpdateResult::Updated);
 
-        $tester = new CommandTester($this->command);
+        $command = $this->createCommand(dependencyUpdater: $dependencyUpdater, themePath: $themePath);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/theme']]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -81,13 +79,14 @@ class UpdateCommandTest extends TestCase
     public function testPassesLatestAndDryRunOptionsToService(): void
     {
         $this->themePath->method('getPath')->willReturn('/path');
-        $this->dependencyUpdater
+        $dependencyUpdater = $this->createMock(DependencyUpdater::class);
+        $dependencyUpdater
             ->expects($this->once())
             ->method('updateThemeDependencies')
             ->with('Vendor/theme', '/path', $this->anything(), false, true, true)
             ->willReturn(DependencyUpdateResult::Updated);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(dependencyUpdater: $dependencyUpdater));
         $exitCode = $tester->execute([
             'themeCodes' => ['Vendor/theme'],
             '--latest' => true,
@@ -148,9 +147,10 @@ class UpdateCommandTest extends TestCase
     {
         $this->themePath->method('getPath')->willReturn(null);
         $this->themeSuggester->method('findSimilarThemes')->willReturn([]);
-        $this->dependencyUpdater->expects($this->never())->method('updateThemeDependencies');
+        $dependencyUpdater = $this->createMock(DependencyUpdater::class);
+        $dependencyUpdater->expects($this->never())->method('updateThemeDependencies');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(dependencyUpdater: $dependencyUpdater));
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/unknown']]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -163,9 +163,10 @@ class UpdateCommandTest extends TestCase
     {
         $theme = new FakeThemeWithTitle('Vendor/theme', 'Vendor Theme');
         $this->themeList->method('getAllThemes')->willReturn([$theme]);
-        $this->dependencyUpdater->expects($this->never())->method('updateThemeDependencies');
+        $dependencyUpdater = $this->createMock(DependencyUpdater::class);
+        $dependencyUpdater->expects($this->never())->method('updateThemeDependencies');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(dependencyUpdater: $dependencyUpdater));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -189,5 +190,19 @@ class UpdateCommandTest extends TestCase
         $display = $tester->getDisplay();
         $this->assertStringContainsString('Updated dependencies for 1 theme(s)', $display);
         $this->assertStringContainsString('Failed to process 1 theme(s): Vendor/broken', $display);
+    }
+
+    private function createCommand(
+        ?DependencyUpdater $dependencyUpdater = null,
+        ?ThemePath $themePath = null,
+        ?ThemeList $themeList = null,
+        ?ThemeSuggester $themeSuggester = null,
+    ): UpdateCommand {
+        return new UpdateCommand(
+            $dependencyUpdater ?? $this->dependencyUpdater,
+            $themePath ?? $this->themePath,
+            $themeList ?? $this->themeList,
+            $themeSuggester ?? $this->themeSuggester,
+        );
     }
 }

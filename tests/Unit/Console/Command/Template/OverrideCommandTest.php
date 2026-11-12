@@ -16,7 +16,7 @@ use OpenForgeProject\MageForge\Service\TemplateOverride\TemplateFallbackResolver
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplatePathParser;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use OpenForgeProject\MageForge\Test\Unit\Service\TemplateOverride\FakeTheme;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -26,44 +26,44 @@ class OverrideCommandTest extends TestCase
     private const MODULE_DIR = '/magento/vendor/magento/module-catalog/view/frontend/templates';
 
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
-    private MockObject $themeList;
+    private Stub $themeList;
 
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
-    private MockObject $themeSuggester;
+    private Stub $themeSuggester;
 
     /**
-     * @var TemplatePathParser&MockObject
+     * @var TemplatePathParser&Stub
      */
-    private MockObject $templatePathParser;
+    private Stub $templatePathParser;
 
     /**
-     * @var TemplateFallbackResolver&MockObject
+     * @var TemplateFallbackResolver&Stub
      */
-    private MockObject $fallbackResolver;
+    private Stub $fallbackResolver;
 
     /**
-     * @var TemplateCopier&MockObject
+     * @var TemplateCopier&Stub
      */
-    private MockObject $templateCopier;
+    private Stub $templateCopier;
 
     /**
-     * @var AreaEmulator&MockObject
+     * @var AreaEmulator&Stub
      */
-    private MockObject $areaEmulator;
+    private Stub $areaEmulator;
 
     /**
-     * @var CacheCleaner&MockObject
+     * @var CacheCleaner&Stub
      */
-    private MockObject $cacheCleaner;
+    private Stub $cacheCleaner;
 
     /**
-     * @var DirectoryList&MockObject
+     * @var DirectoryList&Stub
      */
-    private MockObject $directoryList;
+    private Stub $directoryList;
 
     /**
      * @var OverrideCommand
@@ -72,25 +72,16 @@ class OverrideCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->templatePathParser = $this->createMock(TemplatePathParser::class);
-        $this->fallbackResolver = $this->createMock(TemplateFallbackResolver::class);
-        $this->templateCopier = $this->createMock(TemplateCopier::class);
-        $this->areaEmulator = $this->createMock(AreaEmulator::class);
-        $this->cacheCleaner = $this->createMock(CacheCleaner::class);
-        $this->directoryList = $this->createMock(DirectoryList::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->templatePathParser = $this->createStub(TemplatePathParser::class);
+        $this->fallbackResolver = $this->createStub(TemplateFallbackResolver::class);
+        $this->templateCopier = $this->createStub(TemplateCopier::class);
+        $this->areaEmulator = $this->createStub(AreaEmulator::class);
+        $this->cacheCleaner = $this->createStub(CacheCleaner::class);
+        $this->directoryList = $this->createStub(DirectoryList::class);
         $this->directoryList->method('getRoot')->willReturn('/magento');
-        $this->command = new OverrideCommand(
-            $this->themeList,
-            $this->themeSuggester,
-            $this->templatePathParser,
-            $this->fallbackResolver,
-            $this->templateCopier,
-            $this->areaEmulator,
-            $this->cacheCleaner,
-            $this->directoryList,
-        );
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -113,9 +104,10 @@ class OverrideCommandTest extends TestCase
     public function testMissingTemplateArgumentShowsUsageInNonInteractiveMode(): void
     {
         $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
-        $this->templatePathParser->expects($this->never())->method('parse');
+        $templatePathParser = $this->createMock(TemplatePathParser::class);
+        $templatePathParser->expects($this->never())->method('parse');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templatePathParser: $templatePathParser));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -130,9 +122,10 @@ class OverrideCommandTest extends TestCase
             new FakeTheme('Vendor/theme'),
             new FakeTheme('Vendor/other'),
         ]);
-        $this->areaEmulator->expects($this->never())->method('emulate');
+        $areaEmulator = $this->createMock(AreaEmulator::class);
+        $areaEmulator->expects($this->never())->method('emulate');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(areaEmulator: $areaEmulator));
         $exitCode = $tester->execute(['template' => 'Magento_Catalog::product/view/details.phtml']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -179,7 +172,8 @@ class OverrideCommandTest extends TestCase
                 self::MODULE_DIR . '/product/view/details.phtml',
                 self::THEME_DIR . '/product/view/details.phtml',
             );
-        $this->templateCopier
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier
             ->expects($this->once())
             ->method('copy')
             ->with(
@@ -187,10 +181,16 @@ class OverrideCommandTest extends TestCase
                 self::THEME_DIR . '/product/view/details.phtml',
                 'Magento_Catalog',
             );
-        $this->areaEmulator->expects($this->once())->method('emulate')->with('frontend');
-        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+        $areaEmulator = $this->createMock(AreaEmulator::class);
+        $areaEmulator->expects($this->once())->method('emulate')->with('frontend');
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
+        $cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(
+            templateCopier: $templateCopier,
+            areaEmulator: $areaEmulator,
+            cacheCleaner: $cacheCleaner,
+        ));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -212,10 +212,15 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver
             ->method('findFirstExistingFile')
             ->willReturn(self::MODULE_DIR . '/product/view/details.phtml');
-        $this->templateCopier->expects($this->never())->method('copy');
-        $this->cacheCleaner->expects($this->never())->method('clean');
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier->expects($this->never())->method('copy');
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
+        $cacheCleaner->expects($this->never())->method('clean');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(
+            templateCopier: $templateCopier,
+            cacheCleaner: $cacheCleaner,
+        ));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -236,9 +241,10 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver
             ->method('findFirstExistingFile')
             ->willReturn(self::THEME_DIR . '/product/view/details.phtml');
-        $this->templateCopier->expects($this->never())->method('copy');
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier->expects($this->never())->method('copy');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -260,7 +266,8 @@ class OverrideCommandTest extends TestCase
                 self::MODULE_DIR . '/product/view/details.phtml',
                 self::THEME_DIR . '/product/view/details.phtml',
             );
-        $this->templateCopier
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier
             ->expects($this->once())
             ->method('copy')
             ->with(
@@ -268,9 +275,13 @@ class OverrideCommandTest extends TestCase
                 self::THEME_DIR . '/product/view/details.phtml',
                 'Magento_Catalog',
             );
-        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
+        $cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(
+            templateCopier: $templateCopier,
+            cacheCleaner: $cacheCleaner,
+        ));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -292,10 +303,11 @@ class OverrideCommandTest extends TestCase
                 self::MODULE_DIR . '/product/view/details.phtml',
                 self::THEME_DIR . '/product/view/details.phtml',
             );
-        $this->templateCopier->expects($this->once())->method('copy');
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier->expects($this->once())->method('copy');
         $this->cacheCleaner->method('clean')->willReturn(false);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -311,9 +323,10 @@ class OverrideCommandTest extends TestCase
     {
         $this->setUpResolvableTemplate();
         $this->fallbackResolver->method('findFirstExistingFile')->willReturn(null);
-        $this->templateCopier->expects($this->never())->method('copy');
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier->expects($this->never())->method('copy');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -331,10 +344,15 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver
             ->method('findFirstExistingFile')
             ->willReturn(self::MODULE_DIR . '/product/view/details.phtml');
-        $this->templateCopier->expects($this->once())->method('copy');
-        $this->cacheCleaner->expects($this->never())->method('clean');
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $templateCopier->expects($this->once())->method('copy');
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
+        $cacheCleaner->expects($this->never())->method('clean');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(
+            templateCopier: $templateCopier,
+            cacheCleaner: $cacheCleaner,
+        ));
         $exitCode = $tester->execute([
             'template' => 'Magento_Catalog::product/view/details.phtml',
             '--theme' => 'Vendor/theme',
@@ -361,8 +379,30 @@ class OverrideCommandTest extends TestCase
         $this->assertStringContainsString("Module 'Unknown_Module' is not registered.", $tester->getDisplay());
     }
 
+    private function createCommand(
+        ?ThemeList $themeList = null,
+        ?ThemeSuggester $themeSuggester = null,
+        ?TemplatePathParser $templatePathParser = null,
+        ?TemplateFallbackResolver $fallbackResolver = null,
+        ?TemplateCopier $templateCopier = null,
+        ?AreaEmulator $areaEmulator = null,
+        ?CacheCleaner $cacheCleaner = null,
+        ?DirectoryList $directoryList = null,
+    ): OverrideCommand {
+        return new OverrideCommand(
+            $themeList ?? $this->themeList,
+            $themeSuggester ?? $this->themeSuggester,
+            $templatePathParser ?? $this->templatePathParser,
+            $fallbackResolver ?? $this->fallbackResolver,
+            $templateCopier ?? $this->templateCopier,
+            $areaEmulator ?? $this->areaEmulator,
+            $cacheCleaner ?? $this->cacheCleaner,
+            $directoryList ?? $this->directoryList,
+        );
+    }
+
     /**
-     * Configure mocks for a template that resolves to the fake theme and module directories
+     * Configure stubs for a template that resolves to the fake theme and module directories
      */
     private function setUpResolvableTemplate(): void
     {

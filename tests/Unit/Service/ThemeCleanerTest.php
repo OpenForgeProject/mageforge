@@ -9,22 +9,18 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\ReadInterface;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
 use OpenForgeProject\MageForge\Service\ThemeCleaner;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ThemeCleanerTest extends TestCase
 {
     /**
-     * @var Filesystem&MockObject
-     */
-    private $filesystem;
-    /**
-     * @var WriteInterface&MockObject
+     * @var WriteInterface&Stub
      */
     private $writeDirectory;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
@@ -34,11 +30,9 @@ class ThemeCleanerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->filesystem = $this->createMock(Filesystem::class);
-        $this->writeDirectory = $this->createMock(WriteInterface::class);
-        $this->filesystem->method('getDirectoryWrite')->willReturn($this->writeDirectory);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->cleaner = new ThemeCleaner($this->filesystem);
+        $this->writeDirectory = $this->createStub(WriteInterface::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->cleaner = $this->createCleaner();
     }
 
     // -------------------------------------------------------------------------
@@ -55,9 +49,10 @@ class ThemeCleanerTest extends TestCase
                 $deleted[] = $path;
                 return true;
             });
-        $this->io->expects($this->never())->method('writeln');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->assertSame(2, $this->cleaner->cleanViewPreprocessed('Vendor/theme', $this->io));
+        $this->assertSame(2, $this->cleaner->cleanViewPreprocessed('Vendor/theme', $io));
         $this->assertSame(
             [
                 'view_preprocessed/css/frontend/Vendor/theme',
@@ -70,11 +65,13 @@ class ThemeCleanerTest extends TestCase
     public function testCleanViewPreprocessedReturnsZeroForInvalidThemeCode(): void
     {
         // Directories nominally exist so only the theme-code guard prevents deletion.
-        $this->writeDirectory->method('isDirectory')->willReturn(true);
-        $this->writeDirectory->expects($this->never())->method('delete');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->method('isDirectory')->willReturn(true);
+        $writeDirectory->expects($this->never())->method('delete');
+        $cleaner = $this->createCleaner($writeDirectory);
 
-        $this->assertSame(0, $this->cleaner->cleanViewPreprocessed('invalid-theme-code', $this->io));
-        $this->assertSame(0, $this->cleaner->cleanViewPreprocessed('too/many/parts', $this->io));
+        $this->assertSame(0, $cleaner->cleanViewPreprocessed('invalid-theme-code', $this->io));
+        $this->assertSame(0, $cleaner->cleanViewPreprocessed('too/many/parts', $this->io));
     }
 
     public function testVerboseDryRunAnnouncesWhatWouldBeCleaned(): void
@@ -124,10 +121,11 @@ class ThemeCleanerTest extends TestCase
     {
         $this->writeDirectory->method('isDirectory')->willReturn(true);
         $this->writeDirectory->method('delete')->willThrowException(new \RuntimeException('locked'));
-        $this->io->expects($this->never())->method('writeln');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->cleaner->cleanPubStatic('Vendor/theme', $this->io);
-        $this->cleaner->cleanPageCache($this->io);
+        $this->cleaner->cleanPubStatic('Vendor/theme', $io);
+        $this->cleaner->cleanPageCache($io);
 
         $this->assertSame(
             ['pub/static/frontend/Vendor/theme - locked', 'var/page_cache - locked'],
@@ -160,18 +158,22 @@ class ThemeCleanerTest extends TestCase
 
     public function testCleanViewPreprocessedReturnsZeroWhenBaseDirectoryMissing(): void
     {
-        $this->writeDirectory->method('isDirectory')->willReturn(false);
-        $this->writeDirectory->expects($this->never())->method('delete');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->method('isDirectory')->willReturn(false);
+        $writeDirectory->expects($this->never())->method('delete');
 
-        $this->assertSame(0, $this->cleaner->cleanViewPreprocessed('Vendor/theme', $this->io));
+        $this->assertSame(0, $this->createCleaner($writeDirectory)->cleanViewPreprocessed('Vendor/theme', $this->io));
     }
 
     public function testDryRunCountsWithoutDeleting(): void
     {
-        $this->writeDirectory->method('isDirectory')->willReturn(true);
-        $this->writeDirectory->expects($this->never())->method('delete');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->method('isDirectory')->willReturn(true);
+        $writeDirectory->expects($this->never())->method('delete');
 
-        $this->assertSame(2, $this->cleaner->cleanViewPreprocessed('Vendor/theme', $this->io, dryRun: true));
+        $cleaner = $this->createCleaner($writeDirectory);
+
+        $this->assertSame(2, $cleaner->cleanViewPreprocessed('Vendor/theme', $this->io, dryRun: true));
     }
 
     public function testCleanViewPreprocessedSurvivesDeleteFailure(): void
@@ -188,40 +190,44 @@ class ThemeCleanerTest extends TestCase
 
     public function testCleansPubStaticThemeDirectory(): void
     {
-        $this->writeDirectory->method('isDirectory')->willReturn(true);
-        $this->writeDirectory
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->method('isDirectory')->willReturn(true);
+        $writeDirectory
             ->expects($this->once())
             ->method('delete')
             ->with('frontend/Vendor/theme')
             ->willReturn(true);
-        $this->io->expects($this->never())->method('writeln');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->assertSame(1, $this->cleaner->cleanPubStatic('Vendor/theme', $this->io));
+        $this->assertSame(1, $this->createCleaner($writeDirectory)->cleanPubStatic('Vendor/theme', $io));
     }
 
     public function testCleanPubStaticReturnsZeroWhenThemeDirectoryMissing(): void
     {
-        $this->writeDirectory
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory
             ->method('isDirectory')
             ->willReturnMap([
                 ['frontend', true],
                 ['frontend/Vendor/theme', false],
             ]);
-        $this->writeDirectory->expects($this->never())->method('delete');
+        $writeDirectory->expects($this->never())->method('delete');
 
-        $this->assertSame(0, $this->cleaner->cleanPubStatic('Vendor/theme', $this->io));
+        $this->assertSame(0, $this->createCleaner($writeDirectory)->cleanPubStatic('Vendor/theme', $this->io));
     }
 
     public function testCleanPubStaticReportsVerboseOutput(): void
     {
         $this->writeDirectory->method('isDirectory')->willReturn(true);
         $this->writeDirectory->method('delete')->willReturn(true);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('writeln')
             ->with('  <fg=green>✓</> Cleaned: pub/static/frontend/Vendor/theme');
 
-        $this->assertSame(1, $this->cleaner->cleanPubStatic('Vendor/theme', $this->io, false, true));
+        $this->assertSame(1, $this->cleaner->cleanPubStatic('Vendor/theme', $io, false, true));
     }
 
     // -------------------------------------------------------------------------
@@ -230,11 +236,13 @@ class ThemeCleanerTest extends TestCase
 
     public function testCleansPageCacheWhenPresent(): void
     {
-        $this->writeDirectory->method('isDirectory')->with('page_cache')->willReturn(true);
-        $this->writeDirectory->expects($this->once())->method('delete')->with('page_cache')->willReturn(true);
-        $this->io->expects($this->never())->method('writeln');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->expects($this->once())->method('isDirectory')->with('page_cache')->willReturn(true);
+        $writeDirectory->expects($this->once())->method('delete')->with('page_cache')->willReturn(true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->assertSame(1, $this->cleaner->cleanPageCache($this->io));
+        $this->assertSame(1, $this->createCleaner($writeDirectory)->cleanPageCache($io));
     }
 
     public function testCleanPageCacheReturnsZeroWhenMissing(): void
@@ -246,11 +254,13 @@ class ThemeCleanerTest extends TestCase
 
     public function testCleansVarTmpWhenPresent(): void
     {
-        $this->writeDirectory->method('isDirectory')->with('tmp')->willReturn(true);
-        $this->writeDirectory->expects($this->once())->method('delete')->with('tmp')->willReturn(true);
-        $this->io->expects($this->never())->method('writeln');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->expects($this->once())->method('isDirectory')->with('tmp')->willReturn(true);
+        $writeDirectory->expects($this->once())->method('delete')->with('tmp')->willReturn(true);
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->assertSame(1, $this->cleaner->cleanVarTmp($this->io));
+        $this->assertSame(1, $this->createCleaner($writeDirectory)->cleanVarTmp($io));
     }
 
     // -------------------------------------------------------------------------
@@ -268,18 +278,20 @@ class ThemeCleanerTest extends TestCase
                 return true;
             });
 
-        $this->io->expects($this->never())->method('writeln');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('writeln');
 
-        $this->assertSame(1, $this->cleaner->cleanGenerated($this->io));
+        $this->assertSame(1, $this->cleaner->cleanGenerated($io));
         $this->assertSame(['code', 'metadata'], $deleted);
     }
 
     public function testCleanGeneratedReturnsZeroWhenNothingExists(): void
     {
-        $this->writeDirectory->method('isDirectory')->willReturn(false);
-        $this->writeDirectory->expects($this->never())->method('delete');
+        $writeDirectory = $this->createMock(WriteInterface::class);
+        $writeDirectory->method('isDirectory')->willReturn(false);
+        $writeDirectory->expects($this->never())->method('delete');
 
-        $this->assertSame(0, $this->cleaner->cleanGenerated($this->io));
+        $this->assertSame(0, $this->createCleaner($writeDirectory)->cleanGenerated($this->io));
     }
 
     public function testCleanGeneratedCountsPartialSuccess(): void
@@ -304,19 +316,30 @@ class ThemeCleanerTest extends TestCase
     public function testHasStaticFilesChecksThemeDirectory(): void
     {
         $readDirectory = $this->createMock(ReadInterface::class);
-        $this->filesystem
+        $readDirectory->expects($this->once())->method('isDirectory')->with('frontend/Vendor/theme')->willReturn(true);
+        $filesystem = $this->createMock(Filesystem::class);
+        $filesystem
+            ->expects($this->once())
             ->method('getDirectoryRead')
             ->with(DirectoryList::STATIC_VIEW)
             ->willReturn($readDirectory);
-        $readDirectory->method('isDirectory')->with('frontend/Vendor/theme')->willReturn(true);
 
-        $this->assertTrue($this->cleaner->hasStaticFiles('Vendor/theme'));
+        $this->assertTrue((new ThemeCleaner($filesystem))->hasStaticFiles('Vendor/theme'));
     }
 
     public function testHasStaticFilesIsFalseForInvalidThemeCode(): void
     {
-        $this->filesystem->expects($this->never())->method('getDirectoryRead');
+        $filesystem = $this->createMock(Filesystem::class);
+        $filesystem->expects($this->never())->method('getDirectoryRead');
 
-        $this->assertFalse($this->cleaner->hasStaticFiles('invalid'));
+        $this->assertFalse((new ThemeCleaner($filesystem))->hasStaticFiles('invalid'));
+    }
+
+    private function createCleaner(?WriteInterface $writeDirectory = null): ThemeCleaner
+    {
+        $filesystem = $this->createStub(Filesystem::class);
+        $filesystem->method('getDirectoryWrite')->willReturn($writeDirectory ?? $this->writeDirectory);
+
+        return new ThemeCleaner($filesystem);
     }
 }

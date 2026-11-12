@@ -11,7 +11,7 @@ use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Dev\InspectorCommand;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -19,19 +19,19 @@ use Symfony\Component\Console\Tester\CommandTester;
 class InspectorCommandTest extends TestCase
 {
     /**
-     * @var WriterInterface&MockObject
+     * @var WriterInterface&Stub
      */
     private $configWriter;
     /**
-     * @var State&MockObject
+     * @var State&Stub
      */
     private $state;
     /**
-     * @var CacheManager&MockObject
+     * @var CacheManager&Stub
      */
     private $cacheManager;
     /**
-     * @var ScopeConfigInterface&MockObject
+     * @var ScopeConfigInterface&Stub
      */
     private $scopeConfig;
     /**
@@ -41,17 +41,12 @@ class InspectorCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->configWriter = $this->createMock(WriterInterface::class);
-        $this->state = $this->createMock(State::class);
-        $this->cacheManager = $this->createMock(CacheManager::class);
-        $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $this->configWriter = $this->createStub(WriterInterface::class);
+        $this->state = $this->createStub(State::class);
+        $this->cacheManager = $this->createStub(CacheManager::class);
+        $this->scopeConfig = $this->createStub(ScopeConfigInterface::class);
 
-        $this->command = new InspectorCommand(
-            $this->configWriter,
-            $this->state,
-            $this->cacheManager,
-            $this->scopeConfig,
-        );
+        $this->command = $this->createCommand();
     }
 
     public function testRejectsInvalidAction(): void
@@ -66,9 +61,10 @@ class InspectorCommandTest extends TestCase
     public function testEnableFailsOutsideDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_PRODUCTION);
-        $this->configWriter->expects($this->never())->method('save');
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->never())->method('save');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(configWriter: $configWriter));
         $exitCode = $tester->execute(['action' => 'enable']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -78,14 +74,16 @@ class InspectorCommandTest extends TestCase
     public function testEnableSavesConfigAndCleansCacheInDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->configWriter->expects($this->once())
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->once())
             ->method('save')
             ->with(InspectorConfig::XML_PATH_ENABLED, '1');
-        $this->cacheManager->expects($this->once())
+        $cacheManager = $this->createMock(CacheManager::class);
+        $cacheManager->expects($this->once())
             ->method('clean')
             ->with(['config', 'layout', 'full_page', 'block_html']);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(configWriter: $configWriter, cacheManager: $cacheManager));
         $exitCode = $tester->execute(['action' => 'ENABLE']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -95,11 +93,12 @@ class InspectorCommandTest extends TestCase
     public function testDisableSavesConfigAndCleansCache(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->configWriter->expects($this->once())
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->once())
             ->method('save')
             ->with(InspectorConfig::XML_PATH_ENABLED, '0');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(configWriter: $configWriter));
         $exitCode = $tester->execute(['action' => 'disable']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -167,12 +166,13 @@ class InspectorCommandTest extends TestCase
     public function testEnableAnnouncesUsageAndCleansExactCacheTypes(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->cacheManager
+        $cacheManager = $this->createMock(CacheManager::class);
+        $cacheManager
             ->expects($this->once())
             ->method('clean')
             ->with(['config', 'layout', 'full_page', 'block_html']);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(cacheManager: $cacheManager));
         $tester->execute(['action' => 'enable']);
 
         $display = (string) preg_replace('/\s+/', ' ', $tester->getDisplay());
@@ -239,9 +239,10 @@ class InspectorCommandTest extends TestCase
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
-        $this->configWriter->expects($this->never())->method('save');
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->never())->method('save');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(configWriter: $configWriter));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -251,11 +252,12 @@ class InspectorCommandTest extends TestCase
     public function testNoActionUsesSelectedActionFromInteractiveMenu(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->configWriter->expects($this->once())
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->once())
             ->method('save')
             ->with(InspectorConfig::XML_PATH_ENABLED, '0');
 
-        $tester = new CommandTester($this->createInteractiveCommand('disable'));
+        $tester = new CommandTester($this->createInteractiveCommand('disable', configWriter: $configWriter));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -264,12 +266,27 @@ class InspectorCommandTest extends TestCase
 
     public function testNoActionFailsWhenInteractiveMenuIsCancelled(): void
     {
-        $this->configWriter->expects($this->never())->method('save');
+        $configWriter = $this->createMock(WriterInterface::class);
+        $configWriter->expects($this->never())->method('save');
 
-        $tester = new CommandTester($this->createInteractiveCommand(null));
+        $tester = new CommandTester($this->createInteractiveCommand(null, configWriter: $configWriter));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
+    }
+
+    private function createCommand(
+        ?WriterInterface $configWriter = null,
+        ?State $state = null,
+        ?CacheManager $cacheManager = null,
+        ?ScopeConfigInterface $scopeConfig = null,
+    ): InspectorCommand {
+        return new InspectorCommand(
+            $configWriter ?? $this->configWriter,
+            $state ?? $this->state,
+            $cacheManager ?? $this->cacheManager,
+            $scopeConfig ?? $this->scopeConfig,
+        );
     }
 
     /**
@@ -277,12 +294,15 @@ class InspectorCommandTest extends TestCase
      * the given selection from the menu instead of rendering a real prompt
      *
      * @param string|null $selection
+     * @param WriterInterface|null $configWriter
      * @return InspectorCommand
      */
-    private function createInteractiveCommand(?string $selection): InspectorCommand
-    {
+    private function createInteractiveCommand(
+        ?string $selection,
+        ?WriterInterface $configWriter = null,
+    ): InspectorCommand {
         return new class(
-            $this->configWriter,
+            $configWriter ?? $this->configWriter,
             $this->state,
             $this->cacheManager,
             $this->scopeConfig,

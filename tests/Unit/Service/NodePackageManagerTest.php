@@ -7,22 +7,22 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service;
 use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodePackageManagerTest extends TestCase
 {
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var FileDriver&MockObject
+     * @var FileDriver&Stub
      */
     private $fileDriver;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
@@ -32,10 +32,15 @@ class NodePackageManagerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->shell = $this->createMock(Shell::class);
-        $this->fileDriver = $this->createMock(FileDriver::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->packageManager = new NodePackageManager($this->shell, $this->fileDriver);
+        $this->shell = $this->createStub(Shell::class);
+        $this->fileDriver = $this->createStub(FileDriver::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->packageManager = $this->createPackageManager();
+    }
+
+    private function createPackageManager(?Shell $shell = null, ?FileDriver $fileDriver = null): NodePackageManager
+    {
+        return new NodePackageManager($shell ?? $this->shell, $fileDriver ?? $this->fileDriver);
     }
 
     // -------------------------------------------------------------------------
@@ -44,13 +49,17 @@ class NodePackageManagerTest extends TestCase
 
     public function testUsesNpmCiWhenLockFileExists(): void
     {
-        $this->fileDriver->method('isExists')->with('/theme/package-lock.json')->willReturn(true);
-        $this->shell
+        $fileDriver = $this->createMock(FileDriver::class);
+        $fileDriver->expects($this->once())->method('isExists')->with('/theme/package-lock.json')->willReturn(true);
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm ci --quiet', ['/theme']);
 
-        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, false));
+        $packageManager = $this->createPackageManager(shell: $shell, fileDriver: $fileDriver);
+
+        $this->assertTrue($packageManager->installNodeModules('/theme', $this->io, false));
     }
 
     public function testFallsBackToNpmInstallWhenNpmCiFails(): void
@@ -75,24 +84,28 @@ class NodePackageManagerTest extends TestCase
     public function testUsesNpmInstallWhenLockFileIsMissing(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm install --quiet', ['/theme']);
 
-        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, false));
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->installNodeModules('/theme', $this->io, false));
     }
 
     public function testReturnsFalseAndPrintsErrorWhenInstallationFails(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
         $this->shell->method('execute')->willThrowException(new \RuntimeException('npm not found'));
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with('Failed to install node modules: npm not found');
 
-        $this->assertFalse($this->packageManager->installNodeModules('/theme', $this->io, false));
+        $this->assertFalse($this->packageManager->installNodeModules('/theme', $io, false));
     }
 
     public function testWarnsAndReportsSuccessInVerboseModeWhenNpmCiFails(): void
@@ -106,31 +119,33 @@ class NodePackageManagerTest extends TestCase
                 }
                 return '';
             });
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with('npm ci failed, falling back to npm install...');
-        $this->io
+        $io
             ->expects($this->once())
             ->method('success')
             ->with('Node modules installed successfully.');
 
-        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, true));
+        $this->assertTrue($this->packageManager->installNodeModules('/theme', $io, true));
     }
 
     public function testWarnsInVerboseModeWhenLockFileIsMissing(): void
     {
         $this->fileDriver->method('isExists')->willReturn(false);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with('No package-lock.json found, running npm install...');
-        $this->io
+        $io
             ->expects($this->once())
             ->method('success')
             ->with('Node modules installed successfully.');
 
-        $this->assertTrue($this->packageManager->installNodeModules('/theme', $this->io, true));
+        $this->assertTrue($this->packageManager->installNodeModules('/theme', $io, true));
     }
 
     // -------------------------------------------------------------------------
@@ -139,29 +154,38 @@ class NodePackageManagerTest extends TestCase
 
     public function testNotInSyncWhenNodeModulesIsMissing(): void
     {
-        $this->fileDriver->method('isDirectory')->with('/theme/node_modules')->willReturn(false);
+        $fileDriver = $this->createMock(FileDriver::class);
+        $fileDriver->expects($this->once())->method('isDirectory')->with('/theme/node_modules')->willReturn(false);
 
-        $this->assertFalse($this->packageManager->isNodeModulesInSync('/theme'));
+        $packageManager = $this->createPackageManager(fileDriver: $fileDriver);
+
+        $this->assertFalse($packageManager->isNodeModulesInSync('/theme'));
     }
 
     public function testNotInSyncWhenLockFileIsMissing(): void
     {
-        $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->fileDriver->method('isExists')->with('/theme/package-lock.json')->willReturn(false);
+        $fileDriver = $this->createMock(FileDriver::class);
+        $fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->expects($this->once())->method('isExists')->with('/theme/package-lock.json')->willReturn(false);
 
-        $this->assertFalse($this->packageManager->isNodeModulesInSync('/theme'));
+        $packageManager = $this->createPackageManager(fileDriver: $fileDriver);
+
+        $this->assertFalse($packageManager->isNodeModulesInSync('/theme'));
     }
 
     public function testInSyncWhenNpmLsSucceeds(): void
     {
         $this->fileDriver->method('isDirectory')->willReturn(true);
         $this->fileDriver->method('isExists')->willReturn(true);
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm ls --depth=0 --json > /dev/null 2>&1', ['/theme']);
 
-        $this->assertTrue($this->packageManager->isNodeModulesInSync('/theme'));
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->isNodeModulesInSync('/theme'));
     }
 
     public function testNotInSyncWhenNpmLsFails(): void
@@ -179,37 +203,44 @@ class NodePackageManagerTest extends TestCase
 
     public function testWarnsAboutOutdatedPackages(): void
     {
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
+            ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm outdated --json', ['/theme'])
             ->willReturn('{"tailwindcss": {"current": "3.0.0", "latest": "4.0.0"}}');
-        $this->io->expects($this->once())->method('warning')->with('Outdated packages found:');
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('warning')->with('Outdated packages found:');
+        $io
             ->expects($this->once())
             ->method('writeln')
             ->with('{"tailwindcss": {"current": "3.0.0", "latest": "4.0.0"}}');
 
-        $this->packageManager->checkOutdatedPackages('/theme', $this->io);
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $packageManager->checkOutdatedPackages('/theme', $io);
     }
 
     public function testStaysSilentWhenEverythingIsUpToDate(): void
     {
         $this->shell->method('execute')->willReturn('');
-        $this->io->expects($this->never())->method('warning');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->never())->method('warning');
 
-        $this->packageManager->checkOutdatedPackages('/theme', $this->io);
+        $this->packageManager->checkOutdatedPackages('/theme', $io);
     }
 
     public function testReportsCheckFailureOnlyInVerboseMode(): void
     {
         $this->shell->method('execute')->willThrowException(new \RuntimeException('registry unreachable'));
-        $this->io->method('isVerbose')->willReturn(true);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->method('isVerbose')->willReturn(true);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with('Failed to check outdated packages: registry unreachable');
 
-        $this->packageManager->checkOutdatedPackages('/theme', $this->io);
+        $this->packageManager->checkOutdatedPackages('/theme', $io);
     }
 
     // -------------------------------------------------------------------------
@@ -218,7 +249,8 @@ class NodePackageManagerTest extends TestCase
 
     public function testParsesOutdatedPackagesFromNpmJsonOutput(): void
     {
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm outdated --json --long 2>/dev/null; true', ['/theme'])
@@ -237,7 +269,9 @@ class NodePackageManagerTest extends TestCase
                 ],
             ], JSON_THROW_ON_ERROR));
 
-        $packages = $this->packageManager->getOutdatedPackages('/theme');
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $packages = $packageManager->getOutdatedPackages('/theme');
 
         $this->assertSame([
             [
@@ -322,31 +356,36 @@ class NodePackageManagerTest extends TestCase
 
     public function testRunsNpmUpdate(): void
     {
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm update --quiet', ['/theme']);
 
-        $this->assertTrue($this->packageManager->updatePackages('/theme', $this->io, false));
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->updatePackages('/theme', $this->io, false));
     }
 
     public function testReportsSuccessInVerboseModeAfterUpdate(): void
     {
-        $this->io->expects($this->once())->method('text')->with('Running npm update...');
-        $this->io->expects($this->once())->method('success')->with('Packages updated within their semver ranges.');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('text')->with('Running npm update...');
+        $io->expects($this->once())->method('success')->with('Packages updated within their semver ranges.');
 
-        $this->assertTrue($this->packageManager->updatePackages('/theme', $this->io, true));
+        $this->assertTrue($this->packageManager->updatePackages('/theme', $io, true));
     }
 
     public function testReturnsFalseAndPrintsErrorWhenUpdateFails(): void
     {
         $this->shell->method('execute')->willThrowException(new \RuntimeException('registry unreachable'));
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with('Failed to update packages: registry unreachable');
 
-        $this->assertFalse($this->packageManager->updatePackages('/theme', $this->io, false));
+        $this->assertFalse($this->packageManager->updatePackages('/theme', $io, false));
     }
 
     // -------------------------------------------------------------------------
@@ -355,7 +394,8 @@ class NodePackageManagerTest extends TestCase
 
     public function testInstallsPackagesWithSaveDevFlagForDevDependencies(): void
     {
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with(
@@ -363,7 +403,9 @@ class NodePackageManagerTest extends TestCase
                 ['/theme', 'tailwindcss@4.1.5', 'postcss@8.5.0'],
             );
 
-        $this->assertTrue($this->packageManager->installPackageVersions(
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->installPackageVersions(
             '/theme',
             'devDependencies',
             ['tailwindcss' => '4.1.5', 'postcss' => '8.5.0'],
@@ -374,12 +416,15 @@ class NodePackageManagerTest extends TestCase
 
     public function testInstallsPackagesWithSaveFlagForUnknownDependencyType(): void
     {
-        $this->shell
+        $shell = $this->createMock(Shell::class);
+        $shell
             ->expects($this->once())
             ->method('execute')
             ->with('cd %s && npm install --save --quiet %s', ['/theme', 'alpinejs@3.14.9']);
 
-        $this->assertTrue($this->packageManager->installPackageVersions(
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->installPackageVersions(
             '/theme',
             'somethingUnknown',
             ['alpinejs' => '3.14.9'],
@@ -390,9 +435,12 @@ class NodePackageManagerTest extends TestCase
 
     public function testSkipsShellExecutionForEmptyPackageList(): void
     {
-        $this->shell->expects($this->never())->method('execute');
+        $shell = $this->createMock(Shell::class);
+        $shell->expects($this->never())->method('execute');
 
-        $this->assertTrue($this->packageManager->installPackageVersions(
+        $packageManager = $this->createPackageManager(shell: $shell);
+
+        $this->assertTrue($packageManager->installPackageVersions(
             '/theme',
             'dependencies',
             [],
@@ -404,7 +452,8 @@ class NodePackageManagerTest extends TestCase
     public function testReturnsFalseAndPrintsErrorWhenInstallOfVersionsFails(): void
     {
         $this->shell->method('execute')->willThrowException(new \RuntimeException('E404 not found'));
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with('Failed to install packages: E404 not found');
@@ -413,7 +462,7 @@ class NodePackageManagerTest extends TestCase
             '/theme',
             'dependencies',
             ['alpinejs' => '3.14.9'],
-            $this->io,
+            $io,
             false,
         ));
     }

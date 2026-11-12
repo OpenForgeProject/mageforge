@@ -11,30 +11,30 @@ use OpenForgeProject\MageForge\Service\DependencyUpdateResult;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard\Builder as MagentoStandardBuilder;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DependencyUpdaterTest extends TestCase
 {
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var NodePackageManager&MockObject
+     * @var NodePackageManager&Stub
      */
     private $nodePackageManager;
     /**
-     * @var BuilderPool&MockObject
+     * @var BuilderPool&Stub
      */
     private $builderPool;
     /**
-     * @var DirectoryList&MockObject
+     * @var DirectoryList&Stub
      */
     private $directoryList;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
@@ -44,23 +44,30 @@ class DependencyUpdaterTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->fileDriver = $this->createMock(File::class);
-        $this->nodePackageManager = $this->createMock(NodePackageManager::class);
-        $this->builderPool = $this->createMock(BuilderPool::class);
-        $this->directoryList = $this->createMock(DirectoryList::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->nodePackageManager = $this->createStub(NodePackageManager::class);
+        $this->builderPool = $this->createStub(BuilderPool::class);
+        $this->directoryList = $this->createStub(DirectoryList::class);
         $this->directoryList->method('getRoot')->willReturn('/magento-root');
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->updater = new DependencyUpdater(
-            $this->fileDriver,
-            $this->nodePackageManager,
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->updater = $this->createUpdater();
+    }
+
+    private function createUpdater(
+        ?File $fileDriver = null,
+        ?NodePackageManager $nodePackageManager = null,
+    ): DependencyUpdater {
+        return new DependencyUpdater(
+            $fileDriver ?? $this->fileDriver,
+            $nodePackageManager ?? $this->nodePackageManager,
             $this->builderPool,
             $this->directoryList,
         );
     }
 
-    private function actAsMagentoStandardTheme(): void
+    private function actAsMagentoStandardTheme(BuilderPool&Stub $builderPool): void
     {
-        $this->builderPool->method('getBuilder')->willReturn($this->createMock(MagentoStandardBuilder::class));
+        $builderPool->method('getBuilder')->willReturn($this->createStub(MagentoStandardBuilder::class));
     }
 
     /**
@@ -119,16 +126,20 @@ class DependencyUpdaterTest extends TestCase
 
     public function testSkipsVendorThemesWithWarning(): void
     {
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('managed by Composer'));
-        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
-        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Skipped, $updater->updateThemeDependencies(
             'Hyva/default',
             '/magento-root/vendor/hyva-themes/magento2-default-theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -139,16 +150,20 @@ class DependencyUpdaterTest extends TestCase
     {
         $this->fileDriver->method('isExists')->willReturn(false);
         $this->builderPool->method('getBuilder')->willReturn(null);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('has no own package.json'));
-        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
-        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Skipped, $updater->updateThemeDependencies(
             'Vendor/csstheme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -162,17 +177,21 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager->method('getOutdatedPackages')->willReturn([]);
-        $this->nodePackageManager->expects($this->never())->method('updatePackages');
-        $this->io
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('getOutdatedPackages')->willReturn([]);
+        $nodePackageManager->expects($this->never())->method('updatePackages');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('writeln')
             ->with($this->stringContains('are up to date'));
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -181,19 +200,27 @@ class DependencyUpdaterTest extends TestCase
 
     public function testInstallsNodeModulesFirstWhenMissing(): void
     {
-        $this->fileDriver->method('isExists')->willReturnMap([
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isExists')->willReturnMap([
             ['/theme/web/tailwind/package.json', true],
             ['/theme/package.json', false],
         ]);
-        $this->fileDriver->method('isDirectory')->with('/theme/web/tailwind/node_modules')->willReturn(false);
-        $this->nodePackageManager
+        $fileDriver
+            ->expects($this->once())
+            ->method('isDirectory')
+            ->with('/theme/web/tailwind/node_modules')
+            ->willReturn(false);
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->expects($this->once())
             ->method('installNodeModules')
             ->with('/theme/web/tailwind', $this->io, false)
             ->willReturn(true);
-        $this->nodePackageManager->method('getOutdatedPackages')->willReturn([]);
+        $nodePackageManager->method('getOutdatedPackages')->willReturn([]);
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(fileDriver: $fileDriver, nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -210,10 +237,13 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(false);
-        $this->nodePackageManager->method('installNodeModules')->willReturn(false);
-        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('installNodeModules')->willReturn(false);
+        $nodePackageManager->expects($this->never())->method('getOutdatedPackages');
 
-        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Failed, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -230,17 +260,20 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->method('getOutdatedPackages')
             ->willReturnOnConsecutiveCalls([$this->outdatedPackage()], []);
-        $this->nodePackageManager
+        $nodePackageManager
             ->expects($this->once())
             ->method('updatePackages')
             ->with('/theme/web/tailwind')
             ->willReturn(true);
-        $this->nodePackageManager->expects($this->never())->method('installPackageVersions');
+        $nodePackageManager->expects($this->never())->method('installPackageVersions');
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -261,7 +294,8 @@ class DependencyUpdaterTest extends TestCase
             ->method('getOutdatedPackages')
             ->willReturnOnConsecutiveCalls([$this->outdatedPackage()], [$this->outdatedPackage(current: '3.4.17')]);
         $this->nodePackageManager->method('updatePackages')->willReturn(true);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('note')
             ->with($this->stringContains('--latest'));
@@ -269,7 +303,7 @@ class DependencyUpdaterTest extends TestCase
         $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -282,19 +316,23 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/web/tailwind/package.json', true],
             ['/theme/package.json', false],
         ]);
-        $this->nodePackageManager->method('getOutdatedPackages')->willReturn([$this->outdatedPackage()]);
-        $this->nodePackageManager->expects($this->never())->method('installNodeModules');
-        $this->nodePackageManager->expects($this->never())->method('updatePackages');
-        $this->nodePackageManager->expects($this->never())->method('installPackageVersions');
-        $this->io
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('getOutdatedPackages')->willReturn([$this->outdatedPackage()]);
+        $nodePackageManager->expects($this->never())->method('installNodeModules');
+        $nodePackageManager->expects($this->never())->method('updatePackages');
+        $nodePackageManager->expects($this->never())->method('installPackageVersions');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('note')
             ->with($this->stringContains('Dry run: would update 1 package(s)'));
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             true,
@@ -308,7 +346,8 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->method('getOutdatedPackages')
             ->willReturnOnConsecutiveCalls(
                 [
@@ -319,7 +358,7 @@ class DependencyUpdaterTest extends TestCase
                 [],
             );
         $installedGroups = [];
-        $this->nodePackageManager
+        $nodePackageManager
             ->method('installPackageVersions')
             ->willReturnCallback(
                 function (string $path, string $type, array $packages) use (&$installedGroups): bool {
@@ -328,9 +367,11 @@ class DependencyUpdaterTest extends TestCase
                     return true;
                 },
             );
-        $this->nodePackageManager->expects($this->never())->method('updatePackages');
+        $nodePackageManager->expects($this->never())->method('updatePackages');
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
             $this->io,
@@ -351,7 +392,8 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->method('getOutdatedPackages')
             ->willReturnOnConsecutiveCalls(
                 [
@@ -360,16 +402,19 @@ class DependencyUpdaterTest extends TestCase
                 ],
                 [],
             );
-        $this->nodePackageManager->expects($this->never())->method('installPackageVersions');
-        $this->io
+        $nodePackageManager->expects($this->never())->method('installPackageVersions');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('unexpected name or version'));
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             true,
             false,
@@ -403,17 +448,21 @@ class DependencyUpdaterTest extends TestCase
             ['/theme/package.json', false],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager->method('getOutdatedPackages')->willReturn(null);
-        $this->nodePackageManager->expects($this->never())->method('updatePackages');
-        $this->io
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->method('getOutdatedPackages')->willReturn(null);
+        $nodePackageManager->expects($this->never())->method('updatePackages');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('Could not check for outdated packages'));
 
-        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Failed, $updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -431,7 +480,8 @@ class DependencyUpdaterTest extends TestCase
             ->method('getOutdatedPackages')
             ->willReturnOnConsecutiveCalls([$this->outdatedPackage()], null);
         $this->nodePackageManager->method('updatePackages')->willReturn(true);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('Could not verify the update result'));
@@ -439,7 +489,7 @@ class DependencyUpdaterTest extends TestCase
         $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
             'Vendor/theme',
             '/theme',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -452,20 +502,23 @@ class DependencyUpdaterTest extends TestCase
 
     public function testUpdatesMagentoRootForStandardThemes(): void
     {
-        $this->actAsMagentoStandardTheme();
+        $this->actAsMagentoStandardTheme($this->builderPool);
         $this->fileDriver->method('isExists')->willReturnMap([
             ['/luma/web/tailwind/package.json', false],
             ['/luma/package.json', false],
             ['/magento-root/package.json', true],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->expects($this->once())
             ->method('getOutdatedPackages')
             ->with('/magento-root')
             ->willReturn([]);
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Magento/luma',
             '/luma',
             $this->io,
@@ -477,18 +530,22 @@ class DependencyUpdaterTest extends TestCase
 
     public function testSkipsStandardThemeWhenMagentoRootHasNoPackageJson(): void
     {
-        $this->actAsMagentoStandardTheme();
+        $this->actAsMagentoStandardTheme($this->builderPool);
         $this->fileDriver->method('isExists')->willReturn(false);
-        $this->nodePackageManager->expects($this->never())->method('getOutdatedPackages');
-        $this->io
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->never())->method('getOutdatedPackages');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('package.json.sample'));
 
-        $this->assertSame(DependencyUpdateResult::Skipped, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Skipped, $updater->updateThemeDependencies(
             'Magento/luma',
             '/luma',
-            $this->io,
+            $io,
             false,
             false,
             false,
@@ -497,7 +554,7 @@ class DependencyUpdaterTest extends TestCase
 
     public function testUpdatesMagentoRootOnlyOncePerRun(): void
     {
-        $this->actAsMagentoStandardTheme();
+        $this->actAsMagentoStandardTheme($this->builderPool);
         $this->fileDriver->method('isExists')->willReturnMap([
             ['/luma/web/tailwind/package.json', false],
             ['/luma/package.json', false],
@@ -506,13 +563,16 @@ class DependencyUpdaterTest extends TestCase
             ['/magento-root/package.json', true],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->expects($this->once())
             ->method('getOutdatedPackages')
             ->with('/magento-root')
             ->willReturn([]);
 
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Magento/luma',
             '/luma',
             $this->io,
@@ -520,7 +580,7 @@ class DependencyUpdaterTest extends TestCase
             false,
             false,
         ));
-        $this->assertSame(DependencyUpdateResult::Updated, $this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Updated, $updater->updateThemeDependencies(
             'Magento/blank',
             '/blank',
             $this->io,
@@ -532,7 +592,7 @@ class DependencyUpdaterTest extends TestCase
 
     public function testReplaysMagentoRootFailureForSubsequentStandardThemes(): void
     {
-        $this->actAsMagentoStandardTheme();
+        $this->actAsMagentoStandardTheme($this->builderPool);
         $this->fileDriver->method('isExists')->willReturnMap([
             ['/luma/web/tailwind/package.json', false],
             ['/luma/package.json', false],
@@ -541,13 +601,16 @@ class DependencyUpdaterTest extends TestCase
             ['/magento-root/package.json', true],
         ]);
         $this->fileDriver->method('isDirectory')->willReturn(true);
-        $this->nodePackageManager
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager
             ->expects($this->once())
             ->method('getOutdatedPackages')
             ->with('/magento-root')
             ->willReturn(null);
 
-        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+        $updater = $this->createUpdater(nodePackageManager: $nodePackageManager);
+
+        $this->assertSame(DependencyUpdateResult::Failed, $updater->updateThemeDependencies(
             'Magento/luma',
             '/luma',
             $this->io,
@@ -555,7 +618,7 @@ class DependencyUpdaterTest extends TestCase
             false,
             false,
         ));
-        $this->assertSame(DependencyUpdateResult::Failed, $this->updater->updateThemeDependencies(
+        $this->assertSame(DependencyUpdateResult::Failed, $updater->updateThemeDependencies(
             'Magento/blank',
             '/blank',
             $this->io,

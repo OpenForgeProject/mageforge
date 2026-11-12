@@ -11,22 +11,22 @@ use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Checker;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Finding;
 use OpenForgeProject\MageForge\Service\Hyva\Tailwind4Severity;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class CompatibilityCheckCommandTest extends TestCase
 {
     /**
-     * @var CompatibilityChecker&MockObject
+     * @var CompatibilityChecker&Stub
      */
     private $compatibilityChecker;
     /**
-     * @var Tailwind4Checker&MockObject
+     * @var Tailwind4Checker&Stub
      */
     private $tailwind4Checker;
     /**
-     * @var HyvaVersionDetector&MockObject
+     * @var HyvaVersionDetector&Stub
      */
     private $hyvaVersionDetector;
     /**
@@ -36,12 +36,19 @@ class CompatibilityCheckCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->compatibilityChecker = $this->createMock(CompatibilityChecker::class);
-        $this->tailwind4Checker = $this->createMock(Tailwind4Checker::class);
-        $this->hyvaVersionDetector = $this->createMock(HyvaVersionDetector::class);
-        $this->command = new CompatibilityCheckCommand(
-            $this->compatibilityChecker,
-            $this->tailwind4Checker,
+        $this->compatibilityChecker = $this->createStub(CompatibilityChecker::class);
+        $this->tailwind4Checker = $this->createStub(Tailwind4Checker::class);
+        $this->hyvaVersionDetector = $this->createStub(HyvaVersionDetector::class);
+        $this->command = $this->createCommand();
+    }
+
+    private function createCommand(
+        ?CompatibilityChecker $compatibilityChecker = null,
+        ?Tailwind4Checker $tailwind4Checker = null,
+    ): CompatibilityCheckCommand {
+        return new CompatibilityCheckCommand(
+            $compatibilityChecker ?? $this->compatibilityChecker,
+            $tailwind4Checker ?? $this->tailwind4Checker,
             $this->hyvaVersionDetector,
         );
     }
@@ -236,35 +243,38 @@ class CompatibilityCheckCommandTest extends TestCase
 
     public function testShowAllOptionIsForwardedToFormatResultsForDisplay(): void
     {
-        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $compatibilityChecker->expects($this->once())
             ->method('formatResultsForDisplay')
             ->with($this->anything(), true)
             ->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute(['--show-all' => true]);
     }
 
     public function testWithoutShowAllOptionFormatResultsForDisplayReceivesFalse(): void
     {
-        $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($this->makeResults());
+        $compatibilityChecker->expects($this->once())
             ->method('formatResultsForDisplay')
             ->with($this->anything(), false)
             ->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute([]);
     }
 
     public function testDetailedFlagWithoutIncompatibilitiesSkipsDetailedIssues(): void
     {
-        $this->compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIssues' => false]));
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->compatibilityChecker->expects($this->never())->method('getDetailedIssues');
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($this->makeResults(['hasIssues' => false]));
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->expects($this->never())->method('getDetailedIssues');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute(['--detailed' => true]);
 
         $this->assertStringNotContainsString('Detailed Issues', $tester->getDisplay());
@@ -283,11 +293,12 @@ class CompatibilityCheckCommandTest extends TestCase
             ],
             'hasIssues' => true,
         ]);
-        $this->compatibilityChecker->method('check')->willReturn($results);
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->compatibilityChecker->expects($this->never())->method('getDetailedIssues');
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($results);
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->expects($this->never())->method('getDetailedIssues');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute([]);
 
         $this->assertStringNotContainsString('Detailed Issues', $tester->getDisplay());
@@ -321,10 +332,11 @@ class CompatibilityCheckCommandTest extends TestCase
             ],
             'hasIssues' => true,
         ]);
-        $this->compatibilityChecker->method('check')->willReturn($results);
-        $this->compatibilityChecker->method('formatResultsForDisplay')
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($results);
+        $compatibilityChecker->method('formatResultsForDisplay')
             ->willReturn([['Vendor_Module', 'Incompatible', '1 critical']]);
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker->expects($this->once())
             ->method('getDetailedIssues')
             ->with($moduleData)
             ->willReturn([
@@ -337,7 +349,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 ],
             ]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $exitCode = $tester->execute(['--detailed' => true]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -370,14 +382,15 @@ class CompatibilityCheckCommandTest extends TestCase
             ],
             'hasIssues' => true,
         ]);
-        $this->compatibilityChecker->method('check')->willReturn($results);
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->method('check')->willReturn($results);
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->expects($this->once())
             ->method('getDetailedIssues')
             ->with($warnedModuleData)
             ->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute(['--detailed' => true]);
 
         $this->assertStringContainsString('Vendor_Warned', $tester->getDisplay());
@@ -385,45 +398,49 @@ class CompatibilityCheckCommandTest extends TestCase
 
     public function testDefaultExcludesVendorModules(): void
     {
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->expects($this->once())
             ->method('check')
             ->with($this->anything(), false, true, true)
             ->willReturn($this->makeResults());
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute([]);
     }
 
     public function testIncludeCoreOptionIsPassedToChecker(): void
     {
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->expects($this->once())
             ->method('check')
             ->with($this->anything(), false, false, true)
             ->willReturn($this->makeResults());
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute(['--include-core' => true]);
     }
 
     public function testIncludeVendorOptionIsPassedToChecker(): void
     {
-        $this->compatibilityChecker->expects($this->once())
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->expects($this->once())
             ->method('check')
             ->with($this->anything(), false, true, false)
             ->willReturn($this->makeResults());
-        $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
+        $compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $tester->execute(['--include-vendor' => true]);
     }
 
     public function testConflictingThirdPartyOnlyAndIncludeCoreOptionsReturnError(): void
     {
-        $this->compatibilityChecker->expects($this->never())->method('check');
+        $compatibilityChecker = $this->createMock(CompatibilityChecker::class);
+        $compatibilityChecker->expects($this->never())->method('check');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(compatibilityChecker: $compatibilityChecker));
         $exitCode = $tester->execute([
             '--third-party-only' => true,
             '--include-core' => true,
@@ -447,9 +464,10 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
-        $this->tailwind4Checker->expects($this->never())->method('check');
+        $tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $tailwind4Checker->expects($this->never())->method('check');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(tailwind4Checker: $tailwind4Checker));
         $tester->execute([]);
 
         $this->assertStringNotContainsString('Tailwind CSS v4', $tester->getDisplay());
@@ -460,12 +478,13 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->hyvaVersionDetector->method('getVersion')->willReturn('1.4.2');
-        $this->tailwind4Checker
+        $tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $tailwind4Checker
             ->expects($this->once())
             ->method('check')
             ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(tailwind4Checker: $tailwind4Checker));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -480,7 +499,8 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->hyvaVersionDetector->method('getVersion')->willReturn('1.3.18');
-        $this->tailwind4Checker
+        $tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $tailwind4Checker
             ->expects($this->once())
             ->method('check')
             ->willReturn([
@@ -495,7 +515,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'warnings' => 0,
             ]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(tailwind4Checker: $tailwind4Checker));
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -510,12 +530,13 @@ class CompatibilityCheckCommandTest extends TestCase
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
         $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
-        $this->tailwind4Checker
+        $tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $tailwind4Checker
             ->expects($this->once())
             ->method('check')
             ->willReturn(['sections' => [], 'themes' => 1, 'modules' => 0, 'errors' => 0, 'warnings' => 0]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(tailwind4Checker: $tailwind4Checker));
         $tester->execute(['--tailwind4' => true]);
 
         $this->assertStringContainsString('Tailwind CSS v4 Readiness', $tester->getDisplay());
@@ -526,7 +547,8 @@ class CompatibilityCheckCommandTest extends TestCase
     {
         $this->compatibilityChecker->method('check')->willReturn($this->makeResults());
         $this->compatibilityChecker->method('formatResultsForDisplay')->willReturn([]);
-        $this->tailwind4Checker
+        $tailwind4Checker = $this->createMock(Tailwind4Checker::class);
+        $tailwind4Checker
             ->expects($this->once())
             ->method('check')
             ->with(true, true)
@@ -553,7 +575,7 @@ class CompatibilityCheckCommandTest extends TestCase
                 'warnings' => 1,
             ]);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(tailwind4Checker: $tailwind4Checker));
         $exitCode = $tester->execute(['--tailwind4' => true]);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);

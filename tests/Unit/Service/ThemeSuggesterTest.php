@@ -108,12 +108,12 @@ class ThemeSuggesterTest extends TestCase
     {
         $themes = [];
         foreach ($themeCodes as $code) {
-            $theme = $this->createMock(ThemeInterface::class);
+            $theme = $this->createStub(ThemeInterface::class);
             $theme->method('getCode')->willReturn($code);
             $themes[$code] = $theme;
         }
 
-        $themeList = $this->createMock(ThemeList::class);
+        $themeList = $this->createStub(ThemeList::class);
         $themeList->method('getAllThemes')->willReturn($themes);
 
         return new ThemeSuggester($themeList);

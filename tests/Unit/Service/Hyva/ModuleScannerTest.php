@@ -7,17 +7,17 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\Hyva;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Service\Hyva\IncompatibilityDetector;
 use OpenForgeProject\MageForge\Service\Hyva\ModuleScanner;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class ModuleScannerTest extends TestCase
 {
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var IncompatibilityDetector&MockObject
+     * @var IncompatibilityDetector&Stub
      */
     private $detector;
     /**
@@ -27,9 +27,9 @@ class ModuleScannerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->fileDriver = $this->createMock(File::class);
-        $this->detector = $this->createMock(IncompatibilityDetector::class);
-        $this->scanner = new ModuleScanner($this->fileDriver, $this->detector);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->detector = $this->createStub(IncompatibilityDetector::class);
+        $this->scanner = $this->createScanner();
     }
 
     // -------------------------------------------------------------------------
@@ -38,18 +38,20 @@ class ModuleScannerTest extends TestCase
 
     public function testReturnsEmptyResultForMissingModuleDirectory(): void
     {
-        $this->fileDriver->method('isDirectory')->with('/module')->willReturn(false);
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->expects($this->once())->method('isDirectory')->with('/module')->willReturn(false);
 
         $this->assertSame(
             ['files' => [], 'totalIssues' => 0, 'criticalIssues' => 0],
-            $this->scanner->scanModule('/module'),
+            $this->createScanner(fileDriver: $fileDriver)->scanModule('/module'),
         );
     }
 
     public function testCollectsIssuesAndCountsCriticalOnes(): void
     {
-        $this->givenDirectories(['/module']);
-        $this->fileDriver->method('readDirectory')->with('/module')->willReturn([
+        $fileDriver = $this->createMock(File::class);
+        $this->givenDirectories($fileDriver, ['/module']);
+        $fileDriver->expects($this->once())->method('readDirectory')->with('/module')->willReturn([
             '/module/view.js',
             '/module/layout.xml',
             '/module/clean.js',
@@ -70,7 +72,7 @@ class ModuleScannerTest extends TestCase
             ['/module/clean.js', []],
         ]);
 
-        $result = $this->scanner->scanModule('/module');
+        $result = $this->createScanner(fileDriver: $fileDriver)->scanModule('/module');
 
         $this->assertSame(3, $result['totalIssues']);
         $this->assertSame(2, $result['criticalIssues']);
@@ -81,7 +83,7 @@ class ModuleScannerTest extends TestCase
 
     public function testSkipsExcludedDirectoriesAndIrrelevantExtensions(): void
     {
-        $this->givenDirectories(['/module', '/module/Test', '/module/node_modules', '/module/src']);
+        $this->givenDirectories($this->fileDriver, ['/module', '/module/Test', '/module/node_modules', '/module/src']);
         $this->fileDriver->method('readDirectory')->willReturnMap([
             ['/module', ['/module/Test', '/module/node_modules', '/module/src', '/module/readme.md']],
             ['/module/src', ['/module/src/widget.js', '/module/src/grid.js']],
@@ -107,7 +109,7 @@ class ModuleScannerTest extends TestCase
 
     public function testSkipsUnreadableDirectories(): void
     {
-        $this->givenDirectories(['/module']);
+        $this->givenDirectories($this->fileDriver, ['/module']);
         $this->fileDriver->method('readDirectory')->willThrowException(new \RuntimeException('permission denied'));
 
         $this->assertSame(
@@ -118,14 +120,15 @@ class ModuleScannerTest extends TestCase
 
     public function testHandlesDirectoryEntryWithoutPathSeparator(): void
     {
-        $this->givenDirectories(['/module']);
+        $this->givenDirectories($this->fileDriver, ['/module']);
         $this->fileDriver->method('readDirectory')->willReturnMap([
             ['/module', ['widget.js']],
         ]);
-        $this->detector->method('getExtensionFromPath')->with('widget.js')->willReturn('js');
-        $this->detector->method('detectInFile')->willReturn([]);
+        $detector = $this->createMock(IncompatibilityDetector::class);
+        $detector->expects($this->once())->method('getExtensionFromPath')->with('widget.js')->willReturn('js');
+        $detector->method('detectInFile')->willReturn([]);
 
-        $result = $this->scanner->scanModule('/module');
+        $result = $this->createScanner(detector: $detector)->scanModule('/module');
 
         $this->assertSame(['files' => [], 'totalIssues' => 0, 'criticalIssues' => 0], $result);
     }
@@ -211,12 +214,19 @@ class ModuleScannerTest extends TestCase
     // Helpers
     // -------------------------------------------------------------------------
 
+    private function createScanner(
+        ?File $fileDriver = null,
+        ?IncompatibilityDetector $detector = null,
+    ): ModuleScanner {
+        return new ModuleScanner($fileDriver ?? $this->fileDriver, $detector ?? $this->detector);
+    }
+
     /**
      * @param array<int, string> $directories
      */
-    private function givenDirectories(array $directories): void
+    private function givenDirectories(File&Stub $fileDriver, array $directories): void
     {
-        $this->fileDriver
+        $fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => in_array($path, $directories, true));
     }
@@ -244,15 +254,16 @@ class ModuleScannerTest extends TestCase
 
     public function testHyvaThemesJsonMakesModuleHyvaAware(): void
     {
-        $this->fileDriver->method('isExists')->willReturnMap([
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isExists')->willReturnMap([
             ['/module/composer.json', true],
             ['/module/hyva-themes.json', true],
         ]);
-        $this->fileDriver->method('fileGetContents')->with('/module/composer.json')->willReturn(
+        $fileDriver->expects($this->once())->method('fileGetContents')->with('/module/composer.json')->willReturn(
             json_encode(['name' => 'vendor/module']),
         );
 
-        $this->assertTrue($this->scanner->getModuleInfo('/module')['isHyvaAware']);
+        $this->assertTrue($this->createScanner(fileDriver: $fileDriver)->getModuleInfo('/module')['isHyvaAware']);
     }
 
     public function testComposerHyvaDependencyTakesPrecedenceOverMissingHyvaThemesJson(): void

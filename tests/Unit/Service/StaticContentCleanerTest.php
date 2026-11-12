@@ -7,7 +7,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service;
 use Magento\Framework\App\State;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\ThemeCleaner;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -15,19 +15,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class StaticContentCleanerTest extends TestCase
 {
     /**
-     * @var State&MockObject
+     * @var State&Stub
      */
     private $state;
     /**
-     * @var ThemeCleaner&MockObject
+     * @var ThemeCleaner&Stub
      */
     private $themeCleaner;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
-     * @var OutputInterface&MockObject
+     * @var OutputInterface&Stub
      */
     private $output;
     /**
@@ -37,46 +37,55 @@ class StaticContentCleanerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->state = $this->createMock(State::class);
-        $this->themeCleaner = $this->createMock(ThemeCleaner::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->output = $this->createMock(OutputInterface::class);
-        $this->cleaner = new StaticContentCleaner($this->state, $this->themeCleaner);
+        $this->state = $this->createStub(State::class);
+        $this->themeCleaner = $this->createStub(ThemeCleaner::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->output = $this->createStub(OutputInterface::class);
+        $this->cleaner = $this->createCleaner();
     }
 
     public function testDoesNothingOutsideDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_PRODUCTION);
-        $this->themeCleaner->expects($this->never())->method('hasStaticFiles');
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->expects($this->never())->method('hasStaticFiles');
 
-        $this->assertTrue($this->cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
+        $cleaner = $this->createCleaner(themeCleaner: $themeCleaner);
+
+        $this->assertTrue($cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
     }
 
     public function testDoesNothingWhenNoStaticFilesExist(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->themeCleaner->method('hasStaticFiles')->with('Vendor/theme')->willReturn(false);
-        $this->themeCleaner->expects($this->never())->method('cleanPubStatic');
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->expects($this->once())->method('hasStaticFiles')->with('Vendor/theme')->willReturn(false);
+        $themeCleaner->expects($this->never())->method('cleanPubStatic');
 
-        $this->assertTrue($this->cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
+        $cleaner = $this->createCleaner(themeCleaner: $themeCleaner);
+
+        $this->assertTrue($cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
     }
 
     public function testCleansStaticAndPreprocessedFilesInDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->themeCleaner->method('hasStaticFiles')->willReturn(true);
-        $this->themeCleaner
+        $themeCleaner = $this->createMock(ThemeCleaner::class);
+        $themeCleaner->method('hasStaticFiles')->willReturn(true);
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanPubStatic')
             ->with('Vendor/theme', $this->io, false, false)
             ->willReturn(3);
-        $this->themeCleaner
+        $themeCleaner
             ->expects($this->once())
             ->method('cleanViewPreprocessed')
             ->with('Vendor/theme', $this->io, false, false)
             ->willReturn(1);
 
-        $this->assertTrue($this->cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
+        $cleaner = $this->createCleaner(themeCleaner: $themeCleaner);
+
+        $this->assertTrue($cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
     }
 
     public function testReturnsFalseWhenNothingWasCleaned(): void
@@ -95,22 +104,29 @@ class StaticContentCleanerTest extends TestCase
         $this->themeCleaner->method('hasStaticFiles')->willReturn(true);
         $this->themeCleaner->method('cleanPubStatic')->willReturn(1);
         $this->themeCleaner->method('cleanViewPreprocessed')->willReturn(0);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('note')
             ->with("Developer mode detected: Cleaning existing static files for theme 'Vendor/theme'...");
 
-        $this->assertTrue($this->cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, true));
+        $this->assertTrue($this->cleaner->cleanIfNeeded('Vendor/theme', $io, $this->output, true));
     }
 
     public function testReturnsFalseAndPrintsErrorOnException(): void
     {
         $this->state->method('getMode')->willThrowException(new \RuntimeException('state unavailable'));
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('error')
             ->with('Failed to check/clean static content: state unavailable');
 
-        $this->assertFalse($this->cleaner->cleanIfNeeded('Vendor/theme', $this->io, $this->output, false));
+        $this->assertFalse($this->cleaner->cleanIfNeeded('Vendor/theme', $io, $this->output, false));
+    }
+
+    private function createCleaner(?State $state = null, ?ThemeCleaner $themeCleaner = null): StaticContentCleaner
+    {
+        return new StaticContentCleaner($state ?? $this->state, $themeCleaner ?? $this->themeCleaner);
     }
 }

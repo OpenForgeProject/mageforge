@@ -13,53 +13,55 @@ use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints as 
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHintsFactory;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Plugin\InspectorHints;
 use OpenForgeProject\MageForge\Service\DeveloperAccessChecker;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class InspectorHintsTest extends TestCase
 {
     /**
-     * @var ScopeConfigInterface&MockObject
+     * @var ScopeConfigInterface&Stub
      */
     private $scopeConfig;
     /**
-     * @var DeveloperAccessChecker&MockObject
+     * @var DeveloperAccessChecker&Stub
      */
     private $developerAccessChecker;
     /**
-     * @var InspectorHintsFactory&MockObject
+     * @var InspectorHintsFactory&Stub
      */
     private $inspectorHintsFactory;
     /**
-     * @var State&MockObject
+     * @var State&Stub
      */
     private $state;
     /**
-     * @var TemplateEngineFactory&MockObject
+     * @var TemplateEngineFactory&Stub
      */
     private $subject;
     /**
-     * @var TemplateEngineInterface&MockObject
+     * @var TemplateEngineInterface&Stub
      */
     private $invocationResult;
-    /**
-     * @var InspectorHints
-     */
-    private InspectorHints $plugin;
 
     protected function setUp(): void
     {
-        $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
-        $this->developerAccessChecker = $this->createMock(DeveloperAccessChecker::class);
-        $this->inspectorHintsFactory = $this->createMock(InspectorHintsFactory::class);
-        $this->state = $this->createMock(State::class);
-        $this->subject = $this->createMock(TemplateEngineFactory::class);
-        $this->invocationResult = $this->createMock(TemplateEngineInterface::class);
+        $this->scopeConfig = $this->createStub(ScopeConfigInterface::class);
+        $this->developerAccessChecker = $this->createStub(DeveloperAccessChecker::class);
+        $this->inspectorHintsFactory = $this->createStub(InspectorHintsFactory::class);
+        $this->state = $this->createStub(State::class);
+        $this->subject = $this->createStub(TemplateEngineFactory::class);
+        $this->invocationResult = $this->createStub(TemplateEngineInterface::class);
+    }
 
-        $this->plugin = new InspectorHints(
-            $this->scopeConfig,
-            $this->developerAccessChecker,
-            $this->inspectorHintsFactory,
+    private function createPlugin(
+        ?ScopeConfigInterface $scopeConfig = null,
+        ?DeveloperAccessChecker $developerAccessChecker = null,
+        ?InspectorHintsFactory $inspectorHintsFactory = null,
+    ): InspectorHints {
+        return new InspectorHints(
+            $scopeConfig ?? $this->scopeConfig,
+            $developerAccessChecker ?? $this->developerAccessChecker,
+            $inspectorHintsFactory ?? $this->inspectorHintsFactory,
             $this->state,
         );
     }
@@ -67,9 +69,11 @@ class InspectorHintsTest extends TestCase
     public function testReturnsOriginalResultWhenNotInDeveloperMode(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_PRODUCTION);
-        $this->scopeConfig->expects($this->never())->method('isSetFlag');
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->never())->method('isSetFlag');
 
-        $result = $this->plugin->afterCreate($this->subject, $this->invocationResult);
+        $plugin = $this->createPlugin(scopeConfig: $scopeConfig);
+        $result = $plugin->afterCreate($this->subject, $this->invocationResult);
 
         $this->assertSame($this->invocationResult, $result);
     }
@@ -77,12 +81,19 @@ class InspectorHintsTest extends TestCase
     public function testReturnsOriginalResultWhenInspectorDisabled(): void
     {
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
-        $this->scopeConfig->method('isSetFlag')
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
+            ->method('isSetFlag')
             ->with(InspectorConfig::XML_PATH_ENABLED, InspectorConfig::SCOPE_STORE)
             ->willReturn(false);
-        $this->developerAccessChecker->expects($this->never())->method('isDevAllowed');
+        $developerAccessChecker = $this->createMock(DeveloperAccessChecker::class);
+        $developerAccessChecker->expects($this->never())->method('isDevAllowed');
 
-        $result = $this->plugin->afterCreate($this->subject, $this->invocationResult);
+        $plugin = $this->createPlugin(
+            scopeConfig: $scopeConfig,
+            developerAccessChecker: $developerAccessChecker,
+        );
+        $result = $plugin->afterCreate($this->subject, $this->invocationResult);
 
         $this->assertSame($this->invocationResult, $result);
     }
@@ -92,9 +103,11 @@ class InspectorHintsTest extends TestCase
         $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
         $this->developerAccessChecker->method('isDevAllowed')->willReturn(false);
-        $this->inspectorHintsFactory->expects($this->never())->method('create');
+        $inspectorHintsFactory = $this->createMock(InspectorHintsFactory::class);
+        $inspectorHintsFactory->expects($this->never())->method('create');
 
-        $result = $this->plugin->afterCreate($this->subject, $this->invocationResult);
+        $plugin = $this->createPlugin(inspectorHintsFactory: $inspectorHintsFactory);
+        $result = $plugin->afterCreate($this->subject, $this->invocationResult);
 
         $this->assertSame($this->invocationResult, $result);
     }
@@ -105,8 +118,9 @@ class InspectorHintsTest extends TestCase
         $this->scopeConfig->method('isSetFlag')->willReturn(true);
         $this->developerAccessChecker->method('isDevAllowed')->willReturn(true);
 
-        $decorated = $this->createMock(InspectorHintsDecorator::class);
-        $this->inspectorHintsFactory->expects($this->once())
+        $decorated = $this->createStub(InspectorHintsDecorator::class);
+        $inspectorHintsFactory = $this->createMock(InspectorHintsFactory::class);
+        $inspectorHintsFactory->expects($this->once())
             ->method('create')
             ->with([
                 'subject' => $this->invocationResult,
@@ -114,7 +128,8 @@ class InspectorHintsTest extends TestCase
             ])
             ->willReturn($decorated);
 
-        $result = $this->plugin->afterCreate($this->subject, $this->invocationResult);
+        $plugin = $this->createPlugin(inspectorHintsFactory: $inspectorHintsFactory);
+        $result = $plugin->afterCreate($this->subject, $this->invocationResult);
 
         $this->assertSame($decorated, $result);
     }
