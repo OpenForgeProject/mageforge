@@ -15,13 +15,17 @@
     "since": "0.5.0",
     "keywords": ["theme:clean", "frontend:clean", "static:clean"]
   },
+  "mageforge:theme:info": {
+    "since": "0.30.0",
+    "keywords": ["theme:info", "theme info"]
+  },
   "mageforge:theme:inspector": { "since": "0.6.0", "keywords": ["inspector"] },
   "mageforge:template:override": {
     "since": "0.28.0",
     "keywords": ["template override", "template:override"]
   },
   "mageforge:template:obsolete": {
-    "since": null,
+    "since": "0.30.0",
     "keywords": ["template:obsolete", "obsolete"]
   },
   "mageforge:dependencies:update": {

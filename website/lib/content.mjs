@@ -172,7 +172,12 @@ export async function loadCommands(file, meta) {
       usage,
       body: rest,
       since: meta[name]?.since ?? null,
-      keywords: meta[name]?.keywords ?? [],
+      keywords: [
+        ...new Set([
+          name.replace(/^mageforge:/, ""),
+          ...(meta[name]?.keywords ?? []),
+        ]),
+      ],
     });
   }
   return commands;
@@ -204,7 +209,13 @@ export function linkReleasesToCommands(commands, releases) {
   }
   // Commands without a curated version: use the oldest release that lists them under "Added".
   for (const cmd of commands.filter((c) => !c.since)) {
-    const needles = [cmd.name, ...cmd.aliases].map((k) => k.toLowerCase());
+    const short = cmd.name.replace(/^mageforge:/, "");
+    const needles = [
+      cmd.name,
+      ...cmd.aliases,
+      short,
+      short.replace(/:/g, " "),
+    ].map((k) => k.toLowerCase());
     const hit = releases.filter((rel) =>
       rel.groups.added.some(
         (i) =>
