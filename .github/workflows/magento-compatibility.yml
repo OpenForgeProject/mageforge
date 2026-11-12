@@ -98,11 +98,13 @@ jobs:
           bin/magento mageforge:system:version --help
           bin/magento mageforge:system:check --help
           bin/magento mageforge:theme:list --help
+          bin/magento mageforge:theme:info --help
           bin/magento mageforge:theme:build --help
           bin/magento mageforge:theme:watch --help
           bin/magento mageforge:theme:clean --help
           bin/magento mageforge:theme:inspector --help
           bin/magento mageforge:template:override --help
+          bin/magento mageforge:template:obsolete --help
           bin/magento mageforge:hyva:compatibility:check --help
           bin/magento mageforge:hyva:tokens --help
           bin/magento mageforge:dependencies:update --help
@@ -111,15 +113,18 @@ jobs:
           bin/magento m:s:v --help
           bin/magento m:s:c --help
           bin/magento m:t:l --help
+          bin/magento m:t:i --help
           bin/magento m:t:b --help
           bin/magento m:t:w --help
           bin/magento m:t:c --help
           bin/magento m:h:c:c --help
           bin/magento frontend:list --help
+          bin/magento frontend:info --help
           bin/magento frontend:build --help
           bin/magento frontend:watch --help
           bin/magento frontend:clean --help
           bin/magento template:override --help
+          bin/magento template:obsolete --help
           bin/magento hyva:check --help
           bin/magento hyva:tokens --help
           bin/magento dependencies:update --help

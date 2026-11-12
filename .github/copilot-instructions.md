@@ -142,6 +142,16 @@ feature/<issue-description>
 #<issue-nr> - <message>
 ```
 
+### Commit Messages
+
+Release Please generates the changelog, so commits must follow Conventional Commits: `<type>(<scope>): <message>`
+(`feat`, `fix`, `refactor`, `perf`, `docs`, `style`, `deps`, `chore`, `test`, `build`, `ci`, `revert`).
+
+- **No emojis** in commit messages or PR titles. They break Release Please parsing. This overrides any global
+  "use emojis" preference.
+- Keep the type prefix at the very start of the message.
+- `CONTRIBUTING.md` also forbids emojis in commit messages and PR titles; follow it for the full rules.
+
 ## Testing
 
 Manual after every change:

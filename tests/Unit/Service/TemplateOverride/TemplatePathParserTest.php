@@ -11,6 +11,7 @@ use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Service\TemplateOverride\CompatModuleResolver;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplatePathParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
@@ -395,12 +396,234 @@ class TemplatePathParserTest extends TestCase
         $this->assertSame(TemplateType::EMAIL, $reference->getType());
     }
 
+    public function testParsesModuleDirectoryPath(): void
+    {
+        $directory = '/magento/vendor/magento/module-catalog/view/frontend/templates';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->with($directory)->willReturn(true);
+        $this->fileDriver->method('getRealPath')->with($directory)->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::TEMPLATE, $reference->getType());
+    }
+
+    public function testParsesThemeSubdirectoryPath(): void
+    {
+        $directory = '/magento/app/design/frontend/Vendor/theme/Magento_Sales/email/order';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, []],
+                [ComponentRegistrar::THEME, ['frontend/Vendor/theme' => '/magento/app/design/frontend/Vendor/theme']],
+            ]);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('Magento_Sales', $reference->getModuleName());
+        $this->assertSame('order', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
+    }
+
+    public function testParsesModuleSubdirectoryPathWithTrailingSlashFromRealPath(): void
+    {
+        $directory = '/magento/vendor/magento/module-catalog/view/frontend/templates/product/view';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory . '/');
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('product/view', $reference->getTemplatePath());
+    }
+
+    public function testParsesThemeDirectoryRootWithoutSubPath(): void
+    {
+        $directory = '/magento/app/design/frontend/Vendor/theme/Magento_Sales/email';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, []],
+                [ComponentRegistrar::THEME, ['frontend/Vendor/theme' => '/magento/app/design/frontend/Vendor/theme']],
+            ]);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('', $reference->getTemplatePath());
+        $this->assertSame(TemplateType::EMAIL, $reference->getType());
+    }
+
+    public function testMapsCompatModuleDirectoryNamedAfterOriginalModuleToItsRoot(): void
+    {
+        $directory = '/magento/vendor/hyva-themes/compat/view/frontend/templates/Magento_Catalog';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
+        $this->compatModuleResolver
+            ->method('getOriginalModules')
+            ->with('Hyva_CompatCatalog')
+            ->willReturn(['Magento_Catalog', 'Magento_Checkout']);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('', $reference->getTemplatePath());
+    }
+
+    public function testStripsOriginalModuleDirectoryFromCompatSubdirectoryPath(): void
+    {
+        $directory = '/magento/vendor/hyva-themes/compat/view/frontend/templates/Magento_Catalog/product';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
+        $this->compatModuleResolver
+            ->method('getOriginalModules')
+            ->willReturn(['Magento_Catalog', 'Magento_Checkout']);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('product', $reference->getTemplatePath());
+    }
+
+    public function testMapsSingleCompatModuleDirectoryToOriginalModule(): void
+    {
+        $directory = '/magento/vendor/hyva-themes/compat/view/frontend/templates/product';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
+        $this->compatModuleResolver->method('getOriginalModules')->willReturn(['Magento_Catalog']);
+
+        $reference = $this->parser->parse($directory);
+
+        $this->assertTrue($reference->isDirectory());
+        $this->assertSame('Magento_Catalog', $reference->getModuleName());
+        $this->assertSame('product', $reference->getTemplatePath());
+    }
+
+    #[DataProvider('invalidModuleDirectoryProvider')]
+    public function testRejectsModuleDirectoriesOutsideViewDirectories(string $relativePath): void
+    {
+        $directory = '/magento/vendor/magento/module-catalog/' . $relativePath;
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/is not inside a view/');
+
+        $this->parser->parse($directory);
+    }
+
+    /**
+     * @return array<string,array{0:string}>
+     */
+    public static function invalidModuleDirectoryProvider(): array
+    {
+        return [
+            'prefix before view' => ['Block/view/frontend/templates'],
+            'suffix after view dir' => ['view/frontend/templates-old'],
+            'view area only' => ['view/frontend'],
+        ];
+    }
+
+    #[DataProvider('invalidThemeDirectoryProvider')]
+    public function testRejectsThemeDirectoriesOutsideModuleViewDirectories(string $relativePath): void
+    {
+        $directory = '/magento/app/design/frontend/Vendor/theme/' . $relativePath;
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->willReturnMap([
+                [ComponentRegistrar::MODULE, []],
+                [ComponentRegistrar::THEME, ['frontend/Vendor/theme' => '/magento/app/design/frontend/Vendor/theme']],
+            ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/is not a module template override/');
+
+        $this->parser->parse($directory);
+    }
+
+    /**
+     * @return array<string,array{0:string}>
+     */
+    public static function invalidThemeDirectoryProvider(): array
+    {
+        return [
+            'prefix before module' => ['web/Magento_Catalog/templates'],
+            'suffix after view dir' => ['Magento_Catalog/templates-old'],
+            'module root only' => ['Magento_Catalog'],
+        ];
+    }
+
+    public function testRejectsModuleDirectoryOutsideViewDirectories(): void
+    {
+        $directory = '/magento/vendor/magento/module-catalog/Model';
+        $this->fileDriver->method('isFile')->willReturn(false);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
+        $this->componentRegistrar
+            ->method('getPaths')
+            ->with(ComponentRegistrar::MODULE)
+            ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/is not inside a view/');
+
+        $this->parser->parse($directory);
+    }
+
     public function testRejectsMissingFile(): void
     {
         $this->fileDriver->method('isFile')->willReturn(false);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches("/Template file '\/nowhere\/file\.phtml' not found/");
+        $this->expectExceptionMessageMatches("/Template file or directory '\/nowhere\/file\.phtml' not found/");
 
         $this->parser->parse('/nowhere/file.phtml');
     }
@@ -547,7 +770,9 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('isFile')->willReturn(false);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/Pass an existing file path.*Module_Name::path\/to\/template\.phtml/s');
+        $this->expectExceptionMessageMatches(
+            '/Pass an existing file or directory path.*Module_Name::path\/to\/template\.phtml/s',
+        );
 
         $this->parser->parse('/nowhere/file.phtml');
     }

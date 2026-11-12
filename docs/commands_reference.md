@@ -4,19 +4,21 @@ Complete reference of all CLI commands provided by the MageForge module.
 
 ## Quick Overview
 
-| Group            | Command                              | Description                                         | Aliases               |
-| ---------------- | ------------------------------------ | --------------------------------------------------- | --------------------- |
-| **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`       |
-| **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`      |
-| **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`      |
-| **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`      |
-| **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                     |
-| **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`   |
-| **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update` |
-| **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`         |
-| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`          |
-| **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`      |
-| **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`        |
+| Group            | Command                              | Description                                         | Aliases                  |
+| ---------------- | ------------------------------------ | --------------------------------------------------- | ------------------------ |
+| **Theme**        | `mageforge:theme:list`               | List all available Magento themes                   | `frontend:list`          |
+| **Theme**        | `mageforge:theme:info`               | Show theme details (package, builder, overrides, …) | `frontend:info`, `m:t:i` |
+| **Theme**        | `mageforge:theme:build`              | Build selected themes (CSS/TailwindCSS)             | `frontend:build`         |
+| **Theme**        | `mageforge:theme:watch`              | Watch theme files and auto-rebuild                  | `frontend:watch`         |
+| **Theme**        | `mageforge:theme:clean`              | Clean static files and cache directories            | `frontend:clean`         |
+| **Theme**        | `mageforge:theme:inspector`          | Manage Frontend Inspector (enable/disable/status)   | —                        |
+| **Template**     | `mageforge:template:override`        | Copy a module template into a theme (override)      | `template:override`      |
+| **Template**     | `mageforge:template:obsolete`        | Find theme overrides that are no longer needed      | `template:obsolete`      |
+| **Dependencies** | `mageforge:dependencies:update`      | Update the Node.js dependencies of themes           | `dependencies:update`    |
+| **Hyvä**         | `mageforge:hyva:tokens`              | Generate Hyvä design tokens                         | `hyva:tokens`            |
+| **Hyvä**         | `mageforge:hyva:compatibility:check` | Check Hyvä and Tailwind CSS v4 compatibility        | `hyva:check`             |
+| **System**       | `mageforge:system:version`           | Show current and latest module version              | `system:version`         |
+| **System**       | `mageforge:system:check`             | Display system information (PHP, Node.js, DB, etc.) | `system:check`           |
 
 ---
 
@@ -36,6 +38,15 @@ bin/magento frontend:list
 
 ---
 
+### `mageforge:theme:info`
+
+Shows details about a theme: area, path, Composer package and version, parent chain, detected builder, Node.js version, Tailwind CSS version (required vs. installed), `node_modules` status, override counts (templates, layouts, requirejs-config, web assets), deployed static locales and, for Hyvä themes, the Hyvä version, Tailwind config file and extensions from `hyva-themes.json`. Without an argument, a select menu is shown.
+
+```bash
+bin/magento mageforge:theme:info [<theme-code>]
+bin/magento mageforge:theme:info Magento/luma --json
+```
+
 ### `mageforge:theme:build`
 
 Builds selected themes by compiling assets (CSS/TailwindCSS) and deploying static content.
@@ -49,10 +60,16 @@ bin/magento frontend:build Magento/luma Magento/blank
 
 - `themeCodes` — One or more theme codes in format `Vendor/theme`. Accepts wildcards like `Magento/*`.
 
+**Options:**
+
+- `--with-parents` — Build all parent themes first, without asking.
+- `--no-parents` — Never build parent themes (default in non-interactive environments).
+
 **Behavior:**
 
 - If no theme codes are provided, an interactive prompt lets you select themes.
 - For each theme, the appropriate builder is determined automatically (Hyvä, TailwindCSS, Magento Standard, etc.).
+- If a selected theme has parent themes (e.g. a child of `Vendor/base`), you are asked whether to build them first, topmost ancestor first. Only parents with a builder are offered; vendor (Composer) themes are skipped.
 - Displays a summary of built themes and execution time.
 
 ---
@@ -73,9 +90,12 @@ bin/magento frontend:watch Magento/luma
 **Options:**
 
 - `-t, --theme=VALUE` — Alternative way to specify the theme code.
+- `--with-parents` — Build all parent themes once before watching, without asking.
+- `--no-parents` — Never build parent themes (default in non-interactive environments).
 
 **Behavior:**
 
+- For child themes, you are asked whether to build the parent themes once before the watcher starts. Only the selected theme is watched.
 - Runs indefinitely until interrupted (Ctrl+C).
 - Monitors source files (SCSS, JS, etc.) and triggers rebuilds on change.
 - Useful for active theme development.
@@ -141,17 +161,20 @@ bin/magento mageforge:template:override 'Magento_Catalog::product/view/details.p
 bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml -t Vendor/theme
 bin/magento mageforge:template:override 'Magento_Sales::order/new.html' --theme Vendor/theme
 bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less' --theme Vendor/theme
+bin/magento mageforge:template:override vendor/magento/module-catalog/view/frontend/templates --theme Vendor/theme
 ```
 
 **Arguments:**
 
-- `template` — The view file to override. Accepts the `Module_Name::path/to/file.phtml`
+- `template` — The view file or directory to override. Accepts the `Module_Name::path/to/file.phtml`
   notation or a file path (absolute, or relative to the Magento root / current directory).
   File paths may point into a module's `view/<area>/templates`, `view/<area>/email` or
   `view/<area>/web` directory, a Hyvä compat module, or another theme's override directory.
   Email templates (`.html`) and static view files (CSS, LESS, JS, images, fonts, ...) are
   detected automatically and copied to `<theme>/<Module_Name>/email/` or
   `<theme>/<Module_Name>/web/` respectively.
+  A directory path (e.g. `vendor/magento/module-catalog/view/frontend/templates`) copies
+  all files inside it, including subdirectories.
 
 **Options:**
 
@@ -174,7 +197,56 @@ bin/magento mageforge:template:override 'Magento_Theme::css/source/_module.less'
 - After copying, the command re-resolves the file to verify the new override wins and cleans
   the relevant caches (`full_page`, `block_html`, `layout`, `translate`).
 - If the file is already overridden in the target theme, nothing is copied unless `--force`
-  is given.
+  is given. When copying a directory, already overridden files are skipped and the rest is
+  copied; with `--force` they are replaced as well.
+
+---
+
+### `mageforge:template:obsolete`
+
+Finds theme overrides (`<theme>/<Module_Name>/{templates,email,web}`) that are no longer needed.
+In a terminal it shows the same searchable theme selection as `mageforge:theme:build`, then an
+options menu (Space to toggle) for the slower `--deep` check and for deleting the overrides that are
+safe to remove (deleting still asks for confirmation). Options already given as flags are not offered. Without a terminal (CI, pipes) or with `--format=json` all frontend themes outside `vendor/`
+are checked and nothing is deleted unless `--delete` is given.
+
+```bash
+bin/magento mageforge:template:obsolete
+bin/magento mageforge:template:obsolete Vendor/theme --deep
+bin/magento mageforge:template:obsolete --delete
+bin/magento mageforge:template:obsolete --format=json --fail-on-found
+```
+
+**Arguments:**
+
+- `themeCodes` — Themes to check (format: `Vendor/theme`), also vendor themes. Optional.
+
+**Options:**
+
+- `--deep` — Also list templates without a found reference (slower, heuristic, may include templates that are still used).
+- `--delete` — Delete the overrides marked as safe (asks for confirmation) and clean the caches.
+- `-y, --yes` — Delete without confirmation.
+- `--format=VALUE` — `table` (default) or `json`.
+- `--fail-on-found` — Exit with a failure code if obsolete overrides exist (for CI).
+
+**Findings:**
+
+| Reason          | Meaning                                                                           | Safe to delete                |
+| --------------- | --------------------------------------------------------------------------------- | ----------------------------- |
+| Identical       | Same content as the file Magento would use without the override                   | Yes                           |
+| Orphaned        | The module is not installed/enabled, or the recorded source file no longer exists | Only if the module is missing |
+| Possibly unused | `--deep`: no reference to the `.phtml` template was found (hint only, see notes)  | No                            |
+| Outdated        | Copied from an older module version (taken from the MageForge header)             | No                            |
+
+**Notes:**
+
+- The comparison ignores the MageForge source header and line endings, and uses Magento's
+  fallback rule, so parent themes and Hyvä compat modules are taken into account.
+- Theme layout files extend the module layout and are only checked for missing modules.
+- `Possibly unused` is only a hint and often a false positive. Templates can be used through
+  `widget.xml`, `di.xml`, vendor layouts, the database (e.g. CMS blocks) or dynamically built
+  paths, none of which are reliably detected. Never delete them without checking; `--delete`
+  never touches them.
 
 ---
 
@@ -310,11 +382,13 @@ bin/magento system:check
 
 ```text
 mageforge:theme:list          → List available themes
+mageforge:theme:info          → Show theme details
 mageforge:theme:build         → Build theme assets
 mageforge:theme:watch         → Watch & auto-rebuild
 mageforge:theme:clean         → Clean static files
 mageforge:theme:inspector     → Manage inspector tool
 mageforge:template:override   → Copy module template into a theme
+mageforge:template:obsolete   → Find unneeded theme overrides
 mageforge:dependencies:update → Update theme Node.js dependencies
 mageforge:hyva:tokens         → Generate Hyvä design tokens
 mageforge:hyva:compatibility:check → Check Hyvä compatibility

@@ -9,6 +9,7 @@ use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
+use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
@@ -34,6 +35,10 @@ class WatchCommandTest extends TestCase
      */
     private $themeSuggester;
     /**
+     * @var ThemeParentResolver&Stub
+     */
+    private $parentResolver;
+    /**
      * @var WatchCommand
      */
     private WatchCommand $command;
@@ -44,6 +49,7 @@ class WatchCommandTest extends TestCase
         $this->themeList = $this->createStub(ThemeList::class);
         $this->themePath = $this->createStub(ThemePath::class);
         $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->parentResolver = $this->createStub(ThemeParentResolver::class);
         $this->command = $this->createCommand();
     }
 
@@ -69,6 +75,59 @@ class WatchCommandTest extends TestCase
 
         $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCode' => 'Vendor/theme']);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+    }
+
+    public function testWithParentsBuildsParentsBeforeWatching(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base', 'Vendor/video']);
+        $this->themePath->method('getPath')->willReturnCallback(static fn(string $code): string => '/p/' . $code);
+        $calls = [];
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('build')->willReturnCallback(static function (string $code) use (&$calls): bool {
+            $calls[] = 'build:' . $code;
+            return true;
+        });
+        $builder->method('watch')->willReturnCallback(static function (string $code) use (&$calls): bool {
+            $calls[] = 'watch:' . $code;
+            return true;
+        });
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child', '--with-parents' => true]);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertSame(['build:Vendor/base', 'build:Vendor/video', 'watch:Vendor/child'], $calls);
+    }
+
+    public function testFailedParentBuildPreventsWatch(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base']);
+        $this->themePath->method('getPath')->willReturn('/p');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('build')->willReturn(false);
+        $builder->expects($this->never())->method('watch');
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child', '--with-parents' => true]);
+
+        $this->assertSame(Command::FAILURE, $exitCode);
+    }
+
+    public function testParentsAreSkippedWithoutOption(): void
+    {
+        $this->parentResolver->method('getBuildableParents')->willReturn(['Vendor/base']);
+        $this->themePath->method('getPath')->willReturn('/p');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->expects($this->never())->method('build');
+        $builder->expects($this->once())->method('watch')->willReturn(true);
+        $this->builderPool->method('getBuilder')->willReturn($builder);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute(['themeCode' => 'Vendor/child']);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
     }
@@ -150,12 +209,14 @@ class WatchCommandTest extends TestCase
         ?ThemeList $themeList = null,
         ?ThemePath $themePath = null,
         ?ThemeSuggester $themeSuggester = null,
+        ?ThemeParentResolver $parentResolver = null,
     ): WatchCommand {
         return new WatchCommand(
             $builderPool ?? $this->builderPool,
             $themeList ?? $this->themeList,
             $themePath ?? $this->themePath,
             $themeSuggester ?? $this->themeSuggester,
+            $parentResolver ?? $this->parentResolver,
         );
     }
 }

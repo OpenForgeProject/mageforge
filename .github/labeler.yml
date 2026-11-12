@@ -75,3 +75,9 @@ Styling:
       - any-glob-to-any-file:
           - src/view/frontend/web/css/**
           - "**/*.css"
+
+Website:
+  - changed-files:
+      - any-glob-to-any-file:
+          - website/**
+          - .github/workflows/website.yml
