@@ -207,25 +207,23 @@ class NodePackageManagerTest extends TestCase
         $shell
             ->expects($this->once())
             ->method('execute')
-            ->with('cd %s && npm outdated --json', ['/theme'])
-            ->willReturn('{"tailwindcss": {"current": "3.0.0", "latest": "4.0.0"}}');
+            ->with('cd %s && npm outdated --json --long 2>/dev/null; true', ['/theme'])
+            ->willReturn('{"tailwindcss": {"current": "3.0.0", "wanted": "3.4.0", "latest": "4.0.0"}}');
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('warning')->with('Outdated packages found:');
-        $io
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('{"tailwindcss": {"current": "3.0.0", "latest": "4.0.0"}}');
+        $io->expects($this->once())->method('writeln')->with('  tailwindcss: 3.0.0 -> 4.0.0');
 
         $packageManager = $this->createPackageManager(shell: $shell);
 
         $packageManager->checkOutdatedPackages('/theme', $io);
     }
 
-    public function testStaysSilentWhenEverythingIsUpToDate(): void
+    public function testStaysSilentWhenNpmReportsEmptyObject(): void
     {
-        $this->shell->method('execute')->willReturn('');
+        $this->shell->method('execute')->willReturn('{}');
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->never())->method('warning');
+        $io->expects($this->never())->method('writeln');
 
         $this->packageManager->checkOutdatedPackages('/theme', $io);
     }
@@ -235,10 +233,17 @@ class NodePackageManagerTest extends TestCase
         $this->shell->method('execute')->willThrowException(new \RuntimeException('registry unreachable'));
         $io = $this->createMock(SymfonyStyle::class);
         $io->method('isVerbose')->willReturn(true);
-        $io
-            ->expects($this->once())
-            ->method('warning')
-            ->with('Failed to check outdated packages: registry unreachable');
+        $io->expects($this->once())->method('warning')->with('Failed to check outdated packages.');
+
+        $this->packageManager->checkOutdatedPackages('/theme', $io);
+    }
+
+    public function testStaysSilentOnCheckFailureWhenNotVerbose(): void
+    {
+        $this->shell->method('execute')->willThrowException(new \RuntimeException('registry unreachable'));
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->method('isVerbose')->willReturn(false);
+        $io->expects($this->never())->method('warning');
 
         $this->packageManager->checkOutdatedPackages('/theme', $io);
     }
