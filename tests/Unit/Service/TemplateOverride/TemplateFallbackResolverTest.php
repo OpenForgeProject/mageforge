@@ -14,30 +14,30 @@ use Magento\Framework\View\DesignInterface;
 use OpenForgeProject\MageForge\Model\TemplateReference;
 use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplateFallbackResolver;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class TemplateFallbackResolverTest extends TestCase
 {
     /**
-     * @var ObjectManagerInterface&MockObject
+     * @var ObjectManagerInterface&Stub
      */
-    private MockObject $objectManager;
+    private Stub $objectManager;
 
     /**
-     * @var DesignInterface&MockObject
+     * @var DesignInterface&Stub
      */
-    private MockObject $design;
+    private Stub $design;
 
     /**
-     * @var ComponentRegistrarInterface&MockObject
+     * @var ComponentRegistrarInterface&Stub
      */
-    private MockObject $componentRegistrar;
+    private Stub $componentRegistrar;
 
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
-    private MockObject $fileDriver;
+    private Stub $fileDriver;
 
     /**
      * @var TemplateFallbackResolver
@@ -46,15 +46,24 @@ class TemplateFallbackResolverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->objectManager = $this->createMock(ObjectManagerInterface::class);
-        $this->design = $this->createMock(DesignInterface::class);
-        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
-        $this->fileDriver = $this->createMock(File::class);
-        $this->resolver = new TemplateFallbackResolver(
-            $this->objectManager,
-            $this->design,
-            $this->componentRegistrar,
-            $this->fileDriver,
+        $this->objectManager = $this->createStub(ObjectManagerInterface::class);
+        $this->design = $this->createStub(DesignInterface::class);
+        $this->componentRegistrar = $this->createStub(ComponentRegistrarInterface::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->resolver = $this->createResolver();
+    }
+
+    private function createResolver(
+        ?ObjectManagerInterface $objectManager = null,
+        ?DesignInterface $design = null,
+        ?ComponentRegistrarInterface $componentRegistrar = null,
+        ?File $fileDriver = null,
+    ): TemplateFallbackResolver {
+        return new TemplateFallbackResolver(
+            $objectManager ?? $this->objectManager,
+            $design ?? $this->design,
+            $componentRegistrar ?? $this->componentRegistrar,
+            $fileDriver ?? $this->fileDriver,
         );
     }
 
@@ -81,12 +90,15 @@ class TemplateFallbackResolverTest extends TestCase
             ]);
 
         $rulePool = $this->createMock(RulePool::class);
-        $rulePool->method('getRule')->with(RulePool::TYPE_TEMPLATE_FILE)->willReturn($rule);
+        $rulePool->expects($this->once())->method('getRule')->with(RulePool::TYPE_TEMPLATE_FILE)->willReturn($rule);
 
-        $this->objectManager->method('create')->with(RulePool::class)->willReturn($rulePool);
-        $this->design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->expects($this->once())->method('create')->with(RulePool::class)->willReturn($rulePool);
+        $design = $this->createMock(DesignInterface::class);
+        $design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $resolver = $this->createResolver(objectManager: $objectManager, design: $design);
 
-        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+        $dirs = $resolver->getFallbackDirs($reference, $theme);
 
         $this->assertSame(
             [
@@ -120,12 +132,15 @@ class TemplateFallbackResolverTest extends TestCase
             ]);
 
         $rulePool = $this->createMock(RulePool::class);
-        $rulePool->method('getRule')->with(RulePool::TYPE_EMAIL_TEMPLATE)->willReturn($rule);
+        $rulePool->expects($this->once())->method('getRule')->with(RulePool::TYPE_EMAIL_TEMPLATE)->willReturn($rule);
 
-        $this->objectManager->method('create')->with(RulePool::class)->willReturn($rulePool);
-        $this->design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->expects($this->once())->method('create')->with(RulePool::class)->willReturn($rulePool);
+        $design = $this->createMock(DesignInterface::class);
+        $design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $resolver = $this->createResolver(objectManager: $objectManager, design: $design);
 
-        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+        $dirs = $resolver->getFallbackDirs($reference, $theme);
 
         $this->assertSame(
             [
@@ -157,12 +172,15 @@ class TemplateFallbackResolverTest extends TestCase
             ]);
 
         $rulePool = $this->createMock(RulePool::class);
-        $rulePool->method('getRule')->with(RulePool::TYPE_STATIC_FILE)->willReturn($rule);
+        $rulePool->expects($this->once())->method('getRule')->with(RulePool::TYPE_STATIC_FILE)->willReturn($rule);
 
-        $this->objectManager->method('create')->with(RulePool::class)->willReturn($rulePool);
-        $this->design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->expects($this->once())->method('create')->with(RulePool::class)->willReturn($rulePool);
+        $design = $this->createMock(DesignInterface::class);
+        $design->expects($this->once())->method('setDesignTheme')->with($theme, 'frontend');
+        $resolver = $this->createResolver(objectManager: $objectManager, design: $design);
 
-        $dirs = $this->resolver->getFallbackDirs($reference, $theme);
+        $dirs = $resolver->getFallbackDirs($reference, $theme);
 
         $this->assertSame(
             [
@@ -245,12 +263,15 @@ class TemplateFallbackResolverTest extends TestCase
     public function testGetThemeTargetDirReturnsDirInsideTheme(): void
     {
         $theme = new FakeTheme('Vendor/theme');
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPath')
             ->with(ComponentRegistrar::THEME, 'frontend/Vendor/theme')
             ->willReturn('/app/design/frontend/Vendor/theme');
+        $resolver = $this->createResolver(componentRegistrar: $componentRegistrar);
 
-        $result = $this->resolver->getThemeTargetDir(
+        $result = $resolver->getThemeTargetDir(
             [
                 '/app/design/frontend/Vendor/theme/Magento_Catalog/templates',
                 '/module/view/frontend/templates',
@@ -283,12 +304,15 @@ class TemplateFallbackResolverTest extends TestCase
     public function testGetThemeTargetDirNormalizesBackslashesAndTrailingSlash(): void
     {
         $theme = new FakeTheme('Vendor/theme');
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPath')
             ->with(ComponentRegistrar::THEME, 'frontend/Vendor/theme')
             ->willReturn('C:\\app\\design\\frontend\\Vendor\\theme\\');
+        $resolver = $this->createResolver(componentRegistrar: $componentRegistrar);
 
-        $result = $this->resolver->getThemeTargetDir(
+        $result = $resolver->getThemeTargetDir(
             ['C:\\app\\design\\frontend\\Vendor\\theme\\Magento_Catalog\\templates'],
             $theme,
         );
@@ -298,10 +322,11 @@ class TemplateFallbackResolverTest extends TestCase
 
     public function testFindDirectoryFilesUsesDirectoryRootWithoutSubPathAndSkipsMissingDirs(): void
     {
-        $this->fileDriver
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => $path !== '/missing');
-        $this->fileDriver
+        $fileDriver
             ->expects($this->once())
             ->method('readDirectoryRecursively')
             ->with('/module/templates')
@@ -311,11 +336,11 @@ class TemplateFallbackResolverTest extends TestCase
                 '/other/place/ignored.phtml',
                 '/module/templates/sub',
             ]);
-        $this->fileDriver
+        $fileDriver
             ->method('isFile')
             ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
 
-        $files = $this->resolver->findDirectoryFiles(['/missing', '/module/templates'], '');
+        $files = $this->createResolver(fileDriver: $fileDriver)->findDirectoryFiles(['/missing', '/module/templates'], '');
 
         $this->assertSame(
             ['b.phtml' => '/module/templates/b.phtml', 'z.phtml' => '/module/templates/z.phtml'],

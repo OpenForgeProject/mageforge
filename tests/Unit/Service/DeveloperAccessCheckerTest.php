@@ -9,21 +9,21 @@ use Magento\Framework\HTTP\Header;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use OpenForgeProject\MageForge\Service\DeveloperAccessChecker;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class DeveloperAccessCheckerTest extends TestCase
 {
     /**
-     * @var ScopeConfigInterface&MockObject
+     * @var ScopeConfigInterface&Stub
      */
     private $scopeConfig;
     /**
-     * @var RemoteAddress&MockObject
+     * @var RemoteAddress&Stub
      */
     private $remoteAddress;
     /**
-     * @var Header&MockObject
+     * @var Header&Stub
      */
     private $httpHeader;
     /**
@@ -33,23 +33,20 @@ class DeveloperAccessCheckerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
-        $this->remoteAddress = $this->createMock(RemoteAddress::class);
-        $this->httpHeader = $this->createMock(Header::class);
+        $this->scopeConfig = $this->createStub(ScopeConfigInterface::class);
+        $this->remoteAddress = $this->createStub(RemoteAddress::class);
+        $this->httpHeader = $this->createStub(Header::class);
 
-        $this->checker = new DeveloperAccessChecker(
-            $this->scopeConfig,
-            $this->remoteAddress,
-            $this->httpHeader,
-        );
+        $this->checker = $this->createChecker();
     }
 
     public function testAllowsAccessWhenNoAllowedIpsAreConfigured(): void
     {
         $this->scopeConfig->method('getValue')->willReturn('');
-        $this->remoteAddress->expects($this->never())->method('getRemoteAddress');
+        $remoteAddress = $this->createMock(RemoteAddress::class);
+        $remoteAddress->expects($this->never())->method('getRemoteAddress');
 
-        $this->assertTrue($this->checker->isDevAllowed());
+        $this->assertTrue($this->createChecker(remoteAddress: $remoteAddress)->isDevAllowed());
     }
 
     public function testAllowsAccessWhenConfiguredValueIsNotAString(): void
@@ -95,11 +92,24 @@ class DeveloperAccessCheckerTest extends TestCase
 
     public function testPassesStoreIdAndScopeToScopeConfig(): void
     {
-        $this->scopeConfig->expects($this->once())
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
             ->method('getValue')
             ->with('dev/restrict/allow_ips', InspectorConfig::SCOPE_STORE, '2')
             ->willReturn('');
 
-        $this->checker->isDevAllowed('2');
+        $this->createChecker(scopeConfig: $scopeConfig)->isDevAllowed('2');
+    }
+
+    private function createChecker(
+        ?ScopeConfigInterface $scopeConfig = null,
+        ?RemoteAddress $remoteAddress = null,
+        ?Header $httpHeader = null,
+    ): DeveloperAccessChecker {
+        return new DeveloperAccessChecker(
+            $scopeConfig ?? $this->scopeConfig,
+            $remoteAddress ?? $this->remoteAddress,
+            $httpHeader ?? $this->httpHeader,
+        );
     }
 }

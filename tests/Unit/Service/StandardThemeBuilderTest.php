@@ -8,7 +8,7 @@ use OpenForgeProject\MageForge\Service\DependencyChecker;
 use OpenForgeProject\MageForge\Service\GruntTaskRunner;
 use OpenForgeProject\MageForge\Service\StandardThemeBuilder;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -16,23 +16,23 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class StandardThemeBuilderTest extends TestCase
 {
     /**
-     * @var DependencyChecker&MockObject
+     * @var DependencyChecker&Stub
      */
     private $dependencyChecker;
     /**
-     * @var GruntTaskRunner&MockObject
+     * @var GruntTaskRunner&Stub
      */
     private $gruntTaskRunner;
     /**
-     * @var StaticContentDeployer&MockObject
+     * @var StaticContentDeployer&Stub
      */
     private $staticContentDeployer;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
-     * @var OutputInterface&MockObject
+     * @var OutputInterface&Stub
      */
     private $output;
     /**
@@ -42,16 +42,12 @@ class StandardThemeBuilderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dependencyChecker = $this->createMock(DependencyChecker::class);
-        $this->gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
-        $this->staticContentDeployer = $this->createMock(StaticContentDeployer::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->output = $this->createMock(OutputInterface::class);
-        $this->builder = new StandardThemeBuilder(
-            $this->dependencyChecker,
-            $this->gruntTaskRunner,
-            $this->staticContentDeployer,
-        );
+        $this->dependencyChecker = $this->createStub(DependencyChecker::class);
+        $this->gruntTaskRunner = $this->createStub(GruntTaskRunner::class);
+        $this->staticContentDeployer = $this->createStub(StaticContentDeployer::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->output = $this->createStub(OutputInterface::class);
+        $this->builder = $this->createBuilder();
     }
 
     public function testBuildsThemeAndRecordsAllSteps(): void
@@ -75,12 +71,14 @@ class StandardThemeBuilderTest extends TestCase
     public function testRunsGruntTasksOnlyOncePerBuildProcess(): void
     {
         $this->dependencyChecker->method('checkDependencies')->willReturn(true);
-        $this->gruntTaskRunner->expects($this->once())->method('runTasks')->willReturn(true);
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->once())->method('runTasks')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $builder = $this->createBuilder(gruntTaskRunner: $gruntTaskRunner);
 
         $successList = [];
-        $this->assertTrue($this->builder->build('Vendor/one', $this->io, $this->output, false, $successList));
-        $this->assertTrue($this->builder->build('Vendor/two', $this->io, $this->output, false, $successList));
+        $this->assertTrue($builder->build('Vendor/one', $this->io, $this->output, false, $successList));
+        $this->assertTrue($builder->build('Vendor/two', $this->io, $this->output, false, $successList));
 
         $this->assertSame(
             [
@@ -97,11 +95,17 @@ class StandardThemeBuilderTest extends TestCase
     public function testStopsWhenDependencyCheckFails(): void
     {
         $this->dependencyChecker->method('checkDependencies')->willReturn(false);
-        $this->gruntTaskRunner->expects($this->never())->method('runTasks');
-        $this->staticContentDeployer->expects($this->never())->method('deploy');
+        $gruntTaskRunner = $this->createMock(GruntTaskRunner::class);
+        $gruntTaskRunner->expects($this->never())->method('runTasks');
+        $staticContentDeployer = $this->createMock(StaticContentDeployer::class);
+        $staticContentDeployer->expects($this->never())->method('deploy');
+        $builder = $this->createBuilder(
+            gruntTaskRunner: $gruntTaskRunner,
+            staticContentDeployer: $staticContentDeployer,
+        );
 
         $successList = [];
-        $this->assertFalse($this->builder->build('Vendor/theme', $this->io, $this->output, false, $successList));
+        $this->assertFalse($builder->build('Vendor/theme', $this->io, $this->output, false, $successList));
         $this->assertSame([], $successList);
     }
 
@@ -109,10 +113,12 @@ class StandardThemeBuilderTest extends TestCase
     {
         $this->dependencyChecker->method('checkDependencies')->willReturn(true);
         $this->gruntTaskRunner->method('runTasks')->willReturn(false);
-        $this->staticContentDeployer->expects($this->never())->method('deploy');
+        $staticContentDeployer = $this->createMock(StaticContentDeployer::class);
+        $staticContentDeployer->expects($this->never())->method('deploy');
+        $builder = $this->createBuilder(staticContentDeployer: $staticContentDeployer);
 
         $successList = [];
-        $this->assertFalse($this->builder->build('Vendor/theme', $this->io, $this->output, false, $successList));
+        $this->assertFalse($builder->build('Vendor/theme', $this->io, $this->output, false, $successList));
         $this->assertSame(['Vendor/theme: Dependencies checked'], $successList);
     }
 
@@ -131,12 +137,25 @@ class StandardThemeBuilderTest extends TestCase
         $this->dependencyChecker->method('checkDependencies')->willReturn(true);
         $this->gruntTaskRunner->method('runTasks')->willReturn(true);
         $this->staticContentDeployer->method('deploy')->willReturn(true);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('success')
             ->with('Theme Vendor/theme has been successfully built.');
 
         $successList = [];
-        $this->assertTrue($this->builder->build('Vendor/theme', $this->io, $this->output, true, $successList));
+        $this->assertTrue($this->builder->build('Vendor/theme', $io, $this->output, true, $successList));
+    }
+
+    private function createBuilder(
+        ?DependencyChecker $dependencyChecker = null,
+        ?GruntTaskRunner $gruntTaskRunner = null,
+        ?StaticContentDeployer $staticContentDeployer = null,
+    ): StandardThemeBuilder {
+        return new StandardThemeBuilder(
+            $dependencyChecker ?? $this->dependencyChecker,
+            $gruntTaskRunner ?? $this->gruntTaskRunner,
+            $staticContentDeployer ?? $this->staticContentDeployer,
+        );
     }
 }

@@ -12,7 +12,7 @@ use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -22,23 +22,23 @@ use Symfony\Component\Console\Tester\CommandTester;
 class BuildCommandTest extends TestCase
 {
     /**
-     * @var ThemePath&MockObject
+     * @var ThemePath&Stub
      */
     private $themePath;
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
-     * @var BuilderPool&MockObject
+     * @var BuilderPool&Stub
      */
     private $builderPool;
     /**
-     * @var ThemeSuggester&MockObject
+     * @var ThemeSuggester&Stub
      */
     private $themeSuggester;
     /**
-     * @var ThemeParentResolver&MockObject
+     * @var ThemeParentResolver&Stub
      */
     private $parentResolver;
     /**
@@ -53,18 +53,12 @@ class BuildCommandTest extends TestCase
         // and garbles the PHPUnit progress output. Send it to a buffer instead.
         Prompt::setOutput(new BufferedOutput());
 
-        $this->themePath = $this->createMock(ThemePath::class);
-        $this->themeList = $this->createMock(ThemeList::class);
-        $this->builderPool = $this->createMock(BuilderPool::class);
-        $this->themeSuggester = $this->createMock(ThemeSuggester::class);
-        $this->parentResolver = $this->createMock(ThemeParentResolver::class);
-        $this->command = new BuildCommand(
-            $this->themePath,
-            $this->themeList,
-            $this->builderPool,
-            $this->themeSuggester,
-            $this->parentResolver,
-        );
+        $this->themePath = $this->createStub(ThemePath::class);
+        $this->themeList = $this->createStub(ThemeList::class);
+        $this->builderPool = $this->createStub(BuilderPool::class);
+        $this->themeSuggester = $this->createStub(ThemeSuggester::class);
+        $this->parentResolver = $this->createStub(ThemeParentResolver::class);
+        $this->command = $this->createCommand();
     }
 
     public function testCommandNameAndAlias(): void
@@ -75,16 +69,24 @@ class BuildCommandTest extends TestCase
 
     public function testBuildsThemeVerboseAndReportsSummary(): void
     {
-        $this->themePath->method('getPath')->with('Vendor/theme')->willReturn('/path/to/theme');
-        $builder = $this->createNamedBuilder('tailwind');
+        $themePath = $this->createMock(ThemePath::class);
+        $themePath
+            ->expects($this->atLeastOnce())
+            ->method('getPath')
+            ->with('Vendor/theme')
+            ->willReturn('/path/to/theme');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('getName')->willReturn('tailwind');
         $builder
             ->expects($this->once())
             ->method('build')
             ->with('Vendor/theme', '/path/to/theme')
             ->willReturn(true);
-        $this->builderPool->method('getBuilder')->with('/path/to/theme')->willReturn($builder);
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->expects($this->once())->method('getBuilder')->with('/path/to/theme')->willReturn($builder);
+        $command = $this->createCommand(themePath: $themePath, builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(
             ['themeCodes' => ['Vendor/theme']],
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
@@ -200,9 +202,11 @@ class BuildCommandTest extends TestCase
     {
         $this->themePath->method('getPath')->willReturn(null);
         $this->themeSuggester->method('findSimilarThemes')->willReturn([]);
-        $this->builderPool->expects($this->never())->method('getBuilder');
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->expects($this->never())->method('getBuilder');
+        $command = $this->createCommand(builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(
             ['themeCodes' => ['Vendor/unknown']],
             ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
@@ -221,9 +225,11 @@ class BuildCommandTest extends TestCase
         $this->themeList->method('getAllThemes')->willReturn([
             new FakeThemeWithTitle('Vendor/theme', 'Vendor Theme'),
         ]);
-        $this->builderPool->expects($this->never())->method('getBuilder');
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->expects($this->never())->method('getBuilder');
+        $command = $this->createCommand(builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
@@ -245,7 +251,8 @@ class BuildCommandTest extends TestCase
             new FakeThemeWithTitle('Other/theme', 'Other'),
         ]);
         $this->themePath->method('getPath')->willReturn('/path/to/theme');
-        $builder = $this->createNamedBuilder('grunt');
+        $builder = $this->createMock(BuilderInterface::class);
+        $builder->method('getName')->willReturn('grunt');
         $builder->expects($this->exactly(2))->method('build')->willReturn(true);
         $this->builderPool->method('getBuilder')->willReturn($builder);
 
@@ -266,9 +273,11 @@ class BuildCommandTest extends TestCase
         $this->themeList->method('getAllThemes')->willReturn([
             new FakeThemeWithTitle('Other/theme', 'Other'),
         ]);
-        $this->builderPool->expects($this->never())->method('getBuilder');
+        $builderPool = $this->createMock(BuilderPool::class);
+        $builderPool->expects($this->never())->method('getBuilder');
+        $command = $this->createCommand(builderPool: $builderPool);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($command);
         $exitCode = $tester->execute(['themeCodes' => ['Vendor/*']]);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
@@ -277,9 +286,25 @@ class BuildCommandTest extends TestCase
         $this->assertStringNotContainsString('Usage:', $display, 'Command must exit before listing themes');
     }
 
-    private function createNamedBuilder(string $name): BuilderInterface&MockObject
+    private function createCommand(
+        ?ThemePath $themePath = null,
+        ?ThemeList $themeList = null,
+        ?BuilderPool $builderPool = null,
+        ?ThemeSuggester $themeSuggester = null,
+        ?ThemeParentResolver $parentResolver = null,
+    ): BuildCommand {
+        return new BuildCommand(
+            $themePath ?? $this->themePath,
+            $themeList ?? $this->themeList,
+            $builderPool ?? $this->builderPool,
+            $themeSuggester ?? $this->themeSuggester,
+            $parentResolver ?? $this->parentResolver,
+        );
+    }
+
+    private function createNamedBuilder(string $name): BuilderInterface&Stub
     {
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn($name);
 
         return $builder;

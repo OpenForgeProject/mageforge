@@ -12,30 +12,30 @@ use OpenForgeProject\MageForge\Model\TemplateType;
 use OpenForgeProject\MageForge\Service\TemplateOverride\CompatModuleResolver;
 use OpenForgeProject\MageForge\Service\TemplateOverride\TemplatePathParser;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class TemplatePathParserTest extends TestCase
 {
     /**
-     * @var ComponentRegistrarInterface&MockObject
+     * @var ComponentRegistrarInterface&Stub
      */
-    private MockObject $componentRegistrar;
+    private Stub $componentRegistrar;
 
     /**
-     * @var CompatModuleResolver&MockObject
+     * @var CompatModuleResolver&Stub
      */
-    private MockObject $compatModuleResolver;
+    private Stub $compatModuleResolver;
 
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
-    private MockObject $fileDriver;
+    private Stub $fileDriver;
 
     /**
-     * @var DirectoryList&MockObject
+     * @var DirectoryList&Stub
      */
-    private MockObject $directoryList;
+    private Stub $directoryList;
 
     /**
      * @var TemplatePathParser
@@ -44,28 +44,39 @@ class TemplatePathParserTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
-        $this->compatModuleResolver = $this->createMock(CompatModuleResolver::class);
-        $this->fileDriver = $this->createMock(File::class);
-        $this->directoryList = $this->createMock(DirectoryList::class);
+        $this->componentRegistrar = $this->createStub(ComponentRegistrarInterface::class);
+        $this->compatModuleResolver = $this->createStub(CompatModuleResolver::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->directoryList = $this->createStub(DirectoryList::class);
         $this->directoryList->method('getRoot')->willReturn('/magento');
-        $this->parser = new TemplatePathParser(
-            $this->componentRegistrar,
-            $this->compatModuleResolver,
-            $this->fileDriver,
+        $this->parser = $this->createParser();
+    }
+
+    private function createParser(
+        ?ComponentRegistrarInterface $componentRegistrar = null,
+        ?CompatModuleResolver $compatModuleResolver = null,
+        ?File $fileDriver = null,
+    ): TemplatePathParser {
+        return new TemplatePathParser(
+            $componentRegistrar ?? $this->componentRegistrar,
+            $compatModuleResolver ?? $this->compatModuleResolver,
+            $fileDriver ?? $this->fileDriver,
             $this->directoryList,
         );
     }
 
     public function testParsesModuleNotation(): void
     {
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPath')
             ->with(ComponentRegistrar::MODULE, 'Magento_Catalog')
             ->willReturn('/magento/vendor/magento/module-catalog');
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar);
 
-        $reference = $this->parser->parse('Magento_Catalog::product/view/details.phtml');
+        $reference = $parser->parse('Magento_Catalog::product/view/details.phtml');
 
         $this->assertSame('Magento_Catalog', $reference->getModuleName());
         $this->assertSame('product/view/details.phtml', $reference->getTemplatePath());
@@ -144,12 +155,15 @@ class TemplatePathParserTest extends TestCase
     public function testMapsCompatModuleNotationToOriginalModule(): void
     {
         $this->componentRegistrar->method('getPath')->willReturn('/path/to/compat-module');
-        $this->compatModuleResolver
+        $compatModuleResolver = $this->createMock(CompatModuleResolver::class);
+        $compatModuleResolver
+            ->expects($this->once())
             ->method('getOriginalModules')
             ->with('Hyva_AmastyLabelCompat')
             ->willReturn(['Amasty_Label']);
+        $parser = $this->createParser(compatModuleResolver: $compatModuleResolver);
 
-        $reference = $this->parser->parse('Hyva_AmastyLabelCompat::label/product.phtml');
+        $reference = $parser->parse('Hyva_AmastyLabelCompat::label/product.phtml');
 
         $this->assertSame('Amasty_Label', $reference->getModuleName());
         $this->assertSame('label/product.phtml', $reference->getTemplatePath());
@@ -196,15 +210,19 @@ class TemplatePathParserTest extends TestCase
     public function testParsesModuleFilePath(): void
     {
         $file = '/magento/vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml';
-        $this->fileDriver->method('isFile')->with($file)->willReturn(true);
-        $this->fileDriver->method('getRealPath')->with($file)->willReturn($file);
-        $this->componentRegistrar
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->expects($this->once())->method('isFile')->with($file)->willReturn(true);
+        $fileDriver->expects($this->once())->method('getRealPath')->with($file)->willReturn($file);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar, fileDriver: $fileDriver);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Magento_Catalog', $reference->getModuleName());
         $this->assertSame('product/view/details.phtml', $reference->getTemplatePath());
@@ -215,16 +233,24 @@ class TemplatePathParserTest extends TestCase
         $file = '/magento/vendor/hyva-themes/compat/src/view/frontend/templates/label/product.phtml';
         $this->fileDriver->method('isFile')->willReturn(true);
         $this->fileDriver->method('getRealPath')->willReturn($file);
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_AmastyLabelCompat' => '/magento/vendor/hyva-themes/compat/src']);
-        $this->compatModuleResolver
+        $compatModuleResolver = $this->createMock(CompatModuleResolver::class);
+        $compatModuleResolver
+            ->expects($this->once())
             ->method('getOriginalModules')
             ->with('Hyva_AmastyLabelCompat')
             ->willReturn(['Amasty_Label']);
+        $parser = $this->createParser(
+            componentRegistrar: $componentRegistrar,
+            compatModuleResolver: $compatModuleResolver,
+        );
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Amasty_Label::label/product.phtml', $reference->getTemplateId());
     }
@@ -253,7 +279,9 @@ class TemplatePathParserTest extends TestCase
         $file = '/magento/vendor/acme/module-base/sub-module/view/frontend/templates/widget.phtml';
         $this->fileDriver->method('isFile')->willReturn(true);
         $this->fileDriver->method('getRealPath')->willReturn($file);
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn([
@@ -261,8 +289,9 @@ class TemplatePathParserTest extends TestCase
                 'Acme_Sub' => '/magento/vendor/acme/module-base/sub-module',
             ]);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Acme_Sub', $reference->getModuleName());
         $this->assertSame('widget.phtml', $reference->getTemplatePath());
@@ -272,17 +301,21 @@ class TemplatePathParserTest extends TestCase
     {
         $relative = 'vendor/magento/module-catalog/view/frontend/templates/product/view/details.phtml';
         $absolute = '/magento/' . $relative;
-        $this->fileDriver
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver
             ->method('isFile')
             ->willReturnCallback(static fn (string $path): bool => $path === $absolute);
-        $this->fileDriver->method('getRealPath')->with($absolute)->willReturn($absolute);
-        $this->componentRegistrar
+        $fileDriver->expects($this->once())->method('getRealPath')->with($absolute)->willReturn($absolute);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar, fileDriver: $fileDriver);
 
-        $reference = $this->parser->parse($relative);
+        $reference = $parser->parse($relative);
 
         $this->assertSame('Magento_Catalog::product/view/details.phtml', $reference->getTemplateId());
     }
@@ -324,15 +357,19 @@ class TemplatePathParserTest extends TestCase
     public function testParsesEmailModuleFilePath(): void
     {
         $file = '/magento/vendor/magento/module-sales/view/frontend/email/order/new.html';
-        $this->fileDriver->method('isFile')->with($file)->willReturn(true);
-        $this->fileDriver->method('getRealPath')->with($file)->willReturn($file);
-        $this->componentRegistrar
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->expects($this->once())->method('isFile')->with($file)->willReturn(true);
+        $fileDriver->expects($this->once())->method('getRealPath')->with($file)->willReturn($file);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Sales' => '/magento/vendor/magento/module-sales']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar, fileDriver: $fileDriver);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Magento_Sales', $reference->getModuleName());
         $this->assertSame('order/new.html', $reference->getTemplatePath());
@@ -363,11 +400,10 @@ class TemplatePathParserTest extends TestCase
     {
         $directory = '/magento/vendor/magento/module-catalog/view/frontend/templates';
         $this->fileDriver->method('isFile')->willReturn(false);
-        $this->fileDriver->method('isDirectory')->with($directory)->willReturn(true);
-        $this->fileDriver->method('getRealPath')->with($directory)->willReturn($directory);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
 
@@ -409,7 +445,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory . '/');
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
 
@@ -448,11 +483,9 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver
             ->method('getOriginalModules')
-            ->with('Hyva_CompatCatalog')
             ->willReturn(['Magento_Catalog', 'Magento_Checkout']);
 
         $reference = $this->parser->parse($directory);
@@ -470,7 +503,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver
             ->method('getOriginalModules')
@@ -491,7 +523,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn(['Magento_Catalog']);
 
@@ -511,7 +542,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -572,7 +602,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -594,15 +623,19 @@ class TemplatePathParserTest extends TestCase
     public function testParsesStaticModuleFilePath(): void
     {
         $file = '/magento/vendor/magento/module-theme/view/frontend/web/css/source/_module.less';
-        $this->fileDriver->method('isFile')->with($file)->willReturn(true);
-        $this->fileDriver->method('getRealPath')->with($file)->willReturn($file);
-        $this->componentRegistrar
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->expects($this->once())->method('isFile')->with($file)->willReturn(true);
+        $fileDriver->expects($this->once())->method('getRealPath')->with($file)->willReturn($file);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Theme' => '/magento/vendor/magento/module-theme']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar, fileDriver: $fileDriver);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Magento_Theme', $reference->getModuleName());
         $this->assertSame('css/source/_module.less', $reference->getTemplatePath());
@@ -634,13 +667,16 @@ class TemplatePathParserTest extends TestCase
         $file = '/magento/vendor/magento/module-catalog/view/frontend/layout/default.xml';
         $this->fileDriver->method('isFile')->willReturn(true);
         $this->fileDriver->method('getRealPath')->willReturn($file);
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Magento_Catalog', $reference->getModuleName());
         $this->assertSame('default.xml', $reference->getTemplatePath());
@@ -652,10 +688,13 @@ class TemplatePathParserTest extends TestCase
         $file = '/magento/vendor/magento/module-catalog/etc/module.xml';
         $this->fileDriver->method('isFile')->willReturn(true);
         $this->fileDriver->method('getRealPath')->willReturn($file);
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches(
@@ -663,7 +702,7 @@ class TemplatePathParserTest extends TestCase
             . 'view\/<area>\/web or view\/<area>\/layout directory/',
         );
 
-        $this->parser->parse($file);
+        $parser->parse($file);
     }
 
     public function testRejectsFileOutsideAnyComponent(): void
@@ -681,13 +720,16 @@ class TemplatePathParserTest extends TestCase
 
     public function testParsesModuleNotationWithWhitespaceAroundModuleName(): void
     {
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPath')
             ->with(ComponentRegistrar::MODULE, 'Magento_Catalog')
             ->willReturn('/magento/vendor/magento/module-catalog');
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(componentRegistrar: $componentRegistrar);
 
-        $reference = $this->parser->parse(' Magento_Catalog ::product/view/details.phtml ');
+        $reference = $parser->parse(' Magento_Catalog ::product/view/details.phtml ');
 
         $this->assertSame('Magento_Catalog', $reference->getModuleName());
         $this->assertSame('product/view/details.phtml', $reference->getTemplatePath());
@@ -697,8 +739,9 @@ class TemplatePathParserTest extends TestCase
     {
         $file = '\\magento\\vendor\\magento\\module-catalog\\view\\frontend\\templates\\widget.phtml';
         $normalized = '/magento/vendor/magento/module-catalog/view/frontend/templates/widget.phtml';
-        $this->fileDriver->method('isFile')->willReturnCallback(static fn(string $path): bool => $path === $normalized);
-        $this->fileDriver->method('getRealPath')->with($normalized)->willReturn($normalized);
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isFile')->willReturnCallback(static fn(string $path): bool => $path === $normalized);
+        $fileDriver->expects($this->once())->method('getRealPath')->with($normalized)->willReturn($normalized);
         $this->componentRegistrar
             ->method('getPaths')
             ->willReturnMap([
@@ -706,8 +749,9 @@ class TemplatePathParserTest extends TestCase
                 [ComponentRegistrar::THEME, []],
             ]);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
+        $parser = $this->createParser(fileDriver: $fileDriver);
 
-        $reference = $this->parser->parse($file);
+        $reference = $parser->parse($file);
 
         $this->assertSame('Magento_Catalog', $reference->getModuleName());
         $this->assertSame('widget.phtml', $reference->getTemplatePath());

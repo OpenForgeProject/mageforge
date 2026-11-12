@@ -13,10 +13,10 @@ class ThemeListTest extends TestCase
 {
     public function testReturnsAllThemesFromMagentoThemeList(): void
     {
-        $themeOne = $this->createMock(ThemeInterface::class);
-        $themeTwo = $this->createMock(ThemeInterface::class);
+        $themeOne = $this->createStub(ThemeInterface::class);
+        $themeTwo = $this->createStub(ThemeInterface::class);
 
-        $magentoThemeList = $this->createMock(MagentoThemeList::class);
+        $magentoThemeList = $this->createStub(MagentoThemeList::class);
         $magentoThemeList
             ->method('getItems')
             ->willReturn(['frontend/Vendor/one' => $themeOne, 'frontend/Vendor/two' => $themeTwo]);
@@ -31,7 +31,7 @@ class ThemeListTest extends TestCase
 
     public function testReturnsEmptyArrayWhenNoThemesExist(): void
     {
-        $magentoThemeList = $this->createMock(MagentoThemeList::class);
+        $magentoThemeList = $this->createStub(MagentoThemeList::class);
         $magentoThemeList->method('getItems')->willReturn([]);
 
         $themeList = new ThemeList($magentoThemeList);

@@ -12,39 +12,39 @@ use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\TemplateEngineInterface;
 use OpenForgeProject\MageForge\Model\TemplateEngine\Decorator\InspectorHints;
 use OpenForgeProject\MageForge\Service\Inspector\Cache\BlockCacheCollector;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class InspectorHintsTest extends TestCase
 {
     /**
-     * @var TemplateEngineInterface&MockObject
+     * @var TemplateEngineInterface&Stub
      */
     private $subject;
     /**
-     * @var Random&MockObject
+     * @var Random&Stub
      */
     private $random;
     /**
-     * @var BlockCacheCollector&MockObject
+     * @var BlockCacheCollector&Stub
      */
     private $cacheCollector;
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
     /**
-     * @var Escaper&MockObject
+     * @var Escaper&Stub
      */
     private $escaper;
 
     protected function setUp(): void
     {
-        $this->subject = $this->createMock(TemplateEngineInterface::class);
-        $this->random = $this->createMock(Random::class);
-        $this->cacheCollector = $this->createMock(BlockCacheCollector::class);
-        $this->fileDriver = $this->createMock(File::class);
-        $this->escaper = $this->createMock(Escaper::class);
+        $this->subject = $this->createStub(TemplateEngineInterface::class);
+        $this->random = $this->createStub(Random::class);
+        $this->cacheCollector = $this->createStub(BlockCacheCollector::class);
+        $this->fileDriver = $this->createStub(File::class);
+        $this->escaper = $this->createStub(Escaper::class);
 
         // Fix the resolved Magento root so relative-path assertions are deterministic.
         $this->fileDriver->method('getParentDirectory')->willReturn('/var/www/html');
@@ -85,9 +85,9 @@ class InspectorHintsTest extends TestCase
         );
     }
 
-    private function createBlock(): BlockInterface&MockObject
+    private function createBlock(): BlockInterface&Stub
     {
-        return $this->createMock(BlockInterface::class);
+        return $this->createStub(BlockInterface::class);
     }
 
     /**
@@ -224,16 +224,16 @@ class InspectorHintsTest extends TestCase
 
     public function testRenderDetectsParentBlockAndAlias(): void
     {
-        $parentBlock = $this->getMockBuilder(AbstractBlock::class)
+        $parentBlock = $this->getStubBuilder(AbstractBlock::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getNameInLayout'])
-            ->getMock();
+            ->getStub();
         $parentBlock->method('getNameInLayout')->willReturn('parent.block');
 
-        $block = $this->getMockBuilder(AbstractBlock::class)
+        $block = $this->getStubBuilder(AbstractBlock::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getParentBlock', 'getNameInLayout'])
-            ->getMock();
+            ->getStub();
         $block->method('getParentBlock')->willReturn($parentBlock);
         $block->method('getNameInLayout')->willReturn('child.block');
 

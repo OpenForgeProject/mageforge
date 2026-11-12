@@ -6,33 +6,35 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\TemplateOverride;
 
 use Magento\Framework\ObjectManagerInterface;
 use OpenForgeProject\MageForge\Service\TemplateOverride\CompatModuleResolver;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class CompatModuleResolverTest extends TestCase
 {
     /**
-     * @var ObjectManagerInterface&MockObject
+     * @var ObjectManagerInterface&Stub
      */
-    private MockObject $objectManager;
+    private Stub $objectManager;
 
     protected function setUp(): void
     {
-        $this->objectManager = $this->createMock(ObjectManagerInterface::class);
+        $this->objectManager = $this->createStub(ObjectManagerInterface::class);
     }
 
     public function testReturnsEmptyArrayWhenHyvaIsNotInstalled(): void
     {
-        $this->objectManager->expects($this->never())->method('create');
-        $resolver = new CompatModuleResolver($this->objectManager);
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->expects($this->never())->method('create');
+        $resolver = new CompatModuleResolver($objectManager);
 
         $this->assertSame([], $resolver->getOriginalModules('Hyva_MagentoCatalogCompat'));
     }
 
     public function testReturnsEmptyArrayWhenRegistryClassDoesNotExist(): void
     {
-        $this->objectManager->expects($this->never())->method('create');
-        $resolver = new CompatModuleResolver($this->objectManager, 'NonExistent\\Registry\\ClassName');
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->expects($this->never())->method('create');
+        $resolver = new CompatModuleResolver($objectManager, 'NonExistent\\Registry\\ClassName');
 
         $this->assertSame([], $resolver->getOriginalModules('Some_Module'));
     }
@@ -43,11 +45,13 @@ class CompatModuleResolverTest extends TestCase
             'Amasty_Label' => ['Hyva_AmastyLabelCompat'],
             'Magento_Catalog' => ['Hyva_MagentoCatalogCompat'],
         ]);
-        $this->objectManager
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager
+            ->expects($this->atLeastOnce())
             ->method('create')
             ->with(FakeCompatModuleRegistry::class)
             ->willReturn($registry);
-        $resolver = new CompatModuleResolver($this->objectManager, FakeCompatModuleRegistry::class);
+        $resolver = new CompatModuleResolver($objectManager, FakeCompatModuleRegistry::class);
 
         $this->assertSame(['Amasty_Label'], $resolver->getOriginalModules('Hyva_AmastyLabelCompat'));
         $this->assertSame(['Magento_Catalog'], $resolver->getOriginalModules('Hyva_MagentoCatalogCompat'));

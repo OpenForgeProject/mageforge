@@ -66,7 +66,7 @@ class AbstractCommandTest extends TestCase
         bool $expectedVeryVerbose,
         bool $expectedDebug,
     ): void {
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $output->method('getVerbosity')->willReturn($verbosity);
 
         $this->assertSame($expectedVerbose, $this->command->callIsVerbose($output));
@@ -89,7 +89,7 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesReturnsExplicitCodesUnchanged(): void
     {
-        $themeList = $this->createMock(ThemeList::class);
+        $themeList = $this->createStub(ThemeList::class);
         $io = $this->createMock(SymfonyStyle::class);
         $this->command->setIoForTest($io);
         $io->expects($this->never())->method('warning');
@@ -101,18 +101,18 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesExpandsWildcard(): void
     {
-        $themeOne = $this->createMock(ThemeInterface::class);
+        $themeOne = $this->createStub(ThemeInterface::class);
         $themeOne->method('getCode')->willReturn('Vendor/one');
-        $themeTwo = $this->createMock(ThemeInterface::class);
+        $themeTwo = $this->createStub(ThemeInterface::class);
         $themeTwo->method('getCode')->willReturn('Vendor/two');
-        $themeOther = $this->createMock(ThemeInterface::class);
+        $themeOther = $this->createStub(ThemeInterface::class);
         $themeOther->method('getCode')->willReturn('Other/three');
         // Distinguishes an exact "Vendor/" prefix from an off-by-one "Vendor" prefix: this
         // theme starts with "Vendor" but not with "Vendor/" and must stay excluded.
-        $themeLookalike = $this->createMock(ThemeInterface::class);
+        $themeLookalike = $this->createStub(ThemeInterface::class);
         $themeLookalike->method('getCode')->willReturn('Vendorish/other');
 
-        $themeList = $this->createMock(ThemeList::class);
+        $themeList = $this->createStub(ThemeList::class);
         $themeList->method('getAllThemes')->willReturn([$themeOne, $themeTwo, $themeOther, $themeLookalike]);
 
         $io = $this->createMock(SymfonyStyle::class);
@@ -126,17 +126,17 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesExpandsVendorOnlyName(): void
     {
-        $themeOne = $this->createMock(ThemeInterface::class);
+        $themeOne = $this->createStub(ThemeInterface::class);
         $themeOne->method('getCode')->willReturn('Vendor/one');
         // Distinguishes an exact "Vendor/" prefix from a bare "Vendor" prefix: this theme
         // starts with "Vendor" but not with "Vendor/" and must stay excluded.
-        $themeLookalike = $this->createMock(ThemeInterface::class);
+        $themeLookalike = $this->createStub(ThemeInterface::class);
         $themeLookalike->method('getCode')->willReturn('Vendorish/other');
 
-        $themeList = $this->createMock(ThemeList::class);
+        $themeList = $this->createStub(ThemeList::class);
         $themeList->method('getAllThemes')->willReturn([$themeOne, $themeLookalike]);
 
-        $io = $this->createMock(SymfonyStyle::class);
+        $io = $this->createStub(SymfonyStyle::class);
         $this->command->setIoForTest($io);
 
         $result = $this->command->callResolveVendorThemes(['Vendor'], $themeList);
@@ -146,7 +146,7 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesWarnsAndKeepsCodeWhenVendorNotFound(): void
     {
-        $themeList = $this->createMock(ThemeList::class);
+        $themeList = $this->createStub(ThemeList::class);
         $themeList->method('getAllThemes')->willReturn([]);
 
         $io = $this->createMock(SymfonyStyle::class);
@@ -160,8 +160,8 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesDeduplicatesResults(): void
     {
-        $themeList = $this->createMock(ThemeList::class);
-        $io = $this->createMock(SymfonyStyle::class);
+        $themeList = $this->createStub(ThemeList::class);
+        $io = $this->createStub(SymfonyStyle::class);
         $this->command->setIoForTest($io);
 
         $result = $this->command->callResolveVendorThemes(['Vendor/theme', 'Vendor/theme'], $themeList);
@@ -171,8 +171,8 @@ class AbstractCommandTest extends TestCase
 
     public function testResolveVendorThemesReindexesAfterRemovingADuplicateFromTheMiddle(): void
     {
-        $themeList = $this->createMock(ThemeList::class);
-        $io = $this->createMock(SymfonyStyle::class);
+        $themeList = $this->createStub(ThemeList::class);
+        $io = $this->createStub(SymfonyStyle::class);
         $this->command->setIoForTest($io);
 
         // Removing the middle duplicate leaves array_unique()'s original keys as [0, 1, 3];
@@ -189,7 +189,7 @@ class AbstractCommandTest extends TestCase
     {
         $themeSuggester = $this->createMock(ThemeSuggester::class);
         $themeSuggester->expects($this->never())->method('findSimilarThemes');
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('error');
         $this->command->setIoForTest($io);
@@ -207,8 +207,8 @@ class AbstractCommandTest extends TestCase
     {
         $themeSuggester = $this->createMock(ThemeSuggester::class);
         $themeSuggester->expects($this->once())->method('findSimilarThemes')->willReturn([]);
-        $output = $this->createMock(OutputInterface::class);
-        $io = $this->createMock(SymfonyStyle::class);
+        $output = $this->createStub(OutputInterface::class);
+        $io = $this->createStub(SymfonyStyle::class);
         $this->command->setIoForTest($io);
 
         $this->command->callHandleInvalidThemeWithSuggestions(str_repeat('a', 255), $themeSuggester, $output);
@@ -216,9 +216,9 @@ class AbstractCommandTest extends TestCase
 
     public function testHandleInvalidThemeReturnsNullWhenNoSuggestionsFound(): void
     {
-        $themeSuggester = $this->createMock(ThemeSuggester::class);
+        $themeSuggester = $this->createStub(ThemeSuggester::class);
         $themeSuggester->method('findSimilarThemes')->willReturn([]);
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('error');
         $this->command->setIoForTest($io);
@@ -230,9 +230,9 @@ class AbstractCommandTest extends TestCase
 
     public function testHandleInvalidThemeDisplaysSuggestionsInNonInteractiveMode(): void
     {
-        $themeSuggester = $this->createMock(ThemeSuggester::class);
+        $themeSuggester = $this->createStub(ThemeSuggester::class);
         $themeSuggester->method('findSimilarThemes')->willReturn(['Vendor/similar']);
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $output->method('isDecorated')->willReturn(false);
         $io = $this->createMock(SymfonyStyle::class);
         $io->expects($this->once())->method('error')->with("Theme 'Vendor/typo' is not installed.");
@@ -251,7 +251,7 @@ class AbstractCommandTest extends TestCase
 
     public function testIsInteractiveTerminalIsFalseWhenOutputNotDecorated(): void
     {
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $output->method('isDecorated')->willReturn(false);
 
         $this->assertFalse($this->command->callIsInteractiveTerminal($output));
@@ -259,7 +259,7 @@ class AbstractCommandTest extends TestCase
 
     public function testIsInteractiveTerminalIsTrueWhenDecoratedAndTtyAvailable(): void
     {
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $output->method('isDecorated')->willReturn(true);
         $this->command->setRealTtyAvailable(true);
 
@@ -268,7 +268,7 @@ class AbstractCommandTest extends TestCase
 
     public function testIsInteractiveTerminalIsFalseWhenDecoratedButNoTtyAvailable(): void
     {
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
         $output->method('isDecorated')->willReturn(true);
         $this->command->setRealTtyAvailable(false);
 

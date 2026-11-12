@@ -12,7 +12,7 @@ use Magento\Framework\Escaper;
 use Magento\Framework\HTTP\ClientFactory;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Console\Command\System\CheckCommand;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -22,29 +22,29 @@ class CheckCommandTest extends TestCase
     private const NODE_LTS_BODY = '[{"version": "v23.1.0", "lts": false}, {"version": "v22.13.0", "lts": "Jod"}]';
 
     /**
-     * @var ProductMetadataInterface&MockObject
+     * @var ProductMetadataInterface&Stub
      */
     private $productMetadata;
     /**
-     * @var ResourceConnection&MockObject
+     * @var ResourceConnection&Stub
      */
     private $resourceConnection;
     /**
-     * @var ClientFactory&MockObject
+     * @var ClientFactory&Stub
      */
     private $httpClientFactory;
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
 
     protected function setUp(): void
     {
-        $this->productMetadata = $this->createMock(ProductMetadataInterface::class);
+        $this->productMetadata = $this->createStub(ProductMetadataInterface::class);
         $this->productMetadata->method('getVersion')->willReturn('2.4.8');
-        $this->resourceConnection = $this->createMock(ResourceConnection::class);
-        $this->httpClientFactory = $this->createMock(ClientFactory::class);
-        $this->shell = $this->createMock(Shell::class);
+        $this->resourceConnection = $this->createStub(ResourceConnection::class);
+        $this->httpClientFactory = $this->createStub(ClientFactory::class);
+        $this->shell = $this->createStub(Shell::class);
     }
 
     public function testCommandNameAndAlias(): void
@@ -226,7 +226,7 @@ class CheckCommandTest extends TestCase
     }
 
     /**
-     * Configure the shell mock; probes for unlisted commands fail.
+     * Configure the shell stub; probes for unlisted commands fail.
      *
      * @param array<string, string> $outputsByCommand
      */
@@ -245,7 +245,7 @@ class CheckCommandTest extends TestCase
     private function givenDatabaseVersion(string $version): void
     {
         $connection = $this->createMock(AdapterInterface::class);
-        $connection->method('fetchOne')->with('SELECT VERSION()')->willReturn($version);
+        $connection->expects($this->once())->method('fetchOne')->with('SELECT VERSION()')->willReturn($version);
         $this->resourceConnection->method('getConnection')->willReturn($connection);
     }
 

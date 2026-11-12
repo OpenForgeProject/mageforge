@@ -11,20 +11,20 @@ use GuzzleHttp\Psr7\Response;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem\Driver\File;
 use OpenForgeProject\MageForge\Console\Command\System\VersionCommand;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class VersionCommandTest extends TestCase
 {
     /**
-     * @var File&MockObject
+     * @var File&Stub
      */
     private $fileDriver;
 
     protected function setUp(): void
     {
-        $this->fileDriver = $this->createMock(File::class);
+        $this->fileDriver = $this->createStub(File::class);
     }
 
     public function testCommandNameAndAlias(): void

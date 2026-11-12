@@ -7,13 +7,13 @@ namespace OpenForgeProject\MageForge\Test\Unit\Model;
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use OpenForgeProject\MageForge\Model\ThemePath;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class ThemePathTest extends TestCase
 {
     /**
-     * @var ComponentRegistrarInterface&MockObject
+     * @var ComponentRegistrarInterface&Stub
      */
     private $componentRegistrar;
     /**
@@ -23,13 +23,15 @@ class ThemePathTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->componentRegistrar = $this->createStub(ComponentRegistrarInterface::class);
         $this->themePath = new ThemePath($this->componentRegistrar);
     }
 
     public function testReturnsFrontendThemePath(): void
     {
-        $this->componentRegistrar
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::THEME)
             ->willReturn([
@@ -37,7 +39,10 @@ class ThemePathTest extends TestCase
                 'adminhtml/Vendor/theme' => '/app/design/adminhtml/Vendor/theme',
             ]);
 
-        $this->assertSame('/app/design/frontend/Vendor/theme', $this->themePath->getPath('Vendor/theme'));
+        $this->assertSame(
+            '/app/design/frontend/Vendor/theme',
+            (new ThemePath($componentRegistrar))->getPath('Vendor/theme'),
+        );
     }
 
     public function testFallsBackToAdminhtmlThemePath(): void

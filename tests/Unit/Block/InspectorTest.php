@@ -10,25 +10,25 @@ use Magento\Framework\View\Element\Template\Context;
 use OpenForgeProject\MageForge\Block\Inspector;
 use OpenForgeProject\MageForge\Model\Config\Inspector as InspectorConfig;
 use OpenForgeProject\MageForge\Service\DeveloperAccessChecker;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class InspectorTest extends TestCase
 {
     /**
-     * @var Context&MockObject
+     * @var Context&Stub
      */
     private $context;
     /**
-     * @var State&MockObject
+     * @var State&Stub
      */
     private $state;
     /**
-     * @var ScopeConfigInterface&MockObject
+     * @var ScopeConfigInterface&Stub
      */
     private $scopeConfig;
     /**
-     * @var DeveloperAccessChecker&MockObject
+     * @var DeveloperAccessChecker&Stub
      */
     private $developerAccessChecker;
     /**
@@ -38,15 +38,20 @@ class InspectorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->context = $this->createMock(Context::class);
-        $this->state = $this->createMock(State::class);
-        $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
-        $this->developerAccessChecker = $this->createMock(DeveloperAccessChecker::class);
+        $this->context = $this->createStub(Context::class);
+        $this->state = $this->createStub(State::class);
+        $this->scopeConfig = $this->createStub(ScopeConfigInterface::class);
+        $this->developerAccessChecker = $this->createStub(DeveloperAccessChecker::class);
 
-        $this->block = new Inspector(
+        $this->block = $this->createBlock();
+    }
+
+    private function createBlock(?ScopeConfigInterface $scopeConfig = null): Inspector
+    {
+        return new Inspector(
             $this->context,
             $this->state,
-            $this->scopeConfig,
+            $scopeConfig ?? $this->scopeConfig,
             $this->developerAccessChecker,
         );
     }
@@ -112,11 +117,13 @@ class InspectorTest extends TestCase
 
     public function testGetThemeReturnsConfiguredValue(): void
     {
-        $this->scopeConfig->method('getValue')
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
+            ->method('getValue')
             ->with(InspectorConfig::XML_PATH_THEME, InspectorConfig::SCOPE_STORE)
             ->willReturn('light');
 
-        $this->assertSame('light', $this->block->getTheme());
+        $this->assertSame('light', $this->createBlock(scopeConfig: $scopeConfig)->getTheme());
     }
 
     public function testGetThemeReturnsDefaultWhenEmpty(): void
@@ -135,11 +142,13 @@ class InspectorTest extends TestCase
 
     public function testGetPositionReturnsConfiguredValue(): void
     {
-        $this->scopeConfig->method('getValue')
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
+            ->method('getValue')
             ->with(InspectorConfig::XML_PATH_POSITION, InspectorConfig::SCOPE_STORE)
             ->willReturn('top-right');
 
-        $this->assertSame('top-right', $this->block->getPosition());
+        $this->assertSame('top-right', $this->createBlock(scopeConfig: $scopeConfig)->getPosition());
     }
 
     public function testGetPositionReturnsDefaultWhenEmpty(): void
@@ -172,11 +181,13 @@ class InspectorTest extends TestCase
 
     public function testGetToolbarShortcutReturnsConfiguredValue(): void
     {
-        $this->scopeConfig->method('getValue')
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
+            ->method('getValue')
             ->with(InspectorConfig::XML_PATH_TOOLBAR_SHORTCUT, InspectorConfig::SCOPE_STORE)
             ->willReturn('Shift+F8');
 
-        $this->assertSame('Shift+F8', $this->block->getToolbarShortcut());
+        $this->assertSame('Shift+F8', $this->createBlock(scopeConfig: $scopeConfig)->getToolbarShortcut());
     }
 
     public function testGetToolbarShortcutReturnsDefaultWhenEmpty(): void
@@ -188,11 +199,13 @@ class InspectorTest extends TestCase
 
     public function testGetInspectorShortcutReturnsConfiguredValue(): void
     {
-        $this->scopeConfig->method('getValue')
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->expects($this->once())
+            ->method('getValue')
             ->with(InspectorConfig::XML_PATH_INSPECTOR_SHORTCUT, InspectorConfig::SCOPE_STORE)
             ->willReturn('F12');
 
-        $this->assertSame('F12', $this->block->getInspectorShortcut());
+        $this->assertSame('F12', $this->createBlock(scopeConfig: $scopeConfig)->getInspectorShortcut());
     }
 
     public function testGetInspectorShortcutReturnsDefaultWhenEmpty(): void

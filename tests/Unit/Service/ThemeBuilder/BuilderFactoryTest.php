@@ -6,7 +6,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder;
 
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderFactory;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
 class BuilderFactoryTest extends TestCase
@@ -61,9 +61,9 @@ class BuilderFactoryTest extends TestCase
         $this->assertSame([], $this->factory->getAvailableBuilders());
     }
 
-    private function createNamedBuilder(string $name): BuilderInterface&MockObject
+    private function createNamedBuilder(string $name): BuilderInterface&Stub
     {
-        $builder = $this->createMock(BuilderInterface::class);
+        $builder = $this->createStub(BuilderInterface::class);
         $builder->method('getName')->willReturn($name);
 
         return $builder;

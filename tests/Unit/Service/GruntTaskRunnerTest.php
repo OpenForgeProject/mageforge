@@ -6,7 +6,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service;
 
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\GruntTaskRunner;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -14,15 +14,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class GruntTaskRunnerTest extends TestCase
 {
     /**
-     * @var Shell&MockObject
+     * @var Shell&Stub
      */
     private $shell;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
-     * @var OutputInterface&MockObject
+     * @var OutputInterface&Stub
      */
     private $output;
     /**
@@ -32,9 +32,9 @@ class GruntTaskRunnerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->shell = $this->createMock(Shell::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->output = $this->createMock(OutputInterface::class);
+        $this->shell = $this->createStub(Shell::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->output = $this->createStub(OutputInterface::class);
         $this->taskRunner = new GruntTaskRunner($this->shell);
     }
 
@@ -47,9 +47,10 @@ class GruntTaskRunnerTest extends TestCase
                 $executedCommands[] = $command;
                 return '';
             });
-        $this->output->expects($this->never())->method('writeln');
+        $output = $this->createMock(OutputInterface::class);
+        $output->expects($this->never())->method('writeln');
 
-        $this->assertTrue($this->taskRunner->runTasks($this->io, $this->output, false));
+        $this->assertTrue($this->taskRunner->runTasks($this->io, $output, false));
         $this->assertSame(
             ['node_modules/.bin/grunt clean --quiet', 'node_modules/.bin/grunt less --quiet'],
             $executedCommands,
@@ -72,14 +73,15 @@ class GruntTaskRunnerTest extends TestCase
                 $forwarded[] = $line;
             });
         $announced = [];
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->method('text')
             ->willReturnCallback(function (string $message) use (&$announced): void {
                 $announced[] = $message;
             });
-        $this->io->expects($this->once())->method('success')->with('Grunt tasks completed successfully.');
+        $io->expects($this->once())->method('success')->with('Grunt tasks completed successfully.');
 
-        $this->assertTrue($this->taskRunner->runTasks($this->io, $this->output, true));
+        $this->assertTrue($this->taskRunner->runTasks($io, $this->output, true));
         $this->assertSame(['clean done', 'less done'], $forwarded);
         $this->assertSame(['Running grunt clean...', 'Running grunt less...'], $announced);
     }
@@ -87,8 +89,9 @@ class GruntTaskRunnerTest extends TestCase
     public function testReturnsFalseAndPrintsErrorWhenGruntFails(): void
     {
         $this->shell->method('execute')->willThrowException(new \RuntimeException('grunt not found'));
-        $this->io->expects($this->once())->method('error')->with('Failed to run grunt tasks: grunt not found');
+        $io = $this->createMock(SymfonyStyle::class);
+        $io->expects($this->once())->method('error')->with('Failed to run grunt tasks: grunt not found');
 
-        $this->assertFalse($this->taskRunner->runTasks($this->io, $this->output, false));
+        $this->assertFalse($this->taskRunner->runTasks($io, $this->output, false));
     }
 }

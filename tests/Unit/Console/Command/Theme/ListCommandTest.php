@@ -7,14 +7,14 @@ namespace OpenForgeProject\MageForge\Test\Unit\Console\Command\Theme;
 use Magento\Framework\Console\Cli;
 use OpenForgeProject\MageForge\Console\Command\Theme\ListCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class ListCommandTest extends TestCase
 {
     /**
-     * @var ThemeList&MockObject
+     * @var ThemeList&Stub
      */
     private $themeList;
     /**
@@ -24,7 +24,7 @@ class ListCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->themeList = $this->createMock(ThemeList::class);
+        $this->themeList = $this->createStub(ThemeList::class);
         $this->command = new ListCommand($this->themeList);
     }
 

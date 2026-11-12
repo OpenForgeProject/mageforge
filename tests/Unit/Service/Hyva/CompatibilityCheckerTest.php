@@ -9,6 +9,7 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use OpenForgeProject\MageForge\Service\Hyva\CompatibilityChecker;
 use OpenForgeProject\MageForge\Service\Hyva\ModuleScanner;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -20,15 +21,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class CompatibilityCheckerTest extends TestCase
 {
     /**
-     * @var ComponentRegistrarInterface&MockObject
+     * @var ComponentRegistrarInterface&Stub
      */
     private $componentRegistrar;
     /**
-     * @var ModuleScanner&MockObject
+     * @var ModuleScanner&Stub
      */
     private $moduleScanner;
     /**
-     * @var SymfonyStyle&MockObject
+     * @var SymfonyStyle&Stub
      */
     private $io;
     /**
@@ -38,10 +39,10 @@ class CompatibilityCheckerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
-        $this->moduleScanner = $this->createMock(ModuleScanner::class);
-        $this->io = $this->createMock(SymfonyStyle::class);
-        $this->checker = new CompatibilityChecker($this->componentRegistrar, $this->moduleScanner);
+        $this->componentRegistrar = $this->createStub(ComponentRegistrarInterface::class);
+        $this->moduleScanner = $this->createStub(ModuleScanner::class);
+        $this->io = $this->createStub(SymfonyStyle::class);
+        $this->checker = $this->createChecker();
     }
 
     // -------------------------------------------------------------------------
@@ -50,7 +51,8 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testAggregatesSummaryAcrossModules(): void
     {
-        $this->givenModules([
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, [
             'Vendor_Clean' => '/app/code/Vendor/Clean',
             'Vendor_Broken' => '/app/code/Vendor/Broken',
             'Magento_Catalog' => '/app/code/Magento/Catalog',
@@ -61,13 +63,14 @@ class CompatibilityCheckerTest extends TestCase
             '/app/code/Magento/Catalog' => $this->scanResult(critical: 1, total: 1),
         ]);
         $this->givenModuleInfo(hyvaAware: false);
-        $this->io
+        $io = $this->createMock(SymfonyStyle::class);
+        $io
             ->expects($this->once())
             ->method('text')
             ->with('Scanning 3 modules for Hyvä compatibility...');
-        $this->io->expects($this->once())->method('newLine');
+        $io->expects($this->once())->method('newLine');
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($io);
 
         $this->assertSame(
             [
@@ -87,11 +90,12 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testCriticalIssuesAloneMarkResultsAsIncompatible(): void
     {
-        $this->givenModules(['Vendor_Broken' => '/app/code/Vendor/Broken']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Vendor_Broken' => '/app/code/Vendor/Broken']);
         $this->givenScanResults(['/app/code/Vendor/Broken' => $this->scanResult(critical: 1, total: 1)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io);
 
         $this->assertTrue($results['hasIssues']);
         $this->assertFalse($results['modules']['Vendor_Broken']['hasWarnings']);
@@ -99,11 +103,12 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testFullyCompatibleModulesProduceNoIncompatibilities(): void
     {
-        $this->givenModules(['Vendor_Clean' => '/app/code/Vendor/Clean']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Vendor_Clean' => '/app/code/Vendor/Clean']);
         $this->givenScanResults(['/app/code/Vendor/Clean' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io);
 
         $this->assertFalse($results['hasIssues']);
         $this->assertSame(0, $results['summary']['incompatible']);
@@ -111,11 +116,12 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testWarningsAloneMarkResultsAsIncompatible(): void
     {
-        $this->givenModules(['Vendor_Warned' => '/app/code/Vendor/Warned']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Vendor_Warned' => '/app/code/Vendor/Warned']);
         $this->givenScanResults(['/app/code/Vendor/Warned' => $this->scanResult(critical: 0, total: 2)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io);
 
         $this->assertTrue($results['hasIssues']);
         $this->assertTrue($results['modules']['Vendor_Warned']['compatible']);
@@ -125,57 +131,64 @@ class CompatibilityCheckerTest extends TestCase
 
     public function testExcludesVendorModulesByDefault(): void
     {
-        $this->givenModules([
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, [
             'Vendor_Local' => '/app/code/Vendor/Local',
             'Thirdparty_Module' => '/app/vendor/thirdparty/module',
         ]);
         $this->givenScanResults(['/app/code/Vendor/Local' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io);
 
         $this->assertSame(['Vendor_Local'], array_keys($results['modules']));
     }
 
     public function testIncludesVendorModulesOnRequest(): void
     {
-        $this->givenModules(['Thirdparty_Module' => '/app/vendor/thirdparty/module']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Thirdparty_Module' => '/app/vendor/thirdparty/module']);
         $this->givenScanResults(['/app/vendor/thirdparty/module' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io, excludeVendor: false);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)
+            ->check($this->io, excludeVendor: false);
 
         $this->assertSame(['Thirdparty_Module'], array_keys($results['modules']));
     }
 
     public function testSkipsMagentoModulesInThirdPartyOnlyMode(): void
     {
-        $this->givenModules([
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, [
             'Magento_Catalog' => '/app/code/Magento/Catalog',
             'Vendor_Module' => '/app/code/Vendor/Module',
         ]);
         $this->givenScanResults(['/app/code/Vendor/Module' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: false);
 
-        $results = $this->checker->check($this->io, thirdPartyOnly: true);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)
+            ->check($this->io, thirdPartyOnly: true);
 
         $this->assertSame(['Vendor_Module'], array_keys($results['modules']));
     }
 
     public function testCountsHyvaAwareModules(): void
     {
-        $this->givenModules(['Vendor_Module' => '/app/code/Vendor/Module']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Vendor_Module' => '/app/code/Vendor/Module']);
         $this->givenScanResults(['/app/code/Vendor/Module' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: true);
 
-        $results = $this->checker->check($this->io);
+        $results = $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io);
 
         $this->assertSame(1, $results['summary']['hyvaAware']);
     }
 
     public function testShowAllPrintsScanningLineForEachModule(): void
     {
-        $this->givenModules(['Vendor_Module' => '/app/code/Vendor/Module']);
+        $componentRegistrar = $this->createMock(ComponentRegistrarInterface::class);
+        $this->givenModules($componentRegistrar, ['Vendor_Module' => '/app/code/Vendor/Module']);
         $this->givenScanResults(['/app/code/Vendor/Module' => $this->scanResult(critical: 0, total: 0)]);
         $this->givenModuleInfo(hyvaAware: false);
         $textCalls = [];
@@ -183,7 +196,7 @@ class CompatibilityCheckerTest extends TestCase
             $textCalls[] = $message;
         });
 
-        $this->checker->check($this->io, showAll: true);
+        $this->createChecker(componentRegistrar: $componentRegistrar)->check($this->io, showAll: true);
 
         $this->assertSame(
             ['Scanning 1 modules for Hyvä compatibility...', '  Scanning: <fg=cyan>Vendor_Module</>'],
@@ -298,12 +311,18 @@ class CompatibilityCheckerTest extends TestCase
     // Helpers
     // -------------------------------------------------------------------------
 
+    private function createChecker(?ComponentRegistrarInterface $componentRegistrar = null): CompatibilityChecker
+    {
+        return new CompatibilityChecker($componentRegistrar ?? $this->componentRegistrar, $this->moduleScanner);
+    }
+
     /**
      * @param array<string, string> $modules
      */
-    private function givenModules(array $modules): void
+    private function givenModules(ComponentRegistrarInterface&MockObject $componentRegistrar, array $modules): void
     {
-        $this->componentRegistrar
+        $componentRegistrar
+            ->expects($this->once())
             ->method('getPaths')
             ->with(ComponentRegistrar::MODULE)
             ->willReturn($modules);
