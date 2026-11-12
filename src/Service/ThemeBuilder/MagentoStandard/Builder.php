@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Service\ThemeBuilder\MagentoStandard;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
@@ -29,6 +30,7 @@ class Builder implements BuilderInterface
      * @param SymlinkCleaner $symlinkCleaner
      * @param NodePackageManager $nodePackageManager
      * @param GruntTaskRunner $gruntTaskRunner
+     * @param DirectoryList $directoryList
      */
     public function __construct(
         private readonly Shell $shell,
@@ -39,6 +41,7 @@ class Builder implements BuilderInterface
         private readonly SymlinkCleaner $symlinkCleaner,
         private readonly NodePackageManager $nodePackageManager,
         private readonly GruntTaskRunner $gruntTaskRunner,
+        private readonly DirectoryList $directoryList,
     ) {
     }
 
@@ -154,7 +157,7 @@ class Builder implements BuilderInterface
      */
     public function autoRepair(string $themePath, SymfonyStyle $io, OutputInterface $output, bool $isVerbose): bool
     {
-        $rootPath = '.';
+        $rootPath = $this->getRootPath();
 
         // Check if node_modules is in sync with package-lock.json
         if (!$this->nodePackageManager->isNodeModulesInSync($rootPath)) {
@@ -286,8 +289,10 @@ class Builder implements BuilderInterface
             }
 
             $exitCode = 0;
+            // Run from the Magento root so grunt finds its config regardless of the current working directory
+            $command = 'cd ' . escapeshellarg($this->getRootPath()) . ' && node_modules/.bin/grunt watch';
             // phpcs:ignore Magento2.Security.InsecureFunction.Found -- passthru required for interactive watch mode
-            passthru('node_modules/.bin/grunt watch', $exitCode);
+            passthru($command, $exitCode);
 
             // Check if the command failed
             if ($exitCode !== 0) {
@@ -321,11 +326,13 @@ class Builder implements BuilderInterface
      */
     private function hasNodeSetup(): bool
     {
-        $rootPath = '.';
+        $rootPath = $this->getRootPath();
 
+        // Magento ships Gruntfile.js.sample; the copy is conventionally named Gruntfile.js
         $files = [
             'package.json',
             'package-lock.json',
+            'Gruntfile.js',
             'gruntfile.js',
             'grunt-config.json',
         ];
@@ -337,6 +344,16 @@ class Builder implements BuilderInterface
         }
 
         return false;
+    }
+
+    /**
+     * Get the Magento root path without trailing slash
+     *
+     * @return string
+     */
+    private function getRootPath(): string
+    {
+        return rtrim($this->directoryList->getRoot(), '/');
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder\MagentoStandard;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
@@ -53,6 +54,10 @@ class BuilderTest extends TestCase
      */
     private $gruntTaskRunner;
     /**
+     * @var DirectoryList&Stub
+     */
+    private $directoryList;
+    /**
      * @var SymfonyStyle&Stub
      */
     private $io;
@@ -79,6 +84,8 @@ class BuilderTest extends TestCase
         $this->symlinkCleaner = $this->createStub(SymlinkCleaner::class);
         $this->nodePackageManager = $this->createStub(NodePackageManager::class);
         $this->gruntTaskRunner = $this->createStub(GruntTaskRunner::class);
+        $this->directoryList = $this->createStub(DirectoryList::class);
+        $this->directoryList->method('getRoot')->willReturn('/magento-root');
         $this->io = $this->createStub(SymfonyStyle::class);
         $this->output = $this->createStub(OutputInterface::class);
 
@@ -94,6 +101,7 @@ class BuilderTest extends TestCase
         ?SymlinkCleaner $symlinkCleaner = null,
         ?NodePackageManager $nodePackageManager = null,
         ?GruntTaskRunner $gruntTaskRunner = null,
+        ?DirectoryList $directoryList = null,
     ): Builder {
         return new Builder(
             $shell ?? $this->shell,
@@ -104,6 +112,7 @@ class BuilderTest extends TestCase
             $symlinkCleaner ?? $this->symlinkCleaner,
             $nodePackageManager ?? $this->nodePackageManager,
             $gruntTaskRunner ?? $this->gruntTaskRunner,
+            $directoryList ?? $this->directoryList,
         );
     }
 
@@ -194,10 +203,10 @@ class BuilderTest extends TestCase
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', false],
-            ['./package-lock.json', false],
-            ['./gruntfile.js', false],
-            ['./grunt-config.json', false],
+            ['/magento-root/package.json', false],
+            ['/magento-root/package-lock.json', false],
+            ['/magento-root/gruntfile.js', false],
+            ['/magento-root/grunt-config.json', false],
         ]);
         $nodePackageManager = $this->createMock(NodePackageManager::class);
         $nodePackageManager->expects($this->never())->method('isNodeModulesInSync');
@@ -208,12 +217,34 @@ class BuilderTest extends TestCase
         $this->assertTrue($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, true));
     }
 
+    public function testBuildDetectsCapitalisedGruntfileInMagentoRoot(): void
+    {
+        $this->fileDriver->method('isExists')->willReturnMap([
+            [$this->themePath . '/theme.xml', true],
+            [$this->themePath . '/web/tailwind', false],
+            ['/magento-root/Gruntfile.js', true],
+        ]);
+        $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
+        $this->staticContentDeployer->method('deploy')->willReturn(true);
+        $this->cacheCleaner->method('clean')->willReturn(true);
+        $this->symlinkCleaner->method('cleanSymlinks')->willReturn(true);
+        $this->gruntTaskRunner->method('runTasks')->willReturn(true);
+        $nodePackageManager = $this->createMock(NodePackageManager::class);
+        $nodePackageManager->expects($this->once())
+            ->method('isNodeModulesInSync')
+            ->with('/magento-root')
+            ->willReturn(true);
+        $builder = $this->createBuilder(nodePackageManager: $nodePackageManager);
+
+        $this->assertTrue($builder->build('Vendor/theme', $this->themePath, $this->io, $this->output, false));
+    }
+
     public function testBuildRunsNodeSetupWhenDetected(): void
     {
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', true],
+            ['/magento-root/package.json', true],
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
@@ -245,7 +276,7 @@ class BuilderTest extends TestCase
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', true],
+            ['/magento-root/package.json', true],
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(true);
@@ -340,10 +371,10 @@ class BuilderTest extends TestCase
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', false],
-            ['./package-lock.json', false],
-            ['./gruntfile.js', false],
-            ['./grunt-config.json', false],
+            ['/magento-root/package.json', false],
+            ['/magento-root/package-lock.json', false],
+            ['/magento-root/gruntfile.js', false],
+            ['/magento-root/grunt-config.json', false],
         ]);
 
         $this->assertFalse($this->builder->watch('Vendor/theme', $this->themePath, $this->io, $this->output, false));
@@ -354,7 +385,7 @@ class BuilderTest extends TestCase
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', true],
+            ['/magento-root/package.json', true],
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(false);
 
@@ -366,7 +397,7 @@ class BuilderTest extends TestCase
         $this->fileDriver->method('isExists')->willReturnMap([
             [$this->themePath . '/theme.xml', true],
             [$this->themePath . '/web/tailwind', false],
-            ['./package.json', true],
+            ['/magento-root/package.json', true],
         ]);
         $this->staticContentCleaner->method('cleanIfNeeded')->willReturn(true);
         $this->nodePackageManager->method('isNodeModulesInSync')->willReturn(false);
@@ -467,7 +498,7 @@ class BuilderTest extends TestCase
     public function testAutoRepairInstallsWithExactWarningWhenOutOfSync(): void
     {
         $nodePackageManager = $this->createMock(NodePackageManager::class);
-        $nodePackageManager->expects($this->once())->method('isNodeModulesInSync')->with('.')->willReturn(false);
+        $nodePackageManager->expects($this->once())->method('isNodeModulesInSync')->with('/magento-root')->willReturn(false);
         $nodePackageManager->expects($this->once())->method('installNodeModules')->willReturn(true);
         $io = $this->createMock(SymfonyStyle::class);
         $io
@@ -603,7 +634,7 @@ class BuilderTest extends TestCase
                 if ($path === $themePath . '/web/tailwind') {
                     return false;
                 }
-                return $nodeSetup && $path === './package.json';
+                return $nodeSetup && $path === '/magento-root/package.json';
             });
     }
 }
