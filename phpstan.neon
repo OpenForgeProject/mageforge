@@ -6,3 +6,10 @@ parameters:
     paths:
         - src
         - tests
+    ignoreErrors:
+        # CI analyses the tests inside the Magento install, which pins PHPUnit 10.5 (getStubBuilder() requires
+        # PHPUnit 12). The tests themselves run with the PHPUnit version required by composer.json.
+        -
+            identifier: method.notFound
+            message: '#^Call to an undefined method .+::getStubBuilder\(\)\.$#'
+            reportUnmatched: false
