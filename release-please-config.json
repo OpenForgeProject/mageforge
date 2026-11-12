@@ -5,6 +5,7 @@
       "release-type": "php",
       "package-name": "openforgeproject/mageforge",
       "changelog-path": "CHANGELOG.md",
+      "exclude-paths": ["website", "magento"],
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
