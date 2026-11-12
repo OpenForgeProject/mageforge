@@ -208,6 +208,8 @@ After these steps, your custom ThemeBuilder will be available and integrated wit
 
 This method is crucial as it determines whether your builder is responsible for a specific theme. Implement logic here that uniquely identifies your theme type.
 
+`BuilderPool` uses the first builder whose `detect()` returns `true`, so detection must be mutually exclusive. If your builder overlaps with a built-in one, exclude its themes explicitly (the TailwindCSS builder, for example, rejects themes that `HyvaThemeDetector` identifies as Hyvä).
+
 ```php
 public function detect(string $themePath): bool
 {

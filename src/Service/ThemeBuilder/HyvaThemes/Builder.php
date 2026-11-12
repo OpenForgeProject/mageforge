@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Service\ThemeBuilder\HyvaThemes;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaThemeDetector;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
@@ -28,6 +29,7 @@ class Builder implements BuilderInterface
      * @param CacheCleaner $cacheCleaner
      * @param SymlinkCleaner $symlinkCleaner
      * @param NodePackageManager $nodePackageManager
+     * @param HyvaThemeDetector $hyvaThemeDetector
      */
     public function __construct(
         private readonly Shell $shell,
@@ -37,6 +39,7 @@ class Builder implements BuilderInterface
         private readonly CacheCleaner $cacheCleaner,
         private readonly SymlinkCleaner $symlinkCleaner,
         private readonly NodePackageManager $nodePackageManager,
+        private readonly HyvaThemeDetector $hyvaThemeDetector,
     ) {
     }
 
@@ -56,25 +59,7 @@ class Builder implements BuilderInterface
             return false;
         }
 
-        // Check theme.xml for Hyva theme declaration
-        if ($this->fileDriver->isExists($themePath . '/theme.xml')) {
-            $themeXmlContent = $this->fileDriver->fileGetContents($themePath . '/theme.xml');
-            if (stripos($themeXmlContent, 'hyva') !== false) {
-                return true;
-            }
-        }
-
-        // Check composer.json for Hyva module dependency
-        if ($this->fileDriver->isExists($themePath . '/composer.json')) {
-            $composerContent = $this->fileDriver->fileGetContents($themePath . '/composer.json');
-            $composerJson = json_decode($composerContent, true);
-            $packageName = is_array($composerJson) ? $composerJson['name'] ?? null : null;
-            if (is_string($packageName) && str_contains($packageName, 'hyva')) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->hyvaThemeDetector->isHyvaTheme($themePath);
     }
 
     /**

@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder\HyvaThemes;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaThemeDetector;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
@@ -97,6 +98,7 @@ class BuilderTest extends TestCase
             $cacheCleaner ?? $this->cacheCleaner,
             $symlinkCleaner ?? $this->symlinkCleaner,
             $nodePackageManager ?? $this->nodePackageManager,
+            new HyvaThemeDetector($fileDriver ?? $this->fileDriver),
         );
     }
 

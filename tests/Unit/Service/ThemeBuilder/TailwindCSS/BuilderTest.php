@@ -7,6 +7,7 @@ namespace OpenForgeProject\MageForge\Test\Unit\Service\ThemeBuilder\TailwindCSS;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Shell;
 use OpenForgeProject\MageForge\Service\CacheCleaner;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaThemeDetector;
 use OpenForgeProject\MageForge\Service\NodePackageManager;
 use OpenForgeProject\MageForge\Service\StaticContentCleaner;
 use OpenForgeProject\MageForge\Service\StaticContentDeployer;
@@ -162,6 +163,40 @@ class BuilderTest extends TestCase
         $this->assertFalse($this->builder->detect('app/design/frontend/Vendor/theme'));
     }
 
+    public function testDetectReturnsFalseForHyvaComposerNameWithNeutralThemeXml(): void
+    {
+        $fileDriver = $this->createStub(File::class);
+        $fileDriver->method('isExists')->willReturn(true);
+        $fileDriver->method('fileGetContents')->willReturnMap([
+            ['app/design/frontend/Vendor/theme/theme.xml', null, null, '<theme><title>Custom</title></theme>'],
+            [
+                'app/design/frontend/Vendor/theme/composer.json',
+                null,
+                null,
+                json_encode(['name' => 'hyva-themes/theme-default']),
+            ],
+        ]);
+
+        $this->assertFalse($this->createBuilder(fileDriver: $fileDriver)->detect('app/design/frontend/Vendor/theme'));
+    }
+
+    public function testDetectReturnsFalseForHyvaThemeXmlWithNeutralComposerName(): void
+    {
+        $fileDriver = $this->createStub(File::class);
+        $fileDriver->method('isExists')->willReturn(true);
+        $fileDriver->method('fileGetContents')->willReturnMap([
+            ['app/design/frontend/Vendor/theme/theme.xml', null, null, '<theme><parent>Hyva/default</parent></theme>'],
+            [
+                'app/design/frontend/Vendor/theme/composer.json',
+                null,
+                null,
+                json_encode(['name' => 'vendor/custom-theme']),
+            ],
+        ]);
+
+        $this->assertFalse($this->createBuilder(fileDriver: $fileDriver)->detect('app/design/frontend/Vendor/theme'));
+    }
+
     private function createBuilder(
         ?Shell $shell = null,
         ?File $fileDriver = null,
@@ -179,6 +214,7 @@ class BuilderTest extends TestCase
             $cacheCleaner ?? $this->cacheCleaner,
             $symlinkCleaner ?? $this->symlinkCleaner,
             $nodePackageManager ?? $this->nodePackageManager,
+            new HyvaThemeDetector($fileDriver ?? $this->fileDriver),
         );
     }
 
