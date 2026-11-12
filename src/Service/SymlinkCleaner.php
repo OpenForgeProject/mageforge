@@ -109,23 +109,38 @@ class SymlinkCleaner
             return true;
         }
 
-        return $realPath !== $realDirectory . '/' . $this->getBasename($path);
+        return (
+            $this->normalizeSeparators($realPath)
+            !== $this->normalizeSeparators($realDirectory) . '/' . $this->getBasename($path)
+        );
     }
 
     /**
      * Get basename without using basename().
+     *
+     * A backslash only separates path segments on Windows; on other platforms it is a valid filename character.
      *
      * @param string $path
      * @return string
      */
     private function getBasename(string $path): string
     {
-        $normalized = str_replace('\\', '/', $path);
-        $trimmed = rtrim($normalized, '/');
+        $trimmed = rtrim($this->normalizeSeparators($path), '/');
         $pos = strrpos($trimmed, '/');
         if ($pos === false) {
             return $trimmed;
         }
         return substr($trimmed, $pos + 1);
+    }
+
+    /**
+     * Convert platform-specific directory separators to forward slashes
+     *
+     * @param string $path
+     * @return string
+     */
+    private function normalizeSeparators(string $path): string
+    {
+        return DIRECTORY_SEPARATOR === '\\' ? str_replace('\\', '/', $path) : $path;
     }
 }

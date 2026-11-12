@@ -126,6 +126,22 @@ class SymlinkCleanerTest extends TestCase
         $this->assertTrue($this->createCleaner(fileDriver: $fileDriver)->cleanSymlinks('/theme', $this->io, false));
     }
 
+    public function testKeepsRegularFileWithBackslashInName(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $this->markTestSkipped('A backslash is a path separator on Windows.');
+        }
+
+        $this->state->method('getMode')->willReturn(State::MODE_DEVELOPER);
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver->method('isDirectory')->willReturn(true);
+        $fileDriver->method('readDirectory')->willReturn(['/theme/web/css/vendor\\styles.css']);
+        $fileDriver->method('getRealPath')->willReturnArgument(0);
+        $fileDriver->expects($this->never())->method('deleteFile');
+
+        $this->assertTrue($this->createCleaner(fileDriver: $fileDriver)->cleanSymlinks('/theme', $this->io, false));
+    }
+
     public function testRemovesRealSymlinksFromFilesystem(): void
     {
         $state = $this->createStub(State::class);
