@@ -400,11 +400,10 @@ class TemplatePathParserTest extends TestCase
     {
         $directory = '/magento/vendor/magento/module-catalog/view/frontend/templates';
         $this->fileDriver->method('isFile')->willReturn(false);
-        $this->fileDriver->method('isDirectory')->with($directory)->willReturn(true);
-        $this->fileDriver->method('getRealPath')->with($directory)->willReturn($directory);
+        $this->fileDriver->method('isDirectory')->willReturn(true);
+        $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
 
@@ -446,7 +445,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory . '/');
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn([]);
 
@@ -485,11 +483,9 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver
             ->method('getOriginalModules')
-            ->with('Hyva_CompatCatalog')
             ->willReturn(['Magento_Catalog', 'Magento_Checkout']);
 
         $reference = $this->parser->parse($directory);
@@ -507,7 +503,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver
             ->method('getOriginalModules')
@@ -528,7 +523,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Hyva_CompatCatalog' => '/magento/vendor/hyva-themes/compat']);
         $this->compatModuleResolver->method('getOriginalModules')->willReturn(['Magento_Catalog']);
 
@@ -548,7 +542,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -609,7 +602,6 @@ class TemplatePathParserTest extends TestCase
         $this->fileDriver->method('getRealPath')->willReturn($directory);
         $this->componentRegistrar
             ->method('getPaths')
-            ->with(ComponentRegistrar::MODULE)
             ->willReturn(['Magento_Catalog' => '/magento/vendor/magento/module-catalog']);
 
         $this->expectException(\InvalidArgumentException::class);

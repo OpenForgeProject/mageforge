@@ -365,6 +365,8 @@ class OverrideCommandTest extends TestCase
 
     public function testCopiesAllFilesOfDirectoryAndSkipsExistingOverrides(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
         $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
         $this->templatePathParser
             ->method('parse')
@@ -391,15 +393,17 @@ class OverrideCommandTest extends TestCase
             ->method('findFirstExistingFile')
             ->willReturnCallback(static fn(array $dirs, string $path): string => self::THEME_DIR . '/' . $path);
         $copied = [];
-        $this->templateCopier
+        $templateCopier
             ->expects($this->exactly(3))
             ->method('copy')
             ->willReturnCallback(static function (string $source, string $target) use (&$copied): void {
                 $copied[$source] = $target;
             });
-        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+        $cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester(
+            $this->createCommand(templateCopier: $templateCopier, cacheCleaner: $cacheCleaner),
+        );
         $exitCode = $tester->execute([
             'template' => self::MODULE_DIR,
             '--theme' => 'Vendor/theme',
@@ -421,6 +425,7 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryWithOnlyThemeFilesSucceedsWithoutCopying(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
         $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
         $this->templatePathParser
             ->method('parse')
@@ -434,9 +439,9 @@ class OverrideCommandTest extends TestCase
                     ? ['a.phtml' => self::THEME_DIR . '/a.phtml']
                     : [],
             );
-        $this->templateCopier->expects($this->never())->method('copy');
+        $templateCopier->expects($this->never())->method('copy');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute([
             'template' => self::THEME_DIR,
             '--theme' => 'Vendor/theme',
@@ -448,6 +453,8 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryForceReplacesOverriddenFilesAndReportsThemeOnlyFiles(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
         $this->setUpDirectoryTemplate(
             sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml'],
             overridden: ['a.phtml' => self::THEME_DIR . '/a.phtml', 'theme-only.phtml' => self::THEME_DIR . '/x.phtml'],
@@ -455,13 +462,15 @@ class OverrideCommandTest extends TestCase
         $this->fallbackResolver
             ->method('findFirstExistingFile')
             ->willReturn(self::THEME_DIR . '/a.phtml');
-        $this->templateCopier
+        $templateCopier
             ->expects($this->once())
             ->method('copy')
             ->with(self::MODULE_DIR . '/a.phtml', self::THEME_DIR . '/a.phtml', 'Magento_Catalog');
-        $this->cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
+        $cacheCleaner->expects($this->once())->method('clean')->willReturn(true);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester(
+            $this->createCommand(templateCopier: $templateCopier, cacheCleaner: $cacheCleaner),
+        );
         $exitCode = $tester->execute([
             'template' => self::MODULE_DIR,
             '--theme' => 'Vendor/theme',
@@ -477,13 +486,14 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectorySkipsOverriddenFilesWithoutForce(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
         $this->setUpDirectoryTemplate(
             sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml'],
             overridden: ['a.phtml' => self::THEME_DIR . '/a.phtml'],
         );
-        $this->templateCopier->expects($this->never())->method('copy');
+        $templateCopier->expects($this->never())->method('copy');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -494,10 +504,11 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryFailsWhenNoFilesAreFound(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
         $this->setUpDirectoryTemplate(sources: [], overridden: []);
-        $this->templateCopier->expects($this->never())->method('copy');
+        $templateCopier->expects($this->never())->method('copy');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -508,6 +519,8 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryWarnsWhenFilesDoNotResolveToNewOverride(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
         $this->setUpDirectoryTemplate(
             sources: ['a.phtml' => self::MODULE_DIR . '/a.phtml', 'b.phtml' => self::MODULE_DIR . '/b.phtml'],
             overridden: [],
@@ -519,10 +532,12 @@ class OverrideCommandTest extends TestCase
                     ? self::THEME_DIR . '/a.phtml'
                     : self::MODULE_DIR . '/' . $path,
             );
-        $this->templateCopier->expects($this->exactly(2))->method('copy');
-        $this->cacheCleaner->expects($this->never())->method('clean');
+        $templateCopier->expects($this->exactly(2))->method('copy');
+        $cacheCleaner->expects($this->never())->method('clean');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester(
+            $this->createCommand(templateCopier: $templateCopier, cacheCleaner: $cacheCleaner),
+        );
         $exitCode = $tester->execute(['template' => self::MODULE_DIR, '--theme' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_FAILURE, $exitCode);
@@ -548,6 +563,7 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryCopiesIntoSubPathOfTheme(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
         $this->setUpDirectoryTemplate(
             sources: ['a.phtml' => self::MODULE_DIR . '/product/a.phtml'],
             overridden: [],
@@ -555,15 +571,19 @@ class OverrideCommandTest extends TestCase
         );
         $this->fallbackResolver
             ->method('findFirstExistingFile')
-            ->with([self::THEME_DIR, self::MODULE_DIR], 'product/a.phtml')
-            ->willReturn(self::THEME_DIR . '/product/a.phtml');
-        $this->templateCopier
+            ->willReturnCallback(function (array $dirs, string $path): string {
+                $this->assertSame([self::THEME_DIR, self::MODULE_DIR], $dirs);
+                $this->assertSame('product/a.phtml', $path);
+
+                return self::THEME_DIR . '/product/a.phtml';
+            });
+        $templateCopier
             ->expects($this->once())
             ->method('copy')
             ->with(self::MODULE_DIR . '/product/a.phtml', self::THEME_DIR . '/product/a.phtml');
         $this->cacheCleaner->method('clean')->willReturn(true);
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester($this->createCommand(templateCopier: $templateCopier));
         $exitCode = $tester->execute(['template' => self::MODULE_DIR . '/product', '--theme' => 'Vendor/theme']);
 
         $this->assertSame(Cli::RETURN_SUCCESS, $exitCode);
@@ -590,6 +610,8 @@ class OverrideCommandTest extends TestCase
 
     public function testDirectoryDryRunDoesNotCopy(): void
     {
+        $templateCopier = $this->createMock(TemplateCopier::class);
+        $cacheCleaner = $this->createMock(CacheCleaner::class);
         $this->themeList->method('getAllThemes')->willReturn([new FakeTheme('Vendor/theme')]);
         $this->templatePathParser
             ->method('parse')
@@ -603,10 +625,12 @@ class OverrideCommandTest extends TestCase
                     ? []
                     : ['a.phtml' => self::MODULE_DIR . '/product/a.phtml'],
             );
-        $this->templateCopier->expects($this->never())->method('copy');
-        $this->cacheCleaner->expects($this->never())->method('clean');
+        $templateCopier->expects($this->never())->method('copy');
+        $cacheCleaner->expects($this->never())->method('clean');
 
-        $tester = new CommandTester($this->command);
+        $tester = new CommandTester(
+            $this->createCommand(templateCopier: $templateCopier, cacheCleaner: $cacheCleaner),
+        );
         $exitCode = $tester->execute([
             'template' => self::MODULE_DIR . '/product',
             '--theme' => 'Vendor/theme',

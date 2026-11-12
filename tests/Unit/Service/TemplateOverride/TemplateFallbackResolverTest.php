@@ -57,12 +57,13 @@ class TemplateFallbackResolverTest extends TestCase
         ?ObjectManagerInterface $objectManager = null,
         ?DesignInterface $design = null,
         ?ComponentRegistrarInterface $componentRegistrar = null,
+        ?File $fileDriver = null,
     ): TemplateFallbackResolver {
         return new TemplateFallbackResolver(
             $objectManager ?? $this->objectManager,
             $design ?? $this->design,
             $componentRegistrar ?? $this->componentRegistrar,
-            $this->fileDriver,
+            $fileDriver ?? $this->fileDriver,
         );
     }
 
@@ -321,10 +322,11 @@ class TemplateFallbackResolverTest extends TestCase
 
     public function testFindDirectoryFilesUsesDirectoryRootWithoutSubPathAndSkipsMissingDirs(): void
     {
-        $this->fileDriver
+        $fileDriver = $this->createMock(File::class);
+        $fileDriver
             ->method('isDirectory')
             ->willReturnCallback(static fn(string $path): bool => $path !== '/missing');
-        $this->fileDriver
+        $fileDriver
             ->expects($this->once())
             ->method('readDirectoryRecursively')
             ->with('/module/templates')
@@ -334,11 +336,11 @@ class TemplateFallbackResolverTest extends TestCase
                 '/other/place/ignored.phtml',
                 '/module/templates/sub',
             ]);
-        $this->fileDriver
+        $fileDriver
             ->method('isFile')
             ->willReturnCallback(static fn(string $path): bool => str_ends_with($path, '.phtml'));
 
-        $files = $this->resolver->findDirectoryFiles(['/missing', '/module/templates'], '');
+        $files = $this->createResolver(fileDriver: $fileDriver)->findDirectoryFiles(['/missing', '/module/templates'], '');
 
         $this->assertSame(
             ['b.phtml' => '/module/templates/b.phtml', 'z.phtml' => '/module/templates/z.phtml'],
