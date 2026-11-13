@@ -854,11 +854,6 @@ dialog.search-dialog::backdrop {
   gap: 1.25rem;
   grid-template-columns: minmax(0, 1fr);
 }
-@media (min-width: 56rem) {
-  .up-cols {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  }
-}
 .up-cols > div {
   background: rgb(26 11 4 / 0.92);
   color: #f6e9df;
@@ -881,13 +876,24 @@ dialog.search-dialog::backdrop {
   gap: 0.6rem;
 }
 .up-list li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.6rem;
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr) auto;
+  gap: 0.25rem 0.75rem;
   align-items: baseline;
 }
-.up-list li > span:not(.up-scope):not(.visually-hidden) {
-  flex: 1 1 14rem;
+.up-list li > span:first-child:not(.up-scope) {
+  grid-column: 1 / 3;
+}
+.up-scope {
+  justify-self: start;
+}
+@media (max-width: 36rem) {
+  .up-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .up-list li > .up-scope {
+    grid-column: 1 / -1;
+  }
 }
 .up-list--quiet {
   font-size: 0.95rem;

@@ -15,10 +15,12 @@ const AUDIT_SETTLE_DELAY_MS = 200;
  * @returns {string}
  */
 function escapeMdCode(selector) {
+  // Backslashes stay as-is: they are literal inside code spans. Only the table
+  // delimiter needs escaping.
   return selector
-    .replace(/\\/g, "\\\\")
     .replace(/`/g, "'")
-    .replace(/\|/g, "\\|")
+    .split("|")
+    .join("\\|")
     .replace(/\s+/g, " ");
 }
 
