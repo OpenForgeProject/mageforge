@@ -6,6 +6,30 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.31.0](https://github.com/OpenForgeProject/mageforge/compare/0.30.0...0.31.0) (2026-11-13)
+
+
+### Added
+
+* **website:** add static website with changelog and CI deployment ([4d9f0c9](https://github.com/OpenForgeProject/mageforge/commit/4d9f0c9218ac4c22077d07db01aeaa28785f8114))
+
+
+### Fixed
+
+* **magento-standard:** resolve Node/Grunt paths from the Magento root ([#291](https://github.com/OpenForgeProject/mageforge/issues/291)) ([5f606c5](https://github.com/OpenForgeProject/mageforge/commit/5f606c5c3007c42b8599e5507692f15823cbf23f))
+* **node:** report outdated npm packages correctly ([#292](https://github.com/OpenForgeProject/mageforge/issues/292)) ([53d1815](https://github.com/OpenForgeProject/mageforge/commit/53d18156027604446d27d5ff1321e241e3ec5dbd))
+* **symlink-cleaner:** detect symlinks via resolved path instead of stat mode ([#288](https://github.com/OpenForgeProject/mageforge/issues/288)) ([bba249c](https://github.com/OpenForgeProject/mageforge/commit/bba249ced8d7b0dbf26b47400645c9f103e2a7d7))
+* **tests:** avoid getStubBuilder and fix line length for CI ([#290](https://github.com/OpenForgeProject/mageforge/issues/290)) ([31d46be](https://github.com/OpenForgeProject/mageforge/commit/31d46be8235840009e8a8f4a82aec9c583a16503))
+* **theme-builder:** make Hyva and TailwindCSS detection mutually exclusive ([#289](https://github.com/OpenForgeProject/mageforge/issues/289)) ([fa8ea08](https://github.com/OpenForgeProject/mageforge/commit/fa8ea085ace1ddca58310e4cd4a3327948092ca4))
+* **toolbar:** escape selectors in markdown audit export ([#295](https://github.com/OpenForgeProject/mageforge/issues/295)) ([e89faa2](https://github.com/OpenForgeProject/mageforge/commit/e89faa2479d9de8c369a670afb66f8d285cb0b0f))
+* **toolbar:** exclude elements with negative tabindex from tab order audit ([#294](https://github.com/OpenForgeProject/mageforge/issues/294)) ([869cb4c](https://github.com/OpenForgeProject/mageforge/commit/869cb4c5221c30e1c0af3a93f32a90d21b197d9a))
+* **Website:** fix responsive layout ([#287](https://github.com/OpenForgeProject/mageforge/issues/287)) ([463457e](https://github.com/OpenForgeProject/mageforge/commit/463457ed5bcd258baf5b9b9663ea044b31dc648f))
+
+
+### Maintenance
+
+* update phpunit/phpunit requirement from ^11.5 to ^12.5 ([#281](https://github.com/OpenForgeProject/mageforge/issues/281)) ([68fa34c](https://github.com/OpenForgeProject/mageforge/commit/68fa34c24c03146e35d4d0dbf87ba1a098c2b29a))
+
 ## [0.30.0](https://github.com/OpenForgeProject/mageforge/compare/0.29.0...0.30.0) (2026-11-11)
 
 
