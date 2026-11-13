@@ -8,6 +8,22 @@ import { audits, auditGroups } from "./audits/index.js";
 // time to finish after synchronous mutations (typically 1–2 frames = 16ms).
 const AUDIT_SETTLE_DELAY_MS = 200;
 
+/**
+ * Make a selector safe for an inline code span inside a Markdown table cell.
+ *
+ * @param {string} selector
+ * @returns {string}
+ */
+function escapeMdCode(selector) {
+  // Backslashes stay as-is: they are literal inside code spans. Only the table
+  // delimiter needs escaping.
+  return selector
+    .replace(/`/g, "'")
+    .split("|")
+    .join("\\|")
+    .replace(/\s+/g, " ");
+}
+
 export const auditMethods = {
   /**
    * Toggles an audit on/off and updates the menu item state.
@@ -353,7 +369,7 @@ export const auditMethods = {
             lines.push("| Selector | Severity |");
             lines.push("|----------|----------|");
             findings.forEach(({ selector, severity }) => {
-              lines.push(`| \`${selector}\` | ${severity} |`);
+              lines.push(`| \`${escapeMdCode(selector)}\` | ${severity} |`);
             });
           } else {
             // Page-level audit: badge only, no element selectors
