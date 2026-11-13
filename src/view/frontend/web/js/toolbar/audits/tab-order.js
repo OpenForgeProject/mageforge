@@ -240,6 +240,7 @@ export default {
       document.querySelectorAll(FOCUSABLE_SELECTOR),
     )
       .filter((el) => !el.closest(".mageforge-toolbar"))
+      .filter((el) => getTabIndex(el) >= 0)
       .filter(isVisible);
 
     if (allFocusable.length === 0) {
