@@ -67,7 +67,7 @@ function upcomingSection() {
   const nextCommands = commands.filter((c) => !c.since);
   if (!features.length && !fixes.length && !nextCommands.length) return "";
   const li = (i) =>
-    `<li>${i.scope ? `<span class="up-scope">${e(i.scope.toLowerCase())}</span>` : ""}<span>${e(i.text)}</span>${i.pr ? ` <a class="up-pr" href="https://github.com/OpenForgeProject/mageforge/pull/${e(i.pr)}"><span class="visually-hidden">Pull request </span>#${e(i.pr)}</a>` : ""}</li>`;
+    `<li>${i.scope ? `<span class="up-scope">${e(i.scope)}</span>` : ""}<span>${e(i.text)}</span>${i.pr ? ` <a class="up-pr" href="https://github.com/OpenForgeProject/mageforge/pull/${e(i.pr)}"><span class="visually-hidden">Pull request </span>#${e(i.pr)}</a>` : ""}</li>`;
   return `<section class="upcoming" aria-labelledby="up-h">
   <div class="container">
     <p class="up-eyebrow"><span class="up-dot" aria-hidden="true"></span>On the anvil</p>
