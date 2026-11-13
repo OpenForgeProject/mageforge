@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## Latest Release
 
+## [0.31.1](https://github.com/OpenForgeProject/mageforge/compare/0.31.0...0.31.1) (2026-11-13)
+
+
+### Fixed
+
+* **ci:** trigger website deployment after release ([#296](https://github.com/OpenForgeProject/mageforge/issues/296)) ([58e12a1](https://github.com/OpenForgeProject/mageforge/commit/58e12a1fba92e89c309a4e4c57e31aee6f9755dc))
+
 ## [0.31.0](https://github.com/OpenForgeProject/mageforge/compare/0.30.0...0.31.0) (2026-11-13)
 
 
