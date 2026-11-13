@@ -15,7 +15,11 @@ const AUDIT_SETTLE_DELAY_MS = 200;
  * @returns {string}
  */
 function escapeMdCode(selector) {
-  return selector.replace(/`/g, "'").replace(/\|/g, "\\|").replace(/\s+/g, " ");
+  return selector
+    .replace(/\\/g, "\\\\")
+    .replace(/`/g, "'")
+    .replace(/\|/g, "\\|")
+    .replace(/\s+/g, " ");
 }
 
 export const auditMethods = {
