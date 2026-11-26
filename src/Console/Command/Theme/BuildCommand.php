@@ -214,9 +214,9 @@ class BuildCommand extends AbstractCommand
      * Display available themes
      *
      * @param SymfonyStyle $io
-     * @return int
+     * @return void
      */
-    private function displayAvailableThemes(SymfonyStyle $io): int
+    private function displayAvailableThemes(SymfonyStyle $io): void
     {
         $table = new Table($io);
         $table->setHeaders(['Theme Code', 'Title']);
@@ -227,8 +227,6 @@ class BuildCommand extends AbstractCommand
 
         $table->render();
         $io->info('Usage: bin/magento mageforge:theme:build <theme-code> [<theme-code>...]');
-
-        return Command::SUCCESS;
     }
 
     /**
