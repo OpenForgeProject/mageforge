@@ -533,13 +533,14 @@ abstract class AbstractCommand extends Command
             return null;
         }
 
-        $value = filter_input(INPUT_SERVER, $name);
+        $serverVars = filter_input_array(INPUT_SERVER) ?: [];
+        $value = $serverVars[$name] ?? null;
 
-        if ($value === null || $value === false || $value === '') {
+        if (!is_string($value)) {
             return null;
         }
 
-        return $this->sanitizeAlphanumericValue((string) $value);
+        return $this->sanitizeAlphanumericValue($value);
     }
 
     /**

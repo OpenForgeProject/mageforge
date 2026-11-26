@@ -390,6 +390,22 @@ class AbstractCommandTest extends TestCase
         $this->assertNull($this->callPrivate('getEnvVar', ['TEAMCITY_VERSION']));
     }
 
+    public function testGetServerVarReturnsSanitizedServerVariable(): void
+    {
+        $result = $this->callPrivate('getServerVar', ['PHP_SELF']);
+
+        $this->assertIsString($result);
+        $this->assertNotSame('', $result);
+        $this->assertMatchesRegularExpression('/^[\w\-.]+$/', $result);
+    }
+
+    public function testGetServerVarReturnsNullForMissingEmptyOrInvalidVariable(): void
+    {
+        $this->assertNull($this->callPrivate('getServerVar', ['MAGEFORGE_UNSET_VAR']));
+        $this->assertNull($this->callPrivate('getServerVar', ['DOCUMENT_ROOT']));
+        $this->assertNull($this->callPrivate('getServerVar', ['php_self']));
+    }
+
     #[DataProvider('numericValueProvider')]
     public function testSanitizeNumericValueEnforcesRange(string $input, ?string $expected): void
     {
