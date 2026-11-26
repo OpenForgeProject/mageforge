@@ -9,6 +9,8 @@ use Laravel\Prompts\Spinner;
 use OpenForgeProject\MageForge\Console\Command\AbstractCommand;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
+use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeParentResolver;
 use OpenForgeProject\MageForge\Service\ThemeSuggester;
@@ -21,15 +23,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Command for building Magento themes
+ *
+ * @phpstan-type BuildSuccessEntry array{theme: string, builder: string, hyvaVersion: ?string}
  */
 class BuildCommand extends AbstractCommand
 {
+    private const HYVA_BUILDER_NAME = 'HyvaThemes';
+    private const HYVA_THEME_PREFIX = 'Hyva/';
+
     /**
      * @param ThemePath $themePath
      * @param ThemeList $themeList
      * @param BuilderPool $builderPool
      * @param ThemeSuggester $themeSuggester
      * @param ThemeParentResolver $parentResolver
+     * @param HyvaVersionDetector $hyvaVersionDetector
      */
     public function __construct(
         private readonly ThemePath $themePath,
@@ -37,6 +45,7 @@ class BuildCommand extends AbstractCommand
         private readonly BuilderPool $builderPool,
         private readonly ThemeSuggester $themeSuggester,
         private readonly ThemeParentResolver $parentResolver,
+        private readonly HyvaVersionDetector $hyvaVersionDetector,
     ) {
         parent::__construct();
     }
@@ -347,7 +356,8 @@ class BuildCommand extends AbstractCommand
      * @param SymfonyStyle $io
      * @param OutputInterface $output
      * @param bool $isVerbose
-     * @param array<string> $successList
+     * @param array $successList
+     * @phpstan-param array<int, BuildSuccessEntry> $successList
      * @return bool
      */
     private function buildValidatedTheme(
@@ -381,8 +391,43 @@ class BuildCommand extends AbstractCommand
             return false;
         }
 
-        $successList[] = sprintf('%s: Built successfully using %s builder', $themeCode, $builder->getName());
+        $hyvaVersion = $this->isHyvaTheme($themeCode, $builder) ? $this->hyvaVersionDetector->getVersion() : null;
+        $successList[] = [
+            'theme' => $themeCode,
+            'builder' => $builder->getName(),
+            'hyvaVersion' => $hyvaVersion,
+        ];
         return true;
+    }
+
+    /**
+     * Check whether a built theme is a Hyvä theme, directly or through its parent chain.
+     *
+     * A child theme extending a custom Hyvä base uses the TailwindCSS builder, so its ancestors are checked too.
+     *
+     * @param string $themeCode
+     * @param BuilderInterface $builder
+     * @return bool
+     */
+    private function isHyvaTheme(string $themeCode, BuilderInterface $builder): bool
+    {
+        if ($builder->getName() === self::HYVA_BUILDER_NAME || str_starts_with($themeCode, self::HYVA_THEME_PREFIX)) {
+            return true;
+        }
+
+        foreach ($this->parentResolver->getInheritanceChain($themeCode) as $ancestor) {
+            if (str_starts_with($ancestor->code, self::HYVA_THEME_PREFIX)) {
+                return true;
+            }
+
+            $ancestorPath = $this->themePath->getPath($ancestor->code);
+            $ancestorBuilder = $ancestorPath === null ? null : $this->builderPool->getBuilder($ancestorPath);
+            if ($ancestorBuilder?->getName() === self::HYVA_BUILDER_NAME) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -392,7 +437,8 @@ class BuildCommand extends AbstractCommand
      * @param SymfonyStyle $io
      * @param OutputInterface $output
      * @param bool $isVerbose
-     * @param array<string> $successList
+     * @param array $successList
+     * @phpstan-param array<int, BuildSuccessEntry> $successList
      * @return bool
      */
     private function processTheme(
@@ -417,7 +463,8 @@ class BuildCommand extends AbstractCommand
      * Display build summary
      *
      * @param SymfonyStyle $io
-     * @param array<string> $successList
+     * @param array $successList
+     * @phpstan-param array<int, BuildSuccessEntry> $successList
      * @param float $duration
      */
     private function displayBuildSummary(SymfonyStyle $io, array $successList, float $duration): void
@@ -442,24 +489,16 @@ class BuildCommand extends AbstractCommand
             return;
         }
 
-        foreach ($successList as $success) {
-            $parts = explode(': ', $success, 2);
-            if (count($parts) === 2) {
-                $themeName = $parts[0];
-                $details = $parts[1];
-                // Color the builder name in magenta
-                $matches = [];
-                if (preg_match('/(using\s+)([^\s]+)(\s+builder)/', $details, $matches)) {
-                    $details = str_replace(
-                        $matches[0],
-                        $matches[1] . '<fg=magenta>' . $matches[2] . '</>' . $matches[3],
-                        $details,
-                    );
-                }
-                $io->writeln(sprintf('✅ <fg=cyan>%s</>: %s', $themeName, $details));
-            } else {
-                $io->writeln("✅ $success");
-            }
+        foreach ($successList as $entry) {
+            $versionSuffix = $entry['hyvaVersion'] !== null
+                ? sprintf(' <fg=gray>(Hyvä %s)</>', $entry['hyvaVersion'])
+                : '';
+            $io->writeln(sprintf(
+                '✅ <fg=cyan>%s</>: Built successfully using <fg=magenta>%s</> builder%s',
+                $entry['theme'],
+                $entry['builder'],
+                $versionSuffix,
+            ));
         }
 
         $io->newLine();

@@ -6,8 +6,10 @@ namespace OpenForgeProject\MageForge\Test\Unit\Console\Command\Theme;
 
 use Laravel\Prompts\Prompt;
 use OpenForgeProject\MageForge\Console\Command\Theme\BuildCommand;
+use OpenForgeProject\MageForge\Model\ThemeAncestor;
 use OpenForgeProject\MageForge\Model\ThemeList;
 use OpenForgeProject\MageForge\Model\ThemePath;
+use OpenForgeProject\MageForge\Service\Hyva\HyvaVersionDetector;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderInterface;
 use OpenForgeProject\MageForge\Service\ThemeBuilder\BuilderPool;
 use OpenForgeProject\MageForge\Service\ThemeParentResolver;
@@ -42,6 +44,10 @@ class BuildCommandTest extends TestCase
      */
     private $parentResolver;
     /**
+     * @var HyvaVersionDetector&Stub
+     */
+    private $hyvaVersionDetector;
+    /**
      * @var BuildCommand
      */
     private BuildCommand $command;
@@ -58,6 +64,7 @@ class BuildCommandTest extends TestCase
         $this->builderPool = $this->createStub(BuilderPool::class);
         $this->themeSuggester = $this->createStub(ThemeSuggester::class);
         $this->parentResolver = $this->createStub(ThemeParentResolver::class);
+        $this->hyvaVersionDetector = $this->createStub(HyvaVersionDetector::class);
         $this->command = $this->createCommand();
     }
 
@@ -292,6 +299,7 @@ class BuildCommandTest extends TestCase
         ?BuilderPool $builderPool = null,
         ?ThemeSuggester $themeSuggester = null,
         ?ThemeParentResolver $parentResolver = null,
+        ?HyvaVersionDetector $hyvaVersionDetector = null,
     ): BuildCommand {
         return new BuildCommand(
             $themePath ?? $this->themePath,
@@ -299,6 +307,7 @@ class BuildCommandTest extends TestCase
             $builderPool ?? $this->builderPool,
             $themeSuggester ?? $this->themeSuggester,
             $parentResolver ?? $this->parentResolver,
+            $hyvaVersionDetector ?? $this->hyvaVersionDetector,
         );
     }
 
@@ -361,5 +370,126 @@ class BuildCommandTest extends TestCase
             $tester->getDisplay(),
             'Builder name must be rendered in magenta in the summary',
         );
+    }
+
+    public function testSummaryShowsHyvaVersionOnlyForHyvaThemes(): void
+    {
+        $this->themePath->method('getPath')->willReturnMap([
+            ['Magento/luma', '/path/to/luma'],
+            ['Magento/blank', null],
+            ['Vendor/hyva-shop', '/path/to/hyva-shop'],
+        ]);
+        $standardBuilder = $this->createNamedBuilder('MagentoStandard');
+        $standardBuilder->method('build')->willReturn(true);
+        $hyvaBuilder = $this->createNamedBuilder('HyvaThemes');
+        $hyvaBuilder->method('build')->willReturn(true);
+        $this->builderPool->method('getBuilder')->willReturnMap([
+            ['/path/to/luma', $standardBuilder],
+            ['/path/to/hyva-shop', $hyvaBuilder],
+        ]);
+        $this->parentResolver->method('getInheritanceChain')->willReturnMap([
+            ['Magento/luma', [new ThemeAncestor('Magento/blank', 'vendor')]],
+            ['Vendor/hyva-shop', []],
+        ]);
+        $hyvaVersionDetector = $this->createMock(HyvaVersionDetector::class);
+        $hyvaVersionDetector->expects($this->once())->method('getVersion')->willReturn('1.5.5');
+        $command = $this->createCommand(hyvaVersionDetector: $hyvaVersionDetector);
+
+        $tester = new CommandTester($command);
+        $exitCode = $tester->execute(
+            ['themeCodes' => ['Magento/luma', 'Vendor/hyva-shop']],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString(
+            'Magento/luma: Built successfully using MagentoStandard builder',
+            $display,
+        );
+        $this->assertStringNotContainsString(
+            'Magento/luma: Built successfully using MagentoStandard builder (Hyvä',
+            $display,
+        );
+        $this->assertStringContainsString(
+            'Vendor/hyva-shop: Built successfully using HyvaThemes builder (Hyvä 1.5.5)',
+            $display,
+        );
+    }
+
+    public function testSummaryShowsHyvaVersionForChildOfHyvaAncestor(): void
+    {
+        $this->themePath->method('getPath')->willReturn('/path/to/child');
+        $tailwindBuilder = $this->createNamedBuilder('TailwindCSS');
+        $tailwindBuilder->method('build')->willReturn(true);
+        $this->builderPool->method('getBuilder')->willReturn($tailwindBuilder);
+        $this->parentResolver->method('getInheritanceChain')->willReturn([
+            new ThemeAncestor('Vendor/base', null),
+            new ThemeAncestor('Hyva/default', 'vendor'),
+        ]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.4.2');
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(
+            ['themeCodes' => ['Vendor/child'], '--no-parents' => true],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $this->assertStringContainsString(
+            'Vendor/child: Built successfully using TailwindCSS builder (Hyvä 1.4.2)',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function testSummaryShowsHyvaVersionForChildOfCustomHyvaBuilderAncestor(): void
+    {
+        $this->themePath->method('getPath')->willReturnMap([
+            ['Vendor/child', '/path/to/child'],
+            ['Vendor/hyva-base', '/path/to/base'],
+        ]);
+        $tailwindBuilder = $this->createNamedBuilder('TailwindCSS');
+        $tailwindBuilder->method('build')->willReturn(true);
+        $hyvaBuilder = $this->createNamedBuilder('HyvaThemes');
+        $this->builderPool->method('getBuilder')->willReturnMap([
+            ['/path/to/child', $tailwindBuilder],
+            ['/path/to/base', $hyvaBuilder],
+        ]);
+        $this->parentResolver->method('getInheritanceChain')->willReturn([
+            new ThemeAncestor('Vendor/hyva-base', null),
+        ]);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn('1.3.18');
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(
+            ['themeCodes' => ['Vendor/child'], '--no-parents' => true],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $this->assertStringContainsString(
+            'Vendor/child: Built successfully using TailwindCSS builder (Hyvä 1.3.18)',
+            $tester->getDisplay(),
+        );
+    }
+
+    public function testSummaryOmitsHyvaVersionWhenUnknown(): void
+    {
+        $this->themePath->method('getPath')->willReturn('/path/to/hyva');
+        $hyvaBuilder = $this->createNamedBuilder('HyvaThemes');
+        $hyvaBuilder->method('build')->willReturn(true);
+        $this->builderPool->method('getBuilder')->willReturn($hyvaBuilder);
+        $this->hyvaVersionDetector->method('getVersion')->willReturn(null);
+
+        $tester = new CommandTester($this->command);
+        $tester->execute(
+            ['themeCodes' => ['Vendor/hyva']],
+            ['verbosity' => OutputInterface::VERBOSITY_VERBOSE],
+        );
+
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString(
+            'Vendor/hyva: Built successfully using HyvaThemes builder',
+            $display,
+        );
+        $this->assertStringNotContainsString('(Hyvä', $display);
     }
 }

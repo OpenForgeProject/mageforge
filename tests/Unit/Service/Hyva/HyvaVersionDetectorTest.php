@@ -48,12 +48,20 @@ class HyvaVersionDetectorTest extends TestCase
             'default theme 1.4.0' => [['hyva-themes/magento2-default-theme' => '1.4.0'], '1.4.0'],
             'default theme with v prefix' => [['hyva-themes/magento2-default-theme' => 'v1.4.2'], '1.4.2'],
             'default theme 1.3.18' => [['hyva-themes/magento2-default-theme' => '1.3.18'], '1.3.18'],
+            'csp default theme 1.5.5' => [['hyva-themes/magento2-default-theme-csp' => '1.5.5'], '1.5.5'],
             'default theme wins over a newer theme module' => [
                 [
                     'hyva-themes/magento2-default-theme' => '1.3.18',
                     'hyva-themes/magento2-theme-module' => '1.4.0',
                 ],
                 '1.3.18',
+            ],
+            'csp default theme wins over a newer theme module' => [
+                [
+                    'hyva-themes/magento2-default-theme-csp' => '1.5.5',
+                    'hyva-themes/magento2-theme-module' => '1.6.0',
+                ],
+                '1.5.5',
             ],
             'theme module as fallback' => [['hyva-themes/magento2-theme-module' => '1.4.1'], '1.4.1'],
             'dev branch with digits is not a release' => [

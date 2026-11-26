@@ -14,7 +14,11 @@ use Composer\InstalledVersions;
  */
 class HyvaVersionDetector
 {
-    private const PACKAGES = ['hyva-themes/magento2-default-theme', 'hyva-themes/magento2-theme-module'];
+    private const PACKAGES = [
+        'hyva-themes/magento2-default-theme',
+        'hyva-themes/magento2-default-theme-csp',
+        'hyva-themes/magento2-theme-module',
+    ];
 
     /**
      * Get the installed Hyvä version, e.g. "1.4.0"
